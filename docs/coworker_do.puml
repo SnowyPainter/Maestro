@@ -1,0 +1,85 @@
+@startuml
+title CoWorker: Trend-triggered Daily Brief + Email Reply -> Draft Auto-Create
+
+actor USER as "User"
+participant SNIFF as "Sniffer (Shared)"
+participant COW as "CoWorker"
+database DB as "DB"
+collections REDIS as "Redis (policy/idempotency)"
+participant SYNC as "Synchro (similarity/ranking)"
+participant INJ as "Injector (logic)"
+participant GEN as "Generator (task)"
+participant LLM as "LLMInterface (ainvoke)"
+participant ADPT as "Adapter (constraints)"
+participant ORCH as "Orchestrator (API)"
+
+== Phase 1: Sniffer pulls trends; CoWorker watches & matches ==
+SNIFF -> COW : (poll/push) trends[index_ref, items[]]
+
+COW -> DB : getUserAccounts(user_id)
+DB --> COW : accounts[]
+
+loop for each account in accounts[]
+  COW -> DB : getActiveCampaigns(account_id)
+  DB --> COW : campaigns[topic, status=active]
+
+  loop for each trend in items[]
+    COW -> SYNC : similarity(trend.embedding, campaigns.topics)\n// 개인화된 임계치/리랭크
+    SYNC --> COW : {best_match_topic, score}
+
+    alt score >= threshold
+      note right
+        1일 1회 정책(계정/주제/날짜)\nUserPolicy로 다회 허용 가능
+      end note
+      COW -> REDIS : SETNX idem:daily_mail:{user_id}:{account_id}:{date}:{topic_cluster}
+      alt already sent today
+        REDIS --> COW : exists (skip)
+      else first time today
+        REDIS --> COW : ok(set)
+
+        COW -> ADPT : constraints(account_id)
+        ADPT --> COW : {max_len, hash_limit, schedule_support, ...}
+
+        COW -> DB : getPersonaForAccount(account_id)
+        DB --> COW : persona
+
+        COW -> INJ : compose(persona, trend, /*no playbook*/, constraints)
+        INJ --> COW : {brief, metadata, trade_offs}
+
+        COW -> GEN : buildBriefTask.enqueue(brief, metadata)
+        GEN -> LLM : ainvoke(brief → 지시사항 JSON)
+        LLM --> GEN : 지시사항 JSON
+        GEN --> COW : 지시사항 JSON
+
+        COW --> USER : 이메일 발송(지시사항/가이드 첨부)
+      end
+    else below threshold
+      COW -> COW : skip (no mail)
+    end
+  end
+end
+
+== Phase 2: User replies; CoWorker creates Draft ==
+... (시간 경과 후) ...
+USER -> COW : 이메일 회신(본문 텍스트)
+COW -> COW : sanitize(body_text)
+
+COW -> REDIS : SETNX idem:coworker:ingest:{thread_id}:{bucket}
+alt duplicate reply window
+  REDIS --> COW : exists
+  COW --> ORCH : {status:"already_processed"}
+else first reply in window
+  REDIS --> COW : ok(set)
+
+  COW -> ORCH : createDraft(account_id, subject, body_text, meta_from_email+trend)
+  ORCH -> DB : insert Draft (state=draft, campaign_link?)
+  ORCH -> SYNC : ingest(Draft) [async enqueue]
+  SYNC --> ORCH : ack(queued)
+
+  ORCH --> COW : {post_id, status:"draft_created"}
+  COW --> USER : Draft 생성 알림(타임라인 링크)
+end
+
+== Optional: later by user ==
+USER -> ORCH : (스케줄/발행/삭제 등 후속 조치)
+@enduml

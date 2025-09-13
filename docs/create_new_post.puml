@@ -1,0 +1,32 @@
+@startuml
+title Flow A: Instruction Brief Generation
+
+actor User
+participant ORCH as "Orchestrator(API)"
+participant SNIFF as "Sniffer (Shared)"
+participant SYNC as "Synchro"
+participant ADPT as "Adapter"
+participant INJ as "Injector (Logic)"
+participant GEN as "Generator (Task)"
+participant LLM as "LLMInterface"
+
+User -> ORCH : "지시사항 만들어줘"(계정 선택됨)
+ORCH -> SNIFF : getIndex(region, locale, bucket)
+SNIFF --> ORCH : index_ref + trends[]
+
+ORCH -> SYNC : getPersonalContext(persona_account_id)\n(필요 임베딩/히스토리 요약)
+SYNC --> ORCH : context_summary (선택)
+
+ORCH -> ADPT : constraints(account_id)
+ADPT --> ORCH : {max_len, hash_limit, schedule_support...}
+
+ORCH -> INJ : compose(persona, trends, playbook(account), constraints)
+INJ --> ORCH : {brief, metadata, trade_offs}
+
+ORCH -> GEN : buildBriefTask.enqueue(brief, metadata)
+GEN -> LLM : ainvoke(brief → 지시사항 JSON)
+LLM --> GEN : 지시사항 JSON
+GEN --> ORCH : 지시사항 JSON
+
+ORCH --> User : 지시사항 JSON(복사 버튼/딥링크)
+@enduml

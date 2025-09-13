@@ -1,0 +1,32 @@
+@startuml
+title Flow B: Draft Save → Schedule → Publish & Monitor
+
+actor User
+participant ORCH as "Orchestrator(API)"
+participant DB as "DB"
+participant SYNC as "Synchro"
+participant SCH as "Scheduler"
+participant ADPT as "Adapter"
+
+User -> ORCH : Draft 저장(본문+메타데이터)
+ORCH -> DB : insert Draft/Metadata
+ORCH -> SYNC : ingest(Draft) [async enqueue]
+
+User -> ORCH : 발행 일정 + 모니터링 세그먼트 설정
+ORCH -> SCH : createSchedule(post_id, segments, horizon caps)
+SCH --> ORCH : schedule_id
+
+== Publish at scheduled time ==
+SCH -> ADPT : publish(account, post_payload, schedule_at)
+ADPT --> SCH : {platform_post_id, posted_at, external_url}
+SCH -> DB : update Post→posted, save link
+
+== Monitoring segment(s) ==
+loop for each segment window
+  SCH -> ADPT : fetch_metrics(platform_post_id, window)
+  ADPT --> SCH : {impressions, likes, comments,...}
+  SCH -> SYNC : ingest(MonitoringResult) [async enqueue]
+end
+
+ORCH <-- User : 타임라인/진행률 조회
+@enduml

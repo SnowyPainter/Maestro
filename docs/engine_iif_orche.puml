@@ -1,0 +1,73 @@
+@startuml
+title Engines ↔ Orchestrator Interactions (Service-Layer Centric)
+
+actor User as USER
+package "Presentation / BFF (읽기 전용)" as BFF {
+  [GET /bff/timeline]
+  [GET /bff/calendar]
+  [GET /bff/monitoring]
+  [GET /bff/trends]
+}
+
+rectangle "Orchestrator API (Service Layer = 단일 쓰기 창구)" as ORCH {
+  () "플래닝: POST /orchestrate" as EP_PLAN
+  () "지시사항 생성 요청: POST /actions/generate-brief" as EP_BRIEF_REQ
+  () "드래프트 생성: POST /actions/create-draft" as EP_DRAFT
+  () "스케줄 생성: POST /actions/create-schedule" as EP_SCHED
+  () "내부 이벤트: POST /internal/events/*" as EP_EVENTS
+}
+
+component "Injector\n(순수 로직)" as INJ
+component "Generator Worker\n(Celery)" as GEN
+cloud "LLMInterface\n(ainvoke)" as LLM
+component "Sniffer (Shared)\n공용 트렌드 인덱스" as SNIFF
+component "Synchro\n(개인화 임베딩/RAG)" as SYNC
+component "Scheduler\n(Celery Beat/Worker)" as SCH
+component "Adapter(s)\nThreads 등 플랫폼 I/O" as ADPT
+component "CoWorker\n(이메일 루프)" as COW
+database "DB (Postgres/pgvector)" as DB
+collections "Redis\n(broker/cache/idempotency)" as REDIS
+
+' 사용자와 읽기 경로
+USER --> BFF
+BFF ..> ORCH : 읽기 필요시 Orchestrator 컨텍스트 참조(선택)
+
+' 사용자 → 오케스트레이터 쓰기/행동
+USER --> EP_PLAN
+USER --> EP_BRIEF_REQ
+USER --> EP_DRAFT
+USER --> EP_SCHED
+
+' 오케스트레이터의 읽기 의존
+ORCH ..> SNIFF : 공용 트렌드 조회(READ)
+ORCH ..> SYNC : 개인화 컨텍스트/임베딩(READ)
+ORCH ..> ADPT : constraints(READ)
+
+' 플래닝(동기 LLM)
+EP_PLAN ..> LLM : plan 호출(짧고 동기)
+
+' 지시사항 생성(비동기)
+EP_BRIEF_REQ --> INJ : compose(persona+trends+constraints)
+INJ --> GEN : buildBriefTask.enqueue(brief/meta)
+GEN ..> LLM : ainvoke(지시사항 생성)
+GEN --> EP_EVENTS : /internal/events/brief-ready
+
+' 드래프트/스케줄/상태 전이 = 오케스트레이터만 DB write
+ORCH --> DB : 모든 도메인 write
+ORCH ..> REDIS
+
+' 스케줄 도래: 발행 및 모니터링
+SCH --> ADPT : publish()/fetch_metrics()
+ADPT --> EP_EVENTS : /internal/events/publish-done, /internal/events/metrics
+
+' 코워커: 트렌드 모니터링→메일→회신 드래프트
+COW ..> SNIFF : 공용 트렌드 pull
+COW ..> SYNC : (유사도/임계치 판단 - 선택)
+COW ..> ADPT : 활성 캠페인/주제 확인(READ)
+COW --> GEN : (필요 시) 지시사항 생성 파이프라인 재사용
+COW --> EP_EVENTS : /internal/events/draft-from-email
+
+' 오케스트레이터 이벤트 수신→검증→DB 반영
+EP_EVENTS --> ORCH
+
+@enduml

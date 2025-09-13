@@ -1,0 +1,44 @@
+@startuml
+title System Components & Interactions (No Daily GrowthLog)
+
+actor User
+rectangle "API / Orchestrator" as ORCH
+rectangle "LLMInterface\n(ainvoke)" as LLM
+rectangle "Injector\n(순수 로직)" as INJ
+rectangle "Generator\n(Celery Task)" as GEN
+rectangle "Sniffer (Shared)\n공용 트렌드 인덱스" as SNIFF
+rectangle "Synchro\n(개인화 임베딩/RAG)" as SYNC
+rectangle "Adapter(s)\nThreads 등" as ADPT
+rectangle "Scheduler\n(Celery Beat/Worker)" as SCH
+rectangle "CoWorker\n(이메일 루프/Playbook On-demand)" as COW
+database "DB (Postgres/pgvector)" as DB
+collections "Redis\n(broker/cache/idem)" as REDIS
+
+User --> ORCH : 요청(지시사항/저장/발행/조회 등)
+
+ORCH ..> SNIFF : 공용 트렌드 조회(READ)
+ORCH ..> SYNC : 개인화 컨텍스트/임베딩 조회(READ)
+ORCH ..> ADPT : constraints 조회(READ)
+ORCH --> INJ : persona + trends + playbook + constraints
+INJ --> GEN : brief/meta 전달 (task enqueue)
+GEN ..> LLM : ainvoke(지시사항 생성)
+GEN --> ORCH : 지시사항 JSON 반환
+
+ORCH --> DB : Draft/Metadata 저장
+ORCH --> SYNC : ingest 요청(임베딩 갱신, 비동기)
+
+ORCH --> SCH : 발행/모니터링 스케줄 생성
+SCH --> ADPT : publish()/fetch_metrics()
+ADPT --> SYNC : 모니터링 결과 ingest(비동기)
+
+ORCH --> COW : Playbook 생성/갱신 요청(On-demand)
+COW ..> SNIFF : 트렌드 참조(공용)
+COW ..> SYNC : 계정 컨텍스트 조회(선택)
+COW ..> ADPT : 활성 캠페인·주제 적합성 확인(READ)
+COW --> DB : Playbook 저장(계정 단위)
+COW --> User : 이메일 발송(조건 충족 시 1일 1회)
+
+ORCH ..> REDIS
+SCH ..> REDIS
+GEN ..> REDIS
+@enduml

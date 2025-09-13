@@ -1,0 +1,58 @@
+@startuml
+title Orchestrator API Surface (Public vs Internal) & Callers
+
+actor User as USER
+component "Generator Worker" as GEN
+component "Scheduler" as SCH
+component "Adapter(s)" as ADPT
+component "CoWorker" as COW
+component "BFF / 프론트엔드" as BFF
+
+package "Orchestrator API" as ORCH {
+  frame "Public - Actions (쓰기/행동)" {
+    [POST /orchestrate] as ORCH_PLAN
+    [POST /actions/generate-brief] as ORCH_BRIEF
+    [POST /actions/create-draft] as ORCH_DRAFT
+    [POST /actions/create-schedule] as ORCH_SCHED
+    [PATCH /actions/update-schedule] as ORCH_SCHED_UPD
+  }
+
+  frame "Public - Read (선택/BFF가 사용)" {
+    [GET /sniffer/index] as ORCH_SNIFF_READ
+    [GET /posts/:id] as ORCH_POST_READ
+    [GET /campaigns/:id] as ORCH_CAMP_READ
+  }
+
+  frame "Internal - Events (워커/외부시스템 → 사실 신고)" {
+    [POST /internal/events/brief-ready] as EV_BRIEF
+    [POST /internal/events/publish-done] as EV_PUB
+    [POST /internal/events/metrics] as EV_MET
+    [POST /internal/events/draft-from-email] as EV_MAIL
+  }
+}
+
+' 호출자 매핑
+USER --> ORCH_PLAN : 플래닝(동기 LLM)
+USER --> ORCH_BRIEF : 지시사항 생성(비동기 트리거)
+USER --> ORCH_DRAFT : 드래프트 생성
+USER --> ORCH_SCHED : 스케줄 생성
+USER --> ORCH_SCHED_UPD : 스케줄 수정
+
+BFF --> ORCH_SNIFF_READ
+BFF --> ORCH_POST_READ
+BFF --> ORCH_CAMP_READ
+
+GEN --> EV_BRIEF : 지시사항 생성 완료 보고
+SCH --> EV_PUB : 발행 완료/실패 보고
+SCH --> EV_MET : 모니터링 윈도우 메트릭 보고
+ADPT --> EV_PUB
+ADPT --> EV_MET
+COW --> EV_MAIL : 이메일 회신→드래프트 생성 요청
+
+note right of ORCH
+- 멱등성: X-Idempotency-Key 필수
+- 인증: 내부 이벤트는 서비스 토큰/HMAC 서명
+- 쓰기/상태 전이는 모두 Orchestrator 경유
+- 비용/레이트리밋/권한도 Orchestrator에서 집행
+end note
+@enduml

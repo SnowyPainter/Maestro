@@ -1,0 +1,45 @@
+@startuml
+title Context Propagation & Observability (End-to-End)
+
+actor User as USER
+rectangle "Orchestrator API\n(FastAPI)" as API
+queue "Celery Broker" as QUEUE
+component "Generator Worker" as GEN
+cloud "LLMInterface\n(ainvoke)" as LLM
+component "Scheduler Worker" as SCH
+component "Adapter(s)" as ADPT
+rectangle "Internal Events\n/ internal/events/*" as EVENTS
+database "DB" as DB
+collections "Metrics/Logs/Traces" as OBS
+
+' 1) API 요청 수신
+USER --> API : HTTP 요청\n(헤더: request_id, traceparent, idempotency_key)
+API --> OBS : request_started\n(컨텍스트 세팅)
+
+' 2) 읽기/검증 후 큐잉
+API --> QUEUE : task_enqueued\n(헤더로 컨텍스트 전파)
+
+' 3) 워커 실행
+QUEUE --> GEN : task_started\n(컨텍스트 복원)
+GEN --> LLM : ainvoke\n(컨텍스트 포함)
+LLM --> GEN : usage(토큰/비용)
+GEN --> OBS : llm_call\n(토큰/비용 누적)
+GEN --> EVENTS : brief-ready\n(내부 웹훅, 헤더에 컨텍스트 반영)
+
+' 4) 이벤트 인입→상태 반영
+EVENTS --> API : POST /internal/events/brief-ready\n(컨텍스트 재활용)
+API --> DB : 상태 전이(단일 창구)
+API --> OBS : event_ingested
+
+' 5) 스케줄·발행·모니터링
+API --> QUEUE : scheduler enqueue
+QUEUE --> SCH : task_started
+SCH --> ADPT : publish()/fetch_metrics()
+ADPT --> EVENTS : publish-done / metrics
+EVENTS --> API : 내부 이벤트 인입
+API --> DB : 반영
+API --> OBS : event_ingested
+
+' 6) 응답 요약
+API --> OBS : request_summary\n(응답코드, 지연, LLM 누적, 정책결과)
+@enduml
