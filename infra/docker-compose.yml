@@ -35,10 +35,10 @@ services:
       timeout: 3s
       retries: 30
 
-  tei-bge-m3-cpu:
+  tei-e5-multibase:
     image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8
-    container_name: maestro-tei-bge-m3-cpu
-    command: ["--model-id", "BAAI/bge-m3", "--port", "8080"]
+    container_name: maestro-tei-e5-multibase
+    command: ["--model-id", "intfloat/multilingual-e5-base", "--port", "8080"]
     ports: ["8080:8080"]
     volumes:
       - hf-cache:/data

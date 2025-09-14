@@ -18,22 +18,21 @@ from apps.backend.src.modules.trends.models import Trend, NewsItem  # type: igno
 # Pydantic 스키마 & 수집 함수
 from apps.backend.src.modules.trends.schemas import TrendItem
 from apps.backend.src.modules.trends import trends_google
-from apps.backend.src.services.embeddings import embed_texts_sync
 
 def _save_one(session, country: str, ti: TrendItem):
     trend = Trend(
-        country=country,
-        rank=ti.rank,
-        retrieved=datetime.fromisoformat(ti.retrieved),
-        title=ti.title,
-        approx_traffic=ti.approx_traffic,
-        link=ti.link,
-        pub_date=ti.pubDate,
-        picture=ti.picture,
-        picture_source=ti.picture_source,
-        news_item_raw=ti.news_item or None,
-        title_embedding=embed_texts_sync([ti.title]),
-    )
+         country=country,
+         rank=ti.rank,
+         retrieved=datetime.fromisoformat(ti.retrieved),
+         title=ti.title,
+         approx_traffic=ti.approx_traffic,
+         link=ti.link,
+         pub_date=ti.pubDate,
+         picture=ti.picture,
+         picture_source=ti.picture_source,
+         news_item_raw=ti.news_item or None,
+         title_embedding=None,  # 임베딩은 비동기로 처리
+     )
     if ti.news_items:
         for ni in ti.news_items:
             trend.news_items.append(
@@ -45,6 +44,8 @@ def _save_one(session, country: str, ti: TrendItem):
                 )
             )
     session.add(trend)
+    session.flush()
+    return trend.id
 
 @shared_task(name="apps.backend.src.workers.Sniffer.tasks.sniff_google_trends", queue="sniffer", bind=True, max_retries=3)
 def sniff_google_trends(self, country: str = "KR"):
@@ -60,17 +61,23 @@ def sniff_google_trends(self, country: str = "KR"):
         raise self.retry(exc=e, countdown=min(30 * (self.request.retries + 1), 120))
 
     saved = 0
+    trend_ids = []
     with SessionLocal() as session:
         for ti in resp.trends:
             try:
-                _save_one(session, resp.country, ti)
+                trend_id = _save_one(session, resp.country, ti)
                 session.commit()
                 saved += 1
+                trend_ids.append(trend_id)
             except IntegrityError:
                 session.rollback()  # 중복일 가능성 큼: 스킵
             except Exception:
                 session.rollback()
                 raise
+
+    from apps.backend.src.workers.Synchro.tasks import enqueue_trend_title_embedding
+    for trend_id in trend_ids:
+        enqueue_trend_title_embedding.delay(trend_id)
 
     # 캐시 리프레시
     try:

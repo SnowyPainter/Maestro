@@ -1,61 +1,52 @@
-import requests
+# apps/backend/src/modules/trends/trends_google.py
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from .schemas import GoogleTrendsResponse, TrendItem, NewsItem
+from apps.backend.src.services.http_clients import SYNC_FETCH, ASYNC_FETCH
+
+_NS = {"ht": "https://trends.google.com/trending/rss"}  # namespace
 
 def get_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
-    """
-    Google Trends 'Daily Search Trends' RSS를 읽어 DataFrame 반환
-    
-    Args:
-        country: ISO 3166-1 alpha-2 (KR, US, JP …)
-        max_items: 트렌드 항목 개수 제한
-    Returns:
-        GoogleTrendsResponse: 트렌드 데이터프레임
-    """
     url = f"https://trends.google.com/trending/rss?geo={country.upper()}"
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    
-    response = requests.get(url, headers=headers, timeout=(5, 30))
-    response.raise_for_status()
-    root = ET.fromstring(response.content)
+    # httpx 재사용 클라이언트 사용
+    resp = SYNC_FETCH.get(url)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.content)
     channel = root.find("channel")
     if channel is None:
         raise RuntimeError("채널 정보를 찾을 수 없습니다.")
-    
+
     trends = []
     for rank, item in enumerate(channel.findall("item")[:max_items], start=1):
-        # Get all available elements from the item
         item_data = {
             "rank": rank,
             "retrieved": datetime.now().isoformat(timespec="seconds"),
         }
+        # 평문 태그 수집
         for child in item:
-            tag_name = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+            tag = child.tag.split('}')[-1]
             if child.text:
-                item_data[tag_name] = child.text.strip()
-        
-        # Handle nested news items
+                item_data[tag] = child.text.strip()
+
+        # 뉴스 아이템 수집 (네임스페이스 사용)
         news_items = []
-        for news_item in item.findall(".//ht:news_item", {"ht": "https://trends.google.com/trending/rss"}):
+        for news in item.findall(".//ht:news_item", _NS):
             news_data = {}
-            for news_child in news_item:
-                news_tag = news_child.tag.split('}')[-1] if '}' in news_child.tag else news_child.tag
-                if news_child.text:
-                    news_data[news_tag] = news_child.text.strip()
-            if news_data:  # Only add if there's actual data
+            for ch in news:
+                ntag = ch.tag.split('}')[-1]
+                if ch.text:
+                    news_data[ntag] = ch.text.strip()
+            if news_data:
                 news_items.append(NewsItem(**news_data))
-        
         if news_items:
             item_data["news_items"] = news_items
-        
-        for attr_name, attr_value in item.attrib.items():
-            item_data[f"attr_{attr_name}"] = attr_value
 
-        if item_data["pubDate"]:
-            from email.utils import parsedate_to_datetime
-            parsed_date = parsedate_to_datetime(item_data["pubDate"])
-            item_data["pubDate"] = parsed_date.astimezone(timezone.utc).isoformat(timespec="seconds")
+        # pubDate → UTC ISO8601
+        if item_data.get("pubDate"):
+            dt = parsedate_to_datetime(item_data["pubDate"]).astimezone(timezone.utc)
+            item_data["pubDate"] = dt.isoformat(timespec="seconds")
 
         trends.append(TrendItem(**item_data))
 
@@ -64,5 +55,53 @@ def get_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
         max_items=max_items,
         retrieved_at=datetime.now().isoformat(timespec="seconds"),
         trends=trends,
-        total_count=len(trends)
+        total_count=len(trends),
+    )
+
+# 선택: 비동기 버전 (원하면 워커/라우터에서 await로 사용)
+async def aget_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
+    url = f"https://trends.google.com/trending/rss?geo={country.upper()}"
+    resp = await ASYNC_FETCH.get(url)
+    resp.raise_for_status()
+
+    root = ET.fromstring(resp.content)
+    channel = root.find("channel")
+    if channel is None:
+        raise RuntimeError("채널 정보를 찾을 수 없습니다.")
+
+    trends = []
+    for rank, item in enumerate(channel.findall("item")[:max_items], start=1):
+        item_data = {
+            "rank": rank,
+            "retrieved": datetime.now().isoformat(timespec="seconds"),
+        }
+        for child in item:
+            tag = child.tag.split('}')[-1]
+            if child.text:
+                item_data[tag] = child.text.strip()
+
+        news_items = []
+        for news in item.findall(".//ht:news_item", _NS):
+            news_data = {}
+            for ch in news:
+                ntag = ch.tag.split('}')[-1]
+                if ch.text:
+                    news_data[ntag] = ch.text.strip()
+            if news_data:
+                news_items.append(NewsItem(**news_data))
+        if news_items:
+            item_data["news_items"] = news_items
+
+        if item_data.get("pubDate"):
+            dt = parsedate_to_datetime(item_data["pubDate"]).astimezone(timezone.utc)
+            item_data["pubDate"] = dt.isoformat(timespec="seconds")
+
+        trends.append(TrendItem(**item_data))
+
+    return GoogleTrendsResponse(
+        country=country,
+        max_items=max_items,
+        retrieved_at=datetime.now().isoformat(timespec="seconds"),
+        trends=trends,
+        total_count=len(trends),
     )

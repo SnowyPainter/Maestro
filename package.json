@@ -12,7 +12,11 @@
     "dev:celery:beat": "celery -A apps.backend.src.core.celery_app:celery_app beat -l info",
     "dev:workers": "concurrently -n WRK,BEAT \"pnpm dev:celery:worker\" \"pnpm dev:celery:beat\"",
 
-    "dev:all": "pnpm infra:up && concurrently -k -n API,WRK,FE \"pnpm dev:backend\" \"pnpm dev:workers\" \"pnpm dev:frontend\"",
+    "workers:stop": "pkill -f \"celery.*apps\\.backend\\.src\\.core\\.celery_app:celery_app\" || true",
+    "workers:start": "pnpm dev:workers",
+    "workers:restart": "pnpm workers:stop && pnpm workers:start",
+
+    "dev:all": "pnpm infra:up && concurrently --no-auto-exit -n API,WRK,FE \"pnpm dev:backend\" \"pnpm dev:workers\" \"pnpm dev:frontend\"",
     "stop:all": "pnpm infra:down"
   },
   "devDependencies": {

@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 from datetime import timedelta
-
 import redis
 from celery import shared_task
 from sqlalchemy import create_engine, select, desc, text
@@ -11,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from apps.backend.src.core.config import settings
 from apps.backend.src.modules.trends.models import Trend  # type: ignore
-
+from apps.backend.src.services.embeddings import embed_texts_sync
 REDIS_URL = os.getenv("REDIS_URL", settings.CELERY_BROKER_URL)
 rds = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
@@ -74,3 +73,24 @@ def refresh_embeddings(country: str = "KR", limit: int = 500):
             )).all()
             await upsert_trend_embeddings(db, rows)
     asyncio.run(run())
+
+@shared_task(name="apps.backend.src.workers.Synchro.tasks.enqueue_trend_title_embedding",
+             queue="synchro", bind=True, max_retries=3, acks_late=True)
+def enqueue_trend_title_embedding(self, trend_id: int):
+    with SessionLocal() as session:
+        tr: Trend | None = session.get(Trend, trend_id)
+        if not tr:
+            return {"ok": False, "reason": "not_found"}
+
+        if not tr.title:  # 방어
+            return {"ok": False, "reason": "no_title"}
+
+        emb = embed_texts_sync([tr.title])
+        
+        if emb is None:
+            return {"ok": False, "reason": "embed_failed"}
+
+        tr.title_embedding = emb
+        session.add(tr)
+        session.commit()
+        return {"ok": True} 
