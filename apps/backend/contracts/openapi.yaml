@@ -3,12 +3,12 @@ info:
   title: Maestro Backend
   version: 0.1.0
 paths:
-  /auth/signup:
+  /api/auth/signup:
     post:
       tags:
       - auth
       summary: Signup
-      operationId: signup_auth_signup_post
+      operationId: signup_api_auth_signup_post
       requestBody:
         content:
           application/json:
@@ -28,12 +28,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /auth/login:
+  /api/auth/login:
     post:
       tags:
       - auth
       summary: Login
-      operationId: login_auth_login_post
+      operationId: login_api_auth_login_post
       requestBody:
         content:
           application/json:
@@ -53,12 +53,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /me:
+  /api/me:
     get:
       tags:
       - me
       summary: Me
-      operationId: me_me_get
+      operationId: me_api_me_get
       responses:
         '200':
           description: Successful Response
@@ -66,10 +66,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
-  /health:
+  /api/health:
     get:
       summary: Health
-      operationId: health_health_get
+      operationId: health_api_health_get
       responses:
         '200':
           description: Successful Response

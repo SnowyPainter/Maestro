@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "gen:api": "orval --config orval.config.ts",
     "gen:types": "openapi-typescript ../../apps/backend/contracts/openapi.yaml -o src/lib/types/api.ts",
-    "gen:api:watch": "chokidar ../../apps/backend/contracts/openapi.yaml -c \"pnpm gen:api && pnpm gen:types\"",
+    "gen:api:watch": "chokidar ../../apps/backend/contracts/openapi.yaml --initial -c \"pnpm gen:api && pnpm gen:types\"",
     "dev:with-api": "concurrently -k -p \"[{name}]\" -n FE,GEN \"pnpm dev\" \"pnpm gen:api:watch\""
   },
   "dependencies": {
