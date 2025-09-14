@@ -1,3 +1,5 @@
+import { useSessionStore } from '@/store/session';
+
 export type ApiFetchOptions = RequestInit & { baseUrl?: string }
 
 const BASE = import.meta.env.VITE_API_BASE ?? '/api'
@@ -18,7 +20,7 @@ export async function apiFetch<T = unknown>(
   })
 
   // JWT + 공통 헤더
-  const token = localStorage.getItem('jwt') || ''
+  const token = useSessionStore.getState().token || '';
   if (token) headers.set('Authorization', `Bearer ${token}`)
   headers.set('X-Request-ID', crypto.randomUUID())
   if (options.method && /POST|PUT|PATCH|DELETE/i.test(options.method)) {

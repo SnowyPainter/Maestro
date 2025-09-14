@@ -36,9 +36,8 @@ export function SignupPage() {
         navigate('/login');
       },
       onError: (error) => {
-        // TODO: Improve error handling to show specific messages
         toast.error('Something went wrong', {
-          description: error.message || 'Could not create your account. Please try again.',
+          description: error.detail?.[0]?.msg || 'Could not create your account. Please try again.',
         });
       }
     });

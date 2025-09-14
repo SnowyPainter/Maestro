@@ -1,5 +1,14 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { MoreHorizontal } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function ChatPage() {
   const [messages, setMessages] = useState<string[]>([]);
@@ -7,7 +16,24 @@ export function ChatPage() {
   return (
     <div className="grid grid-cols-[240px_1fr_280px] h-screen">
       {/* Left Nav */}
-      <aside className="bg-neutral-100 p-4">Nav</aside>
+      <aside className="bg-neutral-100 p-4 flex flex-col">
+        <div className="flex-1">Nav</div>
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start">
+                <MoreHorizontal className="w-4 h-4 mr-2" />
+                <span>Settings</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to="/settings">Go to Settings</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
 
       {/* Main Chat Stream */}
       <main className="flex flex-col">

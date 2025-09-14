@@ -6,6 +6,8 @@ import { LoginPage } from '@/pages/Auth/LoginPage';
 import { SignupPage } from '@/pages/Auth/SignupPage';
 import { ChatPage } from '@/pages/ChatPage/ChatPage';
 
+import { SettingsPage } from '@/pages/SettingsPage/SettingsPage';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -26,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: 'chat',
         element: <ChatPage />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
       },
     ],
   },
