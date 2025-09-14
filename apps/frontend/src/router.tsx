@@ -8,6 +8,8 @@ import { ChatPage } from '@/pages/ChatPage/ChatPage';
 
 import { SettingsPage } from '@/pages/SettingsPage/SettingsPage';
 
+import { ProtectedRoute } from '@/components/Auth/ProtectedRoute';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -26,13 +28,18 @@ const router = createBrowserRouter([
         element: <SignupPage />,
       },
       {
-        path: 'chat',
-        element: <ChatPage />,
-      },
-      {
-        path: 'settings',
-        element: <SettingsPage />,
-      },
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: 'chat',
+            element: <ChatPage />,
+          },
+          {
+            path: 'settings',
+            element: <SettingsPage />,
+          },
+        ]
+      }
     ],
   },
 ]);
