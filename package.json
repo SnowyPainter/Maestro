@@ -1,0 +1,10 @@
+{
+    "scripts": {
+      "dev:backend": "uvicorn apps.backend.src.main:app --reload --host 0.0.0.0 --port 8000",
+      "dev:frontend": "pnpm --filter ./apps/frontend dev:with-api",
+      "dev:all": "concurrently -k -n BE,FE \"pnpm dev:backend\" \"pnpm dev:frontend\""
+    },
+    "devDependencies": {
+      "concurrently": "^8.2.2"
+    }
+  }
