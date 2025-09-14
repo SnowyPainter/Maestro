@@ -2,7 +2,21 @@
     "scripts": {
       "dev:backend": "uvicorn apps.backend.src.main:app --reload --host 0.0.0.0 --port 8000",
       "dev:frontend": "pnpm --filter ./apps/frontend dev:with-api",
-      "dev:all": "concurrently -k -n BE,FE \"pnpm dev:backend\" \"pnpm dev:frontend\""
+      "dev:all": "concurrently -k -n BE,FE \"pnpm dev:backend\" \"pnpm dev:frontend\"",
+
+      "//": "------ Redis ------",
+      "be:redis:up": "docker start redis || docker run -d --name redis -p 6379:6379 redis:7",
+      "be:redis:down": "docker stop redis || true",
+      "be:redis:logs": "docker logs -f redis",
+
+      "//1": "------ Celery (from apps/backend) ------",
+      "be:celery:worker": "bash -lc \"cd apps/backend && PYTHONPATH=src celery -A src.celery_app.celery_app worker -Q sniff -l info --concurrency 2\"",
+      "be:celery:beat": "bash -lc \"cd apps/backend && PYTHONPATH=src celery -A src.celery_app.celery_app beat -l info\"",
+
+      "//2": "------ Combos ------",
+      "be:sniff:up": "concurrently -k -n REDIS,CELERY \"pnpm be:redis:up\" \"pnpm be:celery:worker\"",
+      "be:sniff:all": "concurrently -k -n API,REDIS,CELERY \"pnpm dev:backend\" \"pnpm be:redis:up\" \"pnpm be:celery:worker\"",
+      "be:sniff:all+beat": "concurrently -k -n API,REDIS,CELERY,BEAT \"pnpm dev:backend\" \"pnpm be:redis:up\" \"pnpm be:celery:worker\" \"pnpm be:celery:beat\""
     },
     "devDependencies": {
       "concurrently": "^8.2.2"
