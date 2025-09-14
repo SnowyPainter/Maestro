@@ -178,3 +178,11 @@ components:
       - msg
       - type
       title: ValidationError
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+security:
+- HTTPBearer: []
+servers:
+- url: /api

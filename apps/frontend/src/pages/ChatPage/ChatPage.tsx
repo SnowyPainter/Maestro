@@ -1,8 +1,7 @@
-// src/pages/ChatPage/ChatPage.tsx
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function ChatPage() {
+export function ChatPage() {
   const [messages, setMessages] = useState<string[]>([]);
 
   return (

@@ -12,7 +12,8 @@ async def create_user(db: AsyncSession, email: str, password: str, display_name:
     exists = await get_user_by_email(db, email)
     if exists:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already exists")
-    user = User(email=email, hashed_password=hash_password(password), display_name=display_name)
+    user = User(email=email, hashed_password=hash_password(password), display_name=display_name,
+                is_active=True, role="user")
     db.add(user)
     await db.commit()
     await db.refresh(user)

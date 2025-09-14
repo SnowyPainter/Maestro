@@ -1,14 +1,11 @@
-// src/App.tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ChatPage from "./pages/ChatPage/ChatPage";
+import { AppRouter } from '@/router';
+import { AppProviders } from '@/app/providers';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<ChatPage />} />
-      </Routes>
-    </BrowserRouter>
+    <AppProviders>
+      <AppRouter />
+    </AppProviders>
   );
 }
 

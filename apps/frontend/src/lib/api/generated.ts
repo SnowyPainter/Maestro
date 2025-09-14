@@ -9,15 +9,21 @@ import {
   useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
+  QueryClient,
   QueryFunction,
   QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
+import { apiFetch } from './fetcher';
 export interface HTTPValidationError {
   detail?: ValidationError[];
 }
@@ -61,64 +67,39 @@ export interface ValidationError {
   type: string;
 }
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
 /**
  * @summary Signup
  */
-export type signupApiAuthSignupPostResponse201 = {
-  data: UserResponse
-  status: 201
-}
-
-export type signupApiAuthSignupPostResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-    
-export type signupApiAuthSignupPostResponseComposite = signupApiAuthSignupPostResponse201 | signupApiAuthSignupPostResponse422;
-    
-export type signupApiAuthSignupPostResponse = signupApiAuthSignupPostResponseComposite & {
-  headers: Headers;
-}
-
-export const getSignupApiAuthSignupPostUrl = () => {
-
-
+export const signupApiAuthSignupPost = (
+    signupRequest: SignupRequest,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<UserResponse>(
+      {url: `/api/auth/signup`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: signupRequest, signal
+    },
+      options);
+    }
   
-
-  return `http://localhost:8000/api/auth/signup`
-}
-
-export const signupApiAuthSignupPost = async (signupRequest: SignupRequest, options?: RequestInit): Promise<signupApiAuthSignupPostResponse> => {
-  
-  const res = await fetch(getSignupApiAuthSignupPostUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      signupRequest,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: signupApiAuthSignupPostResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as signupApiAuthSignupPostResponse
-}
-
-
 
 
 export const getSignupApiAuthSignupPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof signupApiAuthSignupPost>>, TError,{data: SignupRequest}, TContext> => {
 
 const mutationKey = ['signupApiAuthSignupPost'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -126,7 +107,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof signupApiAuthSignupPost>>, {data: SignupRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  signupApiAuthSignupPost(data,fetchOptions)
+          return  signupApiAuthSignupPost(data,requestOptions)
         }
 
         
@@ -142,8 +123,8 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Signup
  */
 export const useSignupApiAuthSignupPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, fetch?: RequestInit}
- ): UseMutationResult<
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof signupApiAuthSignupPost>>,
         TError,
         {data: SignupRequest},
@@ -152,67 +133,38 @@ export const useSignupApiAuthSignupPost = <TError = HTTPValidationError,
 
       const mutationOptions = getSignupApiAuthSignupPostMutationOptions(options);
 
-      return useMutation(mutationOptions );
+      return useMutation(mutationOptions , queryClient);
     }
     
 /**
  * @summary Login
  */
-export type loginApiAuthLoginPostResponse200 = {
-  data: TokenResponse
-  status: 200
-}
-
-export type loginApiAuthLoginPostResponse422 = {
-  data: HTTPValidationError
-  status: 422
-}
-    
-export type loginApiAuthLoginPostResponseComposite = loginApiAuthLoginPostResponse200 | loginApiAuthLoginPostResponse422;
-    
-export type loginApiAuthLoginPostResponse = loginApiAuthLoginPostResponseComposite & {
-  headers: Headers;
-}
-
-export const getLoginApiAuthLoginPostUrl = () => {
-
-
+export const loginApiAuthLoginPost = (
+    loginRequest: LoginRequest,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TokenResponse>(
+      {url: `/api/auth/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginRequest, signal
+    },
+      options);
+    }
   
-
-  return `http://localhost:8000/api/auth/login`
-}
-
-export const loginApiAuthLoginPost = async (loginRequest: LoginRequest, options?: RequestInit): Promise<loginApiAuthLoginPostResponse> => {
-  
-  const res = await fetch(getLoginApiAuthLoginPostUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginRequest,)
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: loginApiAuthLoginPostResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as loginApiAuthLoginPostResponse
-}
-
-
 
 
 export const getLoginApiAuthLoginPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof loginApiAuthLoginPost>>, TError,{data: LoginRequest}, TContext> => {
 
 const mutationKey = ['loginApiAuthLoginPost'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -220,7 +172,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginApiAuthLoginPost>>, {data: LoginRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  loginApiAuthLoginPost(data,fetchOptions)
+          return  loginApiAuthLoginPost(data,requestOptions)
         }
 
         
@@ -236,8 +188,8 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
  * @summary Login
  */
 export const useLoginApiAuthLoginPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, fetch?: RequestInit}
- ): UseMutationResult<
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof loginApiAuthLoginPost>>,
         TError,
         {data: LoginRequest},
@@ -246,89 +198,88 @@ export const useLoginApiAuthLoginPost = <TError = HTTPValidationError,
 
       const mutationOptions = getLoginApiAuthLoginPostMutationOptions(options);
 
-      return useMutation(mutationOptions );
+      return useMutation(mutationOptions , queryClient);
     }
     
 /**
  * @summary Me
  */
-export type meApiMeGetResponse200 = {
-  data: UserResponse
-  status: 200
-}
+export const meApiMeGet = (
     
-export type meApiMeGetResponseComposite = meApiMeGetResponse200;
-    
-export type meApiMeGetResponse = meApiMeGetResponseComposite & {
-  headers: Headers;
-}
-
-export const getMeApiMeGetUrl = () => {
-
-
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<UserResponse>(
+      {url: `/api/me`, method: 'GET', signal
+    },
+      options);
+    }
   
-
-  return `http://localhost:8000/api/me`
-}
-
-export const meApiMeGet = async ( options?: RequestInit): Promise<meApiMeGetResponse> => {
-  
-  const res = await fetch(getMeApiMeGetUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: meApiMeGetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as meApiMeGetResponse
-}
-
-
 
 export const getMeApiMeGetQueryKey = () => {
-    return [`http://localhost:8000/api/me`] as const;
+    return [`/api/me`] as const;
     }
 
     
-export const getMeApiMeGetQueryOptions = <TData = Awaited<ReturnType<typeof meApiMeGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData>, fetch?: RequestInit}
+export const getMeApiMeGetQueryOptions = <TData = Awaited<ReturnType<typeof meApiMeGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getMeApiMeGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof meApiMeGet>>> = ({ signal }) => meApiMeGet({ signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof meApiMeGet>>> = ({ signal }) => meApiMeGet(requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type MeApiMeGetQueryResult = NonNullable<Awaited<ReturnType<typeof meApiMeGet>>>
 export type MeApiMeGetQueryError = unknown
 
 
+export function useMeApiMeGet<TData = Awaited<ReturnType<typeof meApiMeGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof meApiMeGet>>,
+          TError,
+          Awaited<ReturnType<typeof meApiMeGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMeApiMeGet<TData = Awaited<ReturnType<typeof meApiMeGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof meApiMeGet>>,
+          TError,
+          Awaited<ReturnType<typeof meApiMeGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMeApiMeGet<TData = Awaited<ReturnType<typeof meApiMeGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Me
  */
 
 export function useMeApiMeGet<TData = Awaited<ReturnType<typeof meApiMeGet>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData>, fetch?: RequestInit}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meApiMeGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getMeApiMeGetQueryOptions(options)
 
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   query.queryKey = queryOptions.queryKey ;
 
@@ -341,83 +292,82 @@ export function useMeApiMeGet<TData = Awaited<ReturnType<typeof meApiMeGet>>, TE
 /**
  * @summary Health
  */
-export type healthApiHealthGetResponse200 = {
-  data: unknown
-  status: 200
-}
+export const healthApiHealthGet = (
     
-export type healthApiHealthGetResponseComposite = healthApiHealthGetResponse200;
-    
-export type healthApiHealthGetResponse = healthApiHealthGetResponseComposite & {
-  headers: Headers;
-}
-
-export const getHealthApiHealthGetUrl = () => {
-
-
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<unknown>(
+      {url: `/api/health`, method: 'GET', signal
+    },
+      options);
+    }
   
-
-  return `http://localhost:8000/api/health`
-}
-
-export const healthApiHealthGet = async ( options?: RequestInit): Promise<healthApiHealthGetResponse> => {
-  
-  const res = await fetch(getHealthApiHealthGetUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text()
-  const data: healthApiHealthGetResponse['data'] = body ? JSON.parse(body) : {}
-
-  return { data, status: res.status, headers: res.headers } as healthApiHealthGetResponse
-}
-
-
 
 export const getHealthApiHealthGetQueryKey = () => {
-    return [`http://localhost:8000/api/health`] as const;
+    return [`/api/health`] as const;
     }
 
     
-export const getHealthApiHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthApiHealthGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData>, fetch?: RequestInit}
+export const getHealthApiHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthApiHealthGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getHealthApiHealthGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthApiHealthGet>>> = ({ signal }) => healthApiHealthGet({ signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthApiHealthGet>>> = ({ signal }) => healthApiHealthGet(requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type HealthApiHealthGetQueryResult = NonNullable<Awaited<ReturnType<typeof healthApiHealthGet>>>
 export type HealthApiHealthGetQueryError = unknown
 
 
+export function useHealthApiHealthGet<TData = Awaited<ReturnType<typeof healthApiHealthGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof healthApiHealthGet>>,
+          TError,
+          Awaited<ReturnType<typeof healthApiHealthGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealthApiHealthGet<TData = Awaited<ReturnType<typeof healthApiHealthGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof healthApiHealthGet>>,
+          TError,
+          Awaited<ReturnType<typeof healthApiHealthGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealthApiHealthGet<TData = Awaited<ReturnType<typeof healthApiHealthGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Health
  */
 
 export function useHealthApiHealthGet<TData = Awaited<ReturnType<typeof healthApiHealthGet>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData>, fetch?: RequestInit}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthApiHealthGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getHealthApiHealthGetQueryOptions(options)
 
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   query.queryKey = queryOptions.queryKey ;
 
