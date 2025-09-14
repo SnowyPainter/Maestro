@@ -2,10 +2,15 @@ from fastapi import FastAPI, APIRouter
 from apps.backend.src.core.middleware import ContextMiddleware
 from apps.backend.src.orchestrator.auth_router import router as auth_router
 from apps.backend.src.bff.me_router import router as me_router
+from apps.backend.src.bff.trends_router import router as trends_router
 from apps.backend.src.core.config import settings
 from apps.backend.src.core.db import engine, Base
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
+from apps.backend.src.modules.users.models import User
+from apps.backend.src.modules.trends.models import Trend, NewsItem
 
 PRJ_RT = Path(__file__).parent.parent
 
@@ -24,6 +29,7 @@ app.add_middleware(
 app.add_middleware(ContextMiddleware)
 
 # 라우터 묶기
+api.include_router(trends_router)
 api.include_router(auth_router)
 api.include_router(me_router)
 
@@ -71,8 +77,7 @@ async def dump_openapi():
     with (contracts_dir / "openapi.yaml").open("w", encoding="utf-8") as f:
         yaml.safe_dump(schema, f, sort_keys=False, allow_unicode=True)
 
-# 임시 테이블 생성(알레믹 전용)
-@app.on_event("startup")
-async def on_startup():
+    # 2) pgvector 확장 생성 -> 테이블 생성
     async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)

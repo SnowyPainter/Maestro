@@ -1,54 +1,71 @@
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+from __future__ import annotations
 
-class NewsItem(BaseModel):
-    """개별 뉴스 아이템 스키마"""
-    news_item_title: Optional[str] = None
-    news_item_url: Optional[str] = None
-    news_item_picture: Optional[str] = None
-    news_item_source: Optional[str] = None
+from datetime import datetime
+from typing import Optional, List
 
-class TrendItem(BaseModel):
-    """Google Trends 개별 트렌드 아이템 스키마"""
-    rank: int = Field(..., description="트렌드 순위")
-    retrieved: str = Field(..., description="데이터 수집 시각 (ISO format)")
-    title: str = Field(..., description="트렌드 키워드")
-    approx_traffic: Optional[str] = Field(None, description="대략적인 트래픽 (예: '200+', '1000+')")
-    link: Optional[str] = Field(None, description="Google Trends 링크")
-    pubDate: Optional[str] = Field(None, description="발행 날짜")
-    picture: Optional[str] = Field(None, description="대표 이미지 URL")
-    picture_source: Optional[str] = Field(None, description="이미지 출처")
-    news_item: Optional[str] = Field(None, description="뉴스 아이템 (보통 빈 문자열)")
-    news_items: Optional[List[NewsItem]] = Field(None, description="관련 뉴스 아이템 목록")
-    
-    # 추가 속성들을 위한 필드 (XML 속성이나 기타 필드)
-    class Config:
-        extra = "allow"  # 추가 필드 허용
+from sqlalchemy import (
+    String, Integer, DateTime, Text, ForeignKey, UniqueConstraint, Index, func
+)
+from sqlalchemy.orm import (
+    DeclarativeBase, Mapped, mapped_column, relationship
+)
+from pgvector.sqlalchemy import Vector
 
-class GoogleTrendsResponse(BaseModel):
-    """Google Trends API 응답 전체 스키마"""
-    country: str = Field(..., description="국가 코드 (예: KR, US)")
-    max_items: int = Field(..., description="요청한 최대 아이템 수")
-    retrieved_at: str = Field(..., description="전체 데이터 수집 시각")
-    trends: List[TrendItem] = Field(..., description="트렌드 아이템 목록")
-    total_count: int = Field(..., description="실제 반환된 트렌드 수")
-    
-    def pretty_print(self) -> str:
-        """예쁘게 포맷된 문자열로 트렌드 데이터를 출력하는 헬퍼 메서드"""
-        lines = []
-        lines.append(f"Google Trends for {self.country}")
-        lines.append(f"Retrieved at: {self.retrieved_at}")
-        lines.append(f"Total trends: {self.total_count}/{self.max_items}")
-        lines.append("=" * 50)
-        
-        for trend in self.trends:
-            lines.append(f"#{trend.rank:2d} {trend.title}")
-            if trend.approx_traffic:
-                lines.append(f"     Traffic: {trend.approx_traffic}")
-            if trend.pubDate:
-                lines.append(f"     Published: {trend.pubDate}")
-            if trend.news_items:
-                lines.append(f"     Related news: {len(trend.news_items)} items")
-            lines.append("")
-        
-        return "\n".join(lines)
+from apps.backend.src.core.db import Base
+from apps.backend.src.core.config import settings
+
+class Trend(Base):
+    __tablename__ = "trends"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # 수집 메타
+    country: Mapped[str] = mapped_column(String(8), index=True)           # 예: "KR", "US"
+    retrieved: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, default=func.now())
+    rank: Mapped[int] = mapped_column(Integer, index=True)
+
+    # 본문
+    title: Mapped[str] = mapped_column(String(512), index=True)
+    approx_traffic: Mapped[Optional[str]] = mapped_column(String(64))
+    link: Mapped[Optional[str]] = mapped_column(Text)
+    pub_date: Mapped[Optional[str]] = mapped_column(String(64))            # 원문이 string이라 string 유지
+    picture: Mapped[Optional[str]] = mapped_column(Text)
+    picture_source: Mapped[Optional[str]] = mapped_column(Text)
+    news_item_raw: Mapped[Optional[str]] = mapped_column(Text)
+
+    # 벡터 검색(임베딩 차원은 Alembic에서 고정: vector(EMBED_DIM))
+    title_embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
+
+    # 관계
+    news_items: Mapped[List["NewsItem"]] = relationship(
+        back_populates="trend", cascade="all, delete-orphan", lazy="selectin"
+    )
+
+    __table_args__ = (
+        # 같은 시각 같은 국가에서 동일 키워드는 중복 방지
+        UniqueConstraint("country", "retrieved", "title", name="uq_trend_country_retrieved_title"),
+        # 정렬/조회 자주 쓰는 조합 인덱스
+        Index("ix_trends_country_retrieved_rank", "country", "retrieved", "rank"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Trend id={self.id} {self.country} #{self.rank} '{self.title[:24]}' @ {self.retrieved}>"
+
+# ────────────────────────────────────────────────────────────────────────────────
+# NewsItem: 트렌드에 딸린 관련 뉴스
+# ────────────────────────────────────────────────────────────────────────────────
+class NewsItem(Base):
+    __tablename__ = "trend_news_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    trend_id: Mapped[int] = mapped_column(ForeignKey("trends.id", ondelete="CASCADE"), index=True)
+
+    title: Mapped[Optional[str]] = mapped_column(Text)
+    url: Mapped[Optional[str]] = mapped_column(Text)
+    picture: Mapped[Optional[str]] = mapped_column(Text)
+    source: Mapped[Optional[str]] = mapped_column(Text)
+
+    trend: Mapped[Trend] = relationship(back_populates="news_items")
+
+    def __repr__(self) -> str:
+        return f"<NewsItem id={self.id} trend_id={self.trend_id} title='{(self.title or '')[:24]}'>"

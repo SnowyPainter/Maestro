@@ -1,7 +1,7 @@
 from modules.trends.trends_google import get_daily_trends
 
 def test_get_daily_trends():
-    trends = get_daily_trends("KR")
+    trends = get_daily_trends("HK")
     assert trends is not None
     assert trends.total_count > 0
     assert trends.trends is not None

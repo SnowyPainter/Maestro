@@ -1,23 +1,80 @@
-from pydantic_settings import BaseSettings
-from pathlib import Path
+from __future__ import annotations
 
-BACKEND_DIR = Path(__file__).resolve().parents[2]  # .../apps/backend
-DB_FILE = BACKEND_DIR / "dev.db"                   # .../apps/backend/dev.db
-DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+from pathlib import Path
+from typing import Optional
+
+from pydantic import Field, computed_field, model_validator
+from pydantic_settings import BaseSettings
+
+# 프로젝트 루트 기준 경로 (apps/backend)
+BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 class Settings(BaseSettings):
+    # ----- App -----
     APP_NAME: str = "Maestro Backend"
     ENV: str = "dev"
-    DATABASE_URL: str = f"sqlite+aiosqlite:///{DB_FILE.as_posix()}"
+
+    # ----- JWT -----
     JWT_SECRET: str = "change-me-in-env"
     JWT_ALG: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 24
 
+    # ----- Redis / Celery -----
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    TIMEZONE: str = "Asia/Seoul"
+
+    # ----- Postgres 구성 옵션 -----
+    # 1) DATABASE_URL을 직접 주면 그대로 사용 (권장: async URL)
+    # 2) 없으면 POSTGRES_* 값으로 async/sync URL 자동 생성
+    DATABASE_URL: Optional[str] = None  # e.g. postgresql+asyncpg://user:pass@host:5432/db
+
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_DB: str = "maestro"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+
+    EMBED_PROVIDER_URL: str = "http://localhost:8080/embeddings"  # TEI 등
+    EMBED_DIM: int = 1024  # bge-m3=1024, e5/multilingual-base=768, MiniLM=384
+    EMBED_NORMALIZE: bool = True
+
+    # 내부적으로 sync URL도 필요할 수 있음 (예: Alembic 마이그레이션)
+    _ASYNC_DRIVER: str = "postgresql+asyncpg"
+    _SYNC_DRIVER: str = "postgresql+psycopg2"
+
+    TRENDS_COUNTRIES: str = "US,HK" #중국 시장은 없음. HK 홍콩
+    TRENDS_INTERVAL_MINUTES: int = 15
+    TRENDS_MAX_ITEMS: int = 20
+
+    @model_validator(mode="after")
+    def _fill_database_urls(self) -> "Settings":
+        # DATABASE_URL이 주어지지 않았다면 POSTGRES_*로 async URL 생성
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = (
+                f"{self._ASYNC_DRIVER}://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            )
+        return self
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def SYNC_DATABASE_URL(self) -> str:
+        """
+        동기 드라이버 URL (Alembic 등에서 유용)
+        """
+        if self.DATABASE_URL and self.DATABASE_URL.startswith("postgresql+asyncpg://"):
+            # async → sync로 드라이버만 치환
+            return self.DATABASE_URL.replace("postgresql+asyncpg", self._SYNC_DRIVER, 1)
+
+        # 사용자가 다른 async 드라이버를 썼다면 POSTGRES_*로 안전하게 재조립
+        return (
+            f"{self._SYNC_DRIVER}://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
 
     class Config:
         env_file = BACKEND_DIR / ".env"
-        extra = "allow"  # Allow extra fields from environment variables
+        extra = "allow"  # 알 수 없는 환경변수도 허용
 
 settings = Settings()

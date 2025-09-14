@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: maestro-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  flower:
+    image: mher/flower:1.2
+    command: ["celery", "--broker=redis://redis:6379/0", "flower", "--port=5555"]
+    ports: ["5555:5555"]
+    depends_on: [redis]
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: maestro-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=maestro
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d maestro"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  tei-bge-m3-cpu:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8
+    container_name: maestro-tei-bge-m3-cpu
+    command: ["--model-id", "BAAI/bge-m3", "--port", "8080"]
+    ports: ["8080:8080"]
+    volumes:
+      - hf-cache:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  hf-cache:

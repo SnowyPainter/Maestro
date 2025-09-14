@@ -3,6 +3,57 @@ info:
   title: Maestro Backend
   version: 0.1.0
 paths:
+  /api/trends:
+    get:
+      tags:
+      - trends
+      summary: List Trends
+      description: 'q 없으면: Redis 캐시 → DB fallback
+
+        q 있으면: pgvector 유사도 검색(<-> 연산자)'
+      operationId: list_trends_api_trends_get
+      parameters:
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+          description: 국가 코드
+          default: KR
+          title: Country
+        description: 국가 코드
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 키워드(있으면 벡터 유사검색)
+          title: Q
+        description: 키워드(있으면 벡터 유사검색)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendsListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/auth/signup:
     post:
       tags:
@@ -101,6 +152,31 @@ components:
       - email
       - password
       title: LoginRequest
+    NewsItem:
+      properties:
+        news_item_title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: News Item Title
+        news_item_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: News Item Url
+        news_item_picture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: News Item Picture
+        news_item_source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: News Item Source
+      type: object
+      title: NewsItem
+      description: 개별 뉴스 아이템 스키마
     SignupRequest:
       properties:
         email:
@@ -138,6 +214,104 @@ components:
       - access_token
       - user
       title: TokenResponse
+    TrendItem:
+      properties:
+        rank:
+          type: integer
+          title: Rank
+          description: 트렌드 순위
+        retrieved:
+          type: string
+          title: Retrieved
+          description: 데이터 수집 시각 (ISO format)
+        title:
+          type: string
+          title: Title
+          description: 트렌드 키워드
+        approx_traffic:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Approx Traffic
+          description: '대략적인 트래픽 (예: ''200+'', ''1000+'')'
+        link:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Link
+          description: Google Trends 링크
+        pubDate:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Pubdate
+          description: 발행 날짜
+        picture:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Picture
+          description: 대표 이미지 URL
+        picture_source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Picture Source
+          description: 이미지 출처
+        news_item:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: News Item
+          description: 뉴스 아이템 (보통 빈 문자열)
+        news_items:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NewsItem'
+            type: array
+          - type: 'null'
+          title: News Items
+          description: 관련 뉴스 아이템 목록
+      additionalProperties: true
+      type: object
+      required:
+      - rank
+      - retrieved
+      - title
+      title: TrendItem
+      description: Google Trends 개별 트렌드 아이템 스키마
+    TrendsListResponse:
+      properties:
+        country:
+          type: string
+          title: Country
+          description: '국가 코드 (예: KR, US)'
+        source:
+          type: string
+          enum:
+          - cache
+          - db
+          - vector
+          title: Source
+          description: '데이터 소스 (예: cache, db, vector)'
+        query:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Query
+          description: 키워드 (있으면 벡터 유사검색)
+        items:
+          items:
+            $ref: '#/components/schemas/TrendItem'
+          type: array
+          title: Items
+          description: 트렌드 아이템 목록
+      type: object
+      required:
+      - country
+      - source
+      - items
+      title: TrendsListResponse
     UserResponse:
       properties:
         id:

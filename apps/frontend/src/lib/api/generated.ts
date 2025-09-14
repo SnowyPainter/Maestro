@@ -33,6 +33,24 @@ export interface LoginRequest {
   password: string;
 }
 
+export type NewsItemNewsItemTitle = string | null;
+
+export type NewsItemNewsItemUrl = string | null;
+
+export type NewsItemNewsItemPicture = string | null;
+
+export type NewsItemNewsItemSource = string | null;
+
+/**
+ * 개별 뉴스 아이템 스키마
+ */
+export interface NewsItem {
+  news_item_title?: NewsItemNewsItemTitle;
+  news_item_url?: NewsItemNewsItemUrl;
+  news_item_picture?: NewsItemNewsItemPicture;
+  news_item_source?: NewsItemNewsItemSource;
+}
+
 export type SignupRequestDisplayName = string | null;
 
 export interface SignupRequest {
@@ -51,6 +69,97 @@ export interface TokenResponse {
   user: UserResponse;
 }
 
+/**
+ * 대략적인 트래픽 (예: '200+', '1000+')
+ */
+export type TrendItemApproxTraffic = string | null;
+
+/**
+ * Google Trends 링크
+ */
+export type TrendItemLink = string | null;
+
+/**
+ * 발행 날짜
+ */
+export type TrendItemPubDate = string | null;
+
+/**
+ * 대표 이미지 URL
+ */
+export type TrendItemPicture = string | null;
+
+/**
+ * 이미지 출처
+ */
+export type TrendItemPictureSource = string | null;
+
+/**
+ * 뉴스 아이템 (보통 빈 문자열)
+ */
+export type TrendItemNewsItem = string | null;
+
+/**
+ * 관련 뉴스 아이템 목록
+ */
+export type TrendItemNewsItems = NewsItem[] | null;
+
+/**
+ * Google Trends 개별 트렌드 아이템 스키마
+ */
+export interface TrendItem {
+  /** 트렌드 순위 */
+  rank: number;
+  /** 데이터 수집 시각 (ISO format) */
+  retrieved: string;
+  /** 트렌드 키워드 */
+  title: string;
+  /** 대략적인 트래픽 (예: '200+', '1000+') */
+  approx_traffic?: TrendItemApproxTraffic;
+  /** Google Trends 링크 */
+  link?: TrendItemLink;
+  /** 발행 날짜 */
+  pubDate?: TrendItemPubDate;
+  /** 대표 이미지 URL */
+  picture?: TrendItemPicture;
+  /** 이미지 출처 */
+  picture_source?: TrendItemPictureSource;
+  /** 뉴스 아이템 (보통 빈 문자열) */
+  news_item?: TrendItemNewsItem;
+  /** 관련 뉴스 아이템 목록 */
+  news_items?: TrendItemNewsItems;
+  [key: string]: unknown;
+ }
+
+/**
+ * 데이터 소스 (예: cache, db, vector)
+ */
+export type TrendsListResponseSource = typeof TrendsListResponseSource[keyof typeof TrendsListResponseSource];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TrendsListResponseSource = {
+  cache: 'cache',
+  db: 'db',
+  vector: 'vector',
+} as const;
+
+/**
+ * 키워드 (있으면 벡터 유사검색)
+ */
+export type TrendsListResponseQuery = string | null;
+
+export interface TrendsListResponse {
+  /** 국가 코드 (예: KR, US) */
+  country: string;
+  /** 데이터 소스 (예: cache, db, vector) */
+  source: TrendsListResponseSource;
+  /** 키워드 (있으면 벡터 유사검색) */
+  query?: TrendsListResponseQuery;
+  /** 트렌드 아이템 목록 */
+  items: TrendItem[];
+}
+
 export type UserResponseDisplayName = string | null;
 
 export interface UserResponse {
@@ -67,7 +176,114 @@ export interface ValidationError {
   type: string;
 }
 
+export type ListTrendsApiTrendsGetParams = {
+/**
+ * 국가 코드
+ */
+country?: string;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * 키워드(있으면 벡터 유사검색)
+ */
+q?: string | null;
+};
+
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * q 없으면: Redis 캐시 → DB fallback
+q 있으면: pgvector 유사도 검색(<-> 연산자)
+ * @summary List Trends
+ */
+export const listTrendsApiTrendsGet = (
+    params?: ListTrendsApiTrendsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TrendsListResponse>(
+      {url: `/api/trends`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getListTrendsApiTrendsGetQueryKey = (params?: ListTrendsApiTrendsGetParams,) => {
+    return [`/api/trends`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getListTrendsApiTrendsGetQueryOptions = <TData = Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError = HTTPValidationError>(params?: ListTrendsApiTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrendsApiTrendsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>> = ({ signal }) => listTrendsApiTrendsGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListTrendsApiTrendsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>>
+export type ListTrendsApiTrendsGetQueryError = HTTPValidationError
+
+
+export function useListTrendsApiTrendsGet<TData = Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError = HTTPValidationError>(
+ params: undefined |  ListTrendsApiTrendsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTrendsApiTrendsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listTrendsApiTrendsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTrendsApiTrendsGet<TData = Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError = HTTPValidationError>(
+ params?: ListTrendsApiTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTrendsApiTrendsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listTrendsApiTrendsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTrendsApiTrendsGet<TData = Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError = HTTPValidationError>(
+ params?: ListTrendsApiTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Trends
+ */
+
+export function useListTrendsApiTrendsGet<TData = Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError = HTTPValidationError>(
+ params?: ListTrendsApiTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listTrendsApiTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListTrendsApiTrendsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
 

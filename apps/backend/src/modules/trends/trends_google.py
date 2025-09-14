@@ -1,7 +1,7 @@
 import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-from .models import GoogleTrendsResponse, TrendItem, NewsItem
+from .schemas import GoogleTrendsResponse, TrendItem, NewsItem
 
 def get_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
     """

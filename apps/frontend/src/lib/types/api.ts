@@ -4,6 +4,27 @@
  */
 
 export interface paths {
+    "/api/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Trends
+         * @description q 없으면: Redis 캐시 → DB fallback
+         *     q 있으면: pgvector 유사도 검색(<-> 연산자)
+         */
+        get: operations["list_trends_api_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/signup": {
         parameters: {
             query?: never;
@@ -91,6 +112,20 @@ export interface components {
             /** Password */
             password: string;
         };
+        /**
+         * NewsItem
+         * @description 개별 뉴스 아이템 스키마
+         */
+        NewsItem: {
+            /** News Item Title */
+            news_item_title?: string | null;
+            /** News Item Url */
+            news_item_url?: string | null;
+            /** News Item Picture */
+            news_item_picture?: string | null;
+            /** News Item Source */
+            news_item_source?: string | null;
+        };
         /** SignupRequest */
         SignupRequest: {
             /**
@@ -113,6 +148,88 @@ export interface components {
              */
             token_type: string;
             user: components["schemas"]["UserResponse"];
+        };
+        /**
+         * TrendItem
+         * @description Google Trends 개별 트렌드 아이템 스키마
+         */
+        TrendItem: {
+            /**
+             * Rank
+             * @description 트렌드 순위
+             */
+            rank: number;
+            /**
+             * Retrieved
+             * @description 데이터 수집 시각 (ISO format)
+             */
+            retrieved: string;
+            /**
+             * Title
+             * @description 트렌드 키워드
+             */
+            title: string;
+            /**
+             * Approx Traffic
+             * @description 대략적인 트래픽 (예: '200+', '1000+')
+             */
+            approx_traffic?: string | null;
+            /**
+             * Link
+             * @description Google Trends 링크
+             */
+            link?: string | null;
+            /**
+             * Pubdate
+             * @description 발행 날짜
+             */
+            pubDate?: string | null;
+            /**
+             * Picture
+             * @description 대표 이미지 URL
+             */
+            picture?: string | null;
+            /**
+             * Picture Source
+             * @description 이미지 출처
+             */
+            picture_source?: string | null;
+            /**
+             * News Item
+             * @description 뉴스 아이템 (보통 빈 문자열)
+             */
+            news_item?: string | null;
+            /**
+             * News Items
+             * @description 관련 뉴스 아이템 목록
+             */
+            news_items?: components["schemas"]["NewsItem"][] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** TrendsListResponse */
+        TrendsListResponse: {
+            /**
+             * Country
+             * @description 국가 코드 (예: KR, US)
+             */
+            country: string;
+            /**
+             * Source
+             * @description 데이터 소스 (예: cache, db, vector)
+             * @enum {string}
+             */
+            source: "cache" | "db" | "vector";
+            /**
+             * Query
+             * @description 키워드 (있으면 벡터 유사검색)
+             */
+            query?: string | null;
+            /**
+             * Items
+             * @description 트렌드 아이템 목록
+             */
+            items: components["schemas"]["TrendItem"][];
         };
         /** UserResponse */
         UserResponse: {
@@ -144,6 +261,41 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_trends_api_trends_get: {
+        parameters: {
+            query?: {
+                /** @description 국가 코드 */
+                country?: string;
+                limit?: number;
+                /** @description 키워드(있으면 벡터 유사검색) */
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendsListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     signup_api_auth_signup_post: {
         parameters: {
             query?: never;

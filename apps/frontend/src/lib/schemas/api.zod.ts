@@ -9,6 +9,45 @@ import {
 } from 'zod';
 
 /**
+ * q 없으면: Redis 캐시 → DB fallback
+q 있으면: pgvector 유사도 검색(<-> 연산자)
+ * @summary List Trends
+ */
+export const listTrendsApiTrendsGetQueryCountryDefault = "KR";export const listTrendsApiTrendsGetQueryLimitDefault = 20;
+export const listTrendsApiTrendsGetQueryLimitMax = 100;
+
+
+export const listTrendsApiTrendsGetQueryParams = zod.object({
+  "country": zod.string().default(listTrendsApiTrendsGetQueryCountryDefault).describe('국가 코드'),
+  "limit": zod.number().min(1).max(listTrendsApiTrendsGetQueryLimitMax).default(listTrendsApiTrendsGetQueryLimitDefault),
+  "q": zod.union([zod.string(),zod.null()]).optional().describe('키워드(있으면 벡터 유사검색)')
+})
+
+export const listTrendsApiTrendsGetResponse = zod.object({
+  "country": zod.string().describe('국가 코드 (예: KR, US)'),
+  "source": zod.enum(['cache', 'db', 'vector']).describe('데이터 소스 (예: cache, db, vector)'),
+  "query": zod.union([zod.string(),zod.null()]).optional().describe('키워드 (있으면 벡터 유사검색)'),
+  "items": zod.array(zod.object({
+  "rank": zod.number().describe('트렌드 순위'),
+  "retrieved": zod.string().describe('데이터 수집 시각 (ISO format)'),
+  "title": zod.string().describe('트렌드 키워드'),
+  "approx_traffic": zod.union([zod.string(),zod.null()]).optional().describe('대략적인 트래픽 (예: \'200+\', \'1000+\')'),
+  "link": zod.union([zod.string(),zod.null()]).optional().describe('Google Trends 링크'),
+  "pubDate": zod.union([zod.string(),zod.null()]).optional().describe('발행 날짜'),
+  "picture": zod.union([zod.string(),zod.null()]).optional().describe('대표 이미지 URL'),
+  "picture_source": zod.union([zod.string(),zod.null()]).optional().describe('이미지 출처'),
+  "news_item": zod.union([zod.string(),zod.null()]).optional().describe('뉴스 아이템 (보통 빈 문자열)'),
+  "news_items": zod.union([zod.array(zod.object({
+  "news_item_title": zod.union([zod.string(),zod.null()]).optional(),
+  "news_item_url": zod.union([zod.string(),zod.null()]).optional(),
+  "news_item_picture": zod.union([zod.string(),zod.null()]).optional(),
+  "news_item_source": zod.union([zod.string(),zod.null()]).optional()
+}).describe('개별 뉴스 아이템 스키마')),zod.null()]).optional().describe('관련 뉴스 아이템 목록')
+}).describe('Google Trends 개별 트렌드 아이템 스키마')).describe('트렌드 아이템 목록')
+})
+
+
+/**
  * @summary Signup
  */
 export const signupApiAuthSignupPostBodyPasswordMin = 8;
