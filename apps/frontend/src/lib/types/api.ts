@@ -262,7 +262,14 @@ export interface operations {
             query?: {
                 country?: string;
                 limit?: number;
+                /** @description 검색 질의(벡터검색) */
                 q?: string | null;
+                /** @description YYYY-MM-DD (단일 일자) */
+                on_date?: string | null;
+                /** @description YYYY-MM-DD (이후/포함) */
+                since?: string | null;
+                /** @description YYYY-MM-DD (이전/포함) */
+                until?: string | null;
             };
             header?: never;
             path?: never;

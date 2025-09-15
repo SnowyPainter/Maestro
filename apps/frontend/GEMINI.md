@@ -5,6 +5,24 @@
 * 본 문서는 **프론트엔드(React + TS + Vite)** 구현 규칙만 다룸.
 * **모든 타입·API 계약은 백엔드 스키마를 단일 근원(SSOT)** 으로 삼는다.
 
+### 1.1 디렉토리 구조
+
+frontend/                # React + TS (UI/상호작용 SoT)
+│     ├─ src/
+│     │  ├─ app/               # Router/Providers
+│     │  ├─ pages/             # Chat/Timeline/Calendar/Monitoring/Settings
+│     │  ├─ widgets/           # ChatStream/Calendar 등 큰 조립물
+│     │  ├─ features/          # 행동 단위(mutations/forms/usecases)
+│     │  ├─ entities/          # Draft/Brief/Schedule/Trend 카드
+│     │  ├─ components/        # 순수 UI (shadcn/ui 기반)
+│     │  ├─ lib/
+│     │  │  ├─ api/            # fetcher & generated
+│     │  │  ├─ schemas/        # zod 스키마
+│     │  │  └─ types/          # types
+│     │  └─ styles/
+│     ├─ public/
+│     └─ package.json
+
 ---
 
 ---

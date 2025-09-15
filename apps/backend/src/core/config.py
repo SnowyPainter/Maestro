@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     _SYNC_DRIVER: str = "postgresql+psycopg2"
 
     TRENDS_COUNTRIES: str = "US,HK" #중국 시장은 없음. HK 홍콩
-    TRENDS_INTERVAL_MINUTES: int = 15
+    TRENDS_INTERVAL_MINUTES: int = 60
     TRENDS_MAX_ITEMS: int = 20
 
     @model_validator(mode="after")

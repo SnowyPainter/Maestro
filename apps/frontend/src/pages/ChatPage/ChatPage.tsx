@@ -1,67 +1,49 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { MoreHorizontal } from "lucide-react";
+import React, { useState } from "react";
+import { ChatSidebar } from "./components/ChatSidebar";
+import { ChatStream } from "@/widgets/ChatStream";
+import { ChatContextPanel } from "./components/ChatContextPanel";
+import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
+import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
+import { TrendsListResponse } from "@/lib/api/generated";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+export type Message = {
+    id: number;
+    type: 'user' | 'bot' | 'card';
+    content: string | React.ReactNode;
+};
 
 export function ChatPage() {
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  const addMessage = (content: string, type: 'user' | 'bot') => {
+    setMessages(prev => [...prev, { id: Date.now(), type, content }]);
+  };
+
+  const handleTrendQuerySubmit = (query: string, results: TrendsListResponse) => {
+    // Remove the query card and show the result card
+    setMessages(prev => {
+        const newMessages = prev.filter(m => m.type !== 'card' || (m.content as React.ReactElement).type !== TrendQueryCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <TrendResultCard query={query} results={results} /> }];
+    });
+  };
+
+  const addTrendQueryCard = () => {
+    // Prevent adding multiple query cards
+    if (messages.some(m => m.type === 'card' && (m.content as React.ReactElement).type === TrendQueryCard)) {
+        return;
+    }
+    setMessages(prev => [...prev, { id: Date.now(), type: 'card', content: <TrendQueryCard onSubmit={handleTrendQuerySubmit} /> }]);
+  }
+
+  const clearChat = () => {
+    setMessages([]);
+  }
 
   return (
-    <div className="grid grid-cols-[240px_1fr_280px] h-screen">
-      {/* Left Nav */}
-      <aside className="bg-neutral-100 p-4 flex flex-col">
-        <div className="flex-1">Nav</div>
-        <div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start">
-                <MoreHorizontal className="w-4 h-4 mr-2" />
-                <span>Settings</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/settings">Go to Settings</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </aside>
-
-      {/* Main Chat Stream */}
-      <main className="flex flex-col">
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {messages.map((m, i) => (
-            <div key={i} className="bg-white p-3 rounded-2xl shadow-sm">
-              {m}
-            </div>
-          ))}
-        </div>
-        <div className="p-4 border-t">
-          <input
-            type="text"
-            className="border rounded p-2 w-2/3"
-            placeholder="메시지를 입력하세요..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setMessages((prev) => [...prev, (e.target as HTMLInputElement).value]);
-                (e.target as HTMLInputElement).value = "";
-              }
-            }}
-          />
-          <Button className="ml-2">Send</Button>
-        </div>
-      </main>
-
-      {/* Right Context Rail */}
-      <aside className="bg-neutral-50 border-l p-4">Context</aside>
+    <div className="grid md:grid-cols-[256px_1fr] lg:grid-cols-[256px_1fr_280px] h-screen bg-muted/20">
+      <ChatSidebar onQueryTrendsClick={addTrendQueryCard} onNewChatClick={clearChat} />
+      <ChatStream messages={messages} onSendMessage={addMessage} />
+      <ChatContextPanel />
     </div>
   );
 }

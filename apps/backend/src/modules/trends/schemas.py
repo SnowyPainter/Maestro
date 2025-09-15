@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import Union
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -12,7 +14,7 @@ class NewsItem(BaseModel):
 class TrendItem(BaseModel):
     """Google Trends 개별 트렌드 아이템 스키마"""
     rank: int = Field(..., description="트렌드 순위")
-    retrieved: str = Field(..., description="데이터 수집 시각 (ISO format)")
+    retrieved: Union[str, datetime] = Field(..., description="데이터 수집 시각 (ISO format)")
     title: str = Field(..., description="트렌드 키워드")
     approx_traffic: Optional[str] = Field(None, description="대략적인 트래픽 (예: '200+', '1000+')")
     link: Optional[str] = Field(None, description="Google Trends 링크")
@@ -30,7 +32,7 @@ class GoogleTrendsResponse(BaseModel):
     """Google Trends API 응답 전체 스키마"""
     country: str = Field(..., description="국가 코드 (예: KR, US)")
     max_items: int = Field(..., description="요청한 최대 아이템 수")
-    retrieved_at: str = Field(..., description="전체 데이터 수집 시각")
+    retrieved_at: Union[str, datetime] = Field(..., description="전체 데이터 수집 시각")
     trends: List[TrendItem] = Field(..., description="트렌드 아이템 목록")
     total_count: int = Field(..., description="실제 반환된 트렌드 수")
     

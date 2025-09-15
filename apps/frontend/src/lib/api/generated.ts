@@ -70,6 +70,11 @@ export interface TokenResponse {
 }
 
 /**
+ * 데이터 수집 시각 (ISO format)
+ */
+export type TrendItemRetrieved = string | string;
+
+/**
  * 대략적인 트래픽 (예: '200+', '1000+')
  */
 export type TrendItemApproxTraffic = string | null;
@@ -111,7 +116,7 @@ export interface TrendItem {
   /** 트렌드 순위 */
   rank: number;
   /** 데이터 수집 시각 (ISO format) */
-  retrieved: string;
+  retrieved: TrendItemRetrieved;
   /** 트렌드 키워드 */
   title: string;
   /** 대략적인 트래픽 (예: '200+', '1000+') */
@@ -183,7 +188,22 @@ country?: string;
  * @maximum 100
  */
 limit?: number;
+/**
+ * 검색 질의(벡터검색)
+ */
 q?: string | null;
+/**
+ * YYYY-MM-DD (단일 일자)
+ */
+on_date?: string | null;
+/**
+ * YYYY-MM-DD (이후/포함)
+ */
+since?: string | null;
+/**
+ * YYYY-MM-DD (이전/포함)
+ */
+until?: string | null;
 };
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];

@@ -11,14 +11,17 @@ import {
 /**
  * @summary List Trends
  */
-export const listTrendsApiTrendsGetQueryCountryDefault = "KR";export const listTrendsApiTrendsGetQueryLimitDefault = 20;
+export const listTrendsApiTrendsGetQueryCountryDefault = "US";export const listTrendsApiTrendsGetQueryLimitDefault = 20;
 export const listTrendsApiTrendsGetQueryLimitMax = 100;
 
 
 export const listTrendsApiTrendsGetQueryParams = zod.object({
   "country": zod.string().default(listTrendsApiTrendsGetQueryCountryDefault),
   "limit": zod.number().min(1).max(listTrendsApiTrendsGetQueryLimitMax).default(listTrendsApiTrendsGetQueryLimitDefault),
-  "q": zod.union([zod.string(),zod.null()]).optional()
+  "q": zod.union([zod.string(),zod.null()]).optional().describe('검색 질의(벡터검색)'),
+  "on_date": zod.union([zod.iso.date(),zod.null()]).optional().describe('YYYY-MM-DD (단일 일자)'),
+  "since": zod.union([zod.iso.date(),zod.null()]).optional().describe('YYYY-MM-DD (이후/포함)'),
+  "until": zod.union([zod.iso.date(),zod.null()]).optional().describe('YYYY-MM-DD (이전/포함)')
 })
 
 export const listTrendsApiTrendsGetResponse = zod.object({
@@ -27,7 +30,7 @@ export const listTrendsApiTrendsGetResponse = zod.object({
   "query": zod.union([zod.string(),zod.null()]).optional().describe('키워드 (있으면 벡터 유사검색)'),
   "items": zod.array(zod.object({
   "rank": zod.number().describe('트렌드 순위'),
-  "retrieved": zod.string().describe('데이터 수집 시각 (ISO format)'),
+  "retrieved": zod.union([zod.string(),zod.iso.datetime({})]).describe('데이터 수집 시각 (ISO format)'),
   "title": zod.string().describe('트렌드 키워드'),
   "approx_traffic": zod.union([zod.string(),zod.null()]).optional().describe('대략적인 트래픽 (예: \'200+\', \'1000+\')'),
   "link": zod.union([zod.string(),zod.null()]).optional().describe('Google Trends 링크'),

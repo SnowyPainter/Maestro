@@ -15,7 +15,7 @@ paths:
         required: false
         schema:
           type: string
-          default: KR
+          default: US
           title: Country
       - name: limit
         in: query
@@ -33,7 +33,42 @@ paths:
           anyOf:
           - type: string
           - type: 'null'
+          description: 검색 질의(벡터검색)
           title: Q
+        description: 검색 질의(벡터검색)
+      - name: on_date
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: YYYY-MM-DD (단일 일자)
+          title: On Date
+        description: YYYY-MM-DD (단일 일자)
+      - name: since
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: YYYY-MM-DD (이후/포함)
+          title: Since
+        description: YYYY-MM-DD (이후/포함)
+      - name: until
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: YYYY-MM-DD (이전/포함)
+          title: Until
+        description: YYYY-MM-DD (이전/포함)
       responses:
         '200':
           description: Successful Response
@@ -214,7 +249,10 @@ components:
           title: Rank
           description: 트렌드 순위
         retrieved:
-          type: string
+          anyOf:
+          - type: string
+          - type: string
+            format: date-time
           title: Retrieved
           description: 데이터 수집 시각 (ISO format)
         title:
