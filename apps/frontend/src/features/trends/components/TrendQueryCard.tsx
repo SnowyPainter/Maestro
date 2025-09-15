@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Calendar, Hash } from "lucide-react";
-import { useListTrendsApiTrendsGet } from "@/lib/api/generated";
+import { useListTrendsApiBffTrendsGet } from "@/lib/api/generated";
 import { format, subDays } from "date-fns";
 
 const parseDateKeyword = (keyword: string): Date | null => {
@@ -74,7 +74,7 @@ export function TrendQueryCard({ onSubmit }: { onSubmit: (query: string, results
 
   const parsedParams = parseQuery(query);
 
-  const { data: trendData, isLoading } = useListTrendsApiTrendsGet(
+  const { data: trendData, isLoading } = useListTrendsApiBffTrendsGet(
     { ...parsedParams, country },
     { query: { enabled: isQueryEnabled, staleTime: Infinity, retry: false } }
   );

@@ -1,8 +1,17 @@
 from fastapi import FastAPI, APIRouter
 from apps.backend.src.core.middleware import ContextMiddleware
-from apps.backend.src.orchestrator.auth_router import router as auth_router
-from apps.backend.src.bff.me_router import router as me_router
-from apps.backend.src.bff.trends_router import router as trends_router
+
+from apps.backend.src.bff.me_router import router as bff_me_router
+from apps.backend.src.bff.trends_router import router as bff_trends_router
+from apps.backend.src.bff.campaigns_router import router as bff_campaigns_router
+from apps.backend.src.bff.drafts_router import router as bff_drafts_router
+from apps.backend.src.bff.accounts_router import router as bff_accounts_router
+
+from apps.backend.src.orchestrator.auth_router import router as orchestrator_auth_router
+from apps.backend.src.orchestrator.campaigns_router import router as orchestrator_campaigns_router
+from apps.backend.src.orchestrator.drafts_router import router as orchestrator_drafts_router
+from apps.backend.src.orchestrator.accounts_router import router as orchestrator_accounts_router
+from apps.backend.src.orchestrator.insights_router import router as orchestrator_insights_router
 from apps.backend.src.core.config import settings
 from apps.backend.src.core.db import engine, Base
 from pathlib import Path
@@ -11,6 +20,10 @@ from sqlalchemy import text
 
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.modules.trends.models import Trend, NewsItem
+from apps.backend.src.modules.insights.models import InsightSample
+from apps.backend.src.modules.campaigns.models import Campaign, CampaignKPIDef, CampaignKPIResult
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant
+from apps.backend.src.modules.accounts.models import PlatformAccount, Persona, PersonaAccount
 
 PRJ_RT = Path(__file__).parent.parent
 
@@ -28,10 +41,19 @@ app.add_middleware(
 )
 app.add_middleware(ContextMiddleware)
 
-# 라우터 묶기
-api.include_router(trends_router)
-api.include_router(auth_router)
-api.include_router(me_router)
+# BFF 라우터 등록
+api.include_router(bff_trends_router, prefix="/bff")
+api.include_router(bff_me_router, prefix="/bff")
+api.include_router(bff_campaigns_router, prefix="/bff")
+api.include_router(bff_drafts_router, prefix="/bff")
+api.include_router(bff_accounts_router, prefix="/bff")
+
+# Orchestrator 라우터 등록
+api.include_router(orchestrator_auth_router, prefix="/orchestrator")
+api.include_router(orchestrator_campaigns_router, prefix="/orchestrator")
+api.include_router(orchestrator_drafts_router, prefix="/orchestrator")
+api.include_router(orchestrator_accounts_router, prefix="/orchestrator")
+api.include_router(orchestrator_insights_router, prefix="/orchestrator")
 
 # 헬스체크도 api 아래로
 @api.get("/health")

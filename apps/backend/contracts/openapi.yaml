@@ -3,12 +3,12 @@ info:
   title: Maestro Backend
   version: 0.1.0
 paths:
-  /api/trends:
+  /api/bff/trends:
     get:
       tags:
       - trends
       summary: List Trends
-      operationId: list_trends_api_trends_get
+      operationId: list_trends_api_bff_trends_get
       parameters:
       - name: country
         in: query
@@ -82,12 +82,537 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/auth/signup:
+  /api/bff/me:
+    get:
+      tags:
+      - me
+      summary: Me
+      operationId: me_api_bff_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+  /api/bff/campaigns/{campaign_id}/kpi-defs:
+    get:
+      tags:
+      - campaigns
+      summary: Read Campaign Kpi Defs
+      description: 캠페인의 KPI 정의 목록 조회
+      operationId: read_campaign_kpi_defs_api_bff_campaigns__campaign_id__kpi_defs_get
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignKPIDefOut'
+                title: Response Read Campaign Kpi Defs Api Bff Campaigns  Campaign
+                  Id  Kpi Defs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/campaigns/{campaign_id}/kpi-results:
+    get:
+      tags:
+      - campaigns
+      summary: Read Campaign Kpi Results
+      description: 캠페인의 KPI 결과 목록 조회
+      operationId: read_campaign_kpi_results_api_bff_campaigns__campaign_id__kpi_results_get
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: 시작 날짜
+          title: Start
+        description: 시작 날짜
+      - name: end
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: 종료 날짜
+          title: End
+        description: 종료 날짜
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 최대 항목 수
+          default: 200
+          title: Limit
+        description: 최대 항목 수
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignKPIResultOut'
+                title: Response Read Campaign Kpi Results Api Bff Campaigns  Campaign
+                  Id  Kpi Results Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/campaigns/{campaign_id}:
+    get:
+      tags:
+      - campaigns
+      summary: Read Campaign
+      description: 특정 캠페인 조회
+      operationId: read_campaign_api_bff_campaigns__campaign_id__get
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/campaigns:
+    get:
+      tags:
+      - campaigns
+      summary: Read Campaigns
+      description: 캠페인 목록 조회
+      operationId: read_campaigns_api_bff_campaigns_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 검색 쿼리
+          title: Q
+        description: 검색 쿼리
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 페이지당 항목 수
+          default: 20
+          title: Limit
+        description: 페이지당 항목 수
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 오프셋
+          default: 0
+          title: Offset
+        description: 오프셋
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignOut'
+                title: Response Read Campaigns Api Bff Campaigns Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/{draft_id}/variants:
+    get:
+      tags:
+      - drafts
+      summary: Read Draft Variants
+      description: 드래프트의 플랫폼별 변형 목록 조회
+      operationId: read_draft_variants_api_bff_drafts__draft_id__variants_get
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DraftVariantOut'
+                title: Response Read Draft Variants Api Bff Drafts  Draft Id  Variants
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/{draft_id}:
+    get:
+      tags:
+      - drafts
+      summary: Read Draft
+      description: 특정 드래프트 조회
+      operationId: read_draft_api_bff_drafts__draft_id__get
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts:
+    get:
+      tags:
+      - drafts
+      summary: Read Drafts
+      description: 드래프트 목록 조회
+      operationId: read_drafts_api_bff_drafts_get
+      parameters:
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: 캠페인 ID 필터
+          title: Campaign Id
+        description: 캠페인 ID 필터
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 페이지당 항목 수
+          default: 20
+          title: Limit
+        description: 페이지당 항목 수
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 오프셋
+          default: 0
+          title: Offset
+        description: 오프셋
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DraftOut'
+                title: Response Read Drafts Api Bff Drafts Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/platform/{account_id}:
+    get:
+      tags:
+      - accounts
+      summary: Read Platform Account
+      description: 특정 플랫폼 계정 조회
+      operationId: read_platform_account_api_bff_accounts_platform__account_id__get
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/platform:
+    get:
+      tags:
+      - accounts
+      summary: Read Platform Accounts
+      description: 플랫폼 계정 목록 조회
+      operationId: read_platform_accounts_api_bff_accounts_platform_get
+      parameters:
+      - name: platform
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/PlatformKind'
+          - type: 'null'
+          description: 플랫폼 필터
+          title: Platform
+        description: 플랫폼 필터
+      - name: handle
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 핸들 검색
+          title: Handle
+        description: 핸들 검색
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 페이지당 항목 수
+          default: 50
+          title: Limit
+        description: 페이지당 항목 수
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 오프셋
+          default: 0
+          title: Offset
+        description: 오프셋
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlatformAccountOut'
+                title: Response Read Platform Accounts Api Bff Accounts Platform Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/personas/{persona_id}:
+    get:
+      tags:
+      - accounts
+      summary: Read Persona
+      description: 특정 페르소나 조회
+      operationId: read_persona_api_bff_accounts_personas__persona_id__get
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Persona Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/personas:
+    get:
+      tags:
+      - accounts
+      summary: Read Personas
+      description: 페르소나 목록 조회
+      operationId: read_personas_api_bff_accounts_personas_get
+      parameters:
+      - name: name
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 이름 검색
+          title: Name
+        description: 이름 검색
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 페이지당 항목 수
+          default: 50
+          title: Limit
+        description: 페이지당 항목 수
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          description: 오프셋
+          default: 0
+          title: Offset
+        description: 오프셋
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaOut'
+                title: Response Read Personas Api Bff Accounts Personas Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/personas/{persona_id}/accounts:
+    get:
+      tags:
+      - accounts
+      summary: Read Accounts For Persona
+      description: 페르소나에 연결된 계정 목록 조회
+      operationId: read_accounts_for_persona_api_bff_accounts_personas__persona_id__accounts_get
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Persona Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaAccountOut'
+                title: Response Read Accounts For Persona Api Bff Accounts Personas  Persona
+                  Id  Accounts Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/platform/{account_id}/personas:
+    get:
+      tags:
+      - accounts
+      summary: Read Personas For Account
+      description: 계정에 연결된 페르소나 목록 조회
+      operationId: read_personas_for_account_api_bff_accounts_platform__account_id__personas_get
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaAccountOut'
+                title: Response Read Personas For Account Api Bff Accounts Platform  Account
+                  Id  Personas Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/auth/signup:
     post:
       tags:
       - auth
       summary: Signup
-      operationId: signup_api_auth_signup_post
+      operationId: signup_api_orchestrator_auth_signup_post
       requestBody:
         content:
           application/json:
@@ -107,12 +632,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/auth/login:
+  /api/orchestrator/auth/login:
     post:
       tags:
       - auth
       summary: Login
-      operationId: login_api_auth_login_post
+      operationId: login_api_orchestrator_auth_login_post
       requestBody:
         content:
           application/json:
@@ -132,19 +657,548 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/me:
-    get:
+  /api/orchestrator/campaigns/{campaign_id}:
+    delete:
       tags:
-      - me
-      summary: Me
-      operationId: me_api_me_get
+      - campaigns
+      summary: Delete Existing Campaign
+      description: 캠페인 삭제
+      operationId: delete_existing_campaign_api_orchestrator_campaigns__campaign_id__delete
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - campaigns
+      summary: Update Existing Campaign
+      description: 캠페인 업데이트
+      operationId: update_existing_campaign_api_orchestrator_campaigns__campaign_id__put
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignUpdate'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: '#/components/schemas/CampaignOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/kpi-defs:
+    put:
+      tags:
+      - campaigns
+      summary: Upsert Campaign Kpi Defs
+      description: 캠페인의 KPI 정의 전체 교체
+      operationId: upsert_campaign_kpi_defs_api_orchestrator_campaigns__campaign_id__kpi_defs_put
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CampaignKPIDefUpsert'
+              title: Defs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignKPIDefOut'
+                title: Response Upsert Campaign Kpi Defs Api Orchestrator Campaigns  Campaign
+                  Id  Kpi Defs Put
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/kpi-results:
+    post:
+      tags:
+      - campaigns
+      summary: Record Campaign Kpi Result
+      description: 캠페인 KPI 결과 기록
+      operationId: record_campaign_kpi_result_api_orchestrator_campaigns__campaign_id__kpi_results_post
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      - name: as_of
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+          title: As Of
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              title: Values
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIResultOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/aggregate-kpis:
+    post:
+      tags:
+      - campaigns
+      summary: Aggregate Campaign Kpis
+      description: 캠페인 KPI 집계 실행
+      operationId: aggregate_campaign_kpis_api_orchestrator_campaigns__campaign_id__aggregate_kpis_post
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      - name: as_of
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+          title: As Of
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIResultOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns:
+    post:
+      tags:
+      - campaigns
+      summary: Create New Campaign
+      description: 새 캠페인 생성
+      operationId: create_new_campaign_api_orchestrator_campaigns_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts:
+    post:
+      tags:
+      - drafts
+      summary: Create New Draft
+      description: 새 드래프트 생성
+      operationId: create_new_draft_api_orchestrator_drafts_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftSaveRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/{draft_id}/ir:
+    put:
+      tags:
+      - drafts
+      summary: Update Draft Content
+      description: 드래프트 IR 및 메타데이터 업데이트
+      operationId: update_draft_content_api_orchestrator_drafts__draft_id__ir_put
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Draft Id
+      - name: title
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+      - name: goal
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Goal
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Body_update_draft_content_api_orchestrator_drafts__draft_id__ir_put'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/platform:
+    post:
+      tags:
+      - accounts
+      summary: Create New Platform Account
+      description: 새 플랫폼 계정 생성
+      operationId: create_new_platform_account_api_orchestrator_accounts_platform_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformAccountCreate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/platform/{account_id}:
+    put:
+      tags:
+      - accounts
+      summary: Update Existing Platform Account
+      description: 플랫폼 계정 업데이트
+      operationId: update_existing_platform_account_api_orchestrator_accounts_platform__account_id__put
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformAccountUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - accounts
+      summary: Delete Existing Platform Account
+      description: 플랫폼 계정 삭제
+      operationId: delete_existing_platform_account_api_orchestrator_accounts_platform__account_id__delete
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      - name: soft
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Soft
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/personas:
+    post:
+      tags:
+      - accounts
+      summary: Create New Persona
+      description: 새 페르소나 생성
+      operationId: create_new_persona_api_orchestrator_accounts_personas_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaCreate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/personas/{persona_id}:
+    put:
+      tags:
+      - accounts
+      summary: Update Existing Persona
+      description: 페르소나 업데이트
+      operationId: update_existing_persona_api_orchestrator_accounts_personas__persona_id__put
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Persona Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - accounts
+      summary: Delete Existing Persona
+      description: 페르소나 삭제
+      operationId: delete_existing_persona_api_orchestrator_accounts_personas__persona_id__delete
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Persona Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/persona-account-links:
+    post:
+      tags:
+      - accounts
+      summary: Create Persona Account Link
+      description: 페르소나와 계정 연결 생성
+      operationId: create_persona_account_link_api_orchestrator_accounts_persona_account_links_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaAccountLinkCreate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/persona-account-links/{persona_id}/{account_id}:
+    delete:
+      tags:
+      - accounts
+      summary: Remove Persona Account Link
+      description: 페르소나와 계정 연결 제거
+      operationId: remove_persona_account_link_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Persona Id
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/insights:
+    post:
+      tags:
+      - insights
+      summary: Ingest Insight
+      description: 인사이트 샘플 수집
+      operationId: ingest_insight_api_orchestrator_insights_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/health:
     get:
       summary: Health
@@ -157,6 +1211,446 @@ paths:
               schema: {}
 components:
   schemas:
+    Aggregation:
+      type: string
+      enum:
+      - sum
+      - last
+      - avg
+      title: Aggregation
+    BlockImage:
+      properties:
+        type:
+          type: string
+          const: image
+          title: Type
+        props:
+          additionalProperties: true
+          type: object
+          title: Props
+      type: object
+      required:
+      - type
+      - props
+      title: BlockImage
+    BlockText:
+      properties:
+        type:
+          type: string
+          const: text
+          title: Type
+        props:
+          additionalProperties: true
+          type: object
+          title: Props
+      type: object
+      required:
+      - type
+      - props
+      title: BlockText
+    BlockVideo:
+      properties:
+        type:
+          type: string
+          const: video
+          title: Type
+        props:
+          additionalProperties: true
+          type: object
+          title: Props
+      type: object
+      required:
+      - type
+      - props
+      title: BlockVideo
+    Body_update_draft_content_api_orchestrator_drafts__draft_id__ir_put:
+      properties:
+        ir:
+          $ref: '#/components/schemas/DraftIR'
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+      type: object
+      required:
+      - ir
+      title: Body_update_draft_content_api_orchestrator_drafts__draft_id__ir_put
+    CampaignCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        start_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start At
+        end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End At
+      type: object
+      required:
+      - name
+      title: CampaignCreate
+    CampaignKPIDefOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        campaign_id:
+          type: integer
+          title: Campaign Id
+        key:
+          $ref: '#/components/schemas/KPIKey'
+        aggregation:
+          $ref: '#/components/schemas/Aggregation'
+        target_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Target Value
+        weight:
+          type: number
+          title: Weight
+          default: 1.0
+      type: object
+      required:
+      - id
+      - campaign_id
+      - key
+      - aggregation
+      title: CampaignKPIDefOut
+    CampaignKPIDefUpsert:
+      properties:
+        key:
+          $ref: '#/components/schemas/KPIKey'
+        aggregation:
+          $ref: '#/components/schemas/Aggregation'
+          default: sum
+        target_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Target Value
+        weight:
+          type: number
+          title: Weight
+          default: 1.0
+      type: object
+      required:
+      - key
+      title: CampaignKPIDefUpsert
+    CampaignKPIResultOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        campaign_id:
+          type: integer
+          title: Campaign Id
+        as_of:
+          type: string
+          format: date-time
+          title: As Of
+        values:
+          additionalProperties:
+            type: number
+          type: object
+          title: Values
+      type: object
+      required:
+      - id
+      - campaign_id
+      - as_of
+      - values
+      title: CampaignKPIResultOut
+    CampaignOut:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        start_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start At
+        end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End At
+        id:
+          type: integer
+          title: Id
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - name
+      - id
+      - owner_user_id
+      - created_at
+      title: CampaignOut
+    CampaignUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        start_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Start At
+        end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End At
+      type: object
+      title: CampaignUpdate
+    DraftIR:
+      properties:
+        blocks:
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/BlockText'
+            - $ref: '#/components/schemas/BlockImage'
+            - $ref: '#/components/schemas/BlockVideo'
+          type: array
+          minItems: 1
+          title: Blocks
+        options:
+          additionalProperties: true
+          type: object
+          title: Options
+      type: object
+      required:
+      - blocks
+      title: DraftIR
+    DraftOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        user_id:
+          type: integer
+          title: User Id
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+        goal:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Goal
+        ir:
+          additionalProperties: true
+          type: object
+          title: Ir
+        schema_version:
+          type: integer
+          title: Schema Version
+        ir_revision:
+          type: integer
+          title: Ir Revision
+        state:
+          type: string
+          title: State
+        monitoring_started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Monitoring Started At
+        monitoring_ended_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Monitoring Ended At
+        created_by:
+          type: integer
+          title: Created By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - user_id
+      - ir
+      - schema_version
+      - ir_revision
+      - state
+      - created_by
+      - created_at
+      - updated_at
+      title: DraftOut
+    DraftSaveRequest:
+      properties:
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+        goal:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Goal
+        ir:
+          $ref: '#/components/schemas/DraftIR'
+      type: object
+      required:
+      - ir
+      title: DraftSaveRequest
+    DraftVariantOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        draft_id:
+          type: integer
+          title: Draft Id
+        platform:
+          type: string
+          title: Platform
+        status:
+          type: string
+          title: Status
+        errors:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Errors
+        warnings:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Warnings
+        rendered_caption:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rendered Caption
+        rendered_blocks:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Rendered Blocks
+        metrics:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metrics
+        compiled_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Compiled At
+        ir_revision_compiled:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ir Revision Compiled
+        compiler_version:
+          type: integer
+          title: Compiler Version
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - draft_id
+      - platform
+      - status
+      - compiler_version
+      - created_at
+      - updated_at
+      title: DraftVariantOut
     HTTPValidationError:
       properties:
         detail:
@@ -166,6 +1660,140 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    InsightIn:
+      properties:
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        published_post_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Published Post Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        platform_post_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Platform Post Id
+        account_persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Persona Id
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        metrics:
+          additionalProperties:
+            type: number
+          type: object
+          title: Metrics
+        source:
+          type: string
+          enum:
+          - webhook
+          - poll
+          - manual
+          title: Source
+          default: webhook
+        ingest_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ingest Key
+      type: object
+      required:
+      - owner_user_id
+      - platform
+      - ts
+      title: InsightIn
+    InsightOut:
+      properties:
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        published_post_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Published Post Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        platform_post_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Platform Post Id
+        account_persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Persona Id
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        metrics:
+          additionalProperties:
+            type: number
+          type: object
+          title: Metrics
+        source:
+          type: string
+          enum:
+          - webhook
+          - poll
+          - manual
+          title: Source
+          default: webhook
+        ingest_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ingest Key
+        id:
+          type: integer
+          title: Id
+        ingested_at:
+          type: string
+          format: date-time
+          title: Ingested At
+      type: object
+      required:
+      - owner_user_id
+      - platform
+      - ts
+      - id
+      - ingested_at
+      title: InsightOut
+    KPIKey:
+      type: string
+      enum:
+      - reach
+      - impressions
+      - likes
+      - comments
+      - shares
+      - saves
+      - follows
+      - link_clicks
+      - profile_visits
+      - ctr
+      - engagement_rate
+      title: KPIKey
     LoginRequest:
       properties:
         email:
@@ -205,6 +1833,573 @@ components:
       type: object
       title: NewsItem
       description: 개별 뉴스 아이템 스키마
+    Permission:
+      type: string
+      enum:
+      - read
+      - write
+      - publish
+      title: Permission
+    PersonaAccountLinkCreate:
+      properties:
+        persona_id:
+          type: integer
+          title: Persona Id
+        account_id:
+          type: integer
+          title: Account Id
+        can_permissions:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/Permission'
+            type: array
+          - type: 'null'
+          title: Can Permissions
+          default:
+          - read
+          - publish
+          - write
+        is_verified_link:
+          type: boolean
+          title: Is Verified Link
+          default: false
+        default_templates:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Default Templates
+      type: object
+      required:
+      - persona_id
+      - account_id
+      title: PersonaAccountLinkCreate
+    PersonaAccountOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        persona_id:
+          type: integer
+          title: Persona Id
+        account_id:
+          type: integer
+          title: Account Id
+        can_permissions:
+          items:
+            $ref: '#/components/schemas/Permission'
+          type: array
+          title: Can Permissions
+        is_verified_link:
+          type: boolean
+          title: Is Verified Link
+        default_templates:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Default Templates
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - persona_id
+      - account_id
+      - can_permissions
+      - is_verified_link
+      - created_at
+      title: PersonaAccountOut
+    PersonaCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          title: Name
+        avatar_url:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Avatar Url
+        bio:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Bio
+        language:
+          type: string
+          maxLength: 10
+          title: Language
+          default: en
+        tone:
+          anyOf:
+          - type: string
+            maxLength: 40
+          - type: 'null'
+          title: Tone
+        style_guide:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Style Guide
+        pillars:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Pillars
+        banned_words:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Banned Words
+        default_hashtags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Default Hashtags
+        hashtag_rules:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Hashtag Rules
+        link_policy:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Link Policy
+        media_prefs:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Media Prefs
+        posting_windows:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Posting Windows
+        extras:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Extras
+        schema_version:
+          type: integer
+          title: Schema Version
+          default: 1
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+      type: object
+      required:
+      - name
+      - owner_user_id
+      title: PersonaCreate
+    PersonaOut:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          title: Name
+        avatar_url:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Avatar Url
+        bio:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Bio
+        language:
+          type: string
+          maxLength: 10
+          title: Language
+          default: en
+        tone:
+          anyOf:
+          - type: string
+            maxLength: 40
+          - type: 'null'
+          title: Tone
+        style_guide:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Style Guide
+        pillars:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Pillars
+        banned_words:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Banned Words
+        default_hashtags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Default Hashtags
+        hashtag_rules:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Hashtag Rules
+        link_policy:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Link Policy
+        media_prefs:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Media Prefs
+        posting_windows:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Posting Windows
+        extras:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Extras
+        schema_version:
+          type: integer
+          title: Schema Version
+          default: 1
+        id:
+          type: integer
+          title: Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - name
+      - id
+      - created_at
+      - updated_at
+      title: PersonaOut
+    PersonaUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        avatar_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Avatar Url
+        bio:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Bio
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+        tone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tone
+        style_guide:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Style Guide
+        pillars:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Pillars
+        banned_words:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Banned Words
+        default_hashtags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Default Hashtags
+        hashtag_rules:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Hashtag Rules
+        link_policy:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Link Policy
+        media_prefs:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Media Prefs
+        posting_windows:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Posting Windows
+        extras:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Extras
+        schema_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Schema Version
+      type: object
+      title: PersonaUpdate
+    PlatformAccountCreate:
+      properties:
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        handle:
+          type: string
+          maxLength: 128
+          title: Handle
+        external_id:
+          anyOf:
+          - type: string
+            maxLength: 256
+          - type: 'null'
+          title: External Id
+        avatar_url:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Avatar Url
+        bio:
+          anyOf:
+          - type: string
+            maxLength: 160
+          - type: 'null'
+          title: Bio
+        scopes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Scopes
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+          default: true
+        access_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Access Token
+        refresh_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Refresh Token
+        token_expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Token Expires At
+      type: object
+      required:
+      - platform
+      - handle
+      title: PlatformAccountCreate
+    PlatformAccountOut:
+      properties:
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        handle:
+          type: string
+          maxLength: 128
+          title: Handle
+        external_id:
+          anyOf:
+          - type: string
+            maxLength: 256
+          - type: 'null'
+          title: External Id
+        avatar_url:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Avatar Url
+        bio:
+          anyOf:
+          - type: string
+            maxLength: 160
+          - type: 'null'
+          title: Bio
+        scopes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Scopes
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+          default: true
+        id:
+          type: integer
+          title: Id
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        last_checked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Checked At
+        last_error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Error
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - platform
+      - handle
+      - id
+      - owner_user_id
+      - created_at
+      - updated_at
+      title: PlatformAccountOut
+    PlatformAccountUpdate:
+      properties:
+        handle:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Handle
+        avatar_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Avatar Url
+        bio:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Bio
+        scopes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Scopes
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+        access_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Access Token
+        refresh_token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Refresh Token
+        token_expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Token Expires At
+      type: object
+      title: PlatformAccountUpdate
+    PlatformKind:
+      type: string
+      enum:
+      - instagram
+      - threads
+      - x
+      - blog
+      title: PlatformKind
     SignupRequest:
       properties:
         email:

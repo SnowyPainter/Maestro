@@ -1,0 +1,203 @@
+@startuml
+skinparam backgroundColor #ffffff
+skinparam classAttributeIconSize 0
+hide circle
+hide methods
+
+' ==== Enums ====
+enum PlatformKind {
+  threads
+  instagram
+  x
+}
+
+enum PublishStatus {
+  pending
+  published
+  failed
+  deleted
+}
+
+enum KPIKey {
+  impressions
+  reach
+  likes
+  comments
+  shares
+  saves
+  follows
+  link_clicks
+  profile_visits
+  ctr
+  engagement_rate
+}
+
+enum Aggregation {
+  SUM
+  LAST
+  AVG
+}
+
+' ==== Core Users ====
+class User {
+  +id: UUID
+  +email: string
+  +name: string
+  +created_at: datetime
+  +updated_at: datetime
+}
+
+' ==== Persona & Account and their "available account" binding ====
+class Persona {
+  +id: UUID
+  +user_id: UUID
+  +name: string
+  +desc?: string
+  +created_at: datetime
+}
+
+class Account {
+  +id: UUID
+  +user_id: UUID
+  +platform: PlatformKind
+  +handle: string
+  +external_user_id: string
+  +auth_ref: string   ' 토큰/비밀은 별도 vault/table 권장
+  +created_at: datetime
+}
+
+class PersonaAccount {
+  +id: UUID
+  +persona_id: UUID
+  +account_id: UUID
+  +alias?: string
+  +is_active: bool
+  +created_at: datetime
+}
+Persona "1" -- "many" PersonaAccount : binds >
+Account "1" -- "many" PersonaAccount : binds >
+User "1" -- "many" Persona
+User "1" -- "many" Account
+
+note right of PersonaAccount
+  = "사용가능한 계정"
+  페르소나와 계정을 결합한 발행 단위.
+  퍼블리시/삭제 같은 실행은
+  항상 PersonaAccount를 통해 수행.
+end note
+
+' ==== Campaign & KPI ====
+class Campaign {
+  +id: UUID
+  +user_id: UUID
+  +name: string
+  +description?: string
+  +start_at?: datetime
+  +end_at?: datetime
+  +created_at: datetime
+}
+
+class CampaignKPIDef {
+  +id: UUID
+  +campaign_id: UUID
+  +key: KPIKey
+  +aggregation: Aggregation
+  +target_value?: float
+  +weight: float=1
+}
+class CampaignKPIResult {
+  +id: UUID
+  +campaign_id: UUID
+  +as_of: datetime
+  +values: json   ' {"impressions":123, "ctr":0.04, ...}
+}
+
+User "1" -- "many" Campaign
+Campaign "1" -- "many" CampaignKPIDef
+Campaign "1" -- "many" CampaignKPIResult
+
+note right of Campaign
+  KPI는 "캠페인 종속".
+  (정의/목표/가중치) -> (시간별 결과 롤업)
+end note
+
+' ==== Draft (범-어카운트, 유저 종속) ====
+class Draft {
+  +id: UUID
+  +user_id: UUID
+  +campaign_id?: UUID
+  +title?: string
+  +tags?: json
+  +goal?: string
+  +ir: json         ' DraftIR (blocks/options)
+  +state: string    ' draft|ready|scheduled|published|failed
+  +created_at: datetime
+  +updated_at: datetime
+}
+User "1" -- "many" Draft
+Campaign "1" -- "many" Draft : optional >
+
+note bottom of Draft
+  드래프트/캠페인은 PersonaAccount와 "별개".
+  저장/편집은 계정과 무관.
+  퍼블리시 시점에 어떤 PersonaAccount로
+  보낼지 선택하여 실행.
+end note
+
+' ==== Publish artifacts ====
+class PublishJob {
+  +id: UUID
+  +user_id: UUID
+  +draft_id: UUID
+  +campaign_id?: UUID
+  +persona_account_id: UUID
+  +status: PublishStatus
+  +scheduled_at?: datetime
+  +created_at: datetime
+  +updated_at: datetime
+}
+
+class PublishedPost {
+  +id: UUID
+  +publish_job_id: UUID
+  +platform: PlatformKind
+  +platform_post_id: string
+  +permalink?: string
+  +status: PublishStatus
+  +published_at?: datetime
+  +deleted_at?: datetime
+}
+
+User "1" -- "many" PublishJob
+Draft "1" -- "many" PublishJob
+Campaign "1" -- "many" PublishJob : optional >
+PersonaAccount "1" -- "many" PublishJob
+PublishJob "1" -- "1" PublishedPost
+
+note right of PublishJob
+  요청 단위(예약/즉시/삭제 등).
+  실행은 어댑터가 담당.
+end note
+
+' ==== Monitoring (드래프트 종속) ====
+class InsightSample {
+  +id: UUID
+  +user_id: UUID
+  +draft_id: UUID
+  +published_post_id?: UUID
+  +platform: PlatformKind
+  +platform_post_id?: string
+  +ts: datetime
+  +metrics: json  ' impressions, likes, comments, ...
+}
+
+Draft "1" -- "many" InsightSample
+PublishedPost "1" -- "many" InsightSample : optional >
+
+note bottom of InsightSample
+  모니터링 원시샘플은 "드래프트 종속".
+  (있다면 게시물ID도 연결)
+  집계 작업이 캠페인 KPIResult로 롤업.
+end note
+
+@enduml

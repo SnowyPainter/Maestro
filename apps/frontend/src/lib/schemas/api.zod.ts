@@ -11,20 +11,20 @@ import {
 /**
  * @summary List Trends
  */
-export const listTrendsApiTrendsGetQueryCountryDefault = "US";export const listTrendsApiTrendsGetQueryLimitDefault = 20;
-export const listTrendsApiTrendsGetQueryLimitMax = 100;
+export const listTrendsApiBffTrendsGetQueryCountryDefault = "US";export const listTrendsApiBffTrendsGetQueryLimitDefault = 20;
+export const listTrendsApiBffTrendsGetQueryLimitMax = 100;
 
 
-export const listTrendsApiTrendsGetQueryParams = zod.object({
-  "country": zod.string().default(listTrendsApiTrendsGetQueryCountryDefault),
-  "limit": zod.number().min(1).max(listTrendsApiTrendsGetQueryLimitMax).default(listTrendsApiTrendsGetQueryLimitDefault),
+export const listTrendsApiBffTrendsGetQueryParams = zod.object({
+  "country": zod.string().default(listTrendsApiBffTrendsGetQueryCountryDefault),
+  "limit": zod.number().min(1).max(listTrendsApiBffTrendsGetQueryLimitMax).default(listTrendsApiBffTrendsGetQueryLimitDefault),
   "q": zod.union([zod.string(),zod.null()]).optional().describe('검색 질의(벡터검색)'),
   "on_date": zod.union([zod.iso.date(),zod.null()]).optional().describe('YYYY-MM-DD (단일 일자)'),
   "since": zod.union([zod.iso.date(),zod.null()]).optional().describe('YYYY-MM-DD (이후/포함)'),
   "until": zod.union([zod.iso.date(),zod.null()]).optional().describe('YYYY-MM-DD (이전/포함)')
 })
 
-export const listTrendsApiTrendsGetResponse = zod.object({
+export const listTrendsApiBffTrendsGetResponse = zod.object({
   "country": zod.string().describe('국가 코드 (예: KR, US)'),
   "source": zod.enum(['cache', 'db', 'vector']).describe('데이터 소스 (예: cache, db, vector)'),
   "query": zod.union([zod.string(),zod.null()]).optional().describe('키워드 (있으면 벡터 유사검색)'),
@@ -49,16 +49,384 @@ export const listTrendsApiTrendsGetResponse = zod.object({
 
 
 /**
+ * @summary Me
+ */
+export const meApiBffMeGetResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.email(),
+  "display_name": zod.union([zod.string(),zod.null()]).optional()
+})
+
+
+/**
+ * 캠페인의 KPI 정의 목록 조회
+ * @summary Read Campaign Kpi Defs
+ */
+export const readCampaignKpiDefsApiBffCampaignsCampaignIdKpiDefsGetParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const readCampaignKpiDefsApiBffCampaignsCampaignIdKpiDefsGetResponseWeightDefault = 1;
+
+export const readCampaignKpiDefsApiBffCampaignsCampaignIdKpiDefsGetResponseItem = zod.object({
+  "id": zod.number(),
+  "campaign_id": zod.number(),
+  "key": zod.enum(['reach', 'impressions', 'likes', 'comments', 'shares', 'saves', 'follows', 'link_clicks', 'profile_visits', 'ctr', 'engagement_rate']),
+  "aggregation": zod.enum(['sum', 'last', 'avg']),
+  "target_value": zod.union([zod.number(),zod.null()]).optional(),
+  "weight": zod.number().default(readCampaignKpiDefsApiBffCampaignsCampaignIdKpiDefsGetResponseWeightDefault)
+})
+export const readCampaignKpiDefsApiBffCampaignsCampaignIdKpiDefsGetResponse = zod.array(readCampaignKpiDefsApiBffCampaignsCampaignIdKpiDefsGetResponseItem)
+
+
+/**
+ * 캠페인의 KPI 결과 목록 조회
+ * @summary Read Campaign Kpi Results
+ */
+export const readCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const readCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetQueryLimitDefault = 200;
+
+export const readCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetQueryParams = zod.object({
+  "start": zod.union([zod.iso.datetime({}),zod.null()]).optional().describe('시작 날짜'),
+  "end": zod.union([zod.iso.datetime({}),zod.null()]).optional().describe('종료 날짜'),
+  "limit": zod.number().default(readCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetQueryLimitDefault).describe('최대 항목 수')
+})
+
+export const readCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetResponseItem = zod.object({
+  "id": zod.number(),
+  "campaign_id": zod.number(),
+  "as_of": zod.iso.datetime({}),
+  "values": zod.record(zod.string(), zod.number())
+})
+export const readCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetResponse = zod.array(readCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetResponseItem)
+
+
+/**
+ * 특정 캠페인 조회
+ * @summary Read Campaign
+ */
+export const readCampaignApiBffCampaignsCampaignIdGetParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const readCampaignApiBffCampaignsCampaignIdGetResponseNameMax = 120;
+
+
+export const readCampaignApiBffCampaignsCampaignIdGetResponse = zod.object({
+  "name": zod.string().max(readCampaignApiBffCampaignsCampaignIdGetResponseNameMax),
+  "description": zod.union([zod.string().max(readCampaignApiBffCampaignsCampaignIdGetResponseDescriptionMaxOne),zod.null()]).optional(),
+  "start_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "end_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "created_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 캠페인 목록 조회
+ * @summary Read Campaigns
+ */
+export const readCampaignsApiBffCampaignsGetQueryLimitDefault = 20;export const readCampaignsApiBffCampaignsGetQueryOffsetDefault = 0;
+
+export const readCampaignsApiBffCampaignsGetQueryParams = zod.object({
+  "q": zod.union([zod.string(),zod.null()]).optional().describe('검색 쿼리'),
+  "limit": zod.number().default(readCampaignsApiBffCampaignsGetQueryLimitDefault).describe('페이지당 항목 수'),
+  "offset": zod.number().optional().describe('오프셋')
+})
+
+export const readCampaignsApiBffCampaignsGetResponseNameMax = 120;
+
+
+export const readCampaignsApiBffCampaignsGetResponseItem = zod.object({
+  "name": zod.string().max(readCampaignsApiBffCampaignsGetResponseNameMax),
+  "description": zod.union([zod.string().max(readCampaignsApiBffCampaignsGetResponseDescriptionMaxOne),zod.null()]).optional(),
+  "start_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "end_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "created_at": zod.iso.datetime({})
+})
+export const readCampaignsApiBffCampaignsGetResponse = zod.array(readCampaignsApiBffCampaignsGetResponseItem)
+
+
+/**
+ * 드래프트의 플랫폼별 변형 목록 조회
+ * @summary Read Draft Variants
+ */
+export const readDraftVariantsApiBffDraftsDraftIdVariantsGetParams = zod.object({
+  "draft_id": zod.number()
+})
+
+export const readDraftVariantsApiBffDraftsDraftIdVariantsGetResponseItem = zod.object({
+  "id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.string(),
+  "status": zod.string(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "rendered_caption": zod.union([zod.string(),zod.null()]).optional(),
+  "rendered_blocks": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "compiled_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
+  "compiler_version": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const readDraftVariantsApiBffDraftsDraftIdVariantsGetResponse = zod.array(readDraftVariantsApiBffDraftsDraftIdVariantsGetResponseItem)
+
+
+/**
+ * 특정 드래프트 조회
+ * @summary Read Draft
+ */
+export const readDraftApiBffDraftsDraftIdGetParams = zod.object({
+  "draft_id": zod.number()
+})
+
+export const readDraftApiBffDraftsDraftIdGetResponse = zod.object({
+  "id": zod.number(),
+  "user_id": zod.number(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "title": zod.union([zod.string(),zod.null()]).optional(),
+  "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "goal": zod.union([zod.string(),zod.null()]).optional(),
+  "ir": zod.record(zod.string(), zod.any()),
+  "schema_version": zod.number(),
+  "ir_revision": zod.number(),
+  "state": zod.string(),
+  "monitoring_started_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "monitoring_ended_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "created_by": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 드래프트 목록 조회
+ * @summary Read Drafts
+ */
+export const readDraftsApiBffDraftsGetQueryLimitDefault = 20;export const readDraftsApiBffDraftsGetQueryOffsetDefault = 0;
+
+export const readDraftsApiBffDraftsGetQueryParams = zod.object({
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional().describe('캠페인 ID 필터'),
+  "limit": zod.number().default(readDraftsApiBffDraftsGetQueryLimitDefault).describe('페이지당 항목 수'),
+  "offset": zod.number().optional().describe('오프셋')
+})
+
+export const readDraftsApiBffDraftsGetResponseItem = zod.object({
+  "id": zod.number(),
+  "user_id": zod.number(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "title": zod.union([zod.string(),zod.null()]).optional(),
+  "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "goal": zod.union([zod.string(),zod.null()]).optional(),
+  "ir": zod.record(zod.string(), zod.any()),
+  "schema_version": zod.number(),
+  "ir_revision": zod.number(),
+  "state": zod.string(),
+  "monitoring_started_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "monitoring_ended_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "created_by": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const readDraftsApiBffDraftsGetResponse = zod.array(readDraftsApiBffDraftsGetResponseItem)
+
+
+/**
+ * 특정 플랫폼 계정 조회
+ * @summary Read Platform Account
+ */
+export const readPlatformAccountApiBffAccountsPlatformAccountIdGetParams = zod.object({
+  "account_id": zod.number()
+})
+
+export const readPlatformAccountApiBffAccountsPlatformAccountIdGetResponseHandleMax = 128;
+export const readPlatformAccountApiBffAccountsPlatformAccountIdGetResponseIsActiveDefault = true;
+
+export const readPlatformAccountApiBffAccountsPlatformAccountIdGetResponse = zod.object({
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "handle": zod.string().max(readPlatformAccountApiBffAccountsPlatformAccountIdGetResponseHandleMax),
+  "external_id": zod.union([zod.string().max(readPlatformAccountApiBffAccountsPlatformAccountIdGetResponseExternalIdMaxOne),zod.null()]).optional(),
+  "avatar_url": zod.union([zod.string().max(readPlatformAccountApiBffAccountsPlatformAccountIdGetResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(readPlatformAccountApiBffAccountsPlatformAccountIdGetResponseBioMaxOne),zod.null()]).optional(),
+  "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).default(readPlatformAccountApiBffAccountsPlatformAccountIdGetResponseIsActiveDefault),
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "last_checked_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "last_error": zod.union([zod.string(),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 플랫폼 계정 목록 조회
+ * @summary Read Platform Accounts
+ */
+export const readPlatformAccountsApiBffAccountsPlatformGetQueryLimitDefault = 50;export const readPlatformAccountsApiBffAccountsPlatformGetQueryOffsetDefault = 0;
+
+export const readPlatformAccountsApiBffAccountsPlatformGetQueryParams = zod.object({
+  "platform": zod.union([zod.enum(['instagram', 'threads', 'x', 'blog']),zod.null()]).optional().describe('플랫폼 필터'),
+  "handle": zod.union([zod.string(),zod.null()]).optional().describe('핸들 검색'),
+  "limit": zod.number().default(readPlatformAccountsApiBffAccountsPlatformGetQueryLimitDefault).describe('페이지당 항목 수'),
+  "offset": zod.number().optional().describe('오프셋')
+})
+
+export const readPlatformAccountsApiBffAccountsPlatformGetResponseHandleMax = 128;
+export const readPlatformAccountsApiBffAccountsPlatformGetResponseIsActiveDefault = true;
+
+export const readPlatformAccountsApiBffAccountsPlatformGetResponseItem = zod.object({
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "handle": zod.string().max(readPlatformAccountsApiBffAccountsPlatformGetResponseHandleMax),
+  "external_id": zod.union([zod.string().max(readPlatformAccountsApiBffAccountsPlatformGetResponseExternalIdMaxOne),zod.null()]).optional(),
+  "avatar_url": zod.union([zod.string().max(readPlatformAccountsApiBffAccountsPlatformGetResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(readPlatformAccountsApiBffAccountsPlatformGetResponseBioMaxOne),zod.null()]).optional(),
+  "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).default(readPlatformAccountsApiBffAccountsPlatformGetResponseIsActiveDefault),
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "last_checked_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "last_error": zod.union([zod.string(),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const readPlatformAccountsApiBffAccountsPlatformGetResponse = zod.array(readPlatformAccountsApiBffAccountsPlatformGetResponseItem)
+
+
+/**
+ * 특정 페르소나 조회
+ * @summary Read Persona
+ */
+export const readPersonaApiBffAccountsPersonasPersonaIdGetParams = zod.object({
+  "persona_id": zod.number()
+})
+
+export const readPersonaApiBffAccountsPersonasPersonaIdGetResponseNameMax = 100;
+export const readPersonaApiBffAccountsPersonasPersonaIdGetResponseLanguageDefault = "en";
+export const readPersonaApiBffAccountsPersonasPersonaIdGetResponseLanguageMax = 10;
+export const readPersonaApiBffAccountsPersonasPersonaIdGetResponseSchemaVersionDefault = 1;
+
+export const readPersonaApiBffAccountsPersonasPersonaIdGetResponse = zod.object({
+  "name": zod.string().max(readPersonaApiBffAccountsPersonasPersonaIdGetResponseNameMax),
+  "avatar_url": zod.union([zod.string().max(readPersonaApiBffAccountsPersonasPersonaIdGetResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(readPersonaApiBffAccountsPersonasPersonaIdGetResponseBioMaxOne),zod.null()]).optional(),
+  "language": zod.string().max(readPersonaApiBffAccountsPersonasPersonaIdGetResponseLanguageMax).default(readPersonaApiBffAccountsPersonasPersonaIdGetResponseLanguageDefault),
+  "tone": zod.union([zod.string().max(readPersonaApiBffAccountsPersonasPersonaIdGetResponseToneMaxOne),zod.null()]).optional(),
+  "style_guide": zod.union([zod.string(),zod.null()]).optional(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.number().default(readPersonaApiBffAccountsPersonasPersonaIdGetResponseSchemaVersionDefault),
+  "id": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 페르소나 목록 조회
+ * @summary Read Personas
+ */
+export const readPersonasApiBffAccountsPersonasGetQueryLimitDefault = 50;export const readPersonasApiBffAccountsPersonasGetQueryOffsetDefault = 0;
+
+export const readPersonasApiBffAccountsPersonasGetQueryParams = zod.object({
+  "name": zod.union([zod.string(),zod.null()]).optional().describe('이름 검색'),
+  "limit": zod.number().default(readPersonasApiBffAccountsPersonasGetQueryLimitDefault).describe('페이지당 항목 수'),
+  "offset": zod.number().optional().describe('오프셋')
+})
+
+export const readPersonasApiBffAccountsPersonasGetResponseNameMax = 100;
+export const readPersonasApiBffAccountsPersonasGetResponseLanguageDefault = "en";
+export const readPersonasApiBffAccountsPersonasGetResponseLanguageMax = 10;
+export const readPersonasApiBffAccountsPersonasGetResponseSchemaVersionDefault = 1;
+
+export const readPersonasApiBffAccountsPersonasGetResponseItem = zod.object({
+  "name": zod.string().max(readPersonasApiBffAccountsPersonasGetResponseNameMax),
+  "avatar_url": zod.union([zod.string().max(readPersonasApiBffAccountsPersonasGetResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(readPersonasApiBffAccountsPersonasGetResponseBioMaxOne),zod.null()]).optional(),
+  "language": zod.string().max(readPersonasApiBffAccountsPersonasGetResponseLanguageMax).default(readPersonasApiBffAccountsPersonasGetResponseLanguageDefault),
+  "tone": zod.union([zod.string().max(readPersonasApiBffAccountsPersonasGetResponseToneMaxOne),zod.null()]).optional(),
+  "style_guide": zod.union([zod.string(),zod.null()]).optional(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.number().default(readPersonasApiBffAccountsPersonasGetResponseSchemaVersionDefault),
+  "id": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const readPersonasApiBffAccountsPersonasGetResponse = zod.array(readPersonasApiBffAccountsPersonasGetResponseItem)
+
+
+/**
+ * 페르소나에 연결된 계정 목록 조회
+ * @summary Read Accounts For Persona
+ */
+export const readAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGetParams = zod.object({
+  "persona_id": zod.number()
+})
+
+export const readAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGetResponseItem = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "account_id": zod.number(),
+  "can_permissions": zod.array(zod.enum(['read', 'write', 'publish'])),
+  "is_verified_link": zod.boolean(),
+  "default_templates": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({})
+})
+export const readAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGetResponse = zod.array(readAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGetResponseItem)
+
+
+/**
+ * 계정에 연결된 페르소나 목록 조회
+ * @summary Read Personas For Account
+ */
+export const readPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGetParams = zod.object({
+  "account_id": zod.number()
+})
+
+export const readPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGetResponseItem = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "account_id": zod.number(),
+  "can_permissions": zod.array(zod.enum(['read', 'write', 'publish'])),
+  "is_verified_link": zod.boolean(),
+  "default_templates": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({})
+})
+export const readPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGetResponse = zod.array(readPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGetResponseItem)
+
+
+/**
  * @summary Signup
  */
-export const signupApiAuthSignupPostBodyPasswordMin = 8;
+export const signupApiOrchestratorAuthSignupPostBodyPasswordMin = 8;
 
-export const signupApiAuthSignupPostBodyPasswordMax = 128;
+export const signupApiOrchestratorAuthSignupPostBodyPasswordMax = 128;
 
 
-export const signupApiAuthSignupPostBody = zod.object({
+export const signupApiOrchestratorAuthSignupPostBody = zod.object({
   "email": zod.email(),
-  "password": zod.string().min(signupApiAuthSignupPostBodyPasswordMin).max(signupApiAuthSignupPostBodyPasswordMax),
+  "password": zod.string().min(signupApiOrchestratorAuthSignupPostBodyPasswordMin).max(signupApiOrchestratorAuthSignupPostBodyPasswordMax),
   "display_name": zod.union([zod.string(),zod.null()]).optional()
 })
 
@@ -66,16 +434,16 @@ export const signupApiAuthSignupPostBody = zod.object({
 /**
  * @summary Login
  */
-export const loginApiAuthLoginPostBody = zod.object({
+export const loginApiOrchestratorAuthLoginPostBody = zod.object({
   "email": zod.email(),
   "password": zod.string()
 })
 
-export const loginApiAuthLoginPostResponseTokenTypeDefault = "bearer";
+export const loginApiOrchestratorAuthLoginPostResponseTokenTypeDefault = "bearer";
 
-export const loginApiAuthLoginPostResponse = zod.object({
+export const loginApiOrchestratorAuthLoginPostResponse = zod.object({
   "access_token": zod.string(),
-  "token_type": zod.string().default(loginApiAuthLoginPostResponseTokenTypeDefault),
+  "token_type": zod.string().default(loginApiOrchestratorAuthLoginPostResponseTokenTypeDefault),
   "user": zod.object({
   "id": zod.number(),
   "email": zod.email(),
@@ -85,12 +453,525 @@ export const loginApiAuthLoginPostResponse = zod.object({
 
 
 /**
- * @summary Me
+ * 캠페인 삭제
+ * @summary Delete Existing Campaign
  */
-export const meApiMeGetResponse = zod.object({
+export const deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDeleteParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDeleteResponse = zod.any()
+
+
+/**
+ * 캠페인 업데이트
+ * @summary Update Existing Campaign
+ */
+export const updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutBody = zod.object({
+  "name": zod.union([zod.string().max(updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutBodyNameMaxOne),zod.null()]).optional(),
+  "description": zod.union([zod.string().max(updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutBodyDescriptionMaxOne),zod.null()]).optional(),
+  "start_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "end_at": zod.union([zod.iso.datetime({}),zod.null()]).optional()
+})
+
+export const updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutResponseNameMax = 120;
+
+
+export const updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutResponse = zod.object({
+  "name": zod.string().max(updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutResponseNameMax),
+  "description": zod.union([zod.string().max(updateExistingCampaignApiOrchestratorCampaignsCampaignIdPutResponseDescriptionMaxOne),zod.null()]).optional(),
+  "start_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "end_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
   "id": zod.number(),
-  "email": zod.email(),
-  "display_name": zod.union([zod.string(),zod.null()]).optional()
+  "owner_user_id": zod.number(),
+  "created_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 캠페인의 KPI 정의 전체 교체
+ * @summary Upsert Campaign Kpi Defs
+ */
+export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutBodyWeightDefault = 1;
+
+export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutBodyItem = zod.object({
+  "key": zod.enum(['reach', 'impressions', 'likes', 'comments', 'shares', 'saves', 'follows', 'link_clicks', 'profile_visits', 'ctr', 'engagement_rate']),
+  "aggregation": zod.enum(['sum', 'last', 'avg']).optional(),
+  "target_value": zod.union([zod.number(),zod.null()]).optional(),
+  "weight": zod.number().default(upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutBodyWeightDefault)
+})
+export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutBody = zod.array(upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutBodyItem)
+
+export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutResponseWeightDefault = 1;
+
+export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutResponseItem = zod.object({
+  "id": zod.number(),
+  "campaign_id": zod.number(),
+  "key": zod.enum(['reach', 'impressions', 'likes', 'comments', 'shares', 'saves', 'follows', 'link_clicks', 'profile_visits', 'ctr', 'engagement_rate']),
+  "aggregation": zod.enum(['sum', 'last', 'avg']),
+  "target_value": zod.union([zod.number(),zod.null()]).optional(),
+  "weight": zod.number().default(upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutResponseWeightDefault)
+})
+export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutResponse = zod.array(upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutResponseItem)
+
+
+/**
+ * 캠페인 KPI 결과 기록
+ * @summary Record Campaign Kpi Result
+ */
+export const recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostQueryParams = zod.object({
+  "as_of": zod.iso.datetime({})
+})
+
+export const recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody = zod.record(zod.string(), zod.any())
+
+export const recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostResponse = zod.object({
+  "id": zod.number(),
+  "campaign_id": zod.number(),
+  "as_of": zod.iso.datetime({}),
+  "values": zod.record(zod.string(), zod.number())
+})
+
+
+/**
+ * 캠페인 KPI 집계 실행
+ * @summary Aggregate Campaign Kpis
+ */
+export const aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams = zod.object({
+  "campaign_id": zod.number()
+})
+
+export const aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostQueryParams = zod.object({
+  "as_of": zod.iso.datetime({}).optional()
+})
+
+export const aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostResponse = zod.object({
+  "id": zod.number(),
+  "campaign_id": zod.number(),
+  "as_of": zod.iso.datetime({}),
+  "values": zod.record(zod.string(), zod.number())
+})
+
+
+/**
+ * 새 캠페인 생성
+ * @summary Create New Campaign
+ */
+export const createNewCampaignApiOrchestratorCampaignsPostBodyNameMax = 120;
+
+
+export const createNewCampaignApiOrchestratorCampaignsPostBody = zod.object({
+  "name": zod.string().max(createNewCampaignApiOrchestratorCampaignsPostBodyNameMax),
+  "description": zod.union([zod.string().max(createNewCampaignApiOrchestratorCampaignsPostBodyDescriptionMaxOne),zod.null()]).optional(),
+  "start_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "end_at": zod.union([zod.iso.datetime({}),zod.null()]).optional()
+})
+
+export const createNewCampaignApiOrchestratorCampaignsPostResponseNameMax = 120;
+
+
+export const createNewCampaignApiOrchestratorCampaignsPostResponse = zod.object({
+  "name": zod.string().max(createNewCampaignApiOrchestratorCampaignsPostResponseNameMax),
+  "description": zod.union([zod.string().max(createNewCampaignApiOrchestratorCampaignsPostResponseDescriptionMaxOne),zod.null()]).optional(),
+  "start_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "end_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "created_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 새 드래프트 생성
+ * @summary Create New Draft
+ */
+export const createNewDraftApiOrchestratorDraftsPostBody = zod.object({
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "title": zod.union([zod.string(),zod.null()]).optional(),
+  "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "goal": zod.union([zod.string(),zod.null()]).optional(),
+  "ir": zod.object({
+  "blocks": zod.array(zod.union([zod.object({
+  "type": zod.literal("text"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("image"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("video"),
+  "props": zod.record(zod.string(), zod.any())
+})])).min(1),
+  "options": zod.record(zod.string(), zod.any()).optional()
+})
+})
+
+export const createNewDraftApiOrchestratorDraftsPostResponse = zod.object({
+  "id": zod.number(),
+  "user_id": zod.number(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "title": zod.union([zod.string(),zod.null()]).optional(),
+  "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "goal": zod.union([zod.string(),zod.null()]).optional(),
+  "ir": zod.record(zod.string(), zod.any()),
+  "schema_version": zod.number(),
+  "ir_revision": zod.number(),
+  "state": zod.string(),
+  "monitoring_started_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "monitoring_ended_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "created_by": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 드래프트 IR 및 메타데이터 업데이트
+ * @summary Update Draft Content
+ */
+export const updateDraftContentApiOrchestratorDraftsDraftIdIrPutParams = zod.object({
+  "draft_id": zod.number()
+})
+
+export const updateDraftContentApiOrchestratorDraftsDraftIdIrPutQueryParams = zod.object({
+  "title": zod.union([zod.string(),zod.null()]).optional(),
+  "goal": zod.union([zod.string(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const updateDraftContentApiOrchestratorDraftsDraftIdIrPutBody = zod.object({
+  "ir": zod.object({
+  "blocks": zod.array(zod.union([zod.object({
+  "type": zod.literal("text"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("image"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("video"),
+  "props": zod.record(zod.string(), zod.any())
+})])).min(1),
+  "options": zod.record(zod.string(), zod.any()).optional()
+}),
+  "tags": zod.union([zod.array(zod.string()),zod.null()]).optional()
+})
+
+export const updateDraftContentApiOrchestratorDraftsDraftIdIrPutResponse = zod.object({
+  "id": zod.number(),
+  "user_id": zod.number(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "title": zod.union([zod.string(),zod.null()]).optional(),
+  "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "goal": zod.union([zod.string(),zod.null()]).optional(),
+  "ir": zod.record(zod.string(), zod.any()),
+  "schema_version": zod.number(),
+  "ir_revision": zod.number(),
+  "state": zod.string(),
+  "monitoring_started_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "monitoring_ended_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "created_by": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 새 플랫폼 계정 생성
+ * @summary Create New Platform Account
+ */
+export const createNewPlatformAccountApiOrchestratorAccountsPlatformPostBodyHandleMax = 128;
+export const createNewPlatformAccountApiOrchestratorAccountsPlatformPostBodyIsActiveDefault = true;
+
+export const createNewPlatformAccountApiOrchestratorAccountsPlatformPostBody = zod.object({
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "handle": zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostBodyHandleMax),
+  "external_id": zod.union([zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostBodyExternalIdMaxOne),zod.null()]).optional(),
+  "avatar_url": zod.union([zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostBodyAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostBodyBioMaxOne),zod.null()]).optional(),
+  "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).default(createNewPlatformAccountApiOrchestratorAccountsPlatformPostBodyIsActiveDefault),
+  "access_token": zod.union([zod.string(),zod.null()]).optional(),
+  "refresh_token": zod.union([zod.string(),zod.null()]).optional(),
+  "token_expires_at": zod.union([zod.iso.datetime({}),zod.null()]).optional()
+})
+
+export const createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponseHandleMax = 128;
+export const createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponseIsActiveDefault = true;
+
+export const createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponse = zod.object({
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "handle": zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponseHandleMax),
+  "external_id": zod.union([zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponseExternalIdMaxOne),zod.null()]).optional(),
+  "avatar_url": zod.union([zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponseBioMaxOne),zod.null()]).optional(),
+  "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).default(createNewPlatformAccountApiOrchestratorAccountsPlatformPostResponseIsActiveDefault),
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "last_checked_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "last_error": zod.union([zod.string(),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 플랫폼 계정 업데이트
+ * @summary Update Existing Platform Account
+ */
+export const updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutParams = zod.object({
+  "account_id": zod.number()
+})
+
+export const updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutBody = zod.object({
+  "handle": zod.union([zod.string(),zod.null()]).optional(),
+  "avatar_url": zod.union([zod.string(),zod.null()]).optional(),
+  "bio": zod.union([zod.string(),zod.null()]).optional(),
+  "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).optional(),
+  "access_token": zod.union([zod.string(),zod.null()]).optional(),
+  "refresh_token": zod.union([zod.string(),zod.null()]).optional(),
+  "token_expires_at": zod.union([zod.iso.datetime({}),zod.null()]).optional()
+})
+
+export const updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponseHandleMax = 128;
+export const updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponseIsActiveDefault = true;
+
+export const updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponse = zod.object({
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "handle": zod.string().max(updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponseHandleMax),
+  "external_id": zod.union([zod.string().max(updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponseExternalIdMaxOne),zod.null()]).optional(),
+  "avatar_url": zod.union([zod.string().max(updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponseBioMaxOne),zod.null()]).optional(),
+  "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).default(updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutResponseIsActiveDefault),
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "last_checked_at": zod.union([zod.iso.datetime({}),zod.null()]).optional(),
+  "last_error": zod.union([zod.string(),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 플랫폼 계정 삭제
+ * @summary Delete Existing Platform Account
+ */
+export const deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams = zod.object({
+  "account_id": zod.number()
+})
+
+export const deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteQuerySoftDefault = true;
+
+export const deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteQueryParams = zod.object({
+  "soft": zod.boolean().default(deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteQuerySoftDefault)
+})
+
+export const deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteResponse = zod.any()
+
+
+/**
+ * 새 페르소나 생성
+ * @summary Create New Persona
+ */
+export const createNewPersonaApiOrchestratorAccountsPersonasPostBodyNameMax = 100;
+export const createNewPersonaApiOrchestratorAccountsPersonasPostBodyLanguageDefault = "en";
+export const createNewPersonaApiOrchestratorAccountsPersonasPostBodyLanguageMax = 10;
+export const createNewPersonaApiOrchestratorAccountsPersonasPostBodySchemaVersionDefault = 1;
+
+export const createNewPersonaApiOrchestratorAccountsPersonasPostBody = zod.object({
+  "name": zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostBodyNameMax),
+  "avatar_url": zod.union([zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostBodyAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostBodyBioMaxOne),zod.null()]).optional(),
+  "language": zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostBodyLanguageMax).default(createNewPersonaApiOrchestratorAccountsPersonasPostBodyLanguageDefault),
+  "tone": zod.union([zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostBodyToneMaxOne),zod.null()]).optional(),
+  "style_guide": zod.union([zod.string(),zod.null()]).optional(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.number().default(createNewPersonaApiOrchestratorAccountsPersonasPostBodySchemaVersionDefault),
+  "owner_user_id": zod.number()
+})
+
+export const createNewPersonaApiOrchestratorAccountsPersonasPostResponseNameMax = 100;
+export const createNewPersonaApiOrchestratorAccountsPersonasPostResponseLanguageDefault = "en";
+export const createNewPersonaApiOrchestratorAccountsPersonasPostResponseLanguageMax = 10;
+export const createNewPersonaApiOrchestratorAccountsPersonasPostResponseSchemaVersionDefault = 1;
+
+export const createNewPersonaApiOrchestratorAccountsPersonasPostResponse = zod.object({
+  "name": zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostResponseNameMax),
+  "avatar_url": zod.union([zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostResponseBioMaxOne),zod.null()]).optional(),
+  "language": zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostResponseLanguageMax).default(createNewPersonaApiOrchestratorAccountsPersonasPostResponseLanguageDefault),
+  "tone": zod.union([zod.string().max(createNewPersonaApiOrchestratorAccountsPersonasPostResponseToneMaxOne),zod.null()]).optional(),
+  "style_guide": zod.union([zod.string(),zod.null()]).optional(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.number().default(createNewPersonaApiOrchestratorAccountsPersonasPostResponseSchemaVersionDefault),
+  "id": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 페르소나 업데이트
+ * @summary Update Existing Persona
+ */
+export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutParams = zod.object({
+  "persona_id": zod.number()
+})
+
+export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutBody = zod.object({
+  "name": zod.union([zod.string(),zod.null()]).optional(),
+  "avatar_url": zod.union([zod.string(),zod.null()]).optional(),
+  "bio": zod.union([zod.string(),zod.null()]).optional(),
+  "language": zod.union([zod.string(),zod.null()]).optional(),
+  "tone": zod.union([zod.string(),zod.null()]).optional(),
+  "style_guide": zod.union([zod.string(),zod.null()]).optional(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseNameMax = 100;
+export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseLanguageDefault = "en";
+export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseLanguageMax = 10;
+export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseSchemaVersionDefault = 1;
+
+export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponse = zod.object({
+  "name": zod.string().max(updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseNameMax),
+  "avatar_url": zod.union([zod.string().max(updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseAvatarUrlMaxOne),zod.null()]).optional(),
+  "bio": zod.union([zod.string().max(updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseBioMaxOne),zod.null()]).optional(),
+  "language": zod.string().max(updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseLanguageMax).default(updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseLanguageDefault),
+  "tone": zod.union([zod.string().max(updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseToneMaxOne),zod.null()]).optional(),
+  "style_guide": zod.union([zod.string(),zod.null()]).optional(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.number().default(updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutResponseSchemaVersionDefault),
+  "id": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 페르소나 삭제
+ * @summary Delete Existing Persona
+ */
+export const deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDeleteParams = zod.object({
+  "persona_id": zod.number()
+})
+
+export const deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDeleteResponse = zod.any()
+
+
+/**
+ * 페르소나와 계정 연결 생성
+ * @summary Create Persona Account Link
+ */
+export const createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostBodyCanPermissionsDefault = ["read", "publish", "write"];export const createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostBodyIsVerifiedLinkDefault = false;
+
+export const createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostBody = zod.object({
+  "persona_id": zod.number(),
+  "account_id": zod.number(),
+  "can_permissions": zod.union([zod.array(zod.enum(['read', 'write', 'publish'])),zod.null()]).default(createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostBodyCanPermissionsDefault),
+  "is_verified_link": zod.boolean().optional(),
+  "default_templates": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional()
+})
+
+export const createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostResponse = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "account_id": zod.number(),
+  "can_permissions": zod.array(zod.enum(['read', 'write', 'publish'])),
+  "is_verified_link": zod.boolean(),
+  "default_templates": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({})
+})
+
+
+/**
+ * 페르소나와 계정 연결 제거
+ * @summary Remove Persona Account Link
+ */
+export const removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteParams = zod.object({
+  "persona_id": zod.number(),
+  "account_id": zod.number()
+})
+
+export const removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteResponse = zod.any()
+
+
+/**
+ * 인사이트 샘플 수집
+ * @summary Ingest Insight
+ */
+export const ingestInsightApiOrchestratorInsightsPostBodySourceDefault = "webhook";
+
+export const ingestInsightApiOrchestratorInsightsPostBody = zod.object({
+  "owner_user_id": zod.number(),
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "published_post_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform_post_id": zod.union([zod.string(),zod.null()]).optional(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ts": zod.iso.datetime({}),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "source": zod.enum(['webhook', 'poll', 'manual']).default(ingestInsightApiOrchestratorInsightsPostBodySourceDefault),
+  "ingest_key": zod.union([zod.string(),zod.null()]).optional()
+})
+
+export const ingestInsightApiOrchestratorInsightsPostResponseSourceDefault = "webhook";
+
+export const ingestInsightApiOrchestratorInsightsPostResponse = zod.object({
+  "owner_user_id": zod.number(),
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "published_post_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform_post_id": zod.union([zod.string(),zod.null()]).optional(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ts": zod.iso.datetime({}),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "source": zod.enum(['webhook', 'poll', 'manual']).default(ingestInsightApiOrchestratorInsightsPostResponseSourceDefault),
+  "ingest_key": zod.union([zod.string(),zod.null()]).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
 })
 
 
