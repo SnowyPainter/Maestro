@@ -8,9 +8,6 @@ paths:
       tags:
       - trends
       summary: List Trends
-      description: 'q 없으면: Redis 캐시 → DB fallback
-
-        q 있으면: pgvector 유사도 검색(<-> 연산자)'
       operationId: list_trends_api_trends_get
       parameters:
       - name: country
@@ -18,10 +15,8 @@ paths:
         required: false
         schema:
           type: string
-          description: 국가 코드
           default: KR
           title: Country
-        description: 국가 코드
       - name: limit
         in: query
         required: false
@@ -38,9 +33,7 @@ paths:
           anyOf:
           - type: string
           - type: 'null'
-          description: 키워드(있으면 벡터 유사검색)
           title: Q
-        description: 키워드(있으면 벡터 유사검색)
       responses:
         '200':
           description: Successful Response

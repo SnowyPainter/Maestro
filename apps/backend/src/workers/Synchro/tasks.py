@@ -85,12 +85,11 @@ def enqueue_trend_title_embedding(self, trend_id: int):
         if not tr.title:  # 방어
             return {"ok": False, "reason": "no_title"}
 
-        emb = embed_texts_sync([tr.title])
+        emb = embed_texts_sync([tr.title])[0]
         
         if emb is None:
             return {"ok": False, "reason": "embed_failed"}
 
         tr.title_embedding = emb
-        session.add(tr)
         session.commit()
         return {"ok": True} 

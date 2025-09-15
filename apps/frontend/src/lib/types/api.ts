@@ -11,11 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * List Trends
-         * @description q 없으면: Redis 캐시 → DB fallback
-         *     q 있으면: pgvector 유사도 검색(<-> 연산자)
-         */
+        /** List Trends */
         get: operations["list_trends_api_trends_get"];
         put?: never;
         post?: never;
@@ -264,10 +260,8 @@ export interface operations {
     list_trends_api_trends_get: {
         parameters: {
             query?: {
-                /** @description 국가 코드 */
                 country?: string;
                 limit?: number;
-                /** @description 키워드(있으면 벡터 유사검색) */
                 q?: string | null;
             };
             header?: never;

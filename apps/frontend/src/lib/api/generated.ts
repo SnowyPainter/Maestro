@@ -177,18 +177,12 @@ export interface ValidationError {
 }
 
 export type ListTrendsApiTrendsGetParams = {
-/**
- * 국가 코드
- */
 country?: string;
 /**
  * @minimum 1
  * @maximum 100
  */
 limit?: number;
-/**
- * 키워드(있으면 벡터 유사검색)
- */
 q?: string | null;
 };
 
@@ -197,8 +191,6 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * q 없으면: Redis 캐시 → DB fallback
-q 있으면: pgvector 유사도 검색(<-> 연산자)
  * @summary List Trends
  */
 export const listTrendsApiTrendsGet = (

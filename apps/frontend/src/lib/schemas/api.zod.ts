@@ -9,8 +9,6 @@ import {
 } from 'zod';
 
 /**
- * q 없으면: Redis 캐시 → DB fallback
-q 있으면: pgvector 유사도 검색(<-> 연산자)
  * @summary List Trends
  */
 export const listTrendsApiTrendsGetQueryCountryDefault = "KR";export const listTrendsApiTrendsGetQueryLimitDefault = 20;
@@ -18,9 +16,9 @@ export const listTrendsApiTrendsGetQueryLimitMax = 100;
 
 
 export const listTrendsApiTrendsGetQueryParams = zod.object({
-  "country": zod.string().default(listTrendsApiTrendsGetQueryCountryDefault).describe('국가 코드'),
+  "country": zod.string().default(listTrendsApiTrendsGetQueryCountryDefault),
   "limit": zod.number().min(1).max(listTrendsApiTrendsGetQueryLimitMax).default(listTrendsApiTrendsGetQueryLimitDefault),
-  "q": zod.union([zod.string(),zod.null()]).optional().describe('키워드(있으면 벡터 유사검색)')
+  "q": zod.union([zod.string(),zod.null()]).optional()
 })
 
 export const listTrendsApiTrendsGetResponse = zod.object({
