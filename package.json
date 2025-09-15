@@ -1,23 +1,22 @@
 {
   "scripts": {
-    "dev:frontend": "pnpm --filter ./apps/frontend dev:with-api",
-
-    "infra:up": "docker-compose -f infra/docker-compose.yml up -d",
-    "infra:down": "docker-compose -f infra/docker-compose.yml down",
-    "infra:stop": "docker-compose -f infra/docker-compose.yml stop",
-    "infra:destroy": "docker-compose -f infra/docker-compose.yml down -v",
+    "dev:infra": "docker-compose -f infra/docker-compose.yml up -d",
+    "stop:infra": "docker-compose -f infra/docker-compose.yml down",
+    "destroy:infra": "docker-compose -f infra/docker-compose.yml down -v",
 
     "dev:backend": "uvicorn apps.backend.src.main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:frontend": "pnpm --filter ./apps/frontend dev:with-api",
+    "dev:backend:and:frontend": "concurrently -n API,FE \"pnpm dev:backend\" \"pnpm dev:frontend\"",
+    
     "dev:celery:worker": "celery -A apps.backend.src.core.celery_app:celery_app worker -l info -Q default,sniffer,synchro --concurrency=4",
     "dev:celery:beat": "celery -A apps.backend.src.core.celery_app:celery_app beat -l info",
-    "dev:workers": "concurrently -n WRK,BEAT \"pnpm dev:celery:worker\" \"pnpm dev:celery:beat\"",
+    "dev:celery": "concurrently -n WRK,BEAT \"pnpm dev:celery:worker\" \"pnpm dev:celery:beat\"",
+    
+    "celery:stop": "pkill -f \"celery.*apps\\.backend\\.src\\.core\\.celery_app:celery_app\" || true",
+    "celery:start": "pnpm dev:celery",
+    "celery:restart": "pnpm celery:stop && pnpm celery:start",
 
-    "workers:stop": "pkill -f \"celery.*apps\\.backend\\.src\\.core\\.celery_app:celery_app\" || true",
-    "workers:start": "pnpm dev:workers",
-    "workers:restart": "pnpm workers:stop && pnpm workers:start",
-
-    "dev:all": "pnpm infra:up && concurrently --no-auto-exit -n API,WRK,FE \"pnpm dev:backend\" \"pnpm dev:workers\" \"pnpm dev:frontend\"",
-    "stop:all": "pnpm infra:down"
+    "dev:all": "pnpm dev:infra && concurrently --no-auto-exit -n APP,CELERY \"pnpm dev:backend:and:frontend\" \"pnpm dev:celery\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
