@@ -1,146 +1,379 @@
+"""Accounts orchestration flows implemented via the DSL."""
+
+from __future__ import annotations
+
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+
+from fastapi import HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.src.core.deps import get_db, get_current_user
+from apps.backend.src.modules.accounts.schemas import (
+    PersonaAccountLinkCreate,
+    PersonaAccountOut,
+    PersonaBase,
+    PersonaCreate,
+    PersonaOut,
+    PersonaUpdate,
+    PlatformAccountCreate,
+    PlatformAccountOut,
+    PlatformAccountUpdate,
+)
 from apps.backend.src.modules.accounts.service import (
-    create_platform_account,
-    update_platform_account,
-    delete_platform_account,
     create_persona,
-    update_persona,
+    create_platform_account,
     delete_persona,
+    delete_platform_account,
+    get_persona,
+    get_platform_account,
     link_persona_account,
     unlink_persona_account,
-    get_platform_account,
-    get_persona,
+    update_persona,
+    update_platform_account,
 )
-from apps.backend.src.modules.accounts.schemas import (
-    PlatformAccountCreate,
-    PlatformAccountUpdate,
-    PersonaCreate,
-    PersonaUpdate,
-    PersonaAccountLinkCreate,
-)
-from apps.backend.src.modules.accounts.schemas import PlatformAccountOut, PersonaOut, PersonaAccountOut
 from apps.backend.src.modules.users.models import User
 
-router = APIRouter(prefix="/accounts", tags=["accounts"])
+from .dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from .registry import FLOWS, FlowBuilder, operator
 
 
-# PlatformAccount endpoints
-@router.post("/platform", response_model=PlatformAccountOut)
-async def create_new_platform_account(
-    data: PlatformAccountCreate,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """새 플랫폼 계정 생성"""
-    data.owner_user_id = user.id  # 강제 설정
-    account = await create_platform_account(db, data)
-    return account
+class MessageOut(BaseModel):
+    message: str
 
 
-@router.put("/platform/{account_id}", response_model=PlatformAccountOut)
-async def update_existing_platform_account(
-    account_id: int,
-    data: PlatformAccountUpdate,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """플랫폼 계정 업데이트"""
-    # 계정 소유권 검증
-    account = await get_platform_account(db, account_id=account_id, owner_user_id=user.id)
-    if not account:
-        raise HTTPException(status_code=404, detail="Platform account not found")
-
-    updated_account = await update_platform_account(db, account=account, data=data)
-    return updated_account
-
-@router.delete("/platform/{account_id}")
-async def delete_existing_platform_account(
-    account_id: int,
-    soft: bool = True,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """플랫폼 계정 삭제"""
-    # 계정 소유권 검증
-    account = await get_platform_account(db, account_id=account_id, owner_user_id=user.id)
-    if not account:
-        raise HTTPException(status_code=404, detail="Platform account not found")
-
-    await delete_platform_account(db, account=account, soft=soft)
-    return {"message": "Platform account deleted successfully"}
+class PlatformAccountCreateCommand(BaseModel):
+    account: PlatformAccountCreate
 
 
-# Persona endpoints
-@router.post("/personas", response_model=PersonaOut)
-async def create_new_persona(
-    data: PersonaCreate,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """새 페르소나 생성"""
-    data.owner_user_id = user.id  # 강제 설정
-    persona = await create_persona(db, data)
-    return persona
+class PlatformAccountUpdateCommand(BaseModel):
+    account_id: Optional[int] = None
+    data: PlatformAccountUpdate
 
 
-@router.put("/personas/{persona_id}", response_model=PersonaOut)
-async def update_existing_persona(
-    persona_id: int,
-    data: PersonaUpdate,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """페르소나 업데이트"""
-    # 페르소나 소유권 검증
-    persona = await get_persona(db, persona_id=persona_id, owner_user_id=user.id)
-    if not persona:
-        raise HTTPException(status_code=404, detail="Persona not found")
-
-    updated_persona = await update_persona(db, persona=persona, data=data)
-    return updated_persona
+class PlatformAccountDeleteCommand(BaseModel):
+    account_id: Optional[int] = None
+    soft: bool = True
 
 
-@router.delete("/personas/{persona_id}")
-async def delete_existing_persona(
-    persona_id: int,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """페르소나 삭제"""
-    # 페르소나 소유권 검증
-    persona = await get_persona(db, persona_id=persona_id, owner_user_id=user.id)
-    if not persona:
-        raise HTTPException(status_code=404, detail="Persona not found")
-
-    await delete_persona(db, persona=persona)
-    return {"message": "Persona deleted successfully"}
+class PersonaCreatePayload(PersonaBase):
+    pass
 
 
-# PersonaAccount link endpoints
-@router.post("/persona-account-links", response_model=PersonaAccountOut)
-async def create_persona_account_link(
-    data: PersonaAccountLinkCreate,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """페르소나와 계정 연결 생성"""
-    link = await link_persona_account(db, data, owner_user_id=user.id)
-    return link
+class PersonaCreateCommand(BaseModel):
+    persona: PersonaCreatePayload
 
 
-@router.delete("/persona-account-links/{persona_id}/{account_id}")
-async def remove_persona_account_link(
-    persona_id: int,
-    account_id: int,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """페르소나와 계정 연결 제거"""
-    await unlink_persona_account(
-        db, persona_id=persona_id, account_id=account_id, owner_user_id=user.id
+class PersonaUpdateCommand(BaseModel):
+    persona_id: Optional[int] = None
+    data: PersonaUpdate
+
+
+class PersonaDeleteCommand(BaseModel):
+    persona_id: Optional[int] = None
+
+
+class PersonaAccountLinkCommand(BaseModel):
+    link: PersonaAccountLinkCreate
+
+
+class PersonaAccountUnlinkCommand(BaseModel):
+    persona_id: Optional[int] = None
+    account_id: Optional[int] = None
+
+
+def _to_model(model_cls: type[BaseModel], value) -> BaseModel:
+    if isinstance(value, model_cls):
+        return value
+    if hasattr(model_cls, "model_validate"):
+        return model_cls.model_validate(value)
+    if isinstance(value, BaseModel):
+        return model_cls.parse_obj(value.dict())
+    return model_cls.parse_obj(value)
+
+
+def _model_dump(model: BaseModel) -> dict:
+    if hasattr(model, "model_dump"):
+        return model.model_dump()
+    return model.dict()
+
+
+# ---------------------------------------------------------------------------
+# Operators
+# ---------------------------------------------------------------------------
+
+
+@operator(
+    key="accounts.platform.create_account",
+    title="Create platform account",
+    side_effect="write",
+)
+async def op_create_platform_account(
+    payload: PlatformAccountCreateCommand,
+    ctx: TaskContext,
+) -> PlatformAccountOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    payload.account.owner_user_id = user.id  # type: ignore[attr-defined]
+    created = await create_platform_account(db, payload.account)
+    return _to_model(PlatformAccountOut, created)
+
+
+@operator(
+    key="accounts.platform.update_account",
+    title="Update platform account",
+    side_effect="write",
+)
+async def op_update_platform_account(
+    payload: PlatformAccountUpdateCommand,
+    ctx: TaskContext,
+) -> PlatformAccountOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    if payload.account_id is None:
+        raise HTTPException(status_code=422, detail="account_id is required")
+    account = await get_platform_account(
+        db, account_id=payload.account_id, owner_user_id=user.id
     )
-    return {"message": "Persona-account link removed successfully"}
+    if not account:
+        raise HTTPException(status_code=404, detail="Platform account not found")
+    updated = await update_platform_account(db, account=account, data=payload.data)
+    return _to_model(PlatformAccountOut, updated)
+
+
+@operator(
+    key="accounts.platform.delete_account",
+    title="Delete platform account",
+    side_effect="write",
+)
+async def op_delete_platform_account(
+    payload: PlatformAccountDeleteCommand,
+    ctx: TaskContext,
+) -> MessageOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    if payload.account_id is None:
+        raise HTTPException(status_code=422, detail="account_id is required")
+    account = await get_platform_account(
+        db, account_id=payload.account_id, owner_user_id=user.id
+    )
+    if not account:
+        raise HTTPException(status_code=404, detail="Platform account not found")
+    await delete_platform_account(db, account=account, soft=payload.soft)
+    return MessageOut(message="Platform account deleted successfully")
+
+
+@operator(
+    key="accounts.persona.create_persona",
+    title="Create persona",
+    side_effect="write",
+)
+async def op_create_persona(payload: PersonaCreateCommand, ctx: TaskContext) -> PersonaOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    persona_input = PersonaCreate(owner_user_id=user.id, **_model_dump(payload.persona))
+    persona = await create_persona(db, persona_input)
+    return _to_model(PersonaOut, persona)
+
+
+@operator(
+    key="accounts.persona.update_persona",
+    title="Update persona",
+    side_effect="write",
+)
+async def op_update_persona(payload: PersonaUpdateCommand, ctx: TaskContext) -> PersonaOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    if payload.persona_id is None:
+        raise HTTPException(status_code=422, detail="persona_id is required")
+    persona = await get_persona(
+        db, persona_id=payload.persona_id, owner_user_id=user.id
+    )
+    if not persona:
+        raise HTTPException(status_code=404, detail="Persona not found")
+    updated = await update_persona(db, persona=persona, data=payload.data)
+    return _to_model(PersonaOut, updated)
+
+
+@operator(
+    key="accounts.persona.delete_persona",
+    title="Delete persona",
+    side_effect="write",
+)
+async def op_delete_persona(payload: PersonaDeleteCommand, ctx: TaskContext) -> MessageOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    if payload.persona_id is None:
+        raise HTTPException(status_code=422, detail="persona_id is required")
+    persona = await get_persona(
+        db, persona_id=payload.persona_id, owner_user_id=user.id
+    )
+    if not persona:
+        raise HTTPException(status_code=404, detail="Persona not found")
+    await delete_persona(db, persona=persona)
+    return MessageOut(message="Persona deleted successfully")
+
+
+@operator(
+    key="accounts.link.create_link",
+    title="Link persona/account",
+    side_effect="write",
+)
+async def op_link_persona_account(
+    payload: PersonaAccountLinkCommand,
+    ctx: TaskContext,
+) -> PersonaAccountOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    link = await link_persona_account(db, payload.link, owner_user_id=user.id)
+    return _to_model(PersonaAccountOut, link)
+
+
+@operator(
+    key="accounts.link.unlink",
+    title="Unlink persona/account",
+    side_effect="write",
+)
+async def op_unlink_persona_account(
+    payload: PersonaAccountUnlinkCommand,
+    ctx: TaskContext,
+) -> MessageOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    if payload.persona_id is None or payload.account_id is None:
+        raise HTTPException(status_code=422, detail="persona_id and account_id are required")
+    await unlink_persona_account(
+        db,
+        persona_id=payload.persona_id,
+        account_id=payload.account_id,
+        owner_user_id=user.id,
+    )
+    return MessageOut(message="Persona-account link removed successfully")
+
+
+# ---------------------------------------------------------------------------
+# Flow registrations
+# ---------------------------------------------------------------------------
+
+
+@FLOWS.flow(
+    key="accounts.platform.create",
+    title="Create Platform Account",
+    input_model=PlatformAccountCreateCommand,
+    output_model=PlatformAccountOut,
+    method="post",
+    path="/accounts/platform",
+    tags=("accounts",),
+)
+def _flow_create_platform(builder: FlowBuilder):
+    task = builder.task("create_platform", "accounts.platform.create_account")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.platform.update",
+    title="Update Platform Account",
+    input_model=PlatformAccountUpdateCommand,
+    output_model=PlatformAccountOut,
+    method="put",
+    path="/accounts/platform/{account_id}",
+    tags=("accounts",),
+)
+def _flow_update_platform(builder: FlowBuilder):
+    task = builder.task("update_platform", "accounts.platform.update_account")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.platform.delete",
+    title="Delete Platform Account",
+    input_model=PlatformAccountDeleteCommand,
+    output_model=MessageOut,
+    method="delete",
+    path="/accounts/platform/{account_id}",
+    tags=("accounts",),
+)
+def _flow_delete_platform(builder: FlowBuilder):
+    task = builder.task("delete_platform", "accounts.platform.delete_account")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.persona.create",
+    title="Create Persona",
+    input_model=PersonaCreateCommand,
+    output_model=PersonaOut,
+    method="post",
+    path="/accounts/personas",
+    tags=("accounts",),
+)
+def _flow_create_persona(builder: FlowBuilder):
+    task = builder.task("create_persona", "accounts.persona.create_persona")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.persona.update",
+    title="Update Persona",
+    input_model=PersonaUpdateCommand,
+    output_model=PersonaOut,
+    method="put",
+    path="/accounts/personas/{persona_id}",
+    tags=("accounts",),
+)
+def _flow_update_persona(builder: FlowBuilder):
+    task = builder.task("update_persona", "accounts.persona.update_persona")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.persona.delete",
+    title="Delete Persona",
+    input_model=PersonaDeleteCommand,
+    output_model=MessageOut,
+    method="delete",
+    path="/accounts/personas/{persona_id}",
+    tags=("accounts",),
+)
+def _flow_delete_persona(builder: FlowBuilder):
+    task = builder.task("delete_persona", "accounts.persona.delete_persona")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.link.create",
+    title="Link Persona Account",
+    input_model=PersonaAccountLinkCommand,
+    output_model=PersonaAccountOut,
+    method="post",
+    path="/accounts/persona-account-links",
+    tags=("accounts",),
+)
+def _flow_link_persona_account(builder: FlowBuilder):
+    task = builder.task("link_persona_account", "accounts.link.create_link")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.link.delete",
+    title="Unlink Persona Account",
+    input_model=PersonaAccountUnlinkCommand,
+    output_model=MessageOut,
+    method="delete",
+    path="/accounts/persona-account-links/{persona_id}/{account_id}",
+    tags=("accounts",),
+)
+def _flow_unlink_persona_account(builder: FlowBuilder):
+    task = builder.task("unlink_persona_account", "accounts.link.unlink")
+    builder.expect_terminal(task)
+
+
+router = FLOWS.build_router(
+    orchestrate_flow,
+    prefix="",
+    tags=["accounts"],
+    runtime_dependency=runtime_dependency,
+    flow_filter=lambda flow: "accounts" in flow.tags,
+)
+
+
+__all__ = ["router"]

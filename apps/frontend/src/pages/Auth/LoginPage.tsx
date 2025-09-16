@@ -9,19 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/Logo';
-import { useLoginApiAuthLoginPost } from '@/lib/api/generated';
+import { useLoginApiOrchestratorAuthLoginPost } from '@/lib/api/generated';
 import { useSessionStore } from '@/store/session';
-import { loginApiAuthLoginPostBody } from '@/lib/schemas/api.zod';
+import { loginApiOrchestratorAuthLoginPostBody } from '@/lib/schemas/api.zod';
 
-type LoginFormValues = z.infer<typeof loginApiAuthLoginPostBody>;
+type LoginFormValues = z.infer<typeof loginApiOrchestratorAuthLoginPostBody>;
 
 export function LoginPage() {
   const navigate = useNavigate();
   const setToken = useSessionStore((state) => state.setToken);
-  const loginMutation = useLoginApiAuthLoginPost();
+  const loginMutation = useLoginApiOrchestratorAuthLoginPost();
 
-  const form = useForm<z.infer<typeof loginApiAuthLoginPostBody>>({
-    resolver: zodResolver(loginApiAuthLoginPostBody),
+  const form = useForm<z.infer<typeof loginApiOrchestratorAuthLoginPostBody>>({
+    resolver: zodResolver(loginApiOrchestratorAuthLoginPostBody),
     defaultValues: {
       email: '',
       password: '',

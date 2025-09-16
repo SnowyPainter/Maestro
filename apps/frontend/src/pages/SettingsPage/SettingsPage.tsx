@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { useMeApiMeGet } from '@/lib/api/generated';
+import { useMeApiBffMeGet } from '@/lib/api/generated';
 import { useSessionStore } from '@/store/session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,8 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { data: user, isLoading, error } = useMeApiMeGet();
-  const clearToken = useSessionStore((state) => state.clearToken);
+  const { data: user, isLoading, error } = useMeApiBffMeGet();
+  const clearToken = useSessionStore((state) => state.clearSession);
 
   const handleLogout = () => {
     clearToken();

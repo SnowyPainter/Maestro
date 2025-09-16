@@ -1,21 +1,68 @@
-from fastapi import APIRouter, Depends
+"""Insights orchestration flows."""
+
+from __future__ import annotations
+
+from typing import Optional
+
+from fastapi import HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.src.core.deps import get_db, get_current_user
-from apps.backend.src.modules.insights.service import ingest_insight_sample
 from apps.backend.src.modules.insights.schemas import InsightIn, InsightOut
+from apps.backend.src.modules.insights.service import ingest_insight_sample
 from apps.backend.src.modules.users.models import User
 
-router = APIRouter(prefix="/insights", tags=["insights"])
+from .dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from .registry import FLOWS, FlowBuilder, operator
 
 
-@router.post("", response_model=InsightOut)
-async def ingest_insight(
-    payload: InsightIn,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    """인사이트 샘플 수집"""
-    payload.owner_user_id = user.id
-    sample = await ingest_insight_sample(db, payload)
-    return sample
+class InsightInCommand(InsightIn):
+    owner_user_id: Optional[int] = None
+
+
+def _model_dump(model: BaseModel) -> dict:
+    if hasattr(model, "model_dump"):
+        return model.model_dump()
+    return model.dict()
+
+
+@operator(
+    key="insights.ingest",
+    title="Ingest insight sample",
+    side_effect="write",
+)
+async def op_ingest_insight(payload: InsightInCommand, ctx: TaskContext) -> InsightOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    data = InsightIn(owner_user_id=user.id, **_model_dump(payload))
+    sample = await ingest_insight_sample(db, data)
+    if not sample:
+        raise HTTPException(status_code=500, detail="Failed to ingest insight sample")
+    return InsightOut.model_validate(sample)
+
+
+@FLOWS.flow(
+    key="insights.ingest",
+    title="Ingest Insight",
+    input_model=InsightInCommand,
+    output_model=InsightOut,
+    method="post",
+    path="/insights",
+    tags=("insights",),
+)
+def _flow_ingest_insight(builder: FlowBuilder):
+    task = builder.task("ingest_insight", "insights.ingest")
+    builder.expect_terminal(task)
+
+
+router = FLOWS.build_router(
+    orchestrate_flow,
+    prefix="",
+    tags=["insights"],
+    runtime_dependency=runtime_dependency,
+    flow_filter=lambda flow: "insights" in flow.tags,
+)
+
+
+__all__ = ["router"]
+

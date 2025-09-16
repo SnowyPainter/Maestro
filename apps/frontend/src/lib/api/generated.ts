@@ -55,25 +55,36 @@ export interface BlockVideo {
   props: BlockVideoProps;
 }
 
-export type BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPutTags = string[] | null;
+export type CampaignAggregationCommandCampaignId = number | null;
 
-export interface BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut {
-  ir: DraftIR;
-  tags?: BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPutTags;
+export interface CampaignAggregationCommand {
+  campaign_id?: CampaignAggregationCommandCampaignId;
+  /** @nullable */
+  as_of?: string | null;
 }
-
-export type CampaignCreateDescription = string | null;
-
-export type CampaignCreateStartAt = string | null;
-
-export type CampaignCreateEndAt = string | null;
 
 export interface CampaignCreate {
   /** @maxLength 120 */
   name: string;
-  description?: CampaignCreateDescription;
-  start_at?: CampaignCreateStartAt;
-  end_at?: CampaignCreateEndAt;
+  /**
+   * @maxLength 500
+   * @nullable
+   */
+  description?: string | null;
+  /** @nullable */
+  start_at?: string | null;
+  /** @nullable */
+  end_at?: string | null;
+}
+
+export type CampaignDeleteCommandCampaignId = number | null;
+
+export interface CampaignDeleteCommand {
+  campaign_id?: CampaignDeleteCommandCampaignId;
+}
+
+export interface CampaignKPIDefListOut {
+  defs: CampaignKPIDefOut[];
 }
 
 export type CampaignKPIDefOutTargetValue = number | null;
@@ -96,6 +107,23 @@ export interface CampaignKPIDefUpsert {
   weight?: number;
 }
 
+export type CampaignKPIDefUpsertCommandCampaignId = number | null;
+
+export interface CampaignKPIDefUpsertCommand {
+  campaign_id?: CampaignKPIDefUpsertCommandCampaignId;
+  defs: CampaignKPIDefUpsert[];
+}
+
+export type CampaignKPIRecordCommandCampaignId = number | null;
+
+export type CampaignKPIRecordCommandValues = {[key: string]: number};
+
+export interface CampaignKPIRecordCommand {
+  campaign_id?: CampaignKPIRecordCommandCampaignId;
+  as_of: string;
+  values: CampaignKPIRecordCommandValues;
+}
+
 export type CampaignKPIResultOutValues = {[key: string]: number};
 
 export interface CampaignKPIResultOut {
@@ -105,36 +133,41 @@ export interface CampaignKPIResultOut {
   values: CampaignKPIResultOutValues;
 }
 
-export type CampaignOutDescription = string | null;
-
-export type CampaignOutStartAt = string | null;
-
-export type CampaignOutEndAt = string | null;
-
 export interface CampaignOut {
   /** @maxLength 120 */
   name: string;
-  description?: CampaignOutDescription;
-  start_at?: CampaignOutStartAt;
-  end_at?: CampaignOutEndAt;
+  /**
+   * @maxLength 500
+   * @nullable
+   */
+  description?: string | null;
+  /** @nullable */
+  start_at?: string | null;
+  /** @nullable */
+  end_at?: string | null;
   id: number;
   owner_user_id: number;
   created_at: string;
 }
 
-export type CampaignUpdateName = string | null;
+export type CampaignUpdateCommandCampaignId = number | null;
 
-export type CampaignUpdateDescription = string | null;
-
-export type CampaignUpdateStartAt = string | null;
-
-export type CampaignUpdateEndAt = string | null;
-
-export interface CampaignUpdate {
-  name?: CampaignUpdateName;
-  description?: CampaignUpdateDescription;
-  start_at?: CampaignUpdateStartAt;
-  end_at?: CampaignUpdateEndAt;
+export interface CampaignUpdateCommand {
+  /**
+   * @maxLength 120
+   * @nullable
+   */
+  name?: string | null;
+  /**
+   * @maxLength 500
+   * @nullable
+   */
+  description?: string | null;
+  /** @nullable */
+  start_at?: string | null;
+  /** @nullable */
+  end_at?: string | null;
+  campaign_id?: CampaignUpdateCommandCampaignId;
 }
 
 export type DraftIRBlocksItem = BlockText | BlockImage | BlockVideo;
@@ -149,31 +182,27 @@ export interface DraftIR {
 
 export type DraftOutCampaignId = number | null;
 
-export type DraftOutTitle = string | null;
-
 export type DraftOutTags = string[] | null;
 
-export type DraftOutGoal = string | null;
-
 export type DraftOutIr = { [key: string]: unknown };
-
-export type DraftOutMonitoringStartedAt = string | null;
-
-export type DraftOutMonitoringEndedAt = string | null;
 
 export interface DraftOut {
   id: number;
   user_id: number;
   campaign_id?: DraftOutCampaignId;
-  title?: DraftOutTitle;
+  /** @nullable */
+  title?: string | null;
   tags?: DraftOutTags;
-  goal?: DraftOutGoal;
+  /** @nullable */
+  goal?: string | null;
   ir: DraftOutIr;
   schema_version: number;
   ir_revision: number;
   state: string;
-  monitoring_started_at?: DraftOutMonitoringStartedAt;
-  monitoring_ended_at?: DraftOutMonitoringEndedAt;
+  /** @nullable */
+  monitoring_started_at?: string | null;
+  /** @nullable */
+  monitoring_ended_at?: string | null;
   created_by: number;
   created_at: string;
   updated_at: string;
@@ -181,25 +210,38 @@ export interface DraftOut {
 
 export type DraftSaveRequestCampaignId = number | null;
 
-export type DraftSaveRequestTitle = string | null;
-
 export type DraftSaveRequestTags = string[] | null;
-
-export type DraftSaveRequestGoal = string | null;
 
 export interface DraftSaveRequest {
   campaign_id?: DraftSaveRequestCampaignId;
-  title?: DraftSaveRequestTitle;
+  /** @nullable */
+  title?: string | null;
   tags?: DraftSaveRequestTags;
-  goal?: DraftSaveRequestGoal;
+  /** @nullable */
+  goal?: string | null;
   ir: DraftIR;
+}
+
+export type DraftUpdateCommandDraftId = number | null;
+
+export type DraftUpdateCommandTags = string[] | null;
+
+export type DraftUpdateCommandCampaignId = number | null;
+
+export interface DraftUpdateCommand {
+  draft_id?: DraftUpdateCommandDraftId;
+  ir: DraftIR;
+  /** @nullable */
+  title?: string | null;
+  tags?: DraftUpdateCommandTags;
+  /** @nullable */
+  goal?: string | null;
+  campaign_id?: DraftUpdateCommandCampaignId;
 }
 
 export type DraftVariantOutErrors = string[] | null;
 
 export type DraftVariantOutWarnings = string[] | null;
-
-export type DraftVariantOutRenderedCaption = string | null;
 
 export type DraftVariantOutRenderedBlocksAnyOf = { [key: string]: unknown };
 
@@ -208,8 +250,6 @@ export type DraftVariantOutRenderedBlocks = DraftVariantOutRenderedBlocksAnyOf |
 export type DraftVariantOutMetricsAnyOf = { [key: string]: unknown };
 
 export type DraftVariantOutMetrics = DraftVariantOutMetricsAnyOf | null;
-
-export type DraftVariantOutCompiledAt = string | null;
 
 export type DraftVariantOutIrRevisionCompiled = number | null;
 
@@ -220,10 +260,12 @@ export interface DraftVariantOut {
   status: string;
   errors?: DraftVariantOutErrors;
   warnings?: DraftVariantOutWarnings;
-  rendered_caption?: DraftVariantOutRenderedCaption;
+  /** @nullable */
+  rendered_caption?: string | null;
   rendered_blocks?: DraftVariantOutRenderedBlocks;
   metrics?: DraftVariantOutMetrics;
-  compiled_at?: DraftVariantOutCompiledAt;
+  /** @nullable */
+  compiled_at?: string | null;
   ir_revision_compiled?: DraftVariantOutIrRevisionCompiled;
   compiler_version: number;
   created_at: string;
@@ -234,41 +276,39 @@ export interface HTTPValidationError {
   detail?: ValidationError[];
 }
 
-export type InsightInDraftId = number | null;
+export type InsightInCommandOwnerUserId = number | null;
 
-export type InsightInPlatformPostId = string | null;
+export type InsightInCommandDraftId = number | null;
 
-export type InsightInAccountPersonaId = number | null;
+export type InsightInCommandAccountPersonaId = number | null;
 
-export type InsightInMetrics = {[key: string]: number};
+export type InsightInCommandMetrics = {[key: string]: number};
 
-export type InsightInSource = typeof InsightInSource[keyof typeof InsightInSource];
+export type InsightInCommandSource = typeof InsightInCommandSource[keyof typeof InsightInCommandSource];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const InsightInSource = {
+export const InsightInCommandSource = {
   webhook: 'webhook',
   poll: 'poll',
   manual: 'manual',
 } as const;
 
-export type InsightInIngestKey = string | null;
-
-export interface InsightIn {
-  owner_user_id: number;
-  draft_id?: InsightInDraftId;
+export interface InsightInCommand {
+  owner_user_id?: InsightInCommandOwnerUserId;
+  draft_id?: InsightInCommandDraftId;
   platform: PlatformKind;
-  platform_post_id?: InsightInPlatformPostId;
-  account_persona_id?: InsightInAccountPersonaId;
+  /** @nullable */
+  platform_post_id?: string | null;
+  account_persona_id?: InsightInCommandAccountPersonaId;
   ts: string;
-  metrics?: InsightInMetrics;
-  source?: InsightInSource;
-  ingest_key?: InsightInIngestKey;
+  metrics?: InsightInCommandMetrics;
+  source?: InsightInCommandSource;
+  /** @nullable */
+  ingest_key?: string | null;
 }
 
 export type InsightOutDraftId = number | null;
-
-export type InsightOutPlatformPostId = string | null;
 
 export type InsightOutAccountPersonaId = number | null;
 
@@ -284,18 +324,18 @@ export const InsightOutSource = {
   manual: 'manual',
 } as const;
 
-export type InsightOutIngestKey = string | null;
-
 export interface InsightOut {
   owner_user_id: number;
   draft_id?: InsightOutDraftId;
   platform: PlatformKind;
-  platform_post_id?: InsightOutPlatformPostId;
+  /** @nullable */
+  platform_post_id?: string | null;
   account_persona_id?: InsightOutAccountPersonaId;
   ts: string;
   metrics?: InsightOutMetrics;
   source?: InsightOutSource;
-  ingest_key?: InsightOutIngestKey;
+  /** @nullable */
+  ingest_key?: string | null;
   id: number;
   ingested_at: string;
 }
@@ -323,22 +363,22 @@ export interface LoginRequest {
   password: string;
 }
 
-export type NewsItemNewsItemTitle = string | null;
-
-export type NewsItemNewsItemUrl = string | null;
-
-export type NewsItemNewsItemPicture = string | null;
-
-export type NewsItemNewsItemSource = string | null;
+export interface MessageOut {
+  message: string;
+}
 
 /**
  * 개별 뉴스 아이템 스키마
  */
 export interface NewsItem {
-  news_item_title?: NewsItemNewsItemTitle;
-  news_item_url?: NewsItemNewsItemUrl;
-  news_item_picture?: NewsItemNewsItemPicture;
-  news_item_source?: NewsItemNewsItemSource;
+  /** @nullable */
+  news_item_title?: string | null;
+  /** @nullable */
+  news_item_url?: string | null;
+  /** @nullable */
+  news_item_picture?: string | null;
+  /** @nullable */
+  news_item_source?: string | null;
 }
 
 export type Permission = typeof Permission[keyof typeof Permission];
@@ -350,6 +390,10 @@ export const Permission = {
   write: 'write',
   publish: 'publish',
 } as const;
+
+export interface PersonaAccountLinkCommand {
+  link: PersonaAccountLinkCreate;
+}
 
 export type PersonaAccountLinkCreateCanPermissions = Permission[] | null;
 
@@ -379,68 +423,83 @@ export interface PersonaAccountOut {
   created_at: string;
 }
 
-export type PersonaCreateAvatarUrl = string | null;
+export type PersonaAccountUnlinkCommandPersonaId = number | null;
 
-export type PersonaCreateBio = string | null;
+export type PersonaAccountUnlinkCommandAccountId = number | null;
 
-export type PersonaCreateTone = string | null;
-
-export type PersonaCreateStyleGuide = string | null;
-
-export type PersonaCreatePillars = string[] | null;
-
-export type PersonaCreateBannedWords = string[] | null;
-
-export type PersonaCreateDefaultHashtags = string[] | null;
-
-export type PersonaCreateHashtagRulesAnyOf = { [key: string]: unknown };
-
-export type PersonaCreateHashtagRules = PersonaCreateHashtagRulesAnyOf | null;
-
-export type PersonaCreateLinkPolicyAnyOf = { [key: string]: unknown };
-
-export type PersonaCreateLinkPolicy = PersonaCreateLinkPolicyAnyOf | null;
-
-export type PersonaCreateMediaPrefsAnyOf = { [key: string]: unknown };
-
-export type PersonaCreateMediaPrefs = PersonaCreateMediaPrefsAnyOf | null;
-
-export type PersonaCreatePostingWindowsAnyOfItem = { [key: string]: unknown };
-
-export type PersonaCreatePostingWindows = PersonaCreatePostingWindowsAnyOfItem[] | null;
-
-export type PersonaCreateExtrasAnyOf = { [key: string]: unknown };
-
-export type PersonaCreateExtras = PersonaCreateExtrasAnyOf | null;
-
-export interface PersonaCreate {
-  /** @maxLength 100 */
-  name: string;
-  avatar_url?: PersonaCreateAvatarUrl;
-  bio?: PersonaCreateBio;
-  /** @maxLength 10 */
-  language?: string;
-  tone?: PersonaCreateTone;
-  style_guide?: PersonaCreateStyleGuide;
-  pillars?: PersonaCreatePillars;
-  banned_words?: PersonaCreateBannedWords;
-  default_hashtags?: PersonaCreateDefaultHashtags;
-  hashtag_rules?: PersonaCreateHashtagRules;
-  link_policy?: PersonaCreateLinkPolicy;
-  media_prefs?: PersonaCreateMediaPrefs;
-  posting_windows?: PersonaCreatePostingWindows;
-  extras?: PersonaCreateExtras;
-  schema_version?: number;
-  owner_user_id: number;
+export interface PersonaAccountUnlinkCommand {
+  persona_id?: PersonaAccountUnlinkCommandPersonaId;
+  account_id?: PersonaAccountUnlinkCommandAccountId;
 }
 
-export type PersonaOutAvatarUrl = string | null;
+export interface PersonaCreateCommand {
+  persona: PersonaCreatePayload;
+}
 
-export type PersonaOutBio = string | null;
+export type PersonaCreatePayloadPillars = string[] | null;
 
-export type PersonaOutTone = string | null;
+export type PersonaCreatePayloadBannedWords = string[] | null;
 
-export type PersonaOutStyleGuide = string | null;
+export type PersonaCreatePayloadDefaultHashtags = string[] | null;
+
+export type PersonaCreatePayloadHashtagRulesAnyOf = { [key: string]: unknown };
+
+export type PersonaCreatePayloadHashtagRules = PersonaCreatePayloadHashtagRulesAnyOf | null;
+
+export type PersonaCreatePayloadLinkPolicyAnyOf = { [key: string]: unknown };
+
+export type PersonaCreatePayloadLinkPolicy = PersonaCreatePayloadLinkPolicyAnyOf | null;
+
+export type PersonaCreatePayloadMediaPrefsAnyOf = { [key: string]: unknown };
+
+export type PersonaCreatePayloadMediaPrefs = PersonaCreatePayloadMediaPrefsAnyOf | null;
+
+export type PersonaCreatePayloadPostingWindowsAnyOfItem = { [key: string]: unknown };
+
+export type PersonaCreatePayloadPostingWindows = PersonaCreatePayloadPostingWindowsAnyOfItem[] | null;
+
+export type PersonaCreatePayloadExtrasAnyOf = { [key: string]: unknown };
+
+export type PersonaCreatePayloadExtras = PersonaCreatePayloadExtrasAnyOf | null;
+
+export interface PersonaCreatePayload {
+  /** @maxLength 100 */
+  name: string;
+  /**
+   * @maxLength 512
+   * @nullable
+   */
+  avatar_url?: string | null;
+  /**
+   * @maxLength 200
+   * @nullable
+   */
+  bio?: string | null;
+  /** @maxLength 10 */
+  language?: string;
+  /**
+   * @maxLength 40
+   * @nullable
+   */
+  tone?: string | null;
+  /** @nullable */
+  style_guide?: string | null;
+  pillars?: PersonaCreatePayloadPillars;
+  banned_words?: PersonaCreatePayloadBannedWords;
+  default_hashtags?: PersonaCreatePayloadDefaultHashtags;
+  hashtag_rules?: PersonaCreatePayloadHashtagRules;
+  link_policy?: PersonaCreatePayloadLinkPolicy;
+  media_prefs?: PersonaCreatePayloadMediaPrefs;
+  posting_windows?: PersonaCreatePayloadPostingWindows;
+  extras?: PersonaCreatePayloadExtras;
+  schema_version?: number;
+}
+
+export type PersonaDeleteCommandPersonaId = number | null;
+
+export interface PersonaDeleteCommand {
+  persona_id?: PersonaDeleteCommandPersonaId;
+}
 
 export type PersonaOutPillars = string[] | null;
 
@@ -471,12 +530,25 @@ export type PersonaOutExtras = PersonaOutExtrasAnyOf | null;
 export interface PersonaOut {
   /** @maxLength 100 */
   name: string;
-  avatar_url?: PersonaOutAvatarUrl;
-  bio?: PersonaOutBio;
+  /**
+   * @maxLength 512
+   * @nullable
+   */
+  avatar_url?: string | null;
+  /**
+   * @maxLength 200
+   * @nullable
+   */
+  bio?: string | null;
   /** @maxLength 10 */
   language?: string;
-  tone?: PersonaOutTone;
-  style_guide?: PersonaOutStyleGuide;
+  /**
+   * @maxLength 40
+   * @nullable
+   */
+  tone?: string | null;
+  /** @nullable */
+  style_guide?: string | null;
   pillars?: PersonaOutPillars;
   banned_words?: PersonaOutBannedWords;
   default_hashtags?: PersonaOutDefaultHashtags;
@@ -490,18 +562,6 @@ export interface PersonaOut {
   created_at: string;
   updated_at: string;
 }
-
-export type PersonaUpdateName = string | null;
-
-export type PersonaUpdateAvatarUrl = string | null;
-
-export type PersonaUpdateBio = string | null;
-
-export type PersonaUpdateLanguage = string | null;
-
-export type PersonaUpdateTone = string | null;
-
-export type PersonaUpdateStyleGuide = string | null;
 
 export type PersonaUpdatePillars = string[] | null;
 
@@ -532,12 +592,18 @@ export type PersonaUpdateExtras = PersonaUpdateExtrasAnyOf | null;
 export type PersonaUpdateSchemaVersion = number | null;
 
 export interface PersonaUpdate {
-  name?: PersonaUpdateName;
-  avatar_url?: PersonaUpdateAvatarUrl;
-  bio?: PersonaUpdateBio;
-  language?: PersonaUpdateLanguage;
-  tone?: PersonaUpdateTone;
-  style_guide?: PersonaUpdateStyleGuide;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  avatar_url?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  /** @nullable */
+  language?: string | null;
+  /** @nullable */
+  tone?: string | null;
+  /** @nullable */
+  style_guide?: string | null;
   pillars?: PersonaUpdatePillars;
   banned_words?: PersonaUpdateBannedWords;
   default_hashtags?: PersonaUpdateDefaultHashtags;
@@ -549,92 +615,118 @@ export interface PersonaUpdate {
   schema_version?: PersonaUpdateSchemaVersion;
 }
 
-export type PlatformAccountCreateExternalId = string | null;
+export type PersonaUpdateCommandPersonaId = number | null;
 
-export type PlatformAccountCreateAvatarUrl = string | null;
-
-export type PlatformAccountCreateBio = string | null;
+export interface PersonaUpdateCommand {
+  persona_id?: PersonaUpdateCommandPersonaId;
+  data: PersonaUpdate;
+}
 
 export type PlatformAccountCreateScopes = string[] | null;
 
 export type PlatformAccountCreateIsActive = boolean | null;
 
-export type PlatformAccountCreateAccessToken = string | null;
-
-export type PlatformAccountCreateRefreshToken = string | null;
-
-export type PlatformAccountCreateTokenExpiresAt = string | null;
-
 export interface PlatformAccountCreate {
   platform: PlatformKind;
   /** @maxLength 128 */
   handle: string;
-  external_id?: PlatformAccountCreateExternalId;
-  avatar_url?: PlatformAccountCreateAvatarUrl;
-  bio?: PlatformAccountCreateBio;
+  /**
+   * @maxLength 256
+   * @nullable
+   */
+  external_id?: string | null;
+  /**
+   * @maxLength 512
+   * @nullable
+   */
+  avatar_url?: string | null;
+  /**
+   * @maxLength 160
+   * @nullable
+   */
+  bio?: string | null;
   scopes?: PlatformAccountCreateScopes;
   is_active?: PlatformAccountCreateIsActive;
-  access_token?: PlatformAccountCreateAccessToken;
-  refresh_token?: PlatformAccountCreateRefreshToken;
-  token_expires_at?: PlatformAccountCreateTokenExpiresAt;
+  /** @nullable */
+  access_token?: string | null;
+  /** @nullable */
+  refresh_token?: string | null;
+  /** @nullable */
+  token_expires_at?: string | null;
 }
 
-export type PlatformAccountOutExternalId = string | null;
+export interface PlatformAccountCreateCommand {
+  account: PlatformAccountCreate;
+}
 
-export type PlatformAccountOutAvatarUrl = string | null;
+export type PlatformAccountDeleteCommandAccountId = number | null;
 
-export type PlatformAccountOutBio = string | null;
+export interface PlatformAccountDeleteCommand {
+  account_id?: PlatformAccountDeleteCommandAccountId;
+  soft?: boolean;
+}
 
 export type PlatformAccountOutScopes = string[] | null;
 
 export type PlatformAccountOutIsActive = boolean | null;
 
-export type PlatformAccountOutLastCheckedAt = string | null;
-
-export type PlatformAccountOutLastError = string | null;
-
 export interface PlatformAccountOut {
   platform: PlatformKind;
   /** @maxLength 128 */
   handle: string;
-  external_id?: PlatformAccountOutExternalId;
-  avatar_url?: PlatformAccountOutAvatarUrl;
-  bio?: PlatformAccountOutBio;
+  /**
+   * @maxLength 256
+   * @nullable
+   */
+  external_id?: string | null;
+  /**
+   * @maxLength 512
+   * @nullable
+   */
+  avatar_url?: string | null;
+  /**
+   * @maxLength 160
+   * @nullable
+   */
+  bio?: string | null;
   scopes?: PlatformAccountOutScopes;
   is_active?: PlatformAccountOutIsActive;
   id: number;
   owner_user_id: number;
-  last_checked_at?: PlatformAccountOutLastCheckedAt;
-  last_error?: PlatformAccountOutLastError;
+  /** @nullable */
+  last_checked_at?: string | null;
+  /** @nullable */
+  last_error?: string | null;
   created_at: string;
   updated_at: string;
 }
-
-export type PlatformAccountUpdateHandle = string | null;
-
-export type PlatformAccountUpdateAvatarUrl = string | null;
-
-export type PlatformAccountUpdateBio = string | null;
 
 export type PlatformAccountUpdateScopes = string[] | null;
 
 export type PlatformAccountUpdateIsActive = boolean | null;
 
-export type PlatformAccountUpdateAccessToken = string | null;
-
-export type PlatformAccountUpdateRefreshToken = string | null;
-
-export type PlatformAccountUpdateTokenExpiresAt = string | null;
-
 export interface PlatformAccountUpdate {
-  handle?: PlatformAccountUpdateHandle;
-  avatar_url?: PlatformAccountUpdateAvatarUrl;
-  bio?: PlatformAccountUpdateBio;
+  /** @nullable */
+  handle?: string | null;
+  /** @nullable */
+  avatar_url?: string | null;
+  /** @nullable */
+  bio?: string | null;
   scopes?: PlatformAccountUpdateScopes;
   is_active?: PlatformAccountUpdateIsActive;
-  access_token?: PlatformAccountUpdateAccessToken;
-  refresh_token?: PlatformAccountUpdateRefreshToken;
-  token_expires_at?: PlatformAccountUpdateTokenExpiresAt;
+  /** @nullable */
+  access_token?: string | null;
+  /** @nullable */
+  refresh_token?: string | null;
+  /** @nullable */
+  token_expires_at?: string | null;
+}
+
+export type PlatformAccountUpdateCommandAccountId = number | null;
+
+export interface PlatformAccountUpdateCommand {
+  account_id?: PlatformAccountUpdateCommandAccountId;
+  data: PlatformAccountUpdate;
 }
 
 export type PlatformKind = typeof PlatformKind[keyof typeof PlatformKind];
@@ -648,8 +740,6 @@ export const PlatformKind = {
   blog: 'blog',
 } as const;
 
-export type SignupRequestDisplayName = string | null;
-
 export interface SignupRequest {
   email: string;
   /**
@@ -657,7 +747,8 @@ export interface SignupRequest {
    * @maxLength 128
    */
   password: string;
-  display_name?: SignupRequestDisplayName;
+  /** @nullable */
+  display_name?: string | null;
 }
 
 export interface TokenResponse {
@@ -670,36 +761,6 @@ export interface TokenResponse {
  * 데이터 수집 시각 (ISO format)
  */
 export type TrendItemRetrieved = string | string;
-
-/**
- * 대략적인 트래픽 (예: '200+', '1000+')
- */
-export type TrendItemApproxTraffic = string | null;
-
-/**
- * Google Trends 링크
- */
-export type TrendItemLink = string | null;
-
-/**
- * 발행 날짜
- */
-export type TrendItemPubDate = string | null;
-
-/**
- * 대표 이미지 URL
- */
-export type TrendItemPicture = string | null;
-
-/**
- * 이미지 출처
- */
-export type TrendItemPictureSource = string | null;
-
-/**
- * 뉴스 아이템 (보통 빈 문자열)
- */
-export type TrendItemNewsItem = string | null;
 
 /**
  * 관련 뉴스 아이템 목록
@@ -716,18 +777,36 @@ export interface TrendItem {
   retrieved: TrendItemRetrieved;
   /** 트렌드 키워드 */
   title: string;
-  /** 대략적인 트래픽 (예: '200+', '1000+') */
-  approx_traffic?: TrendItemApproxTraffic;
-  /** Google Trends 링크 */
-  link?: TrendItemLink;
-  /** 발행 날짜 */
-  pubDate?: TrendItemPubDate;
-  /** 대표 이미지 URL */
-  picture?: TrendItemPicture;
-  /** 이미지 출처 */
-  picture_source?: TrendItemPictureSource;
-  /** 뉴스 아이템 (보통 빈 문자열) */
-  news_item?: TrendItemNewsItem;
+  /**
+   * 대략적인 트래픽 (예: '200+', '1000+')
+   * @nullable
+   */
+  approx_traffic?: string | null;
+  /**
+   * Google Trends 링크
+   * @nullable
+   */
+  link?: string | null;
+  /**
+   * 발행 날짜
+   * @nullable
+   */
+  pubDate?: string | null;
+  /**
+   * 대표 이미지 URL
+   * @nullable
+   */
+  picture?: string | null;
+  /**
+   * 이미지 출처
+   * @nullable
+   */
+  picture_source?: string | null;
+  /**
+   * 뉴스 아이템 (보통 빈 문자열)
+   * @nullable
+   */
+  news_item?: string | null;
   /** 관련 뉴스 아이템 목록 */
   news_items?: TrendItemNewsItems;
   [key: string]: unknown;
@@ -746,28 +825,25 @@ export const TrendsListResponseSource = {
   vector: 'vector',
 } as const;
 
-/**
- * 키워드 (있으면 벡터 유사검색)
- */
-export type TrendsListResponseQuery = string | null;
-
 export interface TrendsListResponse {
   /** 국가 코드 (예: KR, US) */
   country: string;
   /** 데이터 소스 (예: cache, db, vector) */
   source: TrendsListResponseSource;
-  /** 키워드 (있으면 벡터 유사검색) */
-  query?: TrendsListResponseQuery;
+  /**
+   * 키워드 (있으면 벡터 유사검색)
+   * @nullable
+   */
+  query?: string | null;
   /** 트렌드 아이템 목록 */
   items: TrendItem[];
 }
 
-export type UserResponseDisplayName = string | null;
-
 export interface UserResponse {
   id: number;
   email: string;
-  display_name?: UserResponseDisplayName;
+  /** @nullable */
+  display_name?: string | null;
 }
 
 export type ValidationErrorLocItem = string | number;
@@ -787,18 +863,22 @@ country?: string;
 limit?: number;
 /**
  * 검색 질의(벡터검색)
+ * @nullable
  */
 q?: string | null;
 /**
  * YYYY-MM-DD (단일 일자)
+ * @nullable
  */
 on_date?: string | null;
 /**
  * YYYY-MM-DD (이후/포함)
+ * @nullable
  */
 since?: string | null;
 /**
  * YYYY-MM-DD (이전/포함)
+ * @nullable
  */
 until?: string | null;
 };
@@ -806,10 +886,12 @@ until?: string | null;
 export type ReadCampaignKpiResultsApiBffCampaignsCampaignIdKpiResultsGetParams = {
 /**
  * 시작 날짜
+ * @nullable
  */
 start?: string | null;
 /**
  * 종료 날짜
+ * @nullable
  */
 end?: string | null;
 /**
@@ -821,6 +903,7 @@ limit?: number;
 export type ReadCampaignsApiBffCampaignsGetParams = {
 /**
  * 검색 쿼리
+ * @nullable
  */
 q?: string | null;
 /**
@@ -855,6 +938,7 @@ export type ReadPlatformAccountsApiBffAccountsPlatformGetParams = {
 platform?: PlatformKind | null;
 /**
  * 핸들 검색
+ * @nullable
  */
 handle?: string | null;
 /**
@@ -870,6 +954,7 @@ offset?: number;
 export type ReadPersonasApiBffAccountsPersonasGetParams = {
 /**
  * 이름 검색
+ * @nullable
  */
 name?: string | null;
 /**
@@ -882,25 +967,13 @@ limit?: number;
 offset?: number;
 };
 
-export type RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams = {
-as_of: string;
-};
+export type CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody = CampaignDeleteCommand | null;
 
-export type RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody = { [key: string]: unknown };
+export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody = PlatformAccountDeleteCommand | null;
 
-export type AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams = {
-as_of?: string;
-};
+export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody = PersonaDeleteCommand | null;
 
-export type UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutParams = {
-title?: string | null;
-goal?: string | null;
-campaign_id?: number | null;
-};
-
-export type DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams = {
-soft?: boolean;
-};
+export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody = PersonaAccountUnlinkCommand | null;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -2383,340 +2456,9 @@ export const useLoginApiOrchestratorAuthLoginPost = <TError = HTTPValidationErro
     }
     
 /**
- * 캠페인 삭제
- * @summary Delete Existing Campaign
+ * @summary Create Campaign
  */
-export const deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete = (
-    campaignId: number,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<unknown>(
-      {url: `/api/orchestrator/campaigns/${campaignId}`, method: 'DELETE'
-    },
-      options);
-    }
-  
-
-
-export const getDeleteExistingCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete>>, TError,{campaignId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete>>, TError,{campaignId: number}, TContext> => {
-
-const mutationKey = ['deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete>>, {campaignId: number}> = (props) => {
-          const {campaignId} = props ?? {};
-
-          return  deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete(campaignId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteExistingCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete>>>
-    
-    export type DeleteExistingCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationError = HTTPValidationError
-
-    /**
- * @summary Delete Existing Campaign
- */
-export const useDeleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete>>, TError,{campaignId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteExistingCampaignApiOrchestratorCampaignsCampaignIdDelete>>,
-        TError,
-        {campaignId: number},
-        TContext
-      > => {
-
-      const mutationOptions = getDeleteExistingCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * 캠페인 업데이트
- * @summary Update Existing Campaign
- */
-export const updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut = (
-    campaignId: number,
-    campaignUpdate: CampaignUpdate,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<CampaignOut>(
-      {url: `/api/orchestrator/campaigns/${campaignId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: campaignUpdate
-    },
-      options);
-    }
-  
-
-
-export const getUpdateExistingCampaignApiOrchestratorCampaignsCampaignIdPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut>>, TError,{campaignId: number;data: CampaignUpdate}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut>>, TError,{campaignId: number;data: CampaignUpdate}, TContext> => {
-
-const mutationKey = ['updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut>>, {campaignId: number;data: CampaignUpdate}> = (props) => {
-          const {campaignId,data} = props ?? {};
-
-          return  updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut(campaignId,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateExistingCampaignApiOrchestratorCampaignsCampaignIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut>>>
-    export type UpdateExistingCampaignApiOrchestratorCampaignsCampaignIdPutMutationBody = CampaignUpdate
-    export type UpdateExistingCampaignApiOrchestratorCampaignsCampaignIdPutMutationError = HTTPValidationError
-
-    /**
- * @summary Update Existing Campaign
- */
-export const useUpdateExistingCampaignApiOrchestratorCampaignsCampaignIdPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut>>, TError,{campaignId: number;data: CampaignUpdate}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateExistingCampaignApiOrchestratorCampaignsCampaignIdPut>>,
-        TError,
-        {campaignId: number;data: CampaignUpdate},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateExistingCampaignApiOrchestratorCampaignsCampaignIdPutMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * 캠페인의 KPI 정의 전체 교체
- * @summary Upsert Campaign Kpi Defs
- */
-export const upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut = (
-    campaignId: number,
-    campaignKPIDefUpsert: CampaignKPIDefUpsert[],
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<CampaignKPIDefOut[]>(
-      {url: `/api/orchestrator/campaigns/${campaignId}/kpi-defs`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: campaignKPIDefUpsert
-    },
-      options);
-    }
-  
-
-
-export const getUpsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, TError,{campaignId: number;data: CampaignKPIDefUpsert[]}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, TError,{campaignId: number;data: CampaignKPIDefUpsert[]}, TContext> => {
-
-const mutationKey = ['upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, {campaignId: number;data: CampaignKPIDefUpsert[]}> = (props) => {
-          const {campaignId,data} = props ?? {};
-
-          return  upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut(campaignId,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationResult = NonNullable<Awaited<ReturnType<typeof upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>>
-    export type UpsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationBody = CampaignKPIDefUpsert[]
-    export type UpsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationError = HTTPValidationError
-
-    /**
- * @summary Upsert Campaign Kpi Defs
- */
-export const useUpsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, TError,{campaignId: number;data: CampaignKPIDefUpsert[]}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof upsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>,
-        TError,
-        {campaignId: number;data: CampaignKPIDefUpsert[]},
-        TContext
-      > => {
-
-      const mutationOptions = getUpsertCampaignKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * 캠페인 KPI 결과 기록
- * @summary Record Campaign Kpi Result
- */
-export const recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost = (
-    campaignId: number,
-    recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody,
-    params: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<CampaignKPIResultOut>(
-      {url: `/api/orchestrator/campaigns/${campaignId}/kpi-results`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody,
-        params, signal
-    },
-      options);
-    }
-  
-
-
-export const getRecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, TError,{campaignId: number;data: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody;params: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, TError,{campaignId: number;data: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody;params: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams}, TContext> => {
-
-const mutationKey = ['recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, {campaignId: number;data: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody;params: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams}> = (props) => {
-          const {campaignId,data,params} = props ?? {};
-
-          return  recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost(campaignId,data,params,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationResult = NonNullable<Awaited<ReturnType<typeof recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>>
-    export type RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationBody = RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody
-    export type RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationError = HTTPValidationError
-
-    /**
- * @summary Record Campaign Kpi Result
- */
-export const useRecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, TError,{campaignId: number;data: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody;params: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof recordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>,
-        TError,
-        {campaignId: number;data: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostBody;params: RecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams},
-        TContext
-      > => {
-
-      const mutationOptions = getRecordCampaignKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * 캠페인 KPI 집계 실행
- * @summary Aggregate Campaign Kpis
- */
-export const aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost = (
-    campaignId: number,
-    params?: AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<CampaignKPIResultOut>(
-      {url: `/api/orchestrator/campaigns/${campaignId}/aggregate-kpis`, method: 'POST',
-        params, signal
-    },
-      options);
-    }
-  
-
-
-export const getAggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, TError,{campaignId: number;params?: AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, TError,{campaignId: number;params?: AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams}, TContext> => {
-
-const mutationKey = ['aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, {campaignId: number;params?: AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams}> = (props) => {
-          const {campaignId,params} = props ?? {};
-
-          return  aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost(campaignId,params,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationResult = NonNullable<Awaited<ReturnType<typeof aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>>
-    
-    export type AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationError = HTTPValidationError
-
-    /**
- * @summary Aggregate Campaign Kpis
- */
-export const useAggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, TError,{campaignId: number;params?: AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof aggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>,
-        TError,
-        {campaignId: number;params?: AggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams},
-        TContext
-      > => {
-
-      const mutationOptions = getAggregateCampaignKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * 새 캠페인 생성
- * @summary Create New Campaign
- */
-export const createNewCampaignApiOrchestratorCampaignsPost = (
+export const campaignsCreateCampaignApiOrchestratorCampaignsPost = (
     campaignCreate: CampaignCreate,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
@@ -2732,11 +2474,11 @@ export const createNewCampaignApiOrchestratorCampaignsPost = (
   
 
 
-export const getCreateNewCampaignApiOrchestratorCampaignsPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewCampaignApiOrchestratorCampaignsPost>>, TError,{data: CampaignCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createNewCampaignApiOrchestratorCampaignsPost>>, TError,{data: CampaignCreate}, TContext> => {
+export const getCampaignsCreateCampaignApiOrchestratorCampaignsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsCreateCampaignApiOrchestratorCampaignsPost>>, TError,{data: CampaignCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsCreateCampaignApiOrchestratorCampaignsPost>>, TError,{data: CampaignCreate}, TContext> => {
 
-const mutationKey = ['createNewCampaignApiOrchestratorCampaignsPost'];
+const mutationKey = ['campaignsCreateCampaignApiOrchestratorCampaignsPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2746,10 +2488,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNewCampaignApiOrchestratorCampaignsPost>>, {data: CampaignCreate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsCreateCampaignApiOrchestratorCampaignsPost>>, {data: CampaignCreate}> = (props) => {
           const {data} = props ?? {};
 
-          return  createNewCampaignApiOrchestratorCampaignsPost(data,requestOptions)
+          return  campaignsCreateCampaignApiOrchestratorCampaignsPost(data,requestOptions)
         }
 
         
@@ -2757,32 +2499,358 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateNewCampaignApiOrchestratorCampaignsPostMutationResult = NonNullable<Awaited<ReturnType<typeof createNewCampaignApiOrchestratorCampaignsPost>>>
-    export type CreateNewCampaignApiOrchestratorCampaignsPostMutationBody = CampaignCreate
-    export type CreateNewCampaignApiOrchestratorCampaignsPostMutationError = HTTPValidationError
+    export type CampaignsCreateCampaignApiOrchestratorCampaignsPostMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsCreateCampaignApiOrchestratorCampaignsPost>>>
+    export type CampaignsCreateCampaignApiOrchestratorCampaignsPostMutationBody = CampaignCreate
+    export type CampaignsCreateCampaignApiOrchestratorCampaignsPostMutationError = HTTPValidationError
 
     /**
- * @summary Create New Campaign
+ * @summary Create Campaign
  */
-export const useCreateNewCampaignApiOrchestratorCampaignsPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewCampaignApiOrchestratorCampaignsPost>>, TError,{data: CampaignCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useCampaignsCreateCampaignApiOrchestratorCampaignsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsCreateCampaignApiOrchestratorCampaignsPost>>, TError,{data: CampaignCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createNewCampaignApiOrchestratorCampaignsPost>>,
+        Awaited<ReturnType<typeof campaignsCreateCampaignApiOrchestratorCampaignsPost>>,
         TError,
         {data: CampaignCreate},
         TContext
       > => {
 
-      const mutationOptions = getCreateNewCampaignApiOrchestratorCampaignsPostMutationOptions(options);
+      const mutationOptions = getCampaignsCreateCampaignApiOrchestratorCampaignsPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 새 드래프트 생성
- * @summary Create New Draft
+ * @summary Update Campaign
  */
-export const createNewDraftApiOrchestratorDraftsPost = (
+export const campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut = (
+    campaignId: number | null,
+    campaignUpdateCommand: CampaignUpdateCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<CampaignOut>(
+      {url: `/api/orchestrator/campaigns/${campaignId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: campaignUpdateCommand
+    },
+      options);
+    }
+  
+
+
+export const getCampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut>>, TError,{campaignId: number | null;data: CampaignUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut>>, TError,{campaignId: number | null;data: CampaignUpdateCommand}, TContext> => {
+
+const mutationKey = ['campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut>>, {campaignId: number | null;data: CampaignUpdateCommand}> = (props) => {
+          const {campaignId,data} = props ?? {};
+
+          return  campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut(campaignId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut>>>
+    export type CampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutMutationBody = CampaignUpdateCommand
+    export type CampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Campaign
+ */
+export const useCampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut>>, TError,{campaignId: number | null;data: CampaignUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut>>,
+        TError,
+        {campaignId: number | null;data: CampaignUpdateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getCampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Delete Campaign
+ */
+export const campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete = (
+    campaignId: number | null,
+    campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody: CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/campaigns/${campaignId}`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody
+    },
+      options);
+    }
+  
+
+
+export const getCampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete>>, TError,{campaignId: number | null;data: CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete>>, TError,{campaignId: number | null;data: CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody}, TContext> => {
+
+const mutationKey = ['campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete>>, {campaignId: number | null;data: CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody}> = (props) => {
+          const {campaignId,data} = props ?? {};
+
+          return  campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete(campaignId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete>>>
+    export type CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationBody = CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody
+    export type CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Campaign
+ */
+export const useCampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete>>, TError,{campaignId: number | null;data: CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete>>,
+        TError,
+        {campaignId: number | null;data: CampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteBody},
+        TContext
+      > => {
+
+      const mutationOptions = getCampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Upsert KPI Definitions
+ */
+export const campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut = (
+    campaignId: number | null,
+    campaignKPIDefUpsertCommand: CampaignKPIDefUpsertCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<CampaignKPIDefListOut>(
+      {url: `/api/orchestrator/campaigns/${campaignId}/kpi-defs`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: campaignKPIDefUpsertCommand
+    },
+      options);
+    }
+  
+
+
+export const getCampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, TError,{campaignId: number | null;data: CampaignKPIDefUpsertCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, TError,{campaignId: number | null;data: CampaignKPIDefUpsertCommand}, TContext> => {
+
+const mutationKey = ['campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, {campaignId: number | null;data: CampaignKPIDefUpsertCommand}> = (props) => {
+          const {campaignId,data} = props ?? {};
+
+          return  campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut(campaignId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>>
+    export type CampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationBody = CampaignKPIDefUpsertCommand
+    export type CampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationError = HTTPValidationError
+
+    /**
+ * @summary Upsert KPI Definitions
+ */
+export const useCampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, TError,{campaignId: number | null;data: CampaignKPIDefUpsertCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>,
+        TError,
+        {campaignId: number | null;data: CampaignKPIDefUpsertCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getCampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Record KPI Result
+ */
+export const campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost = (
+    campaignId: number | null,
+    campaignKPIRecordCommand: CampaignKPIRecordCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<CampaignKPIResultOut>(
+      {url: `/api/orchestrator/campaigns/${campaignId}/kpi-results`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: campaignKPIRecordCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getCampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, TError,{campaignId: number | null;data: CampaignKPIRecordCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, TError,{campaignId: number | null;data: CampaignKPIRecordCommand}, TContext> => {
+
+const mutationKey = ['campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, {campaignId: number | null;data: CampaignKPIRecordCommand}> = (props) => {
+          const {campaignId,data} = props ?? {};
+
+          return  campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost(campaignId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>>
+    export type CampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationBody = CampaignKPIRecordCommand
+    export type CampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Record KPI Result
+ */
+export const useCampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, TError,{campaignId: number | null;data: CampaignKPIRecordCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>,
+        TError,
+        {campaignId: number | null;data: CampaignKPIRecordCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getCampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Aggregate KPI
+ */
+export const campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost = (
+    campaignId: number | null,
+    campaignAggregationCommand: CampaignAggregationCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<CampaignKPIResultOut>(
+      {url: `/api/orchestrator/campaigns/${campaignId}/aggregate-kpis`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: campaignAggregationCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getCampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, TError,{campaignId: number | null;data: CampaignAggregationCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, TError,{campaignId: number | null;data: CampaignAggregationCommand}, TContext> => {
+
+const mutationKey = ['campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, {campaignId: number | null;data: CampaignAggregationCommand}> = (props) => {
+          const {campaignId,data} = props ?? {};
+
+          return  campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost(campaignId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationResult = NonNullable<Awaited<ReturnType<typeof campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>>
+    export type CampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationBody = CampaignAggregationCommand
+    export type CampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Aggregate KPI
+ */
+export const useCampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, TError,{campaignId: number | null;data: CampaignAggregationCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>,
+        TError,
+        {campaignId: number | null;data: CampaignAggregationCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getCampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Create Draft
+ */
+export const draftsCreateApiOrchestratorDraftsPost = (
     draftSaveRequest: DraftSaveRequest,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
@@ -2798,11 +2866,11 @@ export const createNewDraftApiOrchestratorDraftsPost = (
   
 
 
-export const getCreateNewDraftApiOrchestratorDraftsPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewDraftApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createNewDraftApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext> => {
+export const getDraftsCreateApiOrchestratorDraftsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext> => {
 
-const mutationKey = ['createNewDraftApiOrchestratorDraftsPost'];
+const mutationKey = ['draftsCreateApiOrchestratorDraftsPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2812,10 +2880,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNewDraftApiOrchestratorDraftsPost>>, {data: DraftSaveRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>, {data: DraftSaveRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  createNewDraftApiOrchestratorDraftsPost(data,requestOptions)
+          return  draftsCreateApiOrchestratorDraftsPost(data,requestOptions)
         }
 
         
@@ -2823,54 +2891,51 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateNewDraftApiOrchestratorDraftsPostMutationResult = NonNullable<Awaited<ReturnType<typeof createNewDraftApiOrchestratorDraftsPost>>>
-    export type CreateNewDraftApiOrchestratorDraftsPostMutationBody = DraftSaveRequest
-    export type CreateNewDraftApiOrchestratorDraftsPostMutationError = HTTPValidationError
+    export type DraftsCreateApiOrchestratorDraftsPostMutationResult = NonNullable<Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>>
+    export type DraftsCreateApiOrchestratorDraftsPostMutationBody = DraftSaveRequest
+    export type DraftsCreateApiOrchestratorDraftsPostMutationError = HTTPValidationError
 
     /**
- * @summary Create New Draft
+ * @summary Create Draft
  */
-export const useCreateNewDraftApiOrchestratorDraftsPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewDraftApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useDraftsCreateApiOrchestratorDraftsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createNewDraftApiOrchestratorDraftsPost>>,
+        Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>,
         TError,
         {data: DraftSaveRequest},
         TContext
       > => {
 
-      const mutationOptions = getCreateNewDraftApiOrchestratorDraftsPostMutationOptions(options);
+      const mutationOptions = getDraftsCreateApiOrchestratorDraftsPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 드래프트 IR 및 메타데이터 업데이트
- * @summary Update Draft Content
+ * @summary Update Draft
  */
-export const updateDraftContentApiOrchestratorDraftsDraftIdIrPut = (
-    draftId: number,
-    bodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut: BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut,
-    params?: UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutParams,
+export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut = (
+    draftId: number | null,
+    draftUpdateCommand: DraftUpdateCommand,
  options?: SecondParameter<typeof apiFetch>,) => {
       
       
       return apiFetch<DraftOut>(
       {url: `/api/orchestrator/drafts/${draftId}/ir`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: bodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut,
-        params
+      data: draftUpdateCommand
     },
       options);
     }
   
 
 
-export const getUpdateDraftContentApiOrchestratorDraftsDraftIdIrPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDraftContentApiOrchestratorDraftsDraftIdIrPut>>, TError,{draftId: number;data: BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut;params?: UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateDraftContentApiOrchestratorDraftsDraftIdIrPut>>, TError,{draftId: number;data: BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut;params?: UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutParams}, TContext> => {
+export const getDraftsUpdateIrApiOrchestratorDraftsDraftIdIrPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut>>, TError,{draftId: number | null;data: DraftUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut>>, TError,{draftId: number | null;data: DraftUpdateCommand}, TContext> => {
 
-const mutationKey = ['updateDraftContentApiOrchestratorDraftsDraftIdIrPut'];
+const mutationKey = ['draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2880,10 +2945,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDraftContentApiOrchestratorDraftsDraftIdIrPut>>, {draftId: number;data: BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut;params?: UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutParams}> = (props) => {
-          const {draftId,data,params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut>>, {draftId: number | null;data: DraftUpdateCommand}> = (props) => {
+          const {draftId,data} = props ?? {};
 
-          return  updateDraftContentApiOrchestratorDraftsDraftIdIrPut(draftId,data,params,requestOptions)
+          return  draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut(draftId,data,requestOptions)
         }
 
         
@@ -2891,33 +2956,32 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutMutationResult = NonNullable<Awaited<ReturnType<typeof updateDraftContentApiOrchestratorDraftsDraftIdIrPut>>>
-    export type UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutMutationBody = BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut
-    export type UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutMutationError = HTTPValidationError
+    export type DraftsUpdateIrApiOrchestratorDraftsDraftIdIrPutMutationResult = NonNullable<Awaited<ReturnType<typeof draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut>>>
+    export type DraftsUpdateIrApiOrchestratorDraftsDraftIdIrPutMutationBody = DraftUpdateCommand
+    export type DraftsUpdateIrApiOrchestratorDraftsDraftIdIrPutMutationError = HTTPValidationError
 
     /**
- * @summary Update Draft Content
+ * @summary Update Draft
  */
-export const useUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDraftContentApiOrchestratorDraftsDraftIdIrPut>>, TError,{draftId: number;data: BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut;params?: UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useDraftsUpdateIrApiOrchestratorDraftsDraftIdIrPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut>>, TError,{draftId: number | null;data: DraftUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateDraftContentApiOrchestratorDraftsDraftIdIrPut>>,
+        Awaited<ReturnType<typeof draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut>>,
         TError,
-        {draftId: number;data: BodyUpdateDraftContentApiOrchestratorDraftsDraftIdIrPut;params?: UpdateDraftContentApiOrchestratorDraftsDraftIdIrPutParams},
+        {draftId: number | null;data: DraftUpdateCommand},
         TContext
       > => {
 
-      const mutationOptions = getUpdateDraftContentApiOrchestratorDraftsDraftIdIrPutMutationOptions(options);
+      const mutationOptions = getDraftsUpdateIrApiOrchestratorDraftsDraftIdIrPutMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 새 플랫폼 계정 생성
- * @summary Create New Platform Account
+ * @summary Create Platform Account
  */
-export const createNewPlatformAccountApiOrchestratorAccountsPlatformPost = (
-    platformAccountCreate: PlatformAccountCreate,
+export const accountsPlatformCreateApiOrchestratorAccountsPlatformPost = (
+    platformAccountCreateCommand: PlatformAccountCreateCommand,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
@@ -2925,18 +2989,18 @@ export const createNewPlatformAccountApiOrchestratorAccountsPlatformPost = (
       return apiFetch<PlatformAccountOut>(
       {url: `/api/orchestrator/accounts/platform`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: platformAccountCreate, signal
+      data: platformAccountCreateCommand, signal
     },
       options);
     }
   
 
 
-export const getCreateNewPlatformAccountApiOrchestratorAccountsPlatformPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewPlatformAccountApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createNewPlatformAccountApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreate}, TContext> => {
+export const getAccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext> => {
 
-const mutationKey = ['createNewPlatformAccountApiOrchestratorAccountsPlatformPost'];
+const mutationKey = ['accountsPlatformCreateApiOrchestratorAccountsPlatformPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2946,10 +3010,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNewPlatformAccountApiOrchestratorAccountsPlatformPost>>, {data: PlatformAccountCreate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, {data: PlatformAccountCreateCommand}> = (props) => {
           const {data} = props ?? {};
 
-          return  createNewPlatformAccountApiOrchestratorAccountsPlatformPost(data,requestOptions)
+          return  accountsPlatformCreateApiOrchestratorAccountsPlatformPost(data,requestOptions)
         }
 
         
@@ -2957,52 +3021,51 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateNewPlatformAccountApiOrchestratorAccountsPlatformPostMutationResult = NonNullable<Awaited<ReturnType<typeof createNewPlatformAccountApiOrchestratorAccountsPlatformPost>>>
-    export type CreateNewPlatformAccountApiOrchestratorAccountsPlatformPostMutationBody = PlatformAccountCreate
-    export type CreateNewPlatformAccountApiOrchestratorAccountsPlatformPostMutationError = HTTPValidationError
+    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>>
+    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationBody = PlatformAccountCreateCommand
+    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationError = HTTPValidationError
 
     /**
- * @summary Create New Platform Account
+ * @summary Create Platform Account
  */
-export const useCreateNewPlatformAccountApiOrchestratorAccountsPlatformPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewPlatformAccountApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createNewPlatformAccountApiOrchestratorAccountsPlatformPost>>,
+        Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>,
         TError,
-        {data: PlatformAccountCreate},
+        {data: PlatformAccountCreateCommand},
         TContext
       > => {
 
-      const mutationOptions = getCreateNewPlatformAccountApiOrchestratorAccountsPlatformPostMutationOptions(options);
+      const mutationOptions = getAccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 플랫폼 계정 업데이트
- * @summary Update Existing Platform Account
+ * @summary Update Platform Account
  */
-export const updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut = (
-    accountId: number,
-    platformAccountUpdate: PlatformAccountUpdate,
+export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = (
+    accountId: number | null,
+    platformAccountUpdateCommand: PlatformAccountUpdateCommand,
  options?: SecondParameter<typeof apiFetch>,) => {
       
       
       return apiFetch<PlatformAccountOut>(
       {url: `/api/orchestrator/accounts/platform/${accountId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: platformAccountUpdate
+      data: platformAccountUpdateCommand
     },
       options);
     }
   
 
 
-export const getUpdateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number;data: PlatformAccountUpdate}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number;data: PlatformAccountUpdate}, TContext> => {
+export const getAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext> => {
 
-const mutationKey = ['updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut'];
+const mutationKey = ['accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3012,10 +3075,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut>>, {accountId: number;data: PlatformAccountUpdate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, {accountId: number | null;data: PlatformAccountUpdateCommand}> = (props) => {
           const {accountId,data} = props ?? {};
 
-          return  updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut(accountId,data,requestOptions)
+          return  accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut(accountId,data,requestOptions)
         }
 
         
@@ -3023,51 +3086,51 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut>>>
-    export type UpdateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutMutationBody = PlatformAccountUpdate
-    export type UpdateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutMutationError = HTTPValidationError
+    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>>
+    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationBody = PlatformAccountUpdateCommand
+    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationError = HTTPValidationError
 
     /**
- * @summary Update Existing Platform Account
+ * @summary Update Platform Account
  */
-export const useUpdateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number;data: PlatformAccountUpdate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPut>>,
+        Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>,
         TError,
-        {accountId: number;data: PlatformAccountUpdate},
+        {accountId: number | null;data: PlatformAccountUpdateCommand},
         TContext
       > => {
 
-      const mutationOptions = getUpdateExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdPutMutationOptions(options);
+      const mutationOptions = getAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 플랫폼 계정 삭제
- * @summary Delete Existing Platform Account
+ * @summary Delete Platform Account
  */
-export const deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete = (
-    accountId: number,
-    params?: DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams,
+export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = (
+    accountId: number | null,
+    accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody,
  options?: SecondParameter<typeof apiFetch>,) => {
       
       
-      return apiFetch<unknown>(
+      return apiFetch<MessageOut>(
       {url: `/api/orchestrator/accounts/platform/${accountId}`, method: 'DELETE',
-        params
+      headers: {'Content-Type': 'application/json', },
+      data: accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody
     },
       options);
     }
   
 
 
-export const getDeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number;params?: DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number;params?: DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext> => {
+export const getAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;data: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;data: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody}, TContext> => {
 
-const mutationKey = ['deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete'];
+const mutationKey = ['accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3077,10 +3140,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete>>, {accountId: number;params?: DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams}> = (props) => {
-          const {accountId,params} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, {accountId: number | null;data: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody}> = (props) => {
+          const {accountId,data} = props ?? {};
 
-          return  deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete(accountId,params,requestOptions)
+          return  accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete(accountId,data,requestOptions)
         }
 
         
@@ -3088,33 +3151,32 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete>>>
-    
-    export type DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteMutationError = HTTPValidationError
+    export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>>
+    export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationBody = AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody
+    export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationError = HTTPValidationError
 
     /**
- * @summary Delete Existing Platform Account
+ * @summary Delete Platform Account
  */
-export const useDeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number;params?: DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;data: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDelete>>,
+        Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>,
         TError,
-        {accountId: number;params?: DeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteParams},
+        {accountId: number | null;data: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteBody},
         TContext
       > => {
 
-      const mutationOptions = getDeleteExistingPlatformAccountApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions(options);
+      const mutationOptions = getAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 새 페르소나 생성
- * @summary Create New Persona
+ * @summary Create Persona
  */
-export const createNewPersonaApiOrchestratorAccountsPersonasPost = (
-    personaCreate: PersonaCreate,
+export const accountsPersonaCreateApiOrchestratorAccountsPersonasPost = (
+    personaCreateCommand: PersonaCreateCommand,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
@@ -3122,18 +3184,18 @@ export const createNewPersonaApiOrchestratorAccountsPersonasPost = (
       return apiFetch<PersonaOut>(
       {url: `/api/orchestrator/accounts/personas`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: personaCreate, signal
+      data: personaCreateCommand, signal
     },
       options);
     }
   
 
 
-export const getCreateNewPersonaApiOrchestratorAccountsPersonasPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewPersonaApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createNewPersonaApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreate}, TContext> => {
+export const getAccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext> => {
 
-const mutationKey = ['createNewPersonaApiOrchestratorAccountsPersonasPost'];
+const mutationKey = ['accountsPersonaCreateApiOrchestratorAccountsPersonasPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3143,10 +3205,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNewPersonaApiOrchestratorAccountsPersonasPost>>, {data: PersonaCreate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, {data: PersonaCreateCommand}> = (props) => {
           const {data} = props ?? {};
 
-          return  createNewPersonaApiOrchestratorAccountsPersonasPost(data,requestOptions)
+          return  accountsPersonaCreateApiOrchestratorAccountsPersonasPost(data,requestOptions)
         }
 
         
@@ -3154,52 +3216,51 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateNewPersonaApiOrchestratorAccountsPersonasPostMutationResult = NonNullable<Awaited<ReturnType<typeof createNewPersonaApiOrchestratorAccountsPersonasPost>>>
-    export type CreateNewPersonaApiOrchestratorAccountsPersonasPostMutationBody = PersonaCreate
-    export type CreateNewPersonaApiOrchestratorAccountsPersonasPostMutationError = HTTPValidationError
+    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>>
+    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationBody = PersonaCreateCommand
+    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationError = HTTPValidationError
 
     /**
- * @summary Create New Persona
+ * @summary Create Persona
  */
-export const useCreateNewPersonaApiOrchestratorAccountsPersonasPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNewPersonaApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPersonaCreateApiOrchestratorAccountsPersonasPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createNewPersonaApiOrchestratorAccountsPersonasPost>>,
+        Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>,
         TError,
-        {data: PersonaCreate},
+        {data: PersonaCreateCommand},
         TContext
       > => {
 
-      const mutationOptions = getCreateNewPersonaApiOrchestratorAccountsPersonasPostMutationOptions(options);
+      const mutationOptions = getAccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 페르소나 업데이트
- * @summary Update Existing Persona
+ * @summary Update Persona
  */
-export const updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut = (
-    personaId: number,
-    personaUpdate: PersonaUpdate,
+export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = (
+    personaId: number | null,
+    personaUpdateCommand: PersonaUpdateCommand,
  options?: SecondParameter<typeof apiFetch>,) => {
       
       
       return apiFetch<PersonaOut>(
       {url: `/api/orchestrator/accounts/personas/${personaId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: personaUpdate
+      data: personaUpdateCommand
     },
       options);
     }
   
 
 
-export const getUpdateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number;data: PersonaUpdate}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number;data: PersonaUpdate}, TContext> => {
+export const getAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext> => {
 
-const mutationKey = ['updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut'];
+const mutationKey = ['accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3209,10 +3270,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut>>, {personaId: number;data: PersonaUpdate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, {personaId: number | null;data: PersonaUpdateCommand}> = (props) => {
           const {personaId,data} = props ?? {};
 
-          return  updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut(personaId,data,requestOptions)
+          return  accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut(personaId,data,requestOptions)
         }
 
         
@@ -3220,49 +3281,51 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut>>>
-    export type UpdateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutMutationBody = PersonaUpdate
-    export type UpdateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutMutationError = HTTPValidationError
+    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>>
+    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationBody = PersonaUpdateCommand
+    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationError = HTTPValidationError
 
     /**
- * @summary Update Existing Persona
+ * @summary Update Persona
  */
-export const useUpdateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number;data: PersonaUpdate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPut>>,
+        Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>,
         TError,
-        {personaId: number;data: PersonaUpdate},
+        {personaId: number | null;data: PersonaUpdateCommand},
         TContext
       > => {
 
-      const mutationOptions = getUpdateExistingPersonaApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions(options);
+      const mutationOptions = getAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 페르소나 삭제
- * @summary Delete Existing Persona
+ * @summary Delete Persona
  */
-export const deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete = (
-    personaId: number,
+export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = (
+    personaId: number | null,
+    accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody: AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody,
  options?: SecondParameter<typeof apiFetch>,) => {
       
       
-      return apiFetch<unknown>(
-      {url: `/api/orchestrator/accounts/personas/${personaId}`, method: 'DELETE'
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/accounts/personas/${personaId}`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody
     },
       options);
     }
   
 
 
-export const getDeleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number}, TContext> => {
+export const getAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null;data: AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null;data: AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody}, TContext> => {
 
-const mutationKey = ['deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete'];
+const mutationKey = ['accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3272,10 +3335,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete>>, {personaId: number}> = (props) => {
-          const {personaId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, {personaId: number | null;data: AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody}> = (props) => {
+          const {personaId,data} = props ?? {};
 
-          return  deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete(personaId,requestOptions)
+          return  accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete(personaId,data,requestOptions)
         }
 
         
@@ -3283,33 +3346,32 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete>>>
-    
-    export type DeleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDeleteMutationError = HTTPValidationError
+    export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>>
+    export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationBody = AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody
+    export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationError = HTTPValidationError
 
     /**
- * @summary Delete Existing Persona
+ * @summary Delete Persona
  */
-export const useDeleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null;data: AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDelete>>,
+        Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>,
         TError,
-        {personaId: number},
+        {personaId: number | null;data: AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteBody},
         TContext
       > => {
 
-      const mutationOptions = getDeleteExistingPersonaApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions(options);
+      const mutationOptions = getAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 페르소나와 계정 연결 생성
- * @summary Create Persona Account Link
+ * @summary Link Persona Account
  */
-export const createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost = (
-    personaAccountLinkCreate: PersonaAccountLinkCreate,
+export const accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = (
+    personaAccountLinkCommand: PersonaAccountLinkCommand,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
@@ -3317,18 +3379,18 @@ export const createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksP
       return apiFetch<PersonaAccountOut>(
       {url: `/api/orchestrator/accounts/persona-account-links`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: personaAccountLinkCreate, signal
+      data: personaAccountLinkCommand, signal
     },
       options);
     }
   
 
 
-export const getCreatePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCreate}, TContext> => {
+export const getAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext> => {
 
-const mutationKey = ['createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost'];
+const mutationKey = ['accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3338,10 +3400,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost>>, {data: PersonaAccountLinkCreate}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, {data: PersonaAccountLinkCommand}> = (props) => {
           const {data} = props ?? {};
 
-          return  createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost(data,requestOptions)
+          return  accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost(data,requestOptions)
         }
 
         
@@ -3349,50 +3411,52 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreatePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostMutationResult = NonNullable<Awaited<ReturnType<typeof createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost>>>
-    export type CreatePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostMutationBody = PersonaAccountLinkCreate
-    export type CreatePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostMutationError = HTTPValidationError
+    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>>
+    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationBody = PersonaAccountLinkCommand
+    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationError = HTTPValidationError
 
     /**
- * @summary Create Persona Account Link
+ * @summary Link Persona Account
  */
-export const useCreatePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createPersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPost>>,
+        Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>,
         TError,
-        {data: PersonaAccountLinkCreate},
+        {data: PersonaAccountLinkCommand},
         TContext
       > => {
 
-      const mutationOptions = getCreatePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions(options);
+      const mutationOptions = getAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 페르소나와 계정 연결 제거
- * @summary Remove Persona Account Link
+ * @summary Unlink Persona Account
  */
-export const removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = (
-    personaId: number,
-    accountId: number,
+export const accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = (
+    personaId: number | null,
+    accountId: number | null,
+    accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody: AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody,
  options?: SecondParameter<typeof apiFetch>,) => {
       
       
-      return apiFetch<unknown>(
-      {url: `/api/orchestrator/accounts/persona-account-links/${personaId}/${accountId}`, method: 'DELETE'
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/accounts/persona-account-links/${personaId}/${accountId}`, method: 'DELETE',
+      headers: {'Content-Type': 'application/json', },
+      data: accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody
     },
       options);
     }
   
 
 
-export const getRemovePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number;accountId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number;accountId: number}, TContext> => {
+export const getAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null;data: AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null;data: AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody}, TContext> => {
 
-const mutationKey = ['removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete'];
+const mutationKey = ['accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3402,10 +3466,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, {personaId: number;accountId: number}> = (props) => {
-          const {personaId,accountId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, {personaId: number | null;accountId: number | null;data: AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody}> = (props) => {
+          const {personaId,accountId,data} = props ?? {};
 
-          return  removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete(personaId,accountId,requestOptions)
+          return  accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete(personaId,accountId,data,requestOptions)
         }
 
         
@@ -3413,33 +3477,32 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type RemovePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>>
-    
-    export type RemovePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationError = HTTPValidationError
+    export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>>
+    export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationBody = AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody
+    export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationError = HTTPValidationError
 
     /**
- * @summary Remove Persona Account Link
+ * @summary Unlink Persona Account
  */
-export const useRemovePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number;accountId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null;data: AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof removePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>,
+        Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>,
         TError,
-        {personaId: number;accountId: number},
+        {personaId: number | null;accountId: number | null;data: AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteBody},
         TContext
       > => {
 
-      const mutationOptions = getRemovePersonaAccountLinkApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions(options);
+      const mutationOptions = getAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * 인사이트 샘플 수집
  * @summary Ingest Insight
  */
-export const ingestInsightApiOrchestratorInsightsPost = (
-    insightIn: InsightIn,
+export const insightsIngestApiOrchestratorInsightsPost = (
+    insightInCommand: InsightInCommand,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
@@ -3447,18 +3510,18 @@ export const ingestInsightApiOrchestratorInsightsPost = (
       return apiFetch<InsightOut>(
       {url: `/api/orchestrator/insights`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: insightIn, signal
+      data: insightInCommand, signal
     },
       options);
     }
   
 
 
-export const getIngestInsightApiOrchestratorInsightsPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ingestInsightApiOrchestratorInsightsPost>>, TError,{data: InsightIn}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof ingestInsightApiOrchestratorInsightsPost>>, TError,{data: InsightIn}, TContext> => {
+export const getInsightsIngestApiOrchestratorInsightsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext> => {
 
-const mutationKey = ['ingestInsightApiOrchestratorInsightsPost'];
+const mutationKey = ['insightsIngestApiOrchestratorInsightsPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3468,10 +3531,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ingestInsightApiOrchestratorInsightsPost>>, {data: InsightIn}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, {data: InsightInCommand}> = (props) => {
           const {data} = props ?? {};
 
-          return  ingestInsightApiOrchestratorInsightsPost(data,requestOptions)
+          return  insightsIngestApiOrchestratorInsightsPost(data,requestOptions)
         }
 
         
@@ -3479,23 +3542,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type IngestInsightApiOrchestratorInsightsPostMutationResult = NonNullable<Awaited<ReturnType<typeof ingestInsightApiOrchestratorInsightsPost>>>
-    export type IngestInsightApiOrchestratorInsightsPostMutationBody = InsightIn
-    export type IngestInsightApiOrchestratorInsightsPostMutationError = HTTPValidationError
+    export type InsightsIngestApiOrchestratorInsightsPostMutationResult = NonNullable<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>>
+    export type InsightsIngestApiOrchestratorInsightsPostMutationBody = InsightInCommand
+    export type InsightsIngestApiOrchestratorInsightsPostMutationError = HTTPValidationError
 
     /**
  * @summary Ingest Insight
  */
-export const useIngestInsightApiOrchestratorInsightsPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ingestInsightApiOrchestratorInsightsPost>>, TError,{data: InsightIn}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ingestInsightApiOrchestratorInsightsPost>>,
+        Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>,
         TError,
-        {data: InsightIn},
+        {data: InsightInCommand},
         TContext
       > => {
 
-      const mutationOptions = getIngestInsightApiOrchestratorInsightsPostMutationOptions(options);
+      const mutationOptions = getInsightsIngestApiOrchestratorInsightsPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

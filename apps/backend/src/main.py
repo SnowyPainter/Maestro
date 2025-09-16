@@ -63,6 +63,31 @@ async def health():
 # 최종적으로 app에 붙이기
 app.include_router(api)
 
+def _deunionize_nullable(d):
+    """anyOf/oneOf에 [string + null] 패턴이 나오면 nullable 표현으로 정규화"""
+    if isinstance(d, dict):
+        # anyOf/oneOf -> nullable
+        for key in ("anyOf", "oneOf"):
+            if key in d and isinstance(d[key], list):
+                types = { (i.get("type") if isinstance(i, dict) else None): i
+                          for i in d[key] if isinstance(i, dict) }
+                if "string" in types and "null" in types:
+                    str_schema = types["string"]
+                    # maxLength 등 제약은 string 스키마의 것을 보존
+                    for k, v in str_schema.items():
+                        if k not in ("type",):
+                            d[k] = v
+                    d["type"] = "string"
+                    d["nullable"] = True
+                    d.pop(key, None)
+
+        # 자식도 재귀 처리
+        for k, v in list(d.items()):
+            _deunionize_nullable(v)
+    elif isinstance(d, list):
+        for i in d:
+            _deunionize_nullable(i)
+
 # OpenAPI 보안 + 서버 경로 반영
 def custom_openapi():
     if app.openapi_schema:
@@ -71,7 +96,7 @@ def custom_openapi():
     schema = get_openapi(
         title=app.title,
         version=app.version,
-        openapi_version=app.openapi_version,
+        openapi_version='3.0.3',
         description=app.description,
         routes=app.routes,
     )
@@ -81,6 +106,9 @@ def custom_openapi():
     }
     schema["security"] = [{"HTTPBearer": []}]
     schema["servers"] = [{"url": "/api"}]
+
+    _deunionize_nullable(schema)
+
     app.openapi_schema = schema
     return app.openapi_schema
 app.openapi = custom_openapi

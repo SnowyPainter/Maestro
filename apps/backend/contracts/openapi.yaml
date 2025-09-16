@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: Maestro Backend
   version: 0.1.0
@@ -30,44 +30,40 @@ paths:
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-          - type: 'null'
           description: 검색 질의(벡터검색)
           title: Q
+          type: string
+          nullable: true
         description: 검색 질의(벡터검색)
       - name: on_date
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-            format: date
-          - type: 'null'
           description: YYYY-MM-DD (단일 일자)
           title: On Date
+          format: date
+          type: string
+          nullable: true
         description: YYYY-MM-DD (단일 일자)
       - name: since
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-            format: date
-          - type: 'null'
           description: YYYY-MM-DD (이후/포함)
           title: Since
+          format: date
+          type: string
+          nullable: true
         description: YYYY-MM-DD (이후/포함)
       - name: until
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-            format: date
-          - type: 'null'
           description: YYYY-MM-DD (이전/포함)
           title: Until
+          format: date
+          type: string
+          nullable: true
         description: YYYY-MM-DD (이전/포함)
       responses:
         '200':
@@ -144,23 +140,21 @@ paths:
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           description: 시작 날짜
           title: Start
+          format: date-time
+          type: string
+          nullable: true
         description: 시작 날짜
       - name: end
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           description: 종료 날짜
           title: End
+          format: date-time
+          type: string
+          nullable: true
         description: 종료 날짜
       - name: limit
         in: query
@@ -227,11 +221,10 @@ paths:
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-          - type: 'null'
           description: 검색 쿼리
           title: Q
+          type: string
+          nullable: true
         description: 검색 쿼리
       - name: limit
         in: query
@@ -426,11 +419,10 @@ paths:
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-          - type: 'null'
           description: 핸들 검색
           title: Handle
+          type: string
+          nullable: true
         description: 핸들 검색
       - name: limit
         in: query
@@ -505,11 +497,10 @@ paths:
         in: query
         required: false
         schema:
-          anyOf:
-          - type: string
-          - type: 'null'
           description: 이름 검색
           title: Name
+          type: string
+          nullable: true
         description: 이름 검색
       - name: limit
         in: query
@@ -657,187 +648,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}:
-    delete:
-      tags:
-      - campaigns
-      summary: Delete Existing Campaign
-      description: 캠페인 삭제
-      operationId: delete_existing_campaign_api_orchestrator_campaigns__campaign_id__delete
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Campaign Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    put:
-      tags:
-      - campaigns
-      summary: Update Existing Campaign
-      description: 캠페인 업데이트
-      operationId: update_existing_campaign_api_orchestrator_campaigns__campaign_id__put
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Campaign Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampaignUpdate'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}/kpi-defs:
-    put:
-      tags:
-      - campaigns
-      summary: Upsert Campaign Kpi Defs
-      description: 캠페인의 KPI 정의 전체 교체
-      operationId: upsert_campaign_kpi_defs_api_orchestrator_campaigns__campaign_id__kpi_defs_put
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Campaign Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/CampaignKPIDefUpsert'
-              title: Defs
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CampaignKPIDefOut'
-                title: Response Upsert Campaign Kpi Defs Api Orchestrator Campaigns  Campaign
-                  Id  Kpi Defs Put
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}/kpi-results:
-    post:
-      tags:
-      - campaigns
-      summary: Record Campaign Kpi Result
-      description: 캠페인 KPI 결과 기록
-      operationId: record_campaign_kpi_result_api_orchestrator_campaigns__campaign_id__kpi_results_post
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Campaign Id
-      - name: as_of
-        in: query
-        required: true
-        schema:
-          type: string
-          format: date-time
-          title: As Of
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: true
-              title: Values
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignKPIResultOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}/aggregate-kpis:
-    post:
-      tags:
-      - campaigns
-      summary: Aggregate Campaign Kpis
-      description: 캠페인 KPI 집계 실행
-      operationId: aggregate_campaign_kpis_api_orchestrator_campaigns__campaign_id__aggregate_kpis_post
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Campaign Id
-      - name: as_of
-        in: query
-        required: false
-        schema:
-          type: string
-          format: date-time
-          title: As Of
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignKPIResultOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/campaigns:
     post:
       tags:
       - campaigns
-      summary: Create New Campaign
-      description: 새 캠페인 생성
-      operationId: create_new_campaign_api_orchestrator_campaigns_post
+      - campaigns
+      summary: Create Campaign
+      operationId: campaigns_create_campaign_api_orchestrator_campaigns_post
       requestBody:
         content:
           application/json:
@@ -857,13 +674,189 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}:
+    put:
+      tags:
+      - campaigns
+      - campaigns
+      summary: Update Campaign
+      operationId: campaigns_update_campaign_api_orchestrator_campaigns__campaign_id__put
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - campaigns
+      - campaigns
+      summary: Delete Campaign
+      operationId: campaigns_delete_campaign_api_orchestrator_campaigns__campaign_id__delete
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/CampaignDeleteCommand'
+              - type: 'null'
+              title: Payload
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/kpi-defs:
+    put:
+      tags:
+      - campaigns
+      - campaigns
+      summary: Upsert KPI Definitions
+      operationId: campaigns_upsert_kpi_defs_api_orchestrator_campaigns__campaign_id__kpi_defs_put
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignKPIDefUpsertCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIDefListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/kpi-results:
+    post:
+      tags:
+      - campaigns
+      - campaigns
+      summary: Record KPI Result
+      operationId: campaigns_record_kpi_result_api_orchestrator_campaigns__campaign_id__kpi_results_post
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignKPIRecordCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIResultOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/aggregate-kpis:
+    post:
+      tags:
+      - campaigns
+      - campaigns
+      summary: Aggregate KPI
+      operationId: campaigns_aggregate_kpis_api_orchestrator_campaigns__campaign_id__aggregate_kpis_post
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignAggregationCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIResultOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/drafts:
     post:
       tags:
       - drafts
-      summary: Create New Draft
-      description: 새 드래프트 생성
-      operationId: create_new_draft_api_orchestrator_drafts_post
+      - drafts
+      summary: Create Draft
+      operationId: drafts_create_api_orchestrator_drafts_post
       requestBody:
         content:
           application/json:
@@ -887,46 +880,24 @@ paths:
     put:
       tags:
       - drafts
-      summary: Update Draft Content
-      description: 드래프트 IR 및 메타데이터 업데이트
-      operationId: update_draft_content_api_orchestrator_drafts__draft_id__ir_put
+      - drafts
+      summary: Update Draft
+      operationId: drafts_update_ir_api_orchestrator_drafts__draft_id__ir_put
       parameters:
       - name: draft_id
         in: path
         required: true
         schema:
-          type: integer
-          title: Draft Id
-      - name: title
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Title
-      - name: goal
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Goal
-      - name: campaign_id
-        in: query
-        required: false
-        schema:
           anyOf:
           - type: integer
           - type: 'null'
-          title: Campaign Id
+          title: Draft Id
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Body_update_draft_content_api_orchestrator_drafts__draft_id__ir_put'
+              $ref: '#/components/schemas/DraftUpdateCommand'
       responses:
         '200':
           description: Successful Response
@@ -944,14 +915,14 @@ paths:
     post:
       tags:
       - accounts
-      summary: Create New Platform Account
-      description: 새 플랫폼 계정 생성
-      operationId: create_new_platform_account_api_orchestrator_accounts_platform_post
+      - accounts
+      summary: Create Platform Account
+      operationId: accounts_platform_create_api_orchestrator_accounts_platform_post
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlatformAccountCreate'
+              $ref: '#/components/schemas/PlatformAccountCreateCommand'
         required: true
       responses:
         '200':
@@ -970,22 +941,24 @@ paths:
     put:
       tags:
       - accounts
-      summary: Update Existing Platform Account
-      description: 플랫폼 계정 업데이트
-      operationId: update_existing_platform_account_api_orchestrator_accounts_platform__account_id__put
+      - accounts
+      summary: Update Platform Account
+      operationId: accounts_platform_update_api_orchestrator_accounts_platform__account_id__put
       parameters:
       - name: account_id
         in: path
         required: true
         schema:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Account Id
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PlatformAccountUpdate'
+              $ref: '#/components/schemas/PlatformAccountUpdateCommand'
       responses:
         '200':
           description: Successful Response
@@ -1002,29 +975,33 @@ paths:
     delete:
       tags:
       - accounts
-      summary: Delete Existing Platform Account
-      description: 플랫폼 계정 삭제
-      operationId: delete_existing_platform_account_api_orchestrator_accounts_platform__account_id__delete
+      - accounts
+      summary: Delete Platform Account
+      operationId: accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete
       parameters:
       - name: account_id
         in: path
         required: true
         schema:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Account Id
-      - name: soft
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: true
-          title: Soft
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/PlatformAccountDeleteCommand'
+              - type: 'null'
+              title: Payload
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/MessageOut'
         '422':
           description: Validation Error
           content:
@@ -1035,14 +1012,14 @@ paths:
     post:
       tags:
       - accounts
-      summary: Create New Persona
-      description: 새 페르소나 생성
-      operationId: create_new_persona_api_orchestrator_accounts_personas_post
+      - accounts
+      summary: Create Persona
+      operationId: accounts_persona_create_api_orchestrator_accounts_personas_post
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PersonaCreate'
+              $ref: '#/components/schemas/PersonaCreateCommand'
         required: true
       responses:
         '200':
@@ -1061,22 +1038,24 @@ paths:
     put:
       tags:
       - accounts
-      summary: Update Existing Persona
-      description: 페르소나 업데이트
-      operationId: update_existing_persona_api_orchestrator_accounts_personas__persona_id__put
+      - accounts
+      summary: Update Persona
+      operationId: accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put
       parameters:
       - name: persona_id
         in: path
         required: true
         schema:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Persona Id
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PersonaUpdate'
+              $ref: '#/components/schemas/PersonaUpdateCommand'
       responses:
         '200':
           description: Successful Response
@@ -1093,22 +1072,33 @@ paths:
     delete:
       tags:
       - accounts
-      summary: Delete Existing Persona
-      description: 페르소나 삭제
-      operationId: delete_existing_persona_api_orchestrator_accounts_personas__persona_id__delete
+      - accounts
+      summary: Delete Persona
+      operationId: accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete
       parameters:
       - name: persona_id
         in: path
         required: true
         schema:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Persona Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/PersonaDeleteCommand'
+              - type: 'null'
+              title: Payload
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/MessageOut'
         '422':
           description: Validation Error
           content:
@@ -1119,14 +1109,14 @@ paths:
     post:
       tags:
       - accounts
-      summary: Create Persona Account Link
-      description: 페르소나와 계정 연결 생성
-      operationId: create_persona_account_link_api_orchestrator_accounts_persona_account_links_post
+      - accounts
+      summary: Link Persona Account
+      operationId: accounts_link_create_api_orchestrator_accounts_persona_account_links_post
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PersonaAccountLinkCreate'
+              $ref: '#/components/schemas/PersonaAccountLinkCommand'
         required: true
       responses:
         '200':
@@ -1145,28 +1135,41 @@ paths:
     delete:
       tags:
       - accounts
-      summary: Remove Persona Account Link
-      description: 페르소나와 계정 연결 제거
-      operationId: remove_persona_account_link_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete
+      - accounts
+      summary: Unlink Persona Account
+      operationId: accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete
       parameters:
       - name: persona_id
         in: path
         required: true
         schema:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Persona Id
       - name: account_id
         in: path
         required: true
         schema:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Account Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/PersonaAccountUnlinkCommand'
+              - type: 'null'
+              title: Payload
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/MessageOut'
         '422':
           description: Validation Error
           content:
@@ -1177,14 +1180,14 @@ paths:
     post:
       tags:
       - insights
+      - insights
       summary: Ingest Insight
-      description: 인사이트 샘플 수집
-      operationId: ingest_insight_api_orchestrator_insights_post
+      operationId: insights_ingest_api_orchestrator_insights_post
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InsightIn'
+              $ref: '#/components/schemas/InsightInCommand'
         required: true
       responses:
         '200':
@@ -1263,21 +1266,20 @@ components:
       - type
       - props
       title: BlockVideo
-    Body_update_draft_content_api_orchestrator_drafts__draft_id__ir_put:
+    CampaignAggregationCommand:
       properties:
-        ir:
-          $ref: '#/components/schemas/DraftIR'
-        tags:
+        campaign_id:
           anyOf:
-          - items:
-              type: string
-            type: array
+          - type: integer
           - type: 'null'
-          title: Tags
+          title: Campaign Id
+        as_of:
+          title: As Of
+          format: date-time
+          type: string
+          nullable: true
       type: object
-      required:
-      - ir
-      title: Body_update_draft_content_api_orchestrator_drafts__draft_id__ir_put
+      title: CampaignAggregationCommand
     CampaignCreate:
       properties:
         name:
@@ -1285,27 +1287,44 @@ components:
           maxLength: 120
           title: Name
         description:
-          anyOf:
-          - type: string
-            maxLength: 500
-          - type: 'null'
           title: Description
+          maxLength: 500
+          type: string
+          nullable: true
         start_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Start At
+          format: date-time
+          type: string
+          nullable: true
         end_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: End At
+          format: date-time
+          type: string
+          nullable: true
       type: object
       required:
       - name
       title: CampaignCreate
+    CampaignDeleteCommand:
+      properties:
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      type: object
+      title: CampaignDeleteCommand
+    CampaignKPIDefListOut:
+      properties:
+        defs:
+          items:
+            $ref: '#/components/schemas/CampaignKPIDefOut'
+          type: array
+          title: Defs
+      type: object
+      required:
+      - defs
+      title: CampaignKPIDefListOut
     CampaignKPIDefOut:
       properties:
         id:
@@ -1354,6 +1373,43 @@ components:
       required:
       - key
       title: CampaignKPIDefUpsert
+    CampaignKPIDefUpsertCommand:
+      properties:
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        defs:
+          items:
+            $ref: '#/components/schemas/CampaignKPIDefUpsert'
+          type: array
+          title: Defs
+      type: object
+      required:
+      - defs
+      title: CampaignKPIDefUpsertCommand
+    CampaignKPIRecordCommand:
+      properties:
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        as_of:
+          type: string
+          format: date-time
+          title: As Of
+        values:
+          additionalProperties:
+            type: number
+          type: object
+          title: Values
+      type: object
+      required:
+      - as_of
+      - values
+      title: CampaignKPIRecordCommand
     CampaignKPIResultOut:
       properties:
         id:
@@ -1385,23 +1441,20 @@ components:
           maxLength: 120
           title: Name
         description:
-          anyOf:
-          - type: string
-            maxLength: 500
-          - type: 'null'
           title: Description
+          maxLength: 500
+          type: string
+          nullable: true
         start_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Start At
+          format: date-time
+          type: string
+          nullable: true
         end_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: End At
+          format: date-time
+          type: string
+          nullable: true
         id:
           type: integer
           title: Id
@@ -1419,34 +1472,35 @@ components:
       - owner_user_id
       - created_at
       title: CampaignOut
-    CampaignUpdate:
+    CampaignUpdateCommand:
       properties:
         name:
-          anyOf:
-          - type: string
-            maxLength: 120
-          - type: 'null'
           title: Name
+          maxLength: 120
+          type: string
+          nullable: true
         description:
-          anyOf:
-          - type: string
-            maxLength: 500
-          - type: 'null'
           title: Description
+          maxLength: 500
+          type: string
+          nullable: true
         start_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Start At
+          format: date-time
+          type: string
+          nullable: true
         end_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: End At
+          format: date-time
+          type: string
+          nullable: true
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
       type: object
-      title: CampaignUpdate
+      title: CampaignUpdateCommand
     DraftIR:
       properties:
         blocks:
@@ -1480,10 +1534,9 @@ components:
           - type: 'null'
           title: Campaign Id
         title:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Title
+          type: string
+          nullable: true
         tags:
           anyOf:
           - items:
@@ -1492,10 +1545,9 @@ components:
           - type: 'null'
           title: Tags
         goal:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Goal
+          type: string
+          nullable: true
         ir:
           additionalProperties: true
           type: object
@@ -1510,17 +1562,15 @@ components:
           type: string
           title: State
         monitoring_started_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Monitoring Started At
+          format: date-time
+          type: string
+          nullable: true
         monitoring_ended_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Monitoring Ended At
+          format: date-time
+          type: string
+          nullable: true
         created_by:
           type: integer
           title: Created By
@@ -1552,10 +1602,9 @@ components:
           - type: 'null'
           title: Campaign Id
         title:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Title
+          type: string
+          nullable: true
         tags:
           anyOf:
           - items:
@@ -1564,16 +1613,48 @@ components:
           - type: 'null'
           title: Tags
         goal:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Goal
+          type: string
+          nullable: true
         ir:
           $ref: '#/components/schemas/DraftIR'
       type: object
       required:
       - ir
       title: DraftSaveRequest
+    DraftUpdateCommand:
+      properties:
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        ir:
+          $ref: '#/components/schemas/DraftIR'
+        title:
+          title: Title
+          type: string
+          nullable: true
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+        goal:
+          title: Goal
+          type: string
+          nullable: true
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      type: object
+      required:
+      - ir
+      title: DraftUpdateCommand
     DraftVariantOut:
       properties:
         id:
@@ -1603,10 +1684,9 @@ components:
           - type: 'null'
           title: Warnings
         rendered_caption:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Rendered Caption
+          type: string
+          nullable: true
         rendered_blocks:
           anyOf:
           - additionalProperties: true
@@ -1620,11 +1700,10 @@ components:
           - type: 'null'
           title: Metrics
         compiled_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Compiled At
+          format: date-time
+          type: string
+          nullable: true
         ir_revision_compiled:
           anyOf:
           - type: integer
@@ -1660,10 +1739,12 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    InsightIn:
+    InsightInCommand:
       properties:
         owner_user_id:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Owner User Id
         draft_id:
           anyOf:
@@ -1673,10 +1754,9 @@ components:
         platform:
           $ref: '#/components/schemas/PlatformKind'
         platform_post_id:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Platform Post Id
+          type: string
+          nullable: true
         account_persona_id:
           anyOf:
           - type: integer
@@ -1700,16 +1780,14 @@ components:
           title: Source
           default: webhook
         ingest_key:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Ingest Key
+          type: string
+          nullable: true
       type: object
       required:
-      - owner_user_id
       - platform
       - ts
-      title: InsightIn
+      title: InsightInCommand
     InsightOut:
       properties:
         owner_user_id:
@@ -1723,10 +1801,9 @@ components:
         platform:
           $ref: '#/components/schemas/PlatformKind'
         platform_post_id:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Platform Post Id
+          type: string
+          nullable: true
         account_persona_id:
           anyOf:
           - type: integer
@@ -1750,10 +1827,9 @@ components:
           title: Source
           default: webhook
         ingest_key:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Ingest Key
+          type: string
+          nullable: true
         id:
           type: integer
           title: Id
@@ -1798,28 +1874,33 @@ components:
       - email
       - password
       title: LoginRequest
+    MessageOut:
+      properties:
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: MessageOut
     NewsItem:
       properties:
         news_item_title:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: News Item Title
+          type: string
+          nullable: true
         news_item_url:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: News Item Url
+          type: string
+          nullable: true
         news_item_picture:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: News Item Picture
+          type: string
+          nullable: true
         news_item_source:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: News Item Source
+          type: string
+          nullable: true
       type: object
       title: NewsItem
       description: 개별 뉴스 아이템 스키마
@@ -1830,6 +1911,14 @@ components:
       - write
       - publish
       title: Permission
+    PersonaAccountLinkCommand:
+      properties:
+        link:
+          $ref: '#/components/schemas/PersonaAccountLinkCreate'
+      type: object
+      required:
+      - link
+      title: PersonaAccountLinkCommand
     PersonaAccountLinkCreate:
       properties:
         persona_id:
@@ -1902,40 +1991,58 @@ components:
       - is_verified_link
       - created_at
       title: PersonaAccountOut
-    PersonaCreate:
+    PersonaAccountUnlinkCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Id
+      type: object
+      title: PersonaAccountUnlinkCommand
+    PersonaCreateCommand:
+      properties:
+        persona:
+          $ref: '#/components/schemas/PersonaCreatePayload'
+      type: object
+      required:
+      - persona
+      title: PersonaCreateCommand
+    PersonaCreatePayload:
       properties:
         name:
           type: string
           maxLength: 100
           title: Name
         avatar_url:
-          anyOf:
-          - type: string
-            maxLength: 512
-          - type: 'null'
           title: Avatar Url
+          maxLength: 512
+          type: string
+          nullable: true
         bio:
-          anyOf:
-          - type: string
-            maxLength: 200
-          - type: 'null'
           title: Bio
+          maxLength: 200
+          type: string
+          nullable: true
         language:
           type: string
           maxLength: 10
           title: Language
           default: en
         tone:
-          anyOf:
-          - type: string
-            maxLength: 40
-          - type: 'null'
           title: Tone
+          maxLength: 40
+          type: string
+          nullable: true
         style_guide:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Style Guide
+          type: string
+          nullable: true
         pillars:
           anyOf:
           - items:
@@ -1993,14 +2100,19 @@ components:
           type: integer
           title: Schema Version
           default: 1
-        owner_user_id:
-          type: integer
-          title: Owner User Id
       type: object
       required:
       - name
-      - owner_user_id
-      title: PersonaCreate
+      title: PersonaCreatePayload
+    PersonaDeleteCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      type: object
+      title: PersonaDeleteCommand
     PersonaOut:
       properties:
         name:
@@ -2008,33 +2120,29 @@ components:
           maxLength: 100
           title: Name
         avatar_url:
-          anyOf:
-          - type: string
-            maxLength: 512
-          - type: 'null'
           title: Avatar Url
+          maxLength: 512
+          type: string
+          nullable: true
         bio:
-          anyOf:
-          - type: string
-            maxLength: 200
-          - type: 'null'
           title: Bio
+          maxLength: 200
+          type: string
+          nullable: true
         language:
           type: string
           maxLength: 10
           title: Language
           default: en
         tone:
-          anyOf:
-          - type: string
-            maxLength: 40
-          - type: 'null'
           title: Tone
+          maxLength: 40
+          type: string
+          nullable: true
         style_guide:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Style Guide
+          type: string
+          nullable: true
         pillars:
           anyOf:
           - items:
@@ -2113,35 +2221,29 @@ components:
     PersonaUpdate:
       properties:
         name:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Name
+          type: string
+          nullable: true
         avatar_url:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Avatar Url
+          type: string
+          nullable: true
         bio:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Bio
+          type: string
+          nullable: true
         language:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Language
+          type: string
+          nullable: true
         tone:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Tone
+          type: string
+          nullable: true
         style_guide:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Style Guide
+          type: string
+          nullable: true
         pillars:
           anyOf:
           - items:
@@ -2202,6 +2304,19 @@ components:
           title: Schema Version
       type: object
       title: PersonaUpdate
+    PersonaUpdateCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        data:
+          $ref: '#/components/schemas/PersonaUpdate'
+      type: object
+      required:
+      - data
+      title: PersonaUpdateCommand
     PlatformAccountCreate:
       properties:
         platform:
@@ -2211,23 +2326,20 @@ components:
           maxLength: 128
           title: Handle
         external_id:
-          anyOf:
-          - type: string
-            maxLength: 256
-          - type: 'null'
           title: External Id
+          maxLength: 256
+          type: string
+          nullable: true
         avatar_url:
-          anyOf:
-          - type: string
-            maxLength: 512
-          - type: 'null'
           title: Avatar Url
+          maxLength: 512
+          type: string
+          nullable: true
         bio:
-          anyOf:
-          - type: string
-            maxLength: 160
-          - type: 'null'
           title: Bio
+          maxLength: 160
+          type: string
+          nullable: true
         scopes:
           anyOf:
           - items:
@@ -2242,26 +2354,44 @@ components:
           title: Is Active
           default: true
         access_token:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Access Token
+          type: string
+          nullable: true
         refresh_token:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Refresh Token
+          type: string
+          nullable: true
         token_expires_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Token Expires At
+          format: date-time
+          type: string
+          nullable: true
       type: object
       required:
       - platform
       - handle
       title: PlatformAccountCreate
+    PlatformAccountCreateCommand:
+      properties:
+        account:
+          $ref: '#/components/schemas/PlatformAccountCreate'
+      type: object
+      required:
+      - account
+      title: PlatformAccountCreateCommand
+    PlatformAccountDeleteCommand:
+      properties:
+        account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Id
+        soft:
+          type: boolean
+          title: Soft
+          default: true
+      type: object
+      title: PlatformAccountDeleteCommand
     PlatformAccountOut:
       properties:
         platform:
@@ -2271,23 +2401,20 @@ components:
           maxLength: 128
           title: Handle
         external_id:
-          anyOf:
-          - type: string
-            maxLength: 256
-          - type: 'null'
           title: External Id
+          maxLength: 256
+          type: string
+          nullable: true
         avatar_url:
-          anyOf:
-          - type: string
-            maxLength: 512
-          - type: 'null'
           title: Avatar Url
+          maxLength: 512
+          type: string
+          nullable: true
         bio:
-          anyOf:
-          - type: string
-            maxLength: 160
-          - type: 'null'
           title: Bio
+          maxLength: 160
+          type: string
+          nullable: true
         scopes:
           anyOf:
           - items:
@@ -2308,16 +2435,14 @@ components:
           type: integer
           title: Owner User Id
         last_checked_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Last Checked At
+          format: date-time
+          type: string
+          nullable: true
         last_error:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Last Error
+          type: string
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -2338,20 +2463,17 @@ components:
     PlatformAccountUpdate:
       properties:
         handle:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Handle
+          type: string
+          nullable: true
         avatar_url:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Avatar Url
+          type: string
+          nullable: true
         bio:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Bio
+          type: string
+          nullable: true
         scopes:
           anyOf:
           - items:
@@ -2365,23 +2487,33 @@ components:
           - type: 'null'
           title: Is Active
         access_token:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Access Token
+          type: string
+          nullable: true
         refresh_token:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Refresh Token
+          type: string
+          nullable: true
         token_expires_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
           title: Token Expires At
+          format: date-time
+          type: string
+          nullable: true
       type: object
       title: PlatformAccountUpdate
+    PlatformAccountUpdateCommand:
+      properties:
+        account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Id
+        data:
+          $ref: '#/components/schemas/PlatformAccountUpdate'
+      type: object
+      required:
+      - data
+      title: PlatformAccountUpdateCommand
     PlatformKind:
       type: string
       enum:
@@ -2402,10 +2534,9 @@ components:
           minLength: 8
           title: Password
         display_name:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Display Name
+          type: string
+          nullable: true
       type: object
       required:
       - email
@@ -2445,41 +2576,35 @@ components:
           title: Title
           description: 트렌드 키워드
         approx_traffic:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Approx Traffic
           description: '대략적인 트래픽 (예: ''200+'', ''1000+'')'
+          type: string
+          nullable: true
         link:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Link
           description: Google Trends 링크
+          type: string
+          nullable: true
         pubDate:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Pubdate
           description: 발행 날짜
+          type: string
+          nullable: true
         picture:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Picture
           description: 대표 이미지 URL
+          type: string
+          nullable: true
         picture_source:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Picture Source
           description: 이미지 출처
+          type: string
+          nullable: true
         news_item:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: News Item
           description: 뉴스 아이템 (보통 빈 문자열)
+          type: string
+          nullable: true
         news_items:
           anyOf:
           - items:
@@ -2511,11 +2636,10 @@ components:
           title: Source
           description: '데이터 소스 (예: cache, db, vector)'
         query:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Query
           description: 키워드 (있으면 벡터 유사검색)
+          type: string
+          nullable: true
         items:
           items:
             $ref: '#/components/schemas/TrendItem'
@@ -2538,10 +2662,9 @@ components:
           format: email
           title: Email
         display_name:
-          anyOf:
-          - type: string
-          - type: 'null'
           title: Display Name
+          type: string
+          nullable: true
       type: object
       required:
       - id

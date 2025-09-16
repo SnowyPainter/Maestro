@@ -9,17 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/Logo';
-import { useSignupApiAuthSignupPost } from '@/lib/api/generated';
-import { signupApiAuthSignupPostBody } from '@/lib/schemas/api.zod';
+import { useSignupApiOrchestratorAuthSignupPost } from '@/lib/api/generated';
+import { signupApiOrchestratorAuthSignupPostBody } from '@/lib/schemas/api.zod';
 
-type SignupFormValues = z.infer<typeof signupApiAuthSignupPostBody>;
+type SignupFormValues = z.infer<typeof signupApiOrchestratorAuthSignupPostBody>;
 
 export function SignupPage() {
   const navigate = useNavigate();
-  const signupMutation = useSignupApiAuthSignupPost();
+  const signupMutation = useSignupApiOrchestratorAuthSignupPost();
 
   const form = useForm<SignupFormValues>({
-    resolver: zodResolver(signupApiAuthSignupPostBody),
+    resolver: zodResolver(signupApiOrchestratorAuthSignupPostBody),
     defaultValues: {
       display_name: '',
       email: '',
