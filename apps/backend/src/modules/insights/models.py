@@ -33,15 +33,12 @@ class InsightSample(Base):
     draft_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("drafts.id", ondelete="SET NULL"), index=True
     )
-    published_post_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("published_posts.id", ondelete="SET NULL"), index=True
-    )
 
     platform: Mapped[PlatformKind] = mapped_column(Enum(PlatformKind), index=True)
     platform_post_id: Mapped[Optional[str]] = mapped_column(String(128), index=True)
     
     account_persona_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("account_personas.id", ondelete="SET NULL"), index=True
+        ForeignKey("persona_accounts.id", ondelete="SET NULL"), index=True
     )
 
     # 관측 시각(플랫폼에서 보고된 시각 or 조회 기준 시각)

@@ -1,0 +1,49 @@
+@startuml
+skinparam rectangle {
+  BackgroundColor<<bff>> LightBlue
+  BackgroundColor<<orch>> LightGreen
+  BackgroundColor<<svc>> Wheat
+  BackgroundColor<<worker>> LightGray
+}
+
+actor User
+
+rectangle "Frontend" {
+  User --> [BFF Routers] <<bff>>
+}
+
+rectangle "Backend" {
+  rectangle "BFF (얇은 READ 라우터)" <<bff>> {
+    [trends_router] --> [trends.service] <<svc>>
+    [campaigns_router] --> [campaigns.service] <<svc>>
+  }
+
+  rectangle "Orchestrator (단일 실행엔진)" <<orch>> {
+    [Planner] --> [DSL Templates]
+    [Executor] --> [Operator Registry]
+    [Operator Registry] --> [Service Layer]
+  }
+
+  rectangle "Domain Services" <<svc>> {
+    [campaigns.service]
+    [drafts.service]
+    [insights.service]
+    [trends.service]
+  }
+
+  rectangle "Celery Workers" <<worker>> {
+    [shared_task(campaigns)]
+    [shared_task(drafts)]
+    [shared_task(trends)]
+  }
+}
+
+User -right-> [Chat Input] : 자연어
+[Chat Input] --> [Planner]
+
+User -down-> [REST API] : REST Call
+[REST API] --> [BFF Routers]
+[REST API] --> [Orchestrator]
+
+[Executor] --> [Celery Workers]
+@enduml

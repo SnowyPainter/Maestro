@@ -1670,11 +1670,6 @@ components:
           - type: integer
           - type: 'null'
           title: Draft Id
-        published_post_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Published Post Id
         platform:
           $ref: '#/components/schemas/PlatformKind'
         platform_post_id:
@@ -1725,11 +1720,6 @@ components:
           - type: integer
           - type: 'null'
           title: Draft Id
-        published_post_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Published Post Id
         platform:
           $ref: '#/components/schemas/PlatformKind'
         platform_post_id:

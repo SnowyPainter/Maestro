@@ -236,8 +236,6 @@ export interface HTTPValidationError {
 
 export type InsightInDraftId = number | null;
 
-export type InsightInPublishedPostId = number | null;
-
 export type InsightInPlatformPostId = string | null;
 
 export type InsightInAccountPersonaId = number | null;
@@ -259,7 +257,6 @@ export type InsightInIngestKey = string | null;
 export interface InsightIn {
   owner_user_id: number;
   draft_id?: InsightInDraftId;
-  published_post_id?: InsightInPublishedPostId;
   platform: PlatformKind;
   platform_post_id?: InsightInPlatformPostId;
   account_persona_id?: InsightInAccountPersonaId;
@@ -270,8 +267,6 @@ export interface InsightIn {
 }
 
 export type InsightOutDraftId = number | null;
-
-export type InsightOutPublishedPostId = number | null;
 
 export type InsightOutPlatformPostId = string | null;
 
@@ -294,7 +289,6 @@ export type InsightOutIngestKey = string | null;
 export interface InsightOut {
   owner_user_id: number;
   draft_id?: InsightOutDraftId;
-  published_post_id?: InsightOutPublishedPostId;
   platform: PlatformKind;
   platform_post_id?: InsightOutPlatformPostId;
   account_persona_id?: InsightOutAccountPersonaId;

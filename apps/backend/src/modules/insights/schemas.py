@@ -8,7 +8,6 @@ from apps.backend.src.modules.common.enums import PlatformKind
 class InsightIn(BaseModel):
     owner_user_id: int
     draft_id: Optional[int] = None
-    published_post_id: Optional[int] = None
     platform: PlatformKind
     platform_post_id: Optional[str] = None
     account_persona_id: Optional[int] = None

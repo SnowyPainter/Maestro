@@ -947,7 +947,6 @@ export const ingestInsightApiOrchestratorInsightsPostBodySourceDefault = "webhoo
 export const ingestInsightApiOrchestratorInsightsPostBody = zod.object({
   "owner_user_id": zod.number(),
   "draft_id": zod.union([zod.number(),zod.null()]).optional(),
-  "published_post_id": zod.union([zod.number(),zod.null()]).optional(),
   "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
   "platform_post_id": zod.union([zod.string(),zod.null()]).optional(),
   "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
@@ -962,7 +961,6 @@ export const ingestInsightApiOrchestratorInsightsPostResponseSourceDefault = "we
 export const ingestInsightApiOrchestratorInsightsPostResponse = zod.object({
   "owner_user_id": zod.number(),
   "draft_id": zod.union([zod.number(),zod.null()]).optional(),
-  "published_post_id": zod.union([zod.number(),zod.null()]).optional(),
   "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
   "platform_post_id": zod.union([zod.string(),zod.null()]).optional(),
   "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),

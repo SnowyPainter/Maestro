@@ -1,0 +1,21 @@
+@startuml
+package "DSL 합성" {
+  [Template A\n(trends.search -> nlp.summarize)] as A
+  [Template B\n(drafts.generate -> drafts.save)] as B
+
+  A --> B : "summary -> brief"
+}
+
+package "타입/스키마 그래프 검증" {
+  A -[#red]-> B : "Trend != str"
+  [Adapter Op\n(Trend -> str)] as Adapter
+  A --> Adapter
+  Adapter --> B
+}
+
+note right of Adapter
+  Adapter/Transformer 오퍼레이터
+  - 입력: Trend
+  - 출력: str
+end note
+@enduml

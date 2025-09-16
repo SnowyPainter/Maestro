@@ -893,8 +893,6 @@ export interface components {
             owner_user_id: number;
             /** Draft Id */
             draft_id?: number | null;
-            /** Published Post Id */
-            published_post_id?: number | null;
             platform: components["schemas"]["PlatformKind"];
             /** Platform Post Id */
             platform_post_id?: string | null;
@@ -924,8 +922,6 @@ export interface components {
             owner_user_id: number;
             /** Draft Id */
             draft_id?: number | null;
-            /** Published Post Id */
-            published_post_id?: number | null;
             platform: components["schemas"]["PlatformKind"];
             /** Platform Post Id */
             platform_post_id?: string | null;
