@@ -2,18 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Paperclip, Send } from "lucide-react";
 
 interface ChatInputProps {
-    onSendMessage: (content: string, type: 'user' | 'bot') => void;
+    onSendMessage: (content: string) => Promise<void>;
     placeholder?: string;
 }
 
 export function ChatInput({ onSendMessage, placeholder = "Enter a message..." }: ChatInputProps) {
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             const value = (e.target as HTMLTextAreaElement).value;
             if (value.trim()) {
-                onSendMessage(value, 'user');
-                (e.target as HTMLTextAreaElement).value = "";
+                try {
+                    await onSendMessage(value);
+                    (e.target as HTMLTextAreaElement).value = "";
+                } catch (error) {
+                    console.error('Failed to send message:', error);
+                }
             }
         }
     };

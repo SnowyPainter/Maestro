@@ -28,8 +28,8 @@ from apps.backend.src.modules.campaigns.service import (
 )
 from apps.backend.src.modules.users.models import User
 
-from .dispatch import TaskContext, orchestrate_flow, runtime_dependency
-from .registry import FLOWS, FlowBuilder, operator
+from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
 
 class MessageOut(BaseModel):
@@ -277,7 +277,7 @@ router = FLOWS.build_router(
     prefix="",
     tags=["campaigns"],
     runtime_dependency=runtime_dependency,
-    flow_filter=lambda flow: "campaigns" in flow.tags,
+    flow_filter=lambda flow: "campaigns" in flow.tags and "bff" not in flow.tags,
 )
 
 

@@ -5,7 +5,7 @@ import { Logo } from "@/components/Logo";
 
 interface ChatStreamProps {
     messages: Message[];
-    onSendMessage: (content: string, type: 'user' | 'bot') => void;
+    onSendMessage: (content: string) => Promise<void>;
 }
 
 export function ChatStream({ messages, onSendMessage }: ChatStreamProps) {

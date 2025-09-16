@@ -13,8 +13,8 @@ from apps.backend.src.modules.drafts.schemas import DraftIR, DraftOut, DraftSave
 from apps.backend.src.modules.drafts.service import create_draft, update_draft_ir
 from apps.backend.src.modules.users.models import User
 
-from .dispatch import TaskContext, orchestrate_flow, runtime_dependency
-from .registry import FLOWS, FlowBuilder, operator
+from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
 
 class DraftUpdateCommand(BaseModel):
@@ -118,9 +118,8 @@ router = FLOWS.build_router(
     prefix="",
     tags=["drafts"],
     runtime_dependency=runtime_dependency,
-    flow_filter=lambda flow: "drafts" in flow.tags,
+    flow_filter=lambda flow: "drafts" in flow.tags and "bff" not in flow.tags,
 )
 
 
 __all__ = ["router"]
-

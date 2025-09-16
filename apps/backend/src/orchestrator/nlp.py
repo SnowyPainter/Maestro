@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 import dateparser
 from pydantic import BaseModel, Field
@@ -24,7 +24,6 @@ class IntentResult(BaseModel):
     keywords: List[str] = Field(default_factory=list)
 
 
-@dataclass
 class IntentCandidate(BaseModel):
     intent: str
     confidence: float
@@ -176,7 +175,6 @@ class NlpEngine:
                 "TIMEZONE": "UTC",
                 "RETURN_AS_TIMEZONE_AWARE": False,
                 "PREFER_DATES_FROM": "past",
-                "LANGUAGE": "en",
             },
         )
         if not parsed:

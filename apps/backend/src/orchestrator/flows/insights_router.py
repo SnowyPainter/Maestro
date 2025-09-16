@@ -12,8 +12,8 @@ from apps.backend.src.modules.insights.schemas import InsightIn, InsightOut
 from apps.backend.src.modules.insights.service import ingest_insight_sample
 from apps.backend.src.modules.users.models import User
 
-from .dispatch import TaskContext, orchestrate_flow, runtime_dependency
-from .registry import FLOWS, FlowBuilder, operator
+from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
 
 class InsightInCommand(InsightIn):

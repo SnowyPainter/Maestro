@@ -11,7 +11,7 @@ from .cards import card_type_for_model, serialize_payload
 from .dispatch import ExecutionRuntime, orchestrate_flow, runtime_dependency
 from .nlp import IntentResult, nlp_engine
 from .planner import ChatPlan, flow_planner
-from .registry import FLOWS
+from .registry import FLOWS, FlowDefinition
 
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -36,6 +36,15 @@ class ChatResponse(BaseModel):
     messages: List[str] = Field(default_factory=list)
 
 
+class FlowInfo(BaseModel):
+    key: str
+    title: str
+    description: Optional[str] = None
+    method: str
+    path: str
+    tags: List[str]
+
+
 @router.post("/query", response_model=ChatResponse)
 async def chat_query(
     payload: ChatQuery,
@@ -45,6 +54,23 @@ async def chat_query(
     plan = await flow_planner.plan(payload.message, intent)
     response = await _execute_plan(plan, runtime)
     return response
+
+
+@router.get("/flows", response_model=List[FlowInfo])
+async def get_available_flows() -> List[FlowInfo]:
+    """Get list of all available flows."""
+    flows = FLOWS.all()
+    return [
+        FlowInfo(
+            key=flow.key,
+            title=flow.title,
+            description=flow.description,
+            method=flow.method,
+            path=flow.api_path(),
+            tags=list(flow.tags),
+        )
+        for flow in flows
+    ]
 
 
 async def _execute_plan(plan: ChatPlan, runtime: ExecutionRuntime) -> ChatResponse:

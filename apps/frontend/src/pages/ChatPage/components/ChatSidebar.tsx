@@ -15,7 +15,10 @@ const initialTools = [
     { id: 'draft', title: 'Draft', icon: <FileText className="w-5 h-5 text-primary" /> },
 ];
 
-function SortableToolCard({ tool, ...props }: { tool: typeof initialTools[0] & { [key: string]: any } }) {
+function SortableToolCard({ tool, onClick, ...props }: {
+    tool: typeof initialTools[0] & { [key: string]: any },
+    onClick?: () => void
+}) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: tool.id });
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -29,6 +32,7 @@ function SortableToolCard({ tool, ...props }: { tool: typeof initialTools[0] & {
             {...attributes}
             {...listeners}
             {...props}
+            onClick={onClick}
             className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-card hover:bg-muted border transition-colors aspect-square text-card-foreground touch-none"
         >
             {tool.icon}
@@ -37,7 +41,15 @@ function SortableToolCard({ tool, ...props }: { tool: typeof initialTools[0] & {
     );
 }
 
-export function ChatSidebar({ onQueryTrendsClick, onNewChatClick }: { onQueryTrendsClick: () => void, onNewChatClick: () => void }) {
+export function ChatSidebar({
+    onQueryTrendsClick,
+    onNewChatClick,
+    flows
+}: {
+    onQueryTrendsClick: () => void,
+    onNewChatClick: () => void,
+    flows?: any[]
+}) {
     const [tools, setTools] = useState(initialTools);
 
     const sensors = useSensors(
