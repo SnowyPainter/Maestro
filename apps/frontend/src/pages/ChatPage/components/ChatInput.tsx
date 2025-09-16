@@ -23,7 +23,7 @@ export function ChatInput({ onSendMessage, placeholder = "Enter a message..." }:
     };
 
     return (
-        <div className="relative">
+        <div className="relative w-full max-w-3xl">
             <textarea
                 className="border rounded-xl p-3 w-full pr-24 resize-none bg-input"
                 placeholder={placeholder}

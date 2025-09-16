@@ -13,6 +13,7 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "CampaignKPIDefListOut": "campaign_kpi_def",
     "DraftOut": "draft",
     "PersonaOut": "persona",
+    "TrendsListResponse": "trends",
     "MessageOut": "info",
 }
 

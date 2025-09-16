@@ -4,13 +4,63 @@ import { ChatStream } from "@/widgets/ChatStream";
 import { ChatContextPanel } from "./components/ChatContextPanel";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
-import { TrendsListResponse } from "@/lib/api/generated";
+import { TableCard } from "@/entities/messages/components/Table";
+import { ChartCard } from "@/entities/messages/components/ChartCard";
+import { EditorCard } from "@/entities/messages/components/EditorCard";
+import { ProfileCard } from "@/entities/messages/components/ProfileCard";
+import { InfoCard } from "@/entities/messages/components/InfoCard";
+import { GenericCard } from "@/entities/messages/components/GenericCard";
+import { ChatCard, TrendsListResponse } from "@/lib/api/generated";
 import { useChatQueryApiOrchestratorChatQueryPost, useGetAvailableFlowsApiOrchestratorChatFlowsGet } from "@/lib/api/generated";
 
 export type Message = {
     id: number;
     type: 'user' | 'bot' | 'card';
     content: string | React.ReactNode;
+};
+
+// 카드 타입에 따른 컴포넌트 선택 함수
+const renderCardByType = (card: ChatCard) => {
+  const { card_type, data, title, source_flow } = card;
+
+  // Trends 카드 특별 처리
+  if (card_type === 'trends' || (data && data.source && data.items)) {
+    return <TrendResultCard query={title || "Trends"} results={data as unknown as TrendsListResponse} />;
+  }
+
+  // 카드 타입에 따라 컴포넌트 선택
+  switch (card_type) {
+    case 'table':
+    case 'list':
+    case 'series':
+    case 'collection':
+      return <TableCard title={title || "Data"} data={data || card} />;
+
+    case 'chart':
+    case 'kpi':
+    case 'metric':
+      return <ChartCard title={title || "Data"} data={data || card} />;
+
+    case 'editor':
+    case 'draft':
+      return <EditorCard title={title || "Data"} data={data || card} />;
+
+    case 'profile':
+    case 'persona':
+    case 'user':
+      return <ProfileCard title={title || "Data"} data={data || card} />;
+
+    case 'info':
+    case 'message':
+      return <InfoCard title={title || "Data"} data={data || card} />;
+
+    case 'campaign_kpi':
+    case 'campaign_kpi_def':
+      return <ChartCard title={title || "Data"} data={data || card} />;
+
+    default:
+      return <GenericCard title={title || "Data"} data={data || card} />;
+  }
 };
 
 export function ChatPage() {
@@ -46,17 +96,14 @@ export function ChatPage() {
         });
       }
 
-      // 카드들 추가 (나중에 구현)
+      // 카드들 추가
       if (response.cards && response.cards.length > 0) {
         response.cards.forEach(card => {
-          // 카드 타입에 따라 적절한 컴포넌트로 변환해서 표시
-          // 일단은 JSON으로 표시
+          const cardComponent = renderCardByType(card);
           setMessages(prev => [...prev, {
             id: Date.now(),
             type: 'card',
-            content: <div className="p-4 bg-card rounded-lg border">
-              <pre className="text-sm">{JSON.stringify(card, null, 2)}</pre>
-            </div>
+            content: cardComponent
           }]);
         });
       }

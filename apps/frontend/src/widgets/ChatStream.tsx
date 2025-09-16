@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Message } from "@/pages/ChatPage/ChatPage";
 import { ChatInput } from "@/pages/ChatPage/components/ChatInput";
 import { Logo } from "@/components/Logo";
+import { MessageBubble } from "@/entities/messages/components/MessageBubble";
 
 interface ChatStreamProps {
     messages: Message[];
@@ -25,7 +26,7 @@ export function ChatStream({ messages, onSendMessage }: ChatStreamProps) {
             <div className="flex-1 flex items-center justify-center">
                 <Logo size="lg" />
             </div>
-            <div className="w-full max-w-2xl p-4">
+            <div className="w-full max-w-3xl px-4">
                 <ChatInput onSendMessage={onSendMessage} placeholder="Ask me anything..."/>
             </div>
             <div className="text-xs text-muted-foreground p-2">
@@ -38,25 +39,19 @@ export function ChatStream({ messages, onSendMessage }: ChatStreamProps) {
   return (
     <main className="flex flex-col h-screen bg-background">
       <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
-        {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {m.type === 'card' ? (
-                <div className="w-full">{m.content}</div>
-            ) : (
-                <div className={`p-3 rounded-2xl shadow-sm max-w-2xl ${
-                    m.type === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-card text-card-foreground border'
-                }`}>
-                    {m.content}
-                </div>
-            )}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
+        <div className="mx-auto max-w-3xl w-full">
+          {messages.map((m) => (
+            <div key={m.id} className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+              <MessageBubble message={m} />
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
       <div className="p-4 border-t bg-card">
-        <ChatInput onSendMessage={onSendMessage} />
+        <div className="mx-auto max-w-3xl">
+          <ChatInput onSendMessage={onSendMessage} />
+        </div>
       </div>
     </main>
   );

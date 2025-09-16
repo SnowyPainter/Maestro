@@ -4,6 +4,261 @@
  */
 
 export interface paths {
+    "/api/bff/accounts/platform/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF Read Platform Account */
+        get: operations["bff_accounts_read_platform_account_api_bff_accounts_platform__account_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/accounts/platform": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Platform Accounts */
+        get: operations["bff_accounts_list_platform_accounts_api_bff_accounts_platform_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/accounts/personas/{persona_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF Read Persona */
+        get: operations["bff_accounts_read_persona_api_bff_accounts_personas__persona_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/accounts/personas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Personas */
+        get: operations["bff_accounts_list_personas_api_bff_accounts_personas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/accounts/personas/{persona_id}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Accounts for Persona */
+        get: operations["bff_accounts_list_accounts_for_persona_api_bff_accounts_personas__persona_id__accounts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/accounts/platform/{account_id}/personas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Personas for Account */
+        get: operations["bff_accounts_list_personas_for_account_api_bff_accounts_platform__account_id__personas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/campaigns/{campaign_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF Read Campaign */
+        get: operations["bff_campaigns_read_campaign_api_bff_campaigns__campaign_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Campaigns */
+        get: operations["bff_campaigns_list_campaigns_api_bff_campaigns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/campaigns/{campaign_id}/kpi-defs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Campaign KPI Definitions */
+        get: operations["bff_campaigns_list_kpi_defs_api_bff_campaigns__campaign_id__kpi_defs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/campaigns/{campaign_id}/kpi-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Campaign KPI Results */
+        get: operations["bff_campaigns_list_kpi_results_api_bff_campaigns__campaign_id__kpi_results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF Read Draft */
+        get: operations["bff_drafts_read_draft_api_bff_drafts__draft_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Drafts */
+        get: operations["bff_drafts_list_drafts_api_bff_drafts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts/{draft_id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Draft Variants */
+        get: operations["bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF Read Current User */
+        get: operations["bff_me_read_me_api_bff_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** BFF List Trends */
+        get: operations["bff_trends_list_trends_api_bff_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/auth/signup": {
         parameters: {
             query?: never;
@@ -405,11 +660,6 @@ export interface components {
              */
             end_at?: string | null;
         };
-        /** CampaignDeleteCommand */
-        CampaignDeleteCommand: {
-            /** Campaign Id */
-            campaign_id?: number | null;
-        };
         /** CampaignKPIDefListOut */
         CampaignKPIDefListOut: {
             /** Defs */
@@ -481,6 +731,12 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /** CampaignKpiDefList */
+        CampaignKpiDefList: components["schemas"]["CampaignKPIDefOut"][];
+        /** CampaignKpiResultList */
+        CampaignKpiResultList: components["schemas"]["CampaignKPIResultOut"][];
+        /** CampaignList */
+        CampaignList: components["schemas"]["CampaignOut"][];
         /** CampaignOut */
         CampaignOut: {
             /** Name */
@@ -571,6 +827,8 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** DraftList */
+        DraftList: components["schemas"]["DraftOut"][];
         /** DraftOut */
         DraftOut: {
             /** Id */
@@ -643,6 +901,52 @@ export interface components {
             goal?: string | null;
             /** Campaign Id */
             campaign_id?: number | null;
+        };
+        /** DraftVariantList */
+        DraftVariantList: components["schemas"]["DraftVariantOut"][];
+        /** DraftVariantOut */
+        DraftVariantOut: {
+            /** Id */
+            id: number;
+            /** Draft Id */
+            draft_id: number;
+            /** Platform */
+            platform: string;
+            /** Status */
+            status: string;
+            /** Errors */
+            errors?: string[] | null;
+            /** Warnings */
+            warnings?: string[] | null;
+            /** Rendered Caption */
+            rendered_caption?: string | null;
+            /** Rendered Blocks */
+            rendered_blocks?: {
+                [key: string]: unknown;
+            } | null;
+            /** Metrics */
+            metrics?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Compiled At
+             * Format: date-time
+             */
+            compiled_at?: string | null;
+            /** Ir Revision Compiled */
+            ir_revision_compiled?: number | null;
+            /** Compiler Version */
+            compiler_version: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** FlowInfo */
         FlowInfo: {
@@ -780,6 +1084,20 @@ export interface components {
             message: string;
         };
         /**
+         * NewsItem
+         * @description 개별 뉴스 아이템 스키마
+         */
+        NewsItem: {
+            /** News Item Title */
+            news_item_title?: string | null;
+            /** News Item Url */
+            news_item_url?: string | null;
+            /** News Item Picture */
+            news_item_picture?: string | null;
+            /** News Item Source */
+            news_item_source?: string | null;
+        };
+        /**
          * Permission
          * @enum {string}
          */
@@ -813,6 +1131,8 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** PersonaAccountList */
+        PersonaAccountList: components["schemas"]["PersonaAccountOut"][];
         /** PersonaAccountOut */
         PersonaAccountOut: {
             /** Id */
@@ -834,13 +1154,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-        };
-        /** PersonaAccountUnlinkCommand */
-        PersonaAccountUnlinkCommand: {
-            /** Persona Id */
-            persona_id?: number | null;
-            /** Account Id */
-            account_id?: number | null;
         };
         /** PersonaCreateCommand */
         PersonaCreateCommand: {
@@ -895,11 +1208,8 @@ export interface components {
              */
             schema_version: number;
         };
-        /** PersonaDeleteCommand */
-        PersonaDeleteCommand: {
-            /** Persona Id */
-            persona_id?: number | null;
-        };
+        /** PersonaList */
+        PersonaList: components["schemas"]["PersonaOut"][];
         /** PersonaOut */
         PersonaOut: {
             /** Name */
@@ -1042,16 +1352,8 @@ export interface components {
         PlatformAccountCreateCommand: {
             account: components["schemas"]["PlatformAccountCreate"];
         };
-        /** PlatformAccountDeleteCommand */
-        PlatformAccountDeleteCommand: {
-            /** Account Id */
-            account_id?: number | null;
-            /**
-             * Soft
-             * @default true
-             */
-            soft: boolean;
-        };
+        /** PlatformAccountList */
+        PlatformAccountList: components["schemas"]["PlatformAccountOut"][];
         /** PlatformAccountOut */
         PlatformAccountOut: {
             platform: components["schemas"]["PlatformKind"];
@@ -1148,6 +1450,88 @@ export interface components {
             token_type: string;
             user: components["schemas"]["UserResponse"];
         };
+        /**
+         * TrendItem
+         * @description Google Trends 개별 트렌드 아이템 스키마
+         */
+        TrendItem: {
+            /**
+             * Rank
+             * @description 트렌드 순위
+             */
+            rank: number;
+            /**
+             * Retrieved
+             * @description 데이터 수집 시각 (ISO format)
+             */
+            retrieved: string;
+            /**
+             * Title
+             * @description 트렌드 키워드
+             */
+            title: string;
+            /**
+             * Approx Traffic
+             * @description 대략적인 트래픽 (예: '200+', '1000+')
+             */
+            approx_traffic?: string | null;
+            /**
+             * Link
+             * @description Google Trends 링크
+             */
+            link?: string | null;
+            /**
+             * Pubdate
+             * @description 발행 날짜
+             */
+            pubDate?: string | null;
+            /**
+             * Picture
+             * @description 대표 이미지 URL
+             */
+            picture?: string | null;
+            /**
+             * Picture Source
+             * @description 이미지 출처
+             */
+            picture_source?: string | null;
+            /**
+             * News Item
+             * @description 뉴스 아이템 (보통 빈 문자열)
+             */
+            news_item?: string | null;
+            /**
+             * News Items
+             * @description 관련 뉴스 아이템 목록
+             */
+            news_items?: components["schemas"]["NewsItem"][] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** TrendsListResponse */
+        TrendsListResponse: {
+            /**
+             * Country
+             * @description 국가 코드 (예: KR, US)
+             */
+            country: string;
+            /**
+             * Source
+             * @description 데이터 소스 (예: cache, db, vector)
+             * @enum {string}
+             */
+            source: "cache" | "db" | "vector";
+            /**
+             * Query
+             * @description 키워드 (있으면 벡터 유사검색)
+             */
+            query?: string | null;
+            /**
+             * Items
+             * @description 트렌드 아이템 목록
+             */
+            items: components["schemas"]["TrendItem"][];
+        };
         /** UserResponse */
         UserResponse: {
             /** Id */
@@ -1178,6 +1562,478 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    bff_accounts_read_platform_account_api_bff_accounts_platform__account_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_accounts_list_platform_accounts_api_bff_accounts_platform_get: {
+        parameters: {
+            query?: {
+                platform?: components["schemas"]["PlatformKind"] | null;
+                handle?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_accounts_read_persona_api_bff_accounts_personas__persona_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                persona_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_accounts_list_personas_api_bff_accounts_personas_get: {
+        parameters: {
+            query?: {
+                name?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_accounts_list_accounts_for_persona_api_bff_accounts_personas__persona_id__accounts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                persona_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaAccountList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_accounts_list_personas_for_account_api_bff_accounts_platform__account_id__personas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaAccountList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_campaigns_read_campaign_api_bff_campaigns__campaign_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_campaigns_list_campaigns_api_bff_campaigns_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_campaigns_list_kpi_defs_api_bff_campaigns__campaign_id__kpi_defs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignKpiDefList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_campaigns_list_kpi_results_api_bff_campaigns__campaign_id__kpi_results_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+                end?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                campaign_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignKpiResultList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_read_draft_api_bff_drafts__draft_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_drafts_api_bff_drafts_get: {
+        parameters: {
+            query?: {
+                campaign_id?: number | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftVariantList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_me_read_me_api_bff_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    bff_trends_list_trends_api_bff_trends_get: {
+        parameters: {
+            query?: {
+                country?: string;
+                limit?: number;
+                q?: string | null;
+                on_date?: string | null;
+                since?: string | null;
+                until?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendsListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     signup_api_orchestrator_auth_signup_post: {
         parameters: {
             query?: never;
@@ -1321,11 +2177,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["CampaignDeleteCommand"] | null;
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1590,18 +2442,16 @@ export interface operations {
     };
     accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete: {
         parameters: {
-            query?: never;
+            query?: {
+                soft?: boolean;
+            };
             header?: never;
             path: {
                 account_id: number | null;
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PlatformAccountDeleteCommand"] | null;
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1700,11 +2550,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PersonaDeleteCommand"] | null;
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -1769,11 +2615,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PersonaAccountUnlinkCommand"] | null;
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

@@ -281,11 +281,19 @@ class FlowDefinition:
         body_required = self.method not in {"get", "delete"}
 
         async def endpoint(**kwargs):
-            payload_obj = kwargs.pop("payload", None)
             runtime = kwargs.pop("runtime", None)
             path_values = {name: kwargs.pop(name) for name in path_params if name in kwargs}
-            if payload_obj is None:
-                payload_obj = self.input_model()
+
+            if body_required:
+                # For POST/PUT/PATCH, use payload from request body
+                payload_obj = kwargs.pop("payload", None)
+                if payload_obj is None:
+                    payload_obj = self.input_model()
+            else:
+                # For GET/DELETE, construct payload from query/path parameters
+                payload_data = {**kwargs, **path_values}
+                payload_obj = self.input_model(**payload_data)
+
             enriched_payload = _merge_payload_with_path(payload_obj, path_values)
             result = orchestrate(self, enriched_payload, runtime)
             if isawaitable(result):
@@ -295,9 +303,6 @@ class FlowDefinition:
             if isinstance(result, BaseModel):
                 return self.output_model.parse_obj(result.dict())
             return self.output_model.parse_obj(result)
-
-        payload_annotation: Any = self.input_model if body_required else Optional[self.input_model]
-        payload_default: Any = Parameter.empty if body_required else None
 
         # Build parameters in correct order: no-default params first, then default params
         params: list[Parameter] = []
@@ -312,15 +317,40 @@ class FlowDefinition:
                 )
             )
 
-        # Add payload parameter (may have default)
-        params.append(
-            Parameter(
-                "payload",
-                kind=Parameter.POSITIONAL_OR_KEYWORD,
-                annotation=payload_annotation,
-                default=payload_default,
+        if body_required:
+            # For POST/PUT/PATCH, add payload as request body
+            params.append(
+                Parameter(
+                    "payload",
+                    kind=Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=self.input_model,
+                    default=Parameter.empty,
+                )
             )
-        )
+        else:
+            # For GET/DELETE, add payload fields as query parameters
+            model_fields = getattr(self.input_model, "model_fields", None) or getattr(self.input_model, "__fields__", {})
+            for field_name, field_info in model_fields.items():
+                if field_name not in path_params:  # Skip path parameters
+                    # Handle both Pydantic v1 and v2
+                    if hasattr(field_info, "annotation"):
+                        annotation = field_info.annotation
+                    else:
+                        annotation = getattr(field_info, "type_", Any)
+
+                    if hasattr(field_info, "default"):
+                        default = field_info.default
+                    else:
+                        default = getattr(field_info, "default", Parameter.empty)
+
+                    params.append(
+                        Parameter(
+                            field_name,
+                            kind=Parameter.POSITIONAL_OR_KEYWORD,
+                            annotation=annotation,
+                            default=default,
+                        )
+                    )
 
         # Add runtime parameter last (always has default if present)
         if runtime_dependency is not None:
@@ -652,7 +682,7 @@ def _field_annotation(model_cls: Type[BaseModel], field_name: str) -> Any:
     return Any
 
 
-FLOWS = FlowRegistry(REGISTRY, autodiscover_package="apps.backend.src.orchestrator")
+FLOWS = FlowRegistry(REGISTRY, autodiscover_package="apps.backend.src.orchestrator.flows")
 
 
 __all__ = [

@@ -3,6 +3,544 @@ info:
   title: Maestro Backend
   version: 0.1.0
 paths:
+  /api/bff/accounts/platform/{account_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      summary: BFF Read Platform Account
+      operationId: bff_accounts_read_platform_account_api_bff_accounts_platform__account_id__get
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/platform:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      summary: BFF List Platform Accounts
+      operationId: bff_accounts_list_platform_accounts_api_bff_accounts_platform_get
+      parameters:
+      - name: platform
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/PlatformKind'
+          - type: 'null'
+          title: Platform
+      - name: handle
+        in: query
+        required: false
+        schema:
+          title: Handle
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/personas/{persona_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      summary: BFF Read Persona
+      operationId: bff_accounts_read_persona_api_bff_accounts_personas__persona_id__get
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Persona Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/personas:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      summary: BFF List Personas
+      operationId: bff_accounts_list_personas_api_bff_accounts_personas_get
+      parameters:
+      - name: name
+        in: query
+        required: false
+        schema:
+          title: Name
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/personas/{persona_id}/accounts:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      summary: BFF List Accounts for Persona
+      operationId: bff_accounts_list_accounts_for_persona_api_bff_accounts_personas__persona_id__accounts_get
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Persona Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaAccountList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/platform/{account_id}/personas:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      summary: BFF List Personas for Account
+      operationId: bff_accounts_list_personas_for_account_api_bff_accounts_platform__account_id__personas_get
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaAccountList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/campaigns/{campaign_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - campaigns
+      summary: BFF Read Campaign
+      operationId: bff_campaigns_read_campaign_api_bff_campaigns__campaign_id__get
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/campaigns:
+    get:
+      tags:
+      - bff
+      - bff
+      - campaigns
+      summary: BFF List Campaigns
+      operationId: bff_campaigns_list_campaigns_api_bff_campaigns_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          title: Q
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/campaigns/{campaign_id}/kpi-defs:
+    get:
+      tags:
+      - bff
+      - bff
+      - campaigns
+      summary: BFF List Campaign KPI Definitions
+      operationId: bff_campaigns_list_kpi_defs_api_bff_campaigns__campaign_id__kpi_defs_get
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKpiDefList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/campaigns/{campaign_id}/kpi-results:
+    get:
+      tags:
+      - bff
+      - bff
+      - campaigns
+      summary: BFF List Campaign KPI Results
+      operationId: bff_campaigns_list_kpi_results_api_bff_campaigns__campaign_id__kpi_results_get
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Campaign Id
+      - name: start
+        in: query
+        required: false
+        schema:
+          title: Start
+          format: date-time
+          type: string
+          nullable: true
+      - name: end
+        in: query
+        required: false
+        schema:
+          title: End
+          format: date-time
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 200
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKpiResultList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/{draft_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      summary: BFF Read Draft
+      operationId: bff_drafts_read_draft_api_bff_drafts__draft_id__get
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      summary: BFF List Drafts
+      operationId: bff_drafts_list_drafts_api_bff_drafts_get
+      parameters:
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/{draft_id}/variants:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      summary: BFF List Draft Variants
+      operationId: bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftVariantList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/me:
+    get:
+      tags:
+      - bff
+      - bff
+      - me
+      summary: BFF Read Current User
+      operationId: bff_me_read_me_api_bff_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+  /api/bff/trends:
+    get:
+      tags:
+      - bff
+      - bff
+      - trends
+      summary: BFF List Trends
+      operationId: bff_trends_list_trends_api_bff_trends_get
+      parameters:
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+          default: US
+          title: Country
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: q
+        in: query
+        required: false
+        schema:
+          title: Q
+          type: string
+          nullable: true
+      - name: on_date
+        in: query
+        required: false
+        schema:
+          title: On Date
+          format: date
+          type: string
+          nullable: true
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date
+          type: string
+          nullable: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendsListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/auth/signup:
     post:
       tags:
@@ -129,14 +667,6 @@ paths:
           - type: integer
           - type: 'null'
           title: Campaign Id
-      requestBody:
-        content:
-          application/json:
-            schema:
-              anyOf:
-              - $ref: '#/components/schemas/CampaignDeleteCommand'
-              - type: 'null'
-              title: Payload
       responses:
         '200':
           description: Successful Response
@@ -392,14 +922,13 @@ paths:
           - type: integer
           - type: 'null'
           title: Account Id
-      requestBody:
-        content:
-          application/json:
-            schema:
-              anyOf:
-              - $ref: '#/components/schemas/PlatformAccountDeleteCommand'
-              - type: 'null'
-              title: Payload
+      - name: soft
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Soft
       responses:
         '200':
           description: Successful Response
@@ -489,14 +1018,6 @@ paths:
           - type: integer
           - type: 'null'
           title: Persona Id
-      requestBody:
-        content:
-          application/json:
-            schema:
-              anyOf:
-              - $ref: '#/components/schemas/PersonaDeleteCommand'
-              - type: 'null'
-              title: Payload
       responses:
         '200':
           description: Successful Response
@@ -560,14 +1081,6 @@ paths:
           - type: integer
           - type: 'null'
           title: Account Id
-      requestBody:
-        content:
-          application/json:
-            schema:
-              anyOf:
-              - $ref: '#/components/schemas/PersonaAccountUnlinkCommand'
-              - type: 'null'
-              title: Payload
       responses:
         '200':
           description: Successful Response
@@ -752,15 +1265,6 @@ components:
       required:
       - name
       title: CampaignCreate
-    CampaignDeleteCommand:
-      properties:
-        campaign_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Campaign Id
-      type: object
-      title: CampaignDeleteCommand
     CampaignKPIDefListOut:
       properties:
         defs:
@@ -881,6 +1385,21 @@ components:
       - as_of
       - values
       title: CampaignKPIResultOut
+    CampaignKpiDefList:
+      items:
+        $ref: '#/components/schemas/CampaignKPIDefOut'
+      type: array
+      title: CampaignKpiDefList
+    CampaignKpiResultList:
+      items:
+        $ref: '#/components/schemas/CampaignKPIResultOut'
+      type: array
+      title: CampaignKpiResultList
+    CampaignList:
+      items:
+        $ref: '#/components/schemas/CampaignOut'
+      type: array
+      title: CampaignList
     CampaignOut:
       properties:
         name:
@@ -1026,6 +1545,11 @@ components:
       required:
       - blocks
       title: DraftIR
+    DraftList:
+      items:
+        $ref: '#/components/schemas/DraftOut'
+      type: array
+      title: DraftList
     DraftOut:
       properties:
         id:
@@ -1161,6 +1685,86 @@ components:
       required:
       - ir
       title: DraftUpdateCommand
+    DraftVariantList:
+      items:
+        $ref: '#/components/schemas/DraftVariantOut'
+      type: array
+      title: DraftVariantList
+    DraftVariantOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        draft_id:
+          type: integer
+          title: Draft Id
+        platform:
+          type: string
+          title: Platform
+        status:
+          type: string
+          title: Status
+        errors:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Errors
+        warnings:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Warnings
+        rendered_caption:
+          title: Rendered Caption
+          type: string
+          nullable: true
+        rendered_blocks:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Rendered Blocks
+        metrics:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metrics
+        compiled_at:
+          title: Compiled At
+          format: date-time
+          type: string
+          nullable: true
+        ir_revision_compiled:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ir Revision Compiled
+        compiler_version:
+          type: integer
+          title: Compiler Version
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - draft_id
+      - platform
+      - status
+      - compiler_version
+      - created_at
+      - updated_at
+      title: DraftVariantOut
     FlowInfo:
       properties:
         key:
@@ -1390,6 +1994,27 @@ components:
       required:
       - message
       title: MessageOut
+    NewsItem:
+      properties:
+        news_item_title:
+          title: News Item Title
+          type: string
+          nullable: true
+        news_item_url:
+          title: News Item Url
+          type: string
+          nullable: true
+        news_item_picture:
+          title: News Item Picture
+          type: string
+          nullable: true
+        news_item_source:
+          title: News Item Source
+          type: string
+          nullable: true
+      type: object
+      title: NewsItem
+      description: 개별 뉴스 아이템 스키마
     Permission:
       type: string
       enum:
@@ -1439,6 +2064,11 @@ components:
       - persona_id
       - account_id
       title: PersonaAccountLinkCreate
+    PersonaAccountList:
+      items:
+        $ref: '#/components/schemas/PersonaAccountOut'
+      type: array
+      title: PersonaAccountList
     PersonaAccountOut:
       properties:
         id:
@@ -1477,20 +2107,6 @@ components:
       - is_verified_link
       - created_at
       title: PersonaAccountOut
-    PersonaAccountUnlinkCommand:
-      properties:
-        persona_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Persona Id
-        account_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Account Id
-      type: object
-      title: PersonaAccountUnlinkCommand
     PersonaCreateCommand:
       properties:
         persona:
@@ -1590,15 +2206,11 @@ components:
       required:
       - name
       title: PersonaCreatePayload
-    PersonaDeleteCommand:
-      properties:
-        persona_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Persona Id
-      type: object
-      title: PersonaDeleteCommand
+    PersonaList:
+      items:
+        $ref: '#/components/schemas/PersonaOut'
+      type: array
+      title: PersonaList
     PersonaOut:
       properties:
         name:
@@ -1865,19 +2477,11 @@ components:
       required:
       - account
       title: PlatformAccountCreateCommand
-    PlatformAccountDeleteCommand:
-      properties:
-        account_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Account Id
-        soft:
-          type: boolean
-          title: Soft
-          default: true
-      type: object
-      title: PlatformAccountDeleteCommand
+    PlatformAccountList:
+      items:
+        $ref: '#/components/schemas/PlatformAccountOut'
+      type: array
+      title: PlatformAccountList
     PlatformAccountOut:
       properties:
         platform:
@@ -2044,6 +2648,100 @@ components:
       - access_token
       - user
       title: TokenResponse
+    TrendItem:
+      properties:
+        rank:
+          type: integer
+          title: Rank
+          description: 트렌드 순위
+        retrieved:
+          anyOf:
+          - type: string
+          - type: string
+            format: date-time
+          title: Retrieved
+          description: 데이터 수집 시각 (ISO format)
+        title:
+          type: string
+          title: Title
+          description: 트렌드 키워드
+        approx_traffic:
+          title: Approx Traffic
+          description: '대략적인 트래픽 (예: ''200+'', ''1000+'')'
+          type: string
+          nullable: true
+        link:
+          title: Link
+          description: Google Trends 링크
+          type: string
+          nullable: true
+        pubDate:
+          title: Pubdate
+          description: 발행 날짜
+          type: string
+          nullable: true
+        picture:
+          title: Picture
+          description: 대표 이미지 URL
+          type: string
+          nullable: true
+        picture_source:
+          title: Picture Source
+          description: 이미지 출처
+          type: string
+          nullable: true
+        news_item:
+          title: News Item
+          description: 뉴스 아이템 (보통 빈 문자열)
+          type: string
+          nullable: true
+        news_items:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NewsItem'
+            type: array
+          - type: 'null'
+          title: News Items
+          description: 관련 뉴스 아이템 목록
+      additionalProperties: true
+      type: object
+      required:
+      - rank
+      - retrieved
+      - title
+      title: TrendItem
+      description: Google Trends 개별 트렌드 아이템 스키마
+    TrendsListResponse:
+      properties:
+        country:
+          type: string
+          title: Country
+          description: '국가 코드 (예: KR, US)'
+        source:
+          type: string
+          enum:
+          - cache
+          - db
+          - vector
+          title: Source
+          description: '데이터 소스 (예: cache, db, vector)'
+        query:
+          title: Query
+          description: 키워드 (있으면 벡터 유사검색)
+          type: string
+          nullable: true
+        items:
+          items:
+            $ref: '#/components/schemas/TrendItem'
+          type: array
+          title: Items
+          description: 트렌드 아이템 목록
+      type: object
+      required:
+      - country
+      - source
+      - items
+      title: TrendsListResponse
     UserResponse:
       properties:
         id:
