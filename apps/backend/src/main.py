@@ -12,6 +12,7 @@ from apps.backend.src.orchestrator.campaigns_router import router as orchestrato
 from apps.backend.src.orchestrator.drafts_router import router as orchestrator_drafts_router
 from apps.backend.src.orchestrator.accounts_router import router as orchestrator_accounts_router
 from apps.backend.src.orchestrator.insights_router import router as orchestrator_insights_router
+from apps.backend.src.orchestrator.chat_router import router as orchestrator_chat_router
 from apps.backend.src.core.config import settings
 from apps.backend.src.core.db import engine, Base
 from pathlib import Path
@@ -54,6 +55,7 @@ api.include_router(orchestrator_campaigns_router, prefix="/orchestrator")
 api.include_router(orchestrator_drafts_router, prefix="/orchestrator")
 api.include_router(orchestrator_accounts_router, prefix="/orchestrator")
 api.include_router(orchestrator_insights_router, prefix="/orchestrator")
+api.include_router(orchestrator_chat_router, prefix="/orchestrator")
 
 # 헬스체크도 api 아래로
 @api.get("/health")

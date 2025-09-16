@@ -32,6 +32,9 @@ flows automatically.
 from __future__ import annotations
 
 import re
+import importlib
+import logging
+import pkgutil
 from collections import deque
 from dataclasses import dataclass, field
 from inspect import Parameter, Signature, isawaitable, iscoroutinefunction, signature
@@ -56,6 +59,8 @@ from typing import (
 )
 
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 try:  # FastAPI is an optional dependency during unit tests.
     from fastapi import APIRouter, Depends
@@ -488,9 +493,17 @@ class FlowBuilder:
 class FlowRegistry:
     """Central registry that holds all orchestrated flows."""
 
-    def __init__(self, operator_registry: OperatorRegistry) -> None:
+    def __init__(
+        self,
+        operator_registry: OperatorRegistry,
+        *,
+        autodiscover_package: Optional[str] = None,
+    ) -> None:
         self.operator_registry = operator_registry
         self._flows: Dict[str, FlowDefinition] = {}
+        self._autodiscover_package = autodiscover_package
+        self._autodiscover_done = False
+        self._autodiscover_in_progress = False
 
     def register(self, flow: FlowDefinition) -> FlowDefinition:
         if flow.key in self._flows:
@@ -499,9 +512,11 @@ class FlowRegistry:
         return flow
 
     def get(self, key: str) -> FlowDefinition:
+        self._ensure_discovery()
         return self._flows[key]
 
     def all(self) -> Tuple[FlowDefinition, ...]:
+        self._ensure_discovery()
         return tuple(self._flows.values())
 
     def flow(
@@ -550,6 +565,7 @@ class FlowRegistry:
         runtime_dependency: Optional[Callable[..., Any]] = None,
         flow_filter: Optional[Callable[[FlowDefinition], bool]] = None,
     ) -> Any:
+        self._ensure_discovery()
         if APIRouter is None:
             raise RuntimeError("FastAPI is required to materialize flow routes")
         router = APIRouter(prefix=prefix, tags=list(tags or ["orchestrator"]))
@@ -573,7 +589,44 @@ class FlowRegistry:
         return router
 
     def openapi_operations(self) -> Tuple[Dict[str, Any], ...]:
+        self._ensure_discovery()
         return tuple(flow.openapi_operation() for flow in self._flows.values())
+
+    def autodiscover(self) -> None:
+        if (
+            not self._autodiscover_package
+            or self._autodiscover_done
+            or self._autodiscover_in_progress
+        ):
+            return
+        self._autodiscover_in_progress = True
+        try:
+            try:
+                package = importlib.import_module(self._autodiscover_package)
+            except ImportError as exc:  # pragma: no cover - optional dependency
+                logger.debug("Flow autodiscovery skipped: %s", exc)
+                return
+            module_path = getattr(package, "__path__", None)
+            if not module_path:
+                return
+            prefix = package.__name__ + "."
+            for _, name, _ in pkgutil.walk_packages(module_path, prefix):
+                if name.endswith(".registry") or name.endswith(".cards"):
+                    continue
+                try:
+                    importlib.import_module(name)
+                except Exception as exc:  # pragma: no cover - keep server alive
+                    logger.warning(
+                        "Failed to import %s during flow autodiscovery: %s", name, exc
+                    )
+                    continue
+            self._autodiscover_done = True
+        finally:
+            self._autodiscover_in_progress = False
+
+    def _ensure_discovery(self) -> None:
+        if not self._autodiscover_done:
+            self.autodiscover()
 
 
 def _merge_payload_with_path(payload: BaseModel, updates: Dict[str, Any]) -> BaseModel:
@@ -599,7 +652,7 @@ def _field_annotation(model_cls: Type[BaseModel], field_name: str) -> Any:
     return Any
 
 
-FLOWS = FlowRegistry(REGISTRY)
+FLOWS = FlowRegistry(REGISTRY, autodiscover_package="apps.backend.src.orchestrator")
 
 
 __all__ = [

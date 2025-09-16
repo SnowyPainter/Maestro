@@ -1032,6 +1032,39 @@ export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
 
 
 /**
+ * @summary Chat Query
+ */
+export const chatQueryApiOrchestratorChatQueryPostBody = zod.object({
+  "message": zod.string().describe('User utterance (English)'),
+  "session_id": zod.string().nullish().describe('Conversation identifier')
+})
+
+export const chatQueryApiOrchestratorChatQueryPostResponseIntentConfidenceDefault = 0;
+
+export const chatQueryApiOrchestratorChatQueryPostResponse = zod.object({
+  "intent": zod.object({
+  "intent": zod.string(),
+  "confidence": zod.number().optional(),
+  "candidates": zod.array(zod.object({
+  "intent": zod.string(),
+  "confidence": zod.number()
+})).optional(),
+  "slots": zod.record(zod.string(), zod.any()).optional(),
+  "raw_text": zod.string(),
+  "keywords": zod.array(zod.string()).optional()
+}).describe('Structured output describing an analysed user utterance.'),
+  "plan_notes": zod.string().nullish(),
+  "cards": zod.array(zod.object({
+  "card_type": zod.string(),
+  "data": zod.record(zod.string(), zod.any()),
+  "title": zod.string().nullish(),
+  "source_flow": zod.string().nullish()
+})).optional(),
+  "messages": zod.array(zod.string()).optional()
+})
+
+
+/**
  * @summary Health
  */
 export const healthApiHealthGetResponse = zod.any()

@@ -573,6 +573,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/chat/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Chat Query */
+        post: operations["chat_query_api_orchestrator_chat_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -783,6 +800,42 @@ export interface components {
             /** Campaign Id */
             campaign_id?: number | null;
         };
+        /** ChatCard */
+        ChatCard: {
+            /** Card Type */
+            card_type: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Title */
+            title?: string | null;
+            /** Source Flow */
+            source_flow?: string | null;
+        };
+        /** ChatQuery */
+        ChatQuery: {
+            /**
+             * Message
+             * @description User utterance (English)
+             */
+            message: string;
+            /**
+             * Session Id
+             * @description Conversation identifier
+             */
+            session_id?: string | null;
+        };
+        /** ChatResponse */
+        ChatResponse: {
+            intent: components["schemas"]["IntentResult"];
+            /** Plan Notes */
+            plan_notes?: string | null;
+            /** Cards */
+            cards?: components["schemas"]["ChatCard"][];
+            /** Messages */
+            messages?: string[];
+        };
         /** DraftIR */
         DraftIR: {
             /** Blocks */
@@ -978,6 +1031,36 @@ export interface components {
              * Format: date-time
              */
             ingested_at: string;
+        };
+        /** IntentCandidate */
+        IntentCandidate: {
+            /** Intent */
+            intent: string;
+            /** Confidence */
+            confidence: number;
+        };
+        /**
+         * IntentResult
+         * @description Structured output describing an analysed user utterance.
+         */
+        IntentResult: {
+            /** Intent */
+            intent: string;
+            /**
+             * Confidence
+             * @default 0
+             */
+            confidence: number;
+            /** Candidates */
+            candidates?: components["schemas"]["IntentCandidate"][];
+            /** Slots */
+            slots?: {
+                [key: string]: unknown;
+            };
+            /** Raw Text */
+            raw_text: string;
+            /** Keywords */
+            keywords?: string[];
         };
         /**
          * KPIKey
@@ -2623,6 +2706,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InsightOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_query_api_orchestrator_chat_query_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatQuery"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponse"];
                 };
             };
             /** @description Validation Error */

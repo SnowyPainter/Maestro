@@ -170,6 +170,35 @@ export interface CampaignUpdateCommand {
   campaign_id?: CampaignUpdateCommandCampaignId;
 }
 
+export type ChatCardData = { [key: string]: unknown };
+
+export interface ChatCard {
+  card_type: string;
+  data: ChatCardData;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  source_flow?: string | null;
+}
+
+export interface ChatQuery {
+  /** User utterance (English) */
+  message: string;
+  /**
+   * Conversation identifier
+   * @nullable
+   */
+  session_id?: string | null;
+}
+
+export interface ChatResponse {
+  intent: IntentResult;
+  /** @nullable */
+  plan_notes?: string | null;
+  cards?: ChatCard[];
+  messages?: string[];
+}
+
 export type DraftIRBlocksItem = BlockText | BlockImage | BlockVideo;
 
 export type DraftIROptions = { [key: string]: unknown };
@@ -338,6 +367,25 @@ export interface InsightOut {
   ingest_key?: string | null;
   id: number;
   ingested_at: string;
+}
+
+export interface IntentCandidate {
+  intent: string;
+  confidence: number;
+}
+
+export type IntentResultSlots = { [key: string]: unknown };
+
+/**
+ * Structured output describing an analysed user utterance.
+ */
+export interface IntentResult {
+  intent: string;
+  confidence?: number;
+  candidates?: IntentCandidate[];
+  slots?: IntentResultSlots;
+  raw_text: string;
+  keywords?: string[];
 }
 
 export type KPIKey = typeof KPIKey[keyof typeof KPIKey];
@@ -3559,6 +3607,71 @@ export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValida
       > => {
 
       const mutationOptions = getInsightsIngestApiOrchestratorInsightsPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Chat Query
+ */
+export const chatQueryApiOrchestratorChatQueryPost = (
+    chatQuery: ChatQuery,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ChatResponse>(
+      {url: `/api/orchestrator/chat/query`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: chatQuery, signal
+    },
+      options);
+    }
+  
+
+
+export const getChatQueryApiOrchestratorChatQueryPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatQueryApiOrchestratorChatQueryPost>>, TError,{data: ChatQuery}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof chatQueryApiOrchestratorChatQueryPost>>, TError,{data: ChatQuery}, TContext> => {
+
+const mutationKey = ['chatQueryApiOrchestratorChatQueryPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatQueryApiOrchestratorChatQueryPost>>, {data: ChatQuery}> = (props) => {
+          const {data} = props ?? {};
+
+          return  chatQueryApiOrchestratorChatQueryPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatQueryApiOrchestratorChatQueryPostMutationResult = NonNullable<Awaited<ReturnType<typeof chatQueryApiOrchestratorChatQueryPost>>>
+    export type ChatQueryApiOrchestratorChatQueryPostMutationBody = ChatQuery
+    export type ChatQueryApiOrchestratorChatQueryPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Chat Query
+ */
+export const useChatQueryApiOrchestratorChatQueryPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatQueryApiOrchestratorChatQueryPost>>, TError,{data: ChatQuery}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chatQueryApiOrchestratorChatQueryPost>>,
+        TError,
+        {data: ChatQuery},
+        TContext
+      > => {
+
+      const mutationOptions = getChatQueryApiOrchestratorChatQueryPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

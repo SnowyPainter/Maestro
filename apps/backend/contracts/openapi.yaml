@@ -1202,6 +1202,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/chat/query:
+    post:
+      tags:
+      - chat
+      summary: Chat Query
+      operationId: chat_query_api_orchestrator_chat_query_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatQuery'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/health:
     get:
       summary: Health
@@ -1501,6 +1526,65 @@ components:
           title: Campaign Id
       type: object
       title: CampaignUpdateCommand
+    ChatCard:
+      properties:
+        card_type:
+          type: string
+          title: Card Type
+        data:
+          additionalProperties: true
+          type: object
+          title: Data
+        title:
+          title: Title
+          type: string
+          nullable: true
+        source_flow:
+          title: Source Flow
+          type: string
+          nullable: true
+      type: object
+      required:
+      - card_type
+      - data
+      title: ChatCard
+    ChatQuery:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: User utterance (English)
+        session_id:
+          title: Session Id
+          description: Conversation identifier
+          type: string
+          nullable: true
+      type: object
+      required:
+      - message
+      title: ChatQuery
+    ChatResponse:
+      properties:
+        intent:
+          $ref: '#/components/schemas/IntentResult'
+        plan_notes:
+          title: Plan Notes
+          type: string
+          nullable: true
+        cards:
+          items:
+            $ref: '#/components/schemas/ChatCard'
+          type: array
+          title: Cards
+        messages:
+          items:
+            type: string
+          type: array
+          title: Messages
+      type: object
+      required:
+      - intent
+      title: ChatResponse
     DraftIR:
       properties:
         blocks:
@@ -1845,6 +1929,51 @@ components:
       - id
       - ingested_at
       title: InsightOut
+    IntentCandidate:
+      properties:
+        intent:
+          type: string
+          title: Intent
+        confidence:
+          type: number
+          title: Confidence
+      type: object
+      required:
+      - intent
+      - confidence
+      title: IntentCandidate
+    IntentResult:
+      properties:
+        intent:
+          type: string
+          title: Intent
+        confidence:
+          type: number
+          title: Confidence
+          default: 0.0
+        candidates:
+          items:
+            $ref: '#/components/schemas/IntentCandidate'
+          type: array
+          title: Candidates
+        slots:
+          additionalProperties: true
+          type: object
+          title: Slots
+        raw_text:
+          type: string
+          title: Raw Text
+        keywords:
+          items:
+            type: string
+          type: array
+          title: Keywords
+      type: object
+      required:
+      - intent
+      - raw_text
+      title: IntentResult
+      description: Structured output describing an analysed user utterance.
     KPIKey:
       type: string
       enum:
