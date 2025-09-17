@@ -190,12 +190,13 @@ async def op_list_personas_for_account(
 
 @FLOWS.flow(
     key="bff.accounts.read_platform_account",
-    title="BFF Read Platform Account",
+    title="Get Platform Account Details",
+    description="Retrieve detailed information about a specific platform account for UI display",
     input_model=PlatformAccountReadPayload,
     output_model=PlatformAccountOut,
     method="get",
     path="/accounts/platform/{account_id}",
-    tags=("bff", "accounts"),
+    tags=("bff", "accounts", "platform", "read", "ui", "frontend"),
 )
 def _flow_bff_read_platform_account(builder: FlowBuilder):
     task = builder.task("read_platform_account", "bff.accounts.read_platform_account")
@@ -204,12 +205,13 @@ def _flow_bff_read_platform_account(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.accounts.list_platform_accounts",
-    title="BFF List Platform Accounts",
+    title="List All Platform Accounts",
+    description="Get paginated list of all platform accounts for account management interface",
     input_model=PlatformAccountListPayload,
     output_model=PlatformAccountList,
     method="get",
     path="/accounts/platform",
-    tags=("bff", "accounts"),
+    tags=("bff", "accounts", "platform", "list", "ui", "frontend", "pagination"),
 )
 def _flow_bff_list_platform_accounts(builder: FlowBuilder):
     task = builder.task("list_platform_accounts", "bff.accounts.list_platform_accounts")
@@ -218,12 +220,13 @@ def _flow_bff_list_platform_accounts(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.accounts.read_persona",
-    title="BFF Read Persona",
+    title="Get Persona Profile Details",
+    description="Retrieve detailed persona profile information for audience targeting setup",
     input_model=PersonaReadPayload,
     output_model=PersonaOut,
     method="get",
     path="/accounts/personas/{persona_id}",
-    tags=("bff", "accounts"),
+    tags=("bff", "accounts", "persona", "read", "ui", "frontend", "audience", "targeting"),
 )
 def _flow_bff_read_persona(builder: FlowBuilder):
     task = builder.task("read_persona", "bff.accounts.read_persona")
@@ -232,12 +235,13 @@ def _flow_bff_read_persona(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.accounts.list_personas",
-    title="BFF List Personas",
+    title="List All Persona Profiles",
+    description="Get paginated list of all persona profiles for campaign targeting configuration",
     input_model=PersonaListPayload,
     output_model=PersonaList,
     method="get",
     path="/accounts/personas",
-    tags=("bff", "accounts"),
+    tags=("bff", "accounts", "persona", "list", "ui", "frontend", "audience", "targeting", "pagination"),
 )
 def _flow_bff_list_personas(builder: FlowBuilder):
     task = builder.task("list_personas", "bff.accounts.list_personas")
@@ -246,12 +250,13 @@ def _flow_bff_list_personas(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.accounts.list_accounts_for_persona",
-    title="BFF List Accounts for Persona",
+    title="Get Platform Accounts for Persona",
+    description="List all platform accounts connected to a specific persona for content distribution",
     input_model=PersonaAccountsPayload,
     output_model=PersonaAccountList,
     method="get",
     path="/accounts/personas/{persona_id}/accounts",
-    tags=("bff", "accounts"),
+    tags=("bff", "accounts", "persona", "platform", "list", "ui", "frontend", "distribution"),
 )
 def _flow_bff_list_accounts_for_persona(builder: FlowBuilder):
     task = builder.task("list_accounts_for_persona", "bff.accounts.list_accounts_for_persona")
@@ -260,12 +265,13 @@ def _flow_bff_list_accounts_for_persona(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.accounts.list_personas_for_account",
-    title="BFF List Personas for Account",
+    title="Get Personas for Platform Account",
+    description="List all personas linked to a specific platform account for targeted content strategy",
     input_model=AccountPersonasPayload,
     output_model=PersonaAccountList,
     method="get",
     path="/accounts/platform/{account_id}/personas",
-    tags=("bff", "accounts"),
+    tags=("bff", "accounts", "persona", "platform", "list", "ui", "frontend", "strategy"),
 )
 def _flow_bff_list_personas_for_account(builder: FlowBuilder):
     task = builder.task("list_personas_for_account", "bff.accounts.list_personas_for_account")

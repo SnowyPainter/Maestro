@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useBffAccountsListPersonasApiBffAccountsPersonasGet } from "@/lib/api/generated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 export function PersonaList({ onSelectPersona }: { onSelectPersona: (personaId: number) => void }) {
@@ -21,15 +22,44 @@ export function PersonaList({ onSelectPersona }: { onSelectPersona: (personaId: 
   return (
     <div className="p-4 border rounded-lg">
         <h3 className="font-semibold mb-2">Select a Persona</h3>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
             {visiblePersonas?.map(persona => (
-                <button 
-                    key={persona.id} 
+                <button
+                    key={persona.id}
                     onClick={() => onSelectPersona(persona.id)}
-                    className="flex items-center gap-2 p-2 rounded-md hover:bg-muted text-sm text-left"
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/50 text-left group transition-colors"
                 >
-                    <ChevronRight className="w-4 h-4" />
-                    <span>{persona.name}</span>
+                    <ChevronRight className="w-4 h-4 mt-0.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm truncate">{persona.name}</span>
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5 flex-shrink-0">
+                                #{persona.id}
+                            </Badge>
+                        </div>
+                        {persona.bio && (
+                            <p className="text-xs text-muted-foreground mb-1 line-clamp-2 relative">
+                                {persona.bio}
+                                {persona.bio.length > 80 && (
+                                    <span className="absolute right-0 bottom-0 w-8 h-4 bg-gradient-to-l from-background to-transparent"></span>
+                                )}
+                            </p>
+                        )}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {persona.language && (
+                                <span className="flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                    {persona.language.toUpperCase()}
+                                </span>
+                            )}
+                            {persona.tone && (
+                                <span className="flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                    {persona.tone}
+                                </span>
+                            )}
+                        </div>
+                    </div>
                 </button>
             ))}
         </div>

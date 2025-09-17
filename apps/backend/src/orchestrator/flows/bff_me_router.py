@@ -31,12 +31,13 @@ async def op_read_me(payload: MeRequest, ctx: TaskContext) -> UserResponse:
 
 @FLOWS.flow(
     key="bff.me.read_me",
-    title="BFF Read Current User",
+    title="Get Current User Profile",
+    description="Retrieve authenticated user profile information for user interface and settings",
     input_model=MeRequest,
     output_model=UserResponse,
     method="get",
     path="/me",
-    tags=("bff", "me"),
+    tags=("bff", "me", "user", "profile", "read", "ui", "frontend", "authentication"),
 )
 def _flow_bff_read_me(builder: FlowBuilder):
     task = builder.task("read_me", "bff.me.read_me")

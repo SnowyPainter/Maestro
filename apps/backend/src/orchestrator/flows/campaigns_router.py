@@ -190,12 +190,13 @@ async def op_aggregate_campaign_kpis(
 
 @FLOWS.flow(
     key="campaigns.create_campaign",
-    title="Create Campaign",
+    title="Create New Marketing Campaign",
+    description="Set up a new marketing campaign with goals, timeline, and target audience",
     input_model=CampaignCreate,
     output_model=CampaignOut,
     method="post",
     path="/campaigns",
-    tags=("campaigns",),
+    tags=("campaigns", "marketing", "create", "strategy"),
 )
 def _flow_create_campaign(builder: FlowBuilder):
     task = builder.task("create", "campaigns.create")
@@ -204,12 +205,13 @@ def _flow_create_campaign(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="campaigns.update_campaign",
-    title="Update Campaign",
+    title="Update Campaign Settings",
+    description="Modify campaign parameters like name, goals, timeline, or target audience",
     input_model=CampaignUpdateCommand,
     output_model=CampaignOut,
     method="put",
     path="/campaigns/{campaign_id}",
-    tags=("campaigns",),
+    tags=("campaigns", "marketing", "update", "strategy"),
 )
 def _flow_update_campaign(builder: FlowBuilder):
     task = builder.task("update", "campaigns.update")
@@ -219,11 +221,12 @@ def _flow_update_campaign(builder: FlowBuilder):
 @FLOWS.flow(
     key="campaigns.delete_campaign",
     title="Delete Campaign",
+    description="Permanently delete a campaign and all associated data",
     input_model=CampaignDeleteCommand,
     output_model=MessageOut,
     method="delete",
     path="/campaigns/{campaign_id}",
-    tags=("campaigns",),
+    tags=("campaigns", "marketing", "delete", "dangerous"),
 )
 def _flow_delete_campaign(builder: FlowBuilder):
     task = builder.task("delete", "campaigns.delete")
@@ -232,12 +235,13 @@ def _flow_delete_campaign(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="campaigns.upsert_kpi_defs",
-    title="Upsert KPI Definitions",
+    title="Define Campaign KPIs",
+    description="Set up or update Key Performance Indicators for campaign measurement",
     input_model=CampaignKPIDefUpsertCommand,
     output_model=CampaignKPIDefListOut,
     method="put",
     path="/campaigns/{campaign_id}/kpi-defs",
-    tags=("campaigns",),
+    tags=("campaigns", "kpi", "metrics", "analytics", "measurement"),
 )
 def _flow_upsert_kpi_defs(builder: FlowBuilder):
     task = builder.task("upsert_kpi_defs", "campaigns.upsert_kpi_defs")
@@ -246,12 +250,13 @@ def _flow_upsert_kpi_defs(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="campaigns.record_kpi_result",
-    title="Record KPI Result",
+    title="Record Campaign KPI Data",
+    description="Log new KPI measurement data for campaign performance tracking",
     input_model=CampaignKPIRecordCommand,
     output_model=CampaignKPIResultOut,
     method="post",
     path="/campaigns/{campaign_id}/kpi-results",
-    tags=("campaigns",),
+    tags=("campaigns", "kpi", "metrics", "data", "tracking"),
 )
 def _flow_record_kpi(builder: FlowBuilder):
     task = builder.task("record_kpi", "campaigns.record_kpi")
@@ -260,12 +265,13 @@ def _flow_record_kpi(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="campaigns.aggregate_kpis",
-    title="Aggregate KPI",
+    title="Calculate Campaign KPI Summary",
+    description="Aggregate and summarize KPI data for campaign performance analysis",
     input_model=CampaignAggregationCommand,
     output_model=CampaignKPIResultOut,
     method="post",
     path="/campaigns/{campaign_id}/aggregate-kpis",
-    tags=("campaigns",),
+    tags=("campaigns", "kpi", "analytics", "reporting", "summary"),
 )
 def _flow_aggregate_kpis(builder: FlowBuilder):
     task = builder.task("aggregate_kpis", "campaigns.aggregate_kpis")

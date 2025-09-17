@@ -9,7 +9,8 @@ import {
 } from 'zod';
 
 /**
- * @summary BFF Read Platform Account
+ * Retrieve detailed information about a specific platform account for UI display
+ * @summary Get Platform Account Details
  */
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetParams = zod.object({
   "account_id": zod.number()
@@ -39,7 +40,8 @@ export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetRes
 
 
 /**
- * @summary BFF List Platform Accounts
+ * Get paginated list of all platform accounts for account management interface
+ * @summary List All Platform Accounts
  */
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetQueryLimitDefault = 50;export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetQueryOffsetDefault = 0;
 
@@ -75,7 +77,8 @@ export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponse = 
 
 
 /**
- * @summary BFF Read Persona
+ * Retrieve detailed persona profile information for audience targeting setup
+ * @summary Get Persona Profile Details
  */
 export const bffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGetParams = zod.object({
   "persona_id": zod.number()
@@ -112,7 +115,8 @@ export const bffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGetResponse = 
 
 
 /**
- * @summary BFF List Personas
+ * Get paginated list of all persona profiles for campaign targeting configuration
+ * @summary List All Persona Profiles
  */
 export const bffAccountsListPersonasApiBffAccountsPersonasGetQueryLimitDefault = 50;export const bffAccountsListPersonasApiBffAccountsPersonasGetQueryOffsetDefault = 0;
 
@@ -154,7 +158,8 @@ export const bffAccountsListPersonasApiBffAccountsPersonasGetResponse = zod.arra
 
 
 /**
- * @summary BFF List Accounts for Persona
+ * List all platform accounts connected to a specific persona for content distribution
+ * @summary Get Platform Accounts for Persona
  */
 export const bffAccountsListAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGetParams = zod.object({
   "persona_id": zod.number()
@@ -173,7 +178,8 @@ export const bffAccountsListAccountsForPersonaApiBffAccountsPersonasPersonaIdAcc
 
 
 /**
- * @summary BFF List Personas for Account
+ * List all personas linked to a specific platform account for targeted content strategy
+ * @summary Get Personas for Platform Account
  */
 export const bffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGetParams = zod.object({
   "account_id": zod.number()
@@ -192,7 +198,8 @@ export const bffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPer
 
 
 /**
- * @summary BFF Read Campaign
+ * Retrieve complete campaign information for campaign management dashboard
+ * @summary Get Campaign Details
  */
 export const bffCampaignsReadCampaignApiBffCampaignsCampaignIdGetParams = zod.object({
   "campaign_id": zod.number()
@@ -214,7 +221,8 @@ export const bffCampaignsReadCampaignApiBffCampaignsCampaignIdGetResponse = zod.
 
 
 /**
- * @summary BFF List Campaigns
+ * Get paginated list of all campaigns for campaign overview and management
+ * @summary List All Campaigns
  */
 export const bffCampaignsListCampaignsApiBffCampaignsGetQueryLimitDefault = 20;export const bffCampaignsListCampaignsApiBffCampaignsGetQueryOffsetDefault = 0;
 
@@ -241,7 +249,8 @@ export const bffCampaignsListCampaignsApiBffCampaignsGetResponse = zod.array(bff
 
 
 /**
- * @summary BFF List Campaign KPI Definitions
+ * Retrieve all KPI definitions for a campaign to display metrics configuration
+ * @summary Get Campaign KPI Definitions
  */
 export const bffCampaignsListKpiDefsApiBffCampaignsCampaignIdKpiDefsGetParams = zod.object({
   "campaign_id": zod.number()
@@ -261,7 +270,8 @@ export const bffCampaignsListKpiDefsApiBffCampaignsCampaignIdKpiDefsGetResponse 
 
 
 /**
- * @summary BFF List Campaign KPI Results
+ * Retrieve KPI measurement results for campaign performance analytics and reporting
+ * @summary Get Campaign KPI Results
  */
 export const bffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResultsGetParams = zod.object({
   "campaign_id": zod.number()
@@ -285,7 +295,8 @@ export const bffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResultsGetRes
 
 
 /**
- * @summary BFF Read Draft
+ * Retrieve complete draft content and metadata for content editing interface
+ * @summary Get Draft Content
  */
 export const bffDraftsReadDraftApiBffDraftsDraftIdGetParams = zod.object({
   "draft_id": zod.number()
@@ -298,7 +309,19 @@ export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponse = zod.object({
   "title": zod.string().nullish(),
   "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "goal": zod.string().nullish(),
-  "ir": zod.record(zod.string(), zod.any()),
+  "ir": zod.object({
+  "blocks": zod.array(zod.union([zod.object({
+  "type": zod.literal("text"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("image"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("video"),
+  "props": zod.record(zod.string(), zod.any())
+})])).min(1),
+  "options": zod.record(zod.string(), zod.any()).optional()
+}),
   "schema_version": zod.number(),
   "ir_revision": zod.number(),
   "state": zod.string(),
@@ -311,7 +334,8 @@ export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponse = zod.object({
 
 
 /**
- * @summary BFF List Drafts
+ * Get paginated list of all content drafts for content management dashboard
+ * @summary List All Drafts
  */
 export const bffDraftsListDraftsApiBffDraftsGetQueryLimitDefault = 20;export const bffDraftsListDraftsApiBffDraftsGetQueryOffsetDefault = 0;
 
@@ -328,7 +352,19 @@ export const bffDraftsListDraftsApiBffDraftsGetResponseItem = zod.object({
   "title": zod.string().nullish(),
   "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "goal": zod.string().nullish(),
-  "ir": zod.record(zod.string(), zod.any()),
+  "ir": zod.object({
+  "blocks": zod.array(zod.union([zod.object({
+  "type": zod.literal("text"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("image"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("video"),
+  "props": zod.record(zod.string(), zod.any())
+})])).min(1),
+  "options": zod.record(zod.string(), zod.any()).optional()
+}),
   "schema_version": zod.number(),
   "ir_revision": zod.number(),
   "state": zod.string(),
@@ -342,7 +378,8 @@ export const bffDraftsListDraftsApiBffDraftsGetResponse = zod.array(bffDraftsLis
 
 
 /**
- * @summary BFF List Draft Variants
+ * List all variants of a draft for content optimization and A/B testing
+ * @summary Get Draft Variants
  */
 export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetParams = zod.object({
   "draft_id": zod.number()
@@ -368,7 +405,8 @@ export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponse = zod.a
 
 
 /**
- * @summary BFF Read Current User
+ * Retrieve authenticated user profile information for user interface and settings
+ * @summary Get Current User Profile
  */
 export const bffMeReadMeApiBffMeGetResponse = zod.object({
   "id": zod.number(),
@@ -378,7 +416,8 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
 
 
 /**
- * @summary BFF List Trends
+ * Retrieve trend analysis data for content strategy and market insights dashboard
+ * @summary Get Trend Analysis Data
  */
 export const bffTrendsListTrendsApiBffTrendsGetQueryCountryDefault = "US";export const bffTrendsListTrendsApiBffTrendsGetQueryLimitDefault = 20;
 
@@ -452,7 +491,8 @@ export const loginApiOrchestratorAuthLoginPostResponse = zod.object({
 
 
 /**
- * @summary Create Campaign
+ * Set up a new marketing campaign with goals, timeline, and target audience
+ * @summary Create New Marketing Campaign
  */
 export const campaignsCreateCampaignApiOrchestratorCampaignsPostBodyNameMax = 120;
 export const campaignsCreateCampaignApiOrchestratorCampaignsPostBodyDescriptionMax = 500;
@@ -481,7 +521,8 @@ export const campaignsCreateCampaignApiOrchestratorCampaignsPostResponse = zod.o
 
 
 /**
- * @summary Update Campaign
+ * Modify campaign parameters like name, goals, timeline, or target audience
+ * @summary Update Campaign Settings
  */
 export const campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutParams = zod.object({
   "campaign_id": zod.union([zod.number(),zod.null()])
@@ -515,6 +556,7 @@ export const campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutRespons
 
 
 /**
+ * Permanently delete a campaign and all associated data
  * @summary Delete Campaign
  */
 export const campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteParams = zod.object({
@@ -527,7 +569,8 @@ export const campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDeleteResp
 
 
 /**
- * @summary Upsert KPI Definitions
+ * Set up or update Key Performance Indicators for campaign measurement
+ * @summary Define Campaign KPIs
  */
 export const campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutParams = zod.object({
   "campaign_id": zod.union([zod.number(),zod.null()])
@@ -560,7 +603,8 @@ export const campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutR
 
 
 /**
- * @summary Record KPI Result
+ * Log new KPI measurement data for campaign performance tracking
+ * @summary Record Campaign KPI Data
  */
 export const campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostParams = zod.object({
   "campaign_id": zod.union([zod.number(),zod.null()])
@@ -581,7 +625,8 @@ export const campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResult
 
 
 /**
- * @summary Aggregate KPI
+ * Aggregate and summarize KPI data for campaign performance analysis
+ * @summary Calculate Campaign KPI Summary
  */
 export const campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostParams = zod.object({
   "campaign_id": zod.union([zod.number(),zod.null()])
@@ -601,7 +646,8 @@ export const campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKp
 
 
 /**
- * @summary Create Draft
+ * Start a new content draft with initial parameters and metadata
+ * @summary Create Content Draft
  */
 export const draftsCreateApiOrchestratorDraftsPostBody = zod.object({
   "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
@@ -630,7 +676,19 @@ export const draftsCreateApiOrchestratorDraftsPostResponse = zod.object({
   "title": zod.string().nullish(),
   "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "goal": zod.string().nullish(),
-  "ir": zod.record(zod.string(), zod.any()),
+  "ir": zod.object({
+  "blocks": zod.array(zod.union([zod.object({
+  "type": zod.literal("text"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("image"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("video"),
+  "props": zod.record(zod.string(), zod.any())
+})])).min(1),
+  "options": zod.record(zod.string(), zod.any()).optional()
+}),
   "schema_version": zod.number(),
   "ir_revision": zod.number(),
   "state": zod.string(),
@@ -643,7 +701,8 @@ export const draftsCreateApiOrchestratorDraftsPostResponse = zod.object({
 
 
 /**
- * @summary Update Draft
+ * Modify the content and structure of an existing draft
+ * @summary Update Draft Content
  */
 export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutParams = zod.object({
   "draft_id": zod.union([zod.number(),zod.null()])
@@ -677,7 +736,19 @@ export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutResponse = zod.objec
   "title": zod.string().nullish(),
   "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "goal": zod.string().nullish(),
-  "ir": zod.record(zod.string(), zod.any()),
+  "ir": zod.object({
+  "blocks": zod.array(zod.union([zod.object({
+  "type": zod.literal("text"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("image"),
+  "props": zod.record(zod.string(), zod.any())
+}),zod.object({
+  "type": zod.literal("video"),
+  "props": zod.record(zod.string(), zod.any())
+})])).min(1),
+  "options": zod.record(zod.string(), zod.any()).optional()
+}),
   "schema_version": zod.number(),
   "ir_revision": zod.number(),
   "state": zod.string(),
@@ -690,7 +761,21 @@ export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutResponse = zod.objec
 
 
 /**
- * @summary Create Platform Account
+ * Delete an existing draft
+ * @summary Delete Draft
+ */
+export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteParams = zod.object({
+  "draft_id": zod.union([zod.number(),zod.null()])
+})
+
+export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * Create a new platform account (social media, website, etc.) for the user
+ * @summary Create New Platform Account
  */
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccountHandleMax = 128;
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccountExternalIdMax = 256;
@@ -737,7 +822,8 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponse =
 
 
 /**
- * @summary Update Platform Account
+ * Update platform account information like username, credentials, or settings
+ * @summary Update Platform Account Details
  */
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutParams = zod.object({
   "account_id": zod.union([zod.number(),zod.null()])
@@ -781,7 +867,8 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutRe
 
 
 /**
- * @summary Delete Platform Account
+ * Permanently delete a platform account and all associated data
+ * @summary Remove Platform Account
  */
 export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams = zod.object({
   "account_id": zod.union([zod.number(),zod.null()])
@@ -799,7 +886,8 @@ export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelet
 
 
 /**
- * @summary Create Persona
+ * Create a new persona with specific characteristics for content targeting
+ * @summary Create New Persona Profile
  */
 export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaNameMax = 100;
 export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaAvatarUrlMax = 512;
@@ -860,7 +948,8 @@ export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostResponse = 
 
 
 /**
- * @summary Update Persona
+ * Modify persona characteristics, demographics, or targeting preferences
+ * @summary Update Persona Profile
  */
 export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutParams = zod.object({
   "persona_id": zod.union([zod.number(),zod.null()])
@@ -918,7 +1007,8 @@ export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutRes
 
 
 /**
- * @summary Delete Persona
+ * Permanently delete a persona and all associated targeting data
+ * @summary Remove Persona Profile
  */
 export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteParams = zod.object({
   "persona_id": zod.union([zod.number(),zod.null()])
@@ -930,7 +1020,8 @@ export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete
 
 
 /**
- * @summary Link Persona Account
+ * Link a persona profile to a specific platform account for targeted content
+ * @summary Connect Persona to Platform Account
  */
 export const accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostBodyLinkCanPermissionsDefault = ["read", "publish", "write"];export const accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostBodyLinkIsVerifiedLinkDefault = false;
 
@@ -956,7 +1047,8 @@ export const accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostRes
 
 
 /**
- * @summary Unlink Persona Account
+ * Remove the connection between a persona and a platform account
+ * @summary Disconnect Persona from Platform Account
  */
 export const accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteParams = zod.object({
   "persona_id": zod.union([zod.number(),zod.null()]),
@@ -969,7 +1061,47 @@ export const accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersona
 
 
 /**
- * @summary Ingest Insight
+ * Retrieve trend analysis data for content strategy and market insights dashboard
+ * @summary Get Trend Analysis Data
+ */
+export const bffTrendsListTrendsApiOrchestratorTrendsGetQueryCountryDefault = "US";export const bffTrendsListTrendsApiOrchestratorTrendsGetQueryLimitDefault = 20;
+
+export const bffTrendsListTrendsApiOrchestratorTrendsGetQueryParams = zod.object({
+  "country": zod.string().default(bffTrendsListTrendsApiOrchestratorTrendsGetQueryCountryDefault),
+  "limit": zod.number().default(bffTrendsListTrendsApiOrchestratorTrendsGetQueryLimitDefault),
+  "q": zod.string().nullish(),
+  "on_date": zod.iso.date().nullish(),
+  "since": zod.iso.date().nullish(),
+  "until": zod.iso.date().nullish()
+})
+
+export const bffTrendsListTrendsApiOrchestratorTrendsGetResponse = zod.object({
+  "country": zod.string().describe('국가 코드 (예: KR, US)'),
+  "source": zod.enum(['cache', 'db', 'vector']).describe('데이터 소스 (예: cache, db, vector)'),
+  "query": zod.string().nullish().describe('키워드 (있으면 벡터 유사검색)'),
+  "items": zod.array(zod.object({
+  "rank": zod.number().describe('트렌드 순위'),
+  "retrieved": zod.union([zod.string(),zod.iso.datetime({})]).describe('데이터 수집 시각 (ISO format)'),
+  "title": zod.string().describe('트렌드 키워드'),
+  "approx_traffic": zod.string().nullish().describe('대략적인 트래픽 (예: \'200+\', \'1000+\')'),
+  "link": zod.string().nullish().describe('Google Trends 링크'),
+  "pubDate": zod.string().nullish().describe('발행 날짜'),
+  "picture": zod.string().nullish().describe('대표 이미지 URL'),
+  "picture_source": zod.string().nullish().describe('이미지 출처'),
+  "news_item": zod.string().nullish().describe('뉴스 아이템 (보통 빈 문자열)'),
+  "news_items": zod.union([zod.array(zod.object({
+  "news_item_title": zod.string().nullish(),
+  "news_item_url": zod.string().nullish(),
+  "news_item_picture": zod.string().nullish(),
+  "news_item_source": zod.string().nullish()
+}).describe('개별 뉴스 아이템 스키마')),zod.null()]).optional().describe('관련 뉴스 아이템 목록')
+}).describe('Google Trends 개별 트렌드 아이템 스키마')).describe('트렌드 아이템 목록')
+})
+
+
+/**
+ * Ingest new insight data for analysis and trend detection
+ * @summary Process and Store Insight Data
  */
 export const insightsIngestApiOrchestratorInsightsPostBodySourceDefault = "webhook";
 
@@ -1024,6 +1156,22 @@ export const chatQueryApiOrchestratorChatQueryPostResponse = zod.object({
   "raw_text": zod.string(),
   "keywords": zod.array(zod.string()).optional()
 }).describe('Structured output describing an analysed user utterance.'),
+  "match": zod.union([zod.object({
+  "key": zod.string(),
+  "title": zod.string(),
+  "score": zod.number(),
+  "strategy": zod.enum(['embedding', 'keyword']),
+  "description": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional()
+}),zod.null()]).optional(),
+  "alternative_matches": zod.array(zod.object({
+  "key": zod.string(),
+  "title": zod.string(),
+  "score": zod.number(),
+  "strategy": zod.enum(['embedding', 'keyword']),
+  "description": zod.string().nullish(),
+  "tags": zod.array(zod.string()).optional()
+})).optional(),
   "plan_notes": zod.string().nullish(),
   "cards": zod.array(zod.object({
   "card_type": zod.string(),

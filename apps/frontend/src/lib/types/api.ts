@@ -11,7 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF Read Platform Account */
+        /**
+         * Get Platform Account Details
+         * @description Retrieve detailed information about a specific platform account for UI display
+         */
         get: operations["bff_accounts_read_platform_account_api_bff_accounts_platform__account_id__get"];
         put?: never;
         post?: never;
@@ -28,7 +31,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Platform Accounts */
+        /**
+         * List All Platform Accounts
+         * @description Get paginated list of all platform accounts for account management interface
+         */
         get: operations["bff_accounts_list_platform_accounts_api_bff_accounts_platform_get"];
         put?: never;
         post?: never;
@@ -45,7 +51,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF Read Persona */
+        /**
+         * Get Persona Profile Details
+         * @description Retrieve detailed persona profile information for audience targeting setup
+         */
         get: operations["bff_accounts_read_persona_api_bff_accounts_personas__persona_id__get"];
         put?: never;
         post?: never;
@@ -62,7 +71,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Personas */
+        /**
+         * List All Persona Profiles
+         * @description Get paginated list of all persona profiles for campaign targeting configuration
+         */
         get: operations["bff_accounts_list_personas_api_bff_accounts_personas_get"];
         put?: never;
         post?: never;
@@ -79,7 +91,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Accounts for Persona */
+        /**
+         * Get Platform Accounts for Persona
+         * @description List all platform accounts connected to a specific persona for content distribution
+         */
         get: operations["bff_accounts_list_accounts_for_persona_api_bff_accounts_personas__persona_id__accounts_get"];
         put?: never;
         post?: never;
@@ -96,7 +111,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Personas for Account */
+        /**
+         * Get Personas for Platform Account
+         * @description List all personas linked to a specific platform account for targeted content strategy
+         */
         get: operations["bff_accounts_list_personas_for_account_api_bff_accounts_platform__account_id__personas_get"];
         put?: never;
         post?: never;
@@ -113,7 +131,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF Read Campaign */
+        /**
+         * Get Campaign Details
+         * @description Retrieve complete campaign information for campaign management dashboard
+         */
         get: operations["bff_campaigns_read_campaign_api_bff_campaigns__campaign_id__get"];
         put?: never;
         post?: never;
@@ -130,7 +151,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Campaigns */
+        /**
+         * List All Campaigns
+         * @description Get paginated list of all campaigns for campaign overview and management
+         */
         get: operations["bff_campaigns_list_campaigns_api_bff_campaigns_get"];
         put?: never;
         post?: never;
@@ -147,7 +171,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Campaign KPI Definitions */
+        /**
+         * Get Campaign KPI Definitions
+         * @description Retrieve all KPI definitions for a campaign to display metrics configuration
+         */
         get: operations["bff_campaigns_list_kpi_defs_api_bff_campaigns__campaign_id__kpi_defs_get"];
         put?: never;
         post?: never;
@@ -164,7 +191,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Campaign KPI Results */
+        /**
+         * Get Campaign KPI Results
+         * @description Retrieve KPI measurement results for campaign performance analytics and reporting
+         */
         get: operations["bff_campaigns_list_kpi_results_api_bff_campaigns__campaign_id__kpi_results_get"];
         put?: never;
         post?: never;
@@ -181,7 +211,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF Read Draft */
+        /**
+         * Get Draft Content
+         * @description Retrieve complete draft content and metadata for content editing interface
+         */
         get: operations["bff_drafts_read_draft_api_bff_drafts__draft_id__get"];
         put?: never;
         post?: never;
@@ -198,7 +231,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Drafts */
+        /**
+         * List All Drafts
+         * @description Get paginated list of all content drafts for content management dashboard
+         */
         get: operations["bff_drafts_list_drafts_api_bff_drafts_get"];
         put?: never;
         post?: never;
@@ -215,7 +251,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Draft Variants */
+        /**
+         * Get Draft Variants
+         * @description List all variants of a draft for content optimization and A/B testing
+         */
         get: operations["bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get"];
         put?: never;
         post?: never;
@@ -232,7 +271,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF Read Current User */
+        /**
+         * Get Current User Profile
+         * @description Retrieve authenticated user profile information for user interface and settings
+         */
         get: operations["bff_me_read_me_api_bff_me_get"];
         put?: never;
         post?: never;
@@ -249,7 +291,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** BFF List Trends */
+        /**
+         * Get Trend Analysis Data
+         * @description Retrieve trend analysis data for content strategy and market insights dashboard
+         */
         get: operations["bff_trends_list_trends_api_bff_trends_get"];
         put?: never;
         post?: never;
@@ -302,7 +347,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Campaign */
+        /**
+         * Create New Marketing Campaign
+         * @description Set up a new marketing campaign with goals, timeline, and target audience
+         */
         post: operations["campaigns_create_campaign_api_orchestrator_campaigns_post"];
         delete?: never;
         options?: never;
@@ -318,10 +366,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update Campaign */
+        /**
+         * Update Campaign Settings
+         * @description Modify campaign parameters like name, goals, timeline, or target audience
+         */
         put: operations["campaigns_update_campaign_api_orchestrator_campaigns__campaign_id__put"];
         post?: never;
-        /** Delete Campaign */
+        /**
+         * Delete Campaign
+         * @description Permanently delete a campaign and all associated data
+         */
         delete: operations["campaigns_delete_campaign_api_orchestrator_campaigns__campaign_id__delete"];
         options?: never;
         head?: never;
@@ -336,7 +390,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Upsert KPI Definitions */
+        /**
+         * Define Campaign KPIs
+         * @description Set up or update Key Performance Indicators for campaign measurement
+         */
         put: operations["campaigns_upsert_kpi_defs_api_orchestrator_campaigns__campaign_id__kpi_defs_put"];
         post?: never;
         delete?: never;
@@ -354,7 +411,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Record KPI Result */
+        /**
+         * Record Campaign KPI Data
+         * @description Log new KPI measurement data for campaign performance tracking
+         */
         post: operations["campaigns_record_kpi_result_api_orchestrator_campaigns__campaign_id__kpi_results_post"];
         delete?: never;
         options?: never;
@@ -371,7 +431,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Aggregate KPI */
+        /**
+         * Calculate Campaign KPI Summary
+         * @description Aggregate and summarize KPI data for campaign performance analysis
+         */
         post: operations["campaigns_aggregate_kpis_api_orchestrator_campaigns__campaign_id__aggregate_kpis_post"];
         delete?: never;
         options?: never;
@@ -388,7 +451,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Draft */
+        /**
+         * Create Content Draft
+         * @description Start a new content draft with initial parameters and metadata
+         */
         post: operations["drafts_create_api_orchestrator_drafts_post"];
         delete?: never;
         options?: never;
@@ -404,10 +470,33 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update Draft */
+        /**
+         * Update Draft Content
+         * @description Modify the content and structure of an existing draft
+         */
         put: operations["drafts_update_ir_api_orchestrator_drafts__draft_id__ir_put"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/drafts/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Draft
+         * @description Delete an existing draft
+         */
+        delete: operations["drafts_delete_api_orchestrator_drafts__draft_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -422,7 +511,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Platform Account */
+        /**
+         * Create New Platform Account
+         * @description Create a new platform account (social media, website, etc.) for the user
+         */
         post: operations["accounts_platform_create_api_orchestrator_accounts_platform_post"];
         delete?: never;
         options?: never;
@@ -438,10 +530,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update Platform Account */
+        /**
+         * Update Platform Account Details
+         * @description Update platform account information like username, credentials, or settings
+         */
         put: operations["accounts_platform_update_api_orchestrator_accounts_platform__account_id__put"];
         post?: never;
-        /** Delete Platform Account */
+        /**
+         * Remove Platform Account
+         * @description Permanently delete a platform account and all associated data
+         */
         delete: operations["accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete"];
         options?: never;
         head?: never;
@@ -457,7 +555,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Persona */
+        /**
+         * Create New Persona Profile
+         * @description Create a new persona with specific characteristics for content targeting
+         */
         post: operations["accounts_persona_create_api_orchestrator_accounts_personas_post"];
         delete?: never;
         options?: never;
@@ -473,10 +574,16 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update Persona */
+        /**
+         * Update Persona Profile
+         * @description Modify persona characteristics, demographics, or targeting preferences
+         */
         put: operations["accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put"];
         post?: never;
-        /** Delete Persona */
+        /**
+         * Remove Persona Profile
+         * @description Permanently delete a persona and all associated targeting data
+         */
         delete: operations["accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete"];
         options?: never;
         head?: never;
@@ -492,7 +599,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Link Persona Account */
+        /**
+         * Connect Persona to Platform Account
+         * @description Link a persona profile to a specific platform account for targeted content
+         */
         post: operations["accounts_link_create_api_orchestrator_accounts_persona_account_links_post"];
         delete?: never;
         options?: never;
@@ -510,8 +620,31 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Unlink Persona Account */
+        /**
+         * Disconnect Persona from Platform Account
+         * @description Remove the connection between a persona and a platform account
+         */
         delete: operations["accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Trend Analysis Data
+         * @description Retrieve trend analysis data for content strategy and market insights dashboard
+         */
+        get: operations["bff_trends_list_trends_api_orchestrator_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -526,7 +659,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Ingest Insight */
+        /**
+         * Process and Store Insight Data
+         * @description Ingest new insight data for analysis and trend detection
+         */
         post: operations["insights_ingest_api_orchestrator_insights_post"];
         delete?: never;
         options?: never;
@@ -811,6 +947,9 @@ export interface components {
         /** ChatResponse */
         ChatResponse: {
             intent: components["schemas"]["IntentResult"];
+            match?: components["schemas"]["FlowMatchSummary"] | null;
+            /** Alternative Matches */
+            alternative_matches?: components["schemas"]["FlowMatchSummary"][];
             /** Plan Notes */
             plan_notes?: string | null;
             /** Cards */
@@ -843,10 +982,7 @@ export interface components {
             tags?: string[] | null;
             /** Goal */
             goal?: string | null;
-            /** Ir */
-            ir: {
-                [key: string]: unknown;
-            };
+            ir: components["schemas"]["DraftIR"];
             /** Schema Version */
             schema_version: number;
             /** Ir Revision */
@@ -962,6 +1098,24 @@ export interface components {
             path: string;
             /** Tags */
             tags: string[];
+        };
+        /** FlowMatchSummary */
+        FlowMatchSummary: {
+            /** Key */
+            key: string;
+            /** Title */
+            title: string;
+            /** Score */
+            score: number;
+            /**
+             * Strategy
+             * @enum {string}
+             */
+            strategy: "embedding" | "keyword";
+            /** Description */
+            description?: string | null;
+            /** Tags */
+            tags?: string[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2372,6 +2526,37 @@ export interface operations {
             };
         };
     };
+    drafts_delete_api_orchestrator_drafts__draft_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number | null;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     accounts_platform_create_api_orchestrator_accounts_platform_post: {
         parameters: {
             query?: never;
@@ -2624,6 +2809,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_trends_list_trends_api_orchestrator_trends_get: {
+        parameters: {
+            query?: {
+                country?: string;
+                limit?: number;
+                q?: string | null;
+                on_date?: string | null;
+                since?: string | null;
+                until?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendsListResponse"];
                 };
             };
             /** @description Validation Error */

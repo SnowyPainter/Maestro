@@ -5,9 +5,9 @@ from typing import Iterable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus
+from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus, DraftState
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant
-from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
+from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest, DraftDeleteCommand
 from apps.backend.src.modules.drafts.compilers import compile_for_platform
 
 SUPPORTED_COMPILE_PLATFORMS: set[PlatformKind] = {
@@ -86,6 +86,18 @@ async def update_draft_ir(
 
     await db.commit()
     return draft
+
+async def delete_draft(db: AsyncSession, *, draft_id: int) -> None:
+    draft = await db.get(Draft, draft_id)
+    if not draft:
+        raise ValueError("draft not found")
+    
+    draft.state = DraftState.DELETED
+    draft.updated_at = datetime.utcnow()
+    await db.flush()
+    await db.commit()
+
+    await _mark_variants_stale(db, draft_id=draft_id)
 
 async def _ensure_variants_for_platforms(
     db: AsyncSession,

@@ -4,7 +4,10 @@ from apps.backend.src.core.db import get_db
 from apps.backend.src.modules.users.schemas import SignupRequest, LoginRequest, TokenResponse, UserResponse
 from apps.backend.src.modules.users.service import create_user, authenticate
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(
+    prefix="/auth",
+    tags=["auth", "authentication", "security", "login", "signup"]
+)
 
 @router.post("/signup", response_model=UserResponse, status_code=201)
 async def signup(payload: SignupRequest, db: AsyncSession = Depends(get_db)):

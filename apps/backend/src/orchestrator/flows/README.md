@@ -35,9 +35,33 @@
 `src/orchestrator/flows/` 디렉토리는 **실행 가능한 `Operation`의 집합**을 정의하는 곳입니다.
 
 - 각 `*_router.py` 파일은 특정 도메인(예: `accounts`, `campaigns`)과 관련된 `Operation`들을 그룹화합니다.
-- FastAPI의 `APIRouter`를 사용하여 각 `Operation`을 HTTP API 엔드포인트처럼 정의합니다.
-- 시스템이 시작될 때, 여기에 정의된 모든 라우트 함수들이 자동으로 `Registry`에 등록되어 `Planner`와 `Dispatch`가 사용할 수 있는 `Operation`이 됩니다.
+- FastAPI의 `APIRouter` 또는 `@FLOWS.flow` 데코레이터를 사용하여 각 `Operation`을 정의합니다.
+- 시스템이 시작될 때, 여기에 정의된 모든 함수들이 자동으로 `Registry`에 등록되어 `Planner`와 `Dispatch`가 사용할 수 있는 `Operation`이 됩니다.
 - 새로운 기능을 추가하려면, 이 디렉토리에 새로운 `*_router.py` 파일을 만들거나 기존 파일에 `Operation` 함수를 추가하고 `Registry`가 이를 발견하도록 하면 됩니다.
+
+### 4.1 주요 Flow 파일 설명
+
+| 파일명 | 설명 | 주요 Tags | 특징 |
+|--------|------|-----------|------|
+| `accounts_router.py` | 플랫폼 계정 및 페르소나 관리 | `accounts`, `platform`, `persona`, `social-media` | CRUD 작업, 계정 연결/해제 |
+| `campaigns_router.py` | 마케팅 캠페인 관리 | `campaigns`, `marketing`, `kpi`, `analytics` | 캠페인 생성, KPI 관리, 성과 분석 |
+| `drafts_router.py` | 콘텐츠 초안 관리 | `drafts`, `content`, `writing`, `editing` | 콘텐츠 생성 및 수정 |
+| `insights_router.py` | 인사이트 데이터 처리 | `insights`, `data`, `analytics`, `ingestion` | 데이터 수집 및 분석 |
+| `auth_router.py` | 사용자 인증 | `auth`, `authentication`, `security` | 로그인, 회원가입 |
+
+### 4.2 BFF Flow 파일들
+
+BFF(Backend for Frontend) 패턴을 사용하는 파일들은 프론트엔드에 최적화된 API를 제공합니다. 각 파일은 특정 UI 컴포넌트나 화면에 필요한 데이터를 효율적으로 제공하는 것을 목표로 합니다.
+
+| BFF 파일명 | 설명 | 주요 Tags | UI 목적 |
+|------------|------|-----------|---------|
+| `bff_accounts_router.py` | 계정 및 페르소나 관리 UI를 위한 API | `bff`, `accounts`, `platform`, `persona`, `ui`, `frontend` | 계정 관리 인터페이스, 페르소나 설정, 플랫폼 연결 관리 |
+| `bff_campaigns_router.py` | 캠페인 관리 대시보드를 위한 API | `bff`, `campaigns`, `kpi`, `metrics`, `dashboard`, `analytics` | 캠페인 모니터링, KPI 추적, 성과 분석 |
+| `bff_drafts_router.py` | 콘텐츠 편집 및 관리를 위한 API | `bff`, `drafts`, `content`, `editing`, `variants` | 콘텐츠 작성 인터페이스, 초안 관리, 버전 컨트롤 |
+| `bff_trends_router.py` | 트렌드 분석 대시보드를 위한 API | `bff`, `trends`, `analytics`, `insights`, `strategy` | 시장 분석, 콘텐츠 전략 수립, 트렌드 모니터링 |
+| `bff_me_router.py` | 사용자 프로필 및 설정을 위한 API | `bff`, `me`, `user`, `profile`, `authentication` | 사용자 설정, 프로필 관리, 인증 상태 확인 |
+
+이 파일들은 모두 `bff` 태그를 포함하며, 프론트엔드의 특정 UI 패턴에 최적화된 데이터 구조를 반환합니다. 일반적으로 읽기 전용 작업에 특화되어 있으며, 복잡한 데이터 조합이나 UI에 특화된 포맷팅을 수행합니다.
 
 ## 5. API 계약과 자동 생성의 관계
 

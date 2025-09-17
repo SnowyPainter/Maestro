@@ -145,12 +145,13 @@ async def op_list_kpi_results(
 
 @FLOWS.flow(
     key="bff.campaigns.read_campaign",
-    title="BFF Read Campaign",
+    title="Get Campaign Details",
+    description="Retrieve complete campaign information for campaign management dashboard",
     input_model=CampaignReadPayload,
     output_model=CampaignOut,
     method="get",
     path="/campaigns/{campaign_id}",
-    tags=("bff", "campaigns"),
+    tags=("bff", "campaigns", "read", "ui", "frontend", "dashboard"),
 )
 def _flow_bff_read_campaign(builder: FlowBuilder):
     task = builder.task("read_campaign", "bff.campaigns.read_campaign")
@@ -159,12 +160,13 @@ def _flow_bff_read_campaign(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.campaigns.list_campaigns",
-    title="BFF List Campaigns",
+    title="List All Campaigns",
+    description="Get paginated list of all campaigns for campaign overview and management",
     input_model=CampaignListPayload,
     output_model=CampaignList,
     method="get",
     path="/campaigns",
-    tags=("bff", "campaigns"),
+    tags=("bff", "campaigns", "list", "ui", "frontend", "dashboard", "pagination"),
 )
 def _flow_bff_list_campaigns(builder: FlowBuilder):
     task = builder.task("list_campaigns", "bff.campaigns.list_campaigns")
@@ -173,12 +175,13 @@ def _flow_bff_list_campaigns(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.campaigns.list_kpi_defs",
-    title="BFF List Campaign KPI Definitions",
+    title="Get Campaign KPI Definitions",
+    description="Retrieve all KPI definitions for a campaign to display metrics configuration",
     input_model=CampaignKpiDefsPayload,
     output_model=CampaignKpiDefList,
     method="get",
     path="/campaigns/{campaign_id}/kpi-defs",
-    tags=("bff", "campaigns"),
+    tags=("bff", "campaigns", "kpi", "metrics", "read", "ui", "frontend", "configuration"),
 )
 def _flow_bff_list_kpi_defs(builder: FlowBuilder):
     task = builder.task("list_kpi_defs", "bff.campaigns.list_kpi_defs")
@@ -187,12 +190,13 @@ def _flow_bff_list_kpi_defs(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.campaigns.list_kpi_results",
-    title="BFF List Campaign KPI Results",
+    title="Get Campaign KPI Results",
+    description="Retrieve KPI measurement results for campaign performance analytics and reporting",
     input_model=CampaignKpiResultsPayload,
     output_model=CampaignKpiResultList,
     method="get",
     path="/campaigns/{campaign_id}/kpi-results",
-    tags=("bff", "campaigns"),
+    tags=("bff", "campaigns", "kpi", "metrics", "analytics", "read", "ui", "frontend", "reporting"),
 )
 def _flow_bff_list_kpi_results(builder: FlowBuilder):
     task = builder.task("list_kpi_results", "bff.campaigns.list_kpi_results")

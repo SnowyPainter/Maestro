@@ -9,7 +9,13 @@ paths:
       - bff
       - bff
       - accounts
-      summary: BFF Read Platform Account
+      - platform
+      - read
+      - ui
+      - frontend
+      summary: Get Platform Account Details
+      description: Retrieve detailed information about a specific platform account
+        for UI display
       operationId: bff_accounts_read_platform_account_api_bff_accounts_platform__account_id__get
       parameters:
       - name: account_id
@@ -37,7 +43,14 @@ paths:
       - bff
       - bff
       - accounts
-      summary: BFF List Platform Accounts
+      - platform
+      - list
+      - ui
+      - frontend
+      - pagination
+      summary: List All Platform Accounts
+      description: Get paginated list of all platform accounts for account management
+        interface
       operationId: bff_accounts_list_platform_accounts_api_bff_accounts_platform_get
       parameters:
       - name: platform
@@ -88,7 +101,15 @@ paths:
       - bff
       - bff
       - accounts
-      summary: BFF Read Persona
+      - persona
+      - read
+      - ui
+      - frontend
+      - audience
+      - targeting
+      summary: Get Persona Profile Details
+      description: Retrieve detailed persona profile information for audience targeting
+        setup
       operationId: bff_accounts_read_persona_api_bff_accounts_personas__persona_id__get
       parameters:
       - name: persona_id
@@ -116,7 +137,16 @@ paths:
       - bff
       - bff
       - accounts
-      summary: BFF List Personas
+      - persona
+      - list
+      - ui
+      - frontend
+      - audience
+      - targeting
+      - pagination
+      summary: List All Persona Profiles
+      description: Get paginated list of all persona profiles for campaign targeting
+        configuration
       operationId: bff_accounts_list_personas_api_bff_accounts_personas_get
       parameters:
       - name: name
@@ -159,7 +189,15 @@ paths:
       - bff
       - bff
       - accounts
-      summary: BFF List Accounts for Persona
+      - persona
+      - platform
+      - list
+      - ui
+      - frontend
+      - distribution
+      summary: Get Platform Accounts for Persona
+      description: List all platform accounts connected to a specific persona for
+        content distribution
       operationId: bff_accounts_list_accounts_for_persona_api_bff_accounts_personas__persona_id__accounts_get
       parameters:
       - name: persona_id
@@ -187,7 +225,15 @@ paths:
       - bff
       - bff
       - accounts
-      summary: BFF List Personas for Account
+      - persona
+      - platform
+      - list
+      - ui
+      - frontend
+      - strategy
+      summary: Get Personas for Platform Account
+      description: List all personas linked to a specific platform account for targeted
+        content strategy
       operationId: bff_accounts_list_personas_for_account_api_bff_accounts_platform__account_id__personas_get
       parameters:
       - name: account_id
@@ -215,7 +261,13 @@ paths:
       - bff
       - bff
       - campaigns
-      summary: BFF Read Campaign
+      - read
+      - ui
+      - frontend
+      - dashboard
+      summary: Get Campaign Details
+      description: Retrieve complete campaign information for campaign management
+        dashboard
       operationId: bff_campaigns_read_campaign_api_bff_campaigns__campaign_id__get
       parameters:
       - name: campaign_id
@@ -243,7 +295,13 @@ paths:
       - bff
       - bff
       - campaigns
-      summary: BFF List Campaigns
+      - list
+      - ui
+      - frontend
+      - dashboard
+      - pagination
+      summary: List All Campaigns
+      description: Get paginated list of all campaigns for campaign overview and management
       operationId: bff_campaigns_list_campaigns_api_bff_campaigns_get
       parameters:
       - name: q
@@ -286,7 +344,15 @@ paths:
       - bff
       - bff
       - campaigns
-      summary: BFF List Campaign KPI Definitions
+      - kpi
+      - metrics
+      - read
+      - ui
+      - frontend
+      - configuration
+      summary: Get Campaign KPI Definitions
+      description: Retrieve all KPI definitions for a campaign to display metrics
+        configuration
       operationId: bff_campaigns_list_kpi_defs_api_bff_campaigns__campaign_id__kpi_defs_get
       parameters:
       - name: campaign_id
@@ -314,7 +380,16 @@ paths:
       - bff
       - bff
       - campaigns
-      summary: BFF List Campaign KPI Results
+      - kpi
+      - metrics
+      - analytics
+      - read
+      - ui
+      - frontend
+      - reporting
+      summary: Get Campaign KPI Results
+      description: Retrieve KPI measurement results for campaign performance analytics
+        and reporting
       operationId: bff_campaigns_list_kpi_results_api_bff_campaigns__campaign_id__kpi_results_get
       parameters:
       - name: campaign_id
@@ -365,7 +440,14 @@ paths:
       - bff
       - bff
       - drafts
-      summary: BFF Read Draft
+      - content
+      - read
+      - ui
+      - frontend
+      - editing
+      summary: Get Draft Content
+      description: Retrieve complete draft content and metadata for content editing
+        interface
       operationId: bff_drafts_read_draft_api_bff_drafts__draft_id__get
       parameters:
       - name: draft_id
@@ -393,7 +475,15 @@ paths:
       - bff
       - bff
       - drafts
-      summary: BFF List Drafts
+      - content
+      - list
+      - ui
+      - frontend
+      - dashboard
+      - pagination
+      summary: List All Drafts
+      description: Get paginated list of all content drafts for content management
+        dashboard
       operationId: bff_drafts_list_drafts_api_bff_drafts_get
       parameters:
       - name: campaign_id
@@ -437,7 +527,15 @@ paths:
       - bff
       - bff
       - drafts
-      summary: BFF List Draft Variants
+      - content
+      - variants
+      - list
+      - ui
+      - frontend
+      - optimization
+      - ab-testing
+      summary: Get Draft Variants
+      description: List all variants of a draft for content optimization and A/B testing
       operationId: bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get
       parameters:
       - name: draft_id
@@ -465,7 +563,15 @@ paths:
       - bff
       - bff
       - me
-      summary: BFF Read Current User
+      - user
+      - profile
+      - read
+      - ui
+      - frontend
+      - authentication
+      summary: Get Current User Profile
+      description: Retrieve authenticated user profile information for user interface
+        and settings
       operationId: bff_me_read_me_api_bff_me_get
       responses:
         '200':
@@ -480,7 +586,16 @@ paths:
       - bff
       - bff
       - trends
-      summary: BFF List Trends
+      - analytics
+      - insights
+      - read
+      - ui
+      - frontend
+      - dashboard
+      - strategy
+      summary: Get Trend Analysis Data
+      description: Retrieve trend analysis data for content strategy and market insights
+        dashboard
       operationId: bff_trends_list_trends_api_bff_trends_get
       parameters:
       - name: country
@@ -545,6 +660,10 @@ paths:
     post:
       tags:
       - auth
+      - authentication
+      - security
+      - login
+      - signup
       summary: Signup
       operationId: signup_api_orchestrator_auth_signup_post
       requestBody:
@@ -570,6 +689,10 @@ paths:
     post:
       tags:
       - auth
+      - authentication
+      - security
+      - login
+      - signup
       summary: Login
       operationId: login_api_orchestrator_auth_login_post
       requestBody:
@@ -596,7 +719,12 @@ paths:
       tags:
       - campaigns
       - campaigns
-      summary: Create Campaign
+      - marketing
+      - create
+      - strategy
+      summary: Create New Marketing Campaign
+      description: Set up a new marketing campaign with goals, timeline, and target
+        audience
       operationId: campaigns_create_campaign_api_orchestrator_campaigns_post
       requestBody:
         content:
@@ -622,7 +750,12 @@ paths:
       tags:
       - campaigns
       - campaigns
-      summary: Update Campaign
+      - marketing
+      - update
+      - strategy
+      summary: Update Campaign Settings
+      description: Modify campaign parameters like name, goals, timeline, or target
+        audience
       operationId: campaigns_update_campaign_api_orchestrator_campaigns__campaign_id__put
       parameters:
       - name: campaign_id
@@ -656,7 +789,11 @@ paths:
       tags:
       - campaigns
       - campaigns
+      - marketing
+      - delete
+      - dangerous
       summary: Delete Campaign
+      description: Permanently delete a campaign and all associated data
       operationId: campaigns_delete_campaign_api_orchestrator_campaigns__campaign_id__delete
       parameters:
       - name: campaign_id
@@ -685,7 +822,12 @@ paths:
       tags:
       - campaigns
       - campaigns
-      summary: Upsert KPI Definitions
+      - kpi
+      - metrics
+      - analytics
+      - measurement
+      summary: Define Campaign KPIs
+      description: Set up or update Key Performance Indicators for campaign measurement
       operationId: campaigns_upsert_kpi_defs_api_orchestrator_campaigns__campaign_id__kpi_defs_put
       parameters:
       - name: campaign_id
@@ -720,7 +862,12 @@ paths:
       tags:
       - campaigns
       - campaigns
-      summary: Record KPI Result
+      - kpi
+      - metrics
+      - data
+      - tracking
+      summary: Record Campaign KPI Data
+      description: Log new KPI measurement data for campaign performance tracking
       operationId: campaigns_record_kpi_result_api_orchestrator_campaigns__campaign_id__kpi_results_post
       parameters:
       - name: campaign_id
@@ -755,7 +902,12 @@ paths:
       tags:
       - campaigns
       - campaigns
-      summary: Aggregate KPI
+      - kpi
+      - analytics
+      - reporting
+      - summary
+      summary: Calculate Campaign KPI Summary
+      description: Aggregate and summarize KPI data for campaign performance analysis
       operationId: campaigns_aggregate_kpis_api_orchestrator_campaigns__campaign_id__aggregate_kpis_post
       parameters:
       - name: campaign_id
@@ -790,7 +942,11 @@ paths:
       tags:
       - drafts
       - drafts
-      summary: Create Draft
+      - content
+      - create
+      - writing
+      summary: Create Content Draft
+      description: Start a new content draft with initial parameters and metadata
       operationId: drafts_create_api_orchestrator_drafts_post
       requestBody:
         content:
@@ -816,7 +972,12 @@ paths:
       tags:
       - drafts
       - drafts
-      summary: Update Draft
+      - content
+      - update
+      - writing
+      - editing
+      summary: Update Draft Content
+      description: Modify the content and structure of an existing draft
       operationId: drafts_update_ir_api_orchestrator_drafts__draft_id__ir_put
       parameters:
       - name: draft_id
@@ -846,12 +1007,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/{draft_id}:
+    delete:
+      tags:
+      - drafts
+      - drafts
+      - content
+      - delete
+      - writing
+      - editing
+      summary: Delete Draft
+      description: Delete an existing draft
+      operationId: drafts_delete_api_orchestrator_drafts__draft_id__delete
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/accounts/platform:
     post:
       tags:
       - accounts
       - accounts
-      summary: Create Platform Account
+      - platform
+      - create
+      - social-media
+      summary: Create New Platform Account
+      description: Create a new platform account (social media, website, etc.) for
+        the user
       operationId: accounts_platform_create_api_orchestrator_accounts_platform_post
       requestBody:
         content:
@@ -877,7 +1077,12 @@ paths:
       tags:
       - accounts
       - accounts
-      summary: Update Platform Account
+      - platform
+      - update
+      - social-media
+      summary: Update Platform Account Details
+      description: Update platform account information like username, credentials,
+        or settings
       operationId: accounts_platform_update_api_orchestrator_accounts_platform__account_id__put
       parameters:
       - name: account_id
@@ -911,7 +1116,12 @@ paths:
       tags:
       - accounts
       - accounts
-      summary: Delete Platform Account
+      - platform
+      - delete
+      - social-media
+      - dangerous
+      summary: Remove Platform Account
+      description: Permanently delete a platform account and all associated data
       operationId: accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete
       parameters:
       - name: account_id
@@ -947,7 +1157,13 @@ paths:
       tags:
       - accounts
       - accounts
-      summary: Create Persona
+      - persona
+      - create
+      - audience
+      - targeting
+      summary: Create New Persona Profile
+      description: Create a new persona with specific characteristics for content
+        targeting
       operationId: accounts_persona_create_api_orchestrator_accounts_personas_post
       requestBody:
         content:
@@ -973,7 +1189,12 @@ paths:
       tags:
       - accounts
       - accounts
-      summary: Update Persona
+      - persona
+      - update
+      - audience
+      - targeting
+      summary: Update Persona Profile
+      description: Modify persona characteristics, demographics, or targeting preferences
       operationId: accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put
       parameters:
       - name: persona_id
@@ -1007,7 +1228,13 @@ paths:
       tags:
       - accounts
       - accounts
-      summary: Delete Persona
+      - persona
+      - delete
+      - audience
+      - targeting
+      - dangerous
+      summary: Remove Persona Profile
+      description: Permanently delete a persona and all associated targeting data
       operationId: accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete
       parameters:
       - name: persona_id
@@ -1036,7 +1263,13 @@ paths:
       tags:
       - accounts
       - accounts
-      summary: Link Persona Account
+      - persona
+      - platform
+      - link
+      - targeting
+      summary: Connect Persona to Platform Account
+      description: Link a persona profile to a specific platform account for targeted
+        content
       operationId: accounts_link_create_api_orchestrator_accounts_persona_account_links_post
       requestBody:
         content:
@@ -1062,7 +1295,12 @@ paths:
       tags:
       - accounts
       - accounts
-      summary: Unlink Persona Account
+      - persona
+      - platform
+      - unlink
+      - targeting
+      summary: Disconnect Persona from Platform Account
+      description: Remove the connection between a persona and a platform account
       operationId: accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete
       parameters:
       - name: persona_id
@@ -1094,12 +1332,93 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/trends:
+    get:
+      tags:
+      - insights
+      - bff
+      - trends
+      - analytics
+      - insights
+      - read
+      - ui
+      - frontend
+      - dashboard
+      - strategy
+      summary: Get Trend Analysis Data
+      description: Retrieve trend analysis data for content strategy and market insights
+        dashboard
+      operationId: bff_trends_list_trends_api_orchestrator_trends_get
+      parameters:
+      - name: country
+        in: query
+        required: false
+        schema:
+          type: string
+          default: US
+          title: Country
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: q
+        in: query
+        required: false
+        schema:
+          title: Q
+          type: string
+          nullable: true
+      - name: on_date
+        in: query
+        required: false
+        schema:
+          title: On Date
+          format: date
+          type: string
+          nullable: true
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date
+          type: string
+          nullable: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendsListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/insights:
     post:
       tags:
       - insights
       - insights
-      summary: Ingest Insight
+      - data
+      - analytics
+      - ingestion
+      - processing
+      summary: Process and Store Insight Data
+      description: Ingest new insight data for analysis and trend detection
       operationId: insights_ingest_api_orchestrator_insights_post
       requestBody:
         content:
@@ -1508,6 +1827,15 @@ components:
       properties:
         intent:
           $ref: '#/components/schemas/IntentResult'
+        match:
+          anyOf:
+          - $ref: '#/components/schemas/FlowMatchSummary'
+          - type: 'null'
+        alternative_matches:
+          items:
+            $ref: '#/components/schemas/FlowMatchSummary'
+          type: array
+          title: Alternative Matches
         plan_notes:
           title: Plan Notes
           type: string
@@ -1579,9 +1907,7 @@ components:
           type: string
           nullable: true
         ir:
-          additionalProperties: true
-          type: object
-          title: Ir
+          $ref: '#/components/schemas/DraftIR'
         schema_version:
           type: integer
           title: Schema Version
@@ -1796,6 +2122,39 @@ components:
       - path
       - tags
       title: FlowInfo
+    FlowMatchSummary:
+      properties:
+        key:
+          type: string
+          title: Key
+        title:
+          type: string
+          title: Title
+        score:
+          type: number
+          title: Score
+        strategy:
+          type: string
+          enum:
+          - embedding
+          - keyword
+          title: Strategy
+        description:
+          title: Description
+          type: string
+          nullable: true
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+      type: object
+      required:
+      - key
+      - title
+      - score
+      - strategy
+      title: FlowMatchSummary
     HTTPValidationError:
       properties:
         detail:

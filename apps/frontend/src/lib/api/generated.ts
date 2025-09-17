@@ -191,8 +191,12 @@ export interface ChatQuery {
   session_id?: string | null;
 }
 
+export type ChatResponseMatch = FlowMatchSummary | null;
+
 export interface ChatResponse {
   intent: IntentResult;
+  match?: ChatResponseMatch;
+  alternative_matches?: FlowMatchSummary[];
   /** @nullable */
   plan_notes?: string | null;
   cards?: ChatCard[];
@@ -215,8 +219,6 @@ export type DraftOutCampaignId = number | null;
 
 export type DraftOutTags = string[] | null;
 
-export type DraftOutIr = { [key: string]: unknown };
-
 export interface DraftOut {
   id: number;
   user_id: number;
@@ -226,7 +228,7 @@ export interface DraftOut {
   tags?: DraftOutTags;
   /** @nullable */
   goal?: string | null;
-  ir: DraftOutIr;
+  ir: DraftIR;
   schema_version: number;
   ir_revision: number;
   state: string;
@@ -313,6 +315,25 @@ export interface FlowInfo {
   method: string;
   path: string;
   tags: string[];
+}
+
+export type FlowMatchSummaryStrategy = typeof FlowMatchSummaryStrategy[keyof typeof FlowMatchSummaryStrategy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FlowMatchSummaryStrategy = {
+  embedding: 'embedding',
+  keyword: 'keyword',
+} as const;
+
+export interface FlowMatchSummary {
+  key: string;
+  title: string;
+  score: number;
+  strategy: FlowMatchSummaryStrategy;
+  /** @nullable */
+  description?: string | null;
+  tags?: string[];
 }
 
 export interface HTTPValidationError {
@@ -971,12 +992,34 @@ export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete
 soft?: boolean;
 };
 
+export type BffTrendsListTrendsApiOrchestratorTrendsGetParams = {
+country?: string;
+limit?: number;
+/**
+ * @nullable
+ */
+q?: string | null;
+/**
+ * @nullable
+ */
+on_date?: string | null;
+/**
+ * @nullable
+ */
+since?: string | null;
+/**
+ * @nullable
+ */
+until?: string | null;
+};
+
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
 /**
- * @summary BFF Read Platform Account
+ * Retrieve detailed information about a specific platform account for UI display
+ * @summary Get Platform Account Details
  */
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet = (
     accountId: number,
@@ -1043,7 +1086,7 @@ export function useBffAccountsReadPlatformAccountApiBffAccountsPlatformAccountId
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF Read Platform Account
+ * @summary Get Platform Account Details
  */
 
 export function useBffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet<TData = Awaited<ReturnType<typeof bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet>>, TError = HTTPValidationError>(
@@ -1064,7 +1107,8 @@ export function useBffAccountsReadPlatformAccountApiBffAccountsPlatformAccountId
 
 
 /**
- * @summary BFF List Platform Accounts
+ * Get paginated list of all platform accounts for account management interface
+ * @summary List All Platform Accounts
  */
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGet = (
     params?: BffAccountsListPlatformAccountsApiBffAccountsPlatformGetParams,
@@ -1132,7 +1176,7 @@ export function useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet<TDat
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Platform Accounts
+ * @summary List All Platform Accounts
  */
 
 export function useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet<TData = Awaited<ReturnType<typeof bffAccountsListPlatformAccountsApiBffAccountsPlatformGet>>, TError = HTTPValidationError>(
@@ -1153,7 +1197,8 @@ export function useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet<TDat
 
 
 /**
- * @summary BFF Read Persona
+ * Retrieve detailed persona profile information for audience targeting setup
+ * @summary Get Persona Profile Details
  */
 export const bffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGet = (
     personaId: number,
@@ -1220,7 +1265,7 @@ export function useBffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGet<TDat
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF Read Persona
+ * @summary Get Persona Profile Details
  */
 
 export function useBffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGet<TData = Awaited<ReturnType<typeof bffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGet>>, TError = HTTPValidationError>(
@@ -1241,7 +1286,8 @@ export function useBffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGet<TDat
 
 
 /**
- * @summary BFF List Personas
+ * Get paginated list of all persona profiles for campaign targeting configuration
+ * @summary List All Persona Profiles
  */
 export const bffAccountsListPersonasApiBffAccountsPersonasGet = (
     params?: BffAccountsListPersonasApiBffAccountsPersonasGetParams,
@@ -1309,7 +1355,7 @@ export function useBffAccountsListPersonasApiBffAccountsPersonasGet<TData = Awai
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Personas
+ * @summary List All Persona Profiles
  */
 
 export function useBffAccountsListPersonasApiBffAccountsPersonasGet<TData = Awaited<ReturnType<typeof bffAccountsListPersonasApiBffAccountsPersonasGet>>, TError = HTTPValidationError>(
@@ -1330,7 +1376,8 @@ export function useBffAccountsListPersonasApiBffAccountsPersonasGet<TData = Awai
 
 
 /**
- * @summary BFF List Accounts for Persona
+ * List all platform accounts connected to a specific persona for content distribution
+ * @summary Get Platform Accounts for Persona
  */
 export const bffAccountsListAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGet = (
     personaId: number,
@@ -1397,7 +1444,7 @@ export function useBffAccountsListAccountsForPersonaApiBffAccountsPersonasPerson
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Accounts for Persona
+ * @summary Get Platform Accounts for Persona
  */
 
 export function useBffAccountsListAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGet<TData = Awaited<ReturnType<typeof bffAccountsListAccountsForPersonaApiBffAccountsPersonasPersonaIdAccountsGet>>, TError = HTTPValidationError>(
@@ -1418,7 +1465,8 @@ export function useBffAccountsListAccountsForPersonaApiBffAccountsPersonasPerson
 
 
 /**
- * @summary BFF List Personas for Account
+ * List all personas linked to a specific platform account for targeted content strategy
+ * @summary Get Personas for Platform Account
  */
 export const bffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGet = (
     accountId: number,
@@ -1485,7 +1533,7 @@ export function useBffAccountsListPersonasForAccountApiBffAccountsPlatformAccoun
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Personas for Account
+ * @summary Get Personas for Platform Account
  */
 
 export function useBffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGet<TData = Awaited<ReturnType<typeof bffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGet>>, TError = HTTPValidationError>(
@@ -1506,7 +1554,8 @@ export function useBffAccountsListPersonasForAccountApiBffAccountsPlatformAccoun
 
 
 /**
- * @summary BFF Read Campaign
+ * Retrieve complete campaign information for campaign management dashboard
+ * @summary Get Campaign Details
  */
 export const bffCampaignsReadCampaignApiBffCampaignsCampaignIdGet = (
     campaignId: number,
@@ -1573,7 +1622,7 @@ export function useBffCampaignsReadCampaignApiBffCampaignsCampaignIdGet<TData = 
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF Read Campaign
+ * @summary Get Campaign Details
  */
 
 export function useBffCampaignsReadCampaignApiBffCampaignsCampaignIdGet<TData = Awaited<ReturnType<typeof bffCampaignsReadCampaignApiBffCampaignsCampaignIdGet>>, TError = HTTPValidationError>(
@@ -1594,7 +1643,8 @@ export function useBffCampaignsReadCampaignApiBffCampaignsCampaignIdGet<TData = 
 
 
 /**
- * @summary BFF List Campaigns
+ * Get paginated list of all campaigns for campaign overview and management
+ * @summary List All Campaigns
  */
 export const bffCampaignsListCampaignsApiBffCampaignsGet = (
     params?: BffCampaignsListCampaignsApiBffCampaignsGetParams,
@@ -1662,7 +1712,7 @@ export function useBffCampaignsListCampaignsApiBffCampaignsGet<TData = Awaited<R
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Campaigns
+ * @summary List All Campaigns
  */
 
 export function useBffCampaignsListCampaignsApiBffCampaignsGet<TData = Awaited<ReturnType<typeof bffCampaignsListCampaignsApiBffCampaignsGet>>, TError = HTTPValidationError>(
@@ -1683,7 +1733,8 @@ export function useBffCampaignsListCampaignsApiBffCampaignsGet<TData = Awaited<R
 
 
 /**
- * @summary BFF List Campaign KPI Definitions
+ * Retrieve all KPI definitions for a campaign to display metrics configuration
+ * @summary Get Campaign KPI Definitions
  */
 export const bffCampaignsListKpiDefsApiBffCampaignsCampaignIdKpiDefsGet = (
     campaignId: number,
@@ -1750,7 +1801,7 @@ export function useBffCampaignsListKpiDefsApiBffCampaignsCampaignIdKpiDefsGet<TD
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Campaign KPI Definitions
+ * @summary Get Campaign KPI Definitions
  */
 
 export function useBffCampaignsListKpiDefsApiBffCampaignsCampaignIdKpiDefsGet<TData = Awaited<ReturnType<typeof bffCampaignsListKpiDefsApiBffCampaignsCampaignIdKpiDefsGet>>, TError = HTTPValidationError>(
@@ -1771,7 +1822,8 @@ export function useBffCampaignsListKpiDefsApiBffCampaignsCampaignIdKpiDefsGet<TD
 
 
 /**
- * @summary BFF List Campaign KPI Results
+ * Retrieve KPI measurement results for campaign performance analytics and reporting
+ * @summary Get Campaign KPI Results
  */
 export const bffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResultsGet = (
     campaignId: number,
@@ -1845,7 +1897,7 @@ export function useBffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResults
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Campaign KPI Results
+ * @summary Get Campaign KPI Results
  */
 
 export function useBffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResultsGet<TData = Awaited<ReturnType<typeof bffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResultsGet>>, TError = HTTPValidationError>(
@@ -1867,7 +1919,8 @@ export function useBffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResults
 
 
 /**
- * @summary BFF Read Draft
+ * Retrieve complete draft content and metadata for content editing interface
+ * @summary Get Draft Content
  */
 export const bffDraftsReadDraftApiBffDraftsDraftIdGet = (
     draftId: number,
@@ -1934,7 +1987,7 @@ export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<Retu
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF Read Draft
+ * @summary Get Draft Content
  */
 
 export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<ReturnType<typeof bffDraftsReadDraftApiBffDraftsDraftIdGet>>, TError = HTTPValidationError>(
@@ -1955,7 +2008,8 @@ export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<Retu
 
 
 /**
- * @summary BFF List Drafts
+ * Get paginated list of all content drafts for content management dashboard
+ * @summary List All Drafts
  */
 export const bffDraftsListDraftsApiBffDraftsGet = (
     params?: BffDraftsListDraftsApiBffDraftsGetParams,
@@ -2023,7 +2077,7 @@ export function useBffDraftsListDraftsApiBffDraftsGet<TData = Awaited<ReturnType
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Drafts
+ * @summary List All Drafts
  */
 
 export function useBffDraftsListDraftsApiBffDraftsGet<TData = Awaited<ReturnType<typeof bffDraftsListDraftsApiBffDraftsGet>>, TError = HTTPValidationError>(
@@ -2044,7 +2098,8 @@ export function useBffDraftsListDraftsApiBffDraftsGet<TData = Awaited<ReturnType
 
 
 /**
- * @summary BFF List Draft Variants
+ * List all variants of a draft for content optimization and A/B testing
+ * @summary Get Draft Variants
  */
 export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet = (
     draftId: number,
@@ -2111,7 +2166,7 @@ export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = A
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Draft Variants
+ * @summary Get Draft Variants
  */
 
 export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
@@ -2132,7 +2187,8 @@ export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = A
 
 
 /**
- * @summary BFF Read Current User
+ * Retrieve authenticated user profile information for user interface and settings
+ * @summary Get Current User Profile
  */
 export const bffMeReadMeApiBffMeGet = (
     
@@ -2199,7 +2255,7 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF Read Current User
+ * @summary Get Current User Profile
  */
 
 export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffMeReadMeApiBffMeGet>>, TError = unknown>(
@@ -2220,7 +2276,8 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
 
 
 /**
- * @summary BFF List Trends
+ * Retrieve trend analysis data for content strategy and market insights dashboard
+ * @summary Get Trend Analysis Data
  */
 export const bffTrendsListTrendsApiBffTrendsGet = (
     params?: BffTrendsListTrendsApiBffTrendsGetParams,
@@ -2288,7 +2345,7 @@ export function useBffTrendsListTrendsApiBffTrendsGet<TData = Awaited<ReturnType
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary BFF List Trends
+ * @summary Get Trend Analysis Data
  */
 
 export function useBffTrendsListTrendsApiBffTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiBffTrendsGet>>, TError = HTTPValidationError>(
@@ -2439,7 +2496,8 @@ export const useLoginApiOrchestratorAuthLoginPost = <TError = HTTPValidationErro
     }
     
 /**
- * @summary Create Campaign
+ * Set up a new marketing campaign with goals, timeline, and target audience
+ * @summary Create New Marketing Campaign
  */
 export const campaignsCreateCampaignApiOrchestratorCampaignsPost = (
     campaignCreate: CampaignCreate,
@@ -2487,7 +2545,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CampaignsCreateCampaignApiOrchestratorCampaignsPostMutationError = HTTPValidationError
 
     /**
- * @summary Create Campaign
+ * @summary Create New Marketing Campaign
  */
 export const useCampaignsCreateCampaignApiOrchestratorCampaignsPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsCreateCampaignApiOrchestratorCampaignsPost>>, TError,{data: CampaignCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -2504,7 +2562,8 @@ export const useCampaignsCreateCampaignApiOrchestratorCampaignsPost = <TError = 
     }
     
 /**
- * @summary Update Campaign
+ * Modify campaign parameters like name, goals, timeline, or target audience
+ * @summary Update Campaign Settings
  */
 export const campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut = (
     campaignId: number | null,
@@ -2552,7 +2611,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPutMutationError = HTTPValidationError
 
     /**
- * @summary Update Campaign
+ * @summary Update Campaign Settings
  */
 export const useCampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut>>, TError,{campaignId: number | null;data: CampaignUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -2569,6 +2628,7 @@ export const useCampaignsUpdateCampaignApiOrchestratorCampaignsCampaignIdPut = <
     }
     
 /**
+ * Permanently delete a campaign and all associated data
  * @summary Delete Campaign
  */
 export const campaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete = (
@@ -2631,7 +2691,8 @@ export const useCampaignsDeleteCampaignApiOrchestratorCampaignsCampaignIdDelete 
     }
     
 /**
- * @summary Upsert KPI Definitions
+ * Set up or update Key Performance Indicators for campaign measurement
+ * @summary Define Campaign KPIs
  */
 export const campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut = (
     campaignId: number | null,
@@ -2679,7 +2740,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPutMutationError = HTTPValidationError
 
     /**
- * @summary Upsert KPI Definitions
+ * @summary Define Campaign KPIs
  */
 export const useCampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsPut>>, TError,{campaignId: number | null;data: CampaignKPIDefUpsertCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -2696,7 +2757,8 @@ export const useCampaignsUpsertKpiDefsApiOrchestratorCampaignsCampaignIdKpiDefsP
     }
     
 /**
- * @summary Record KPI Result
+ * Log new KPI measurement data for campaign performance tracking
+ * @summary Record Campaign KPI Data
  */
 export const campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost = (
     campaignId: number | null,
@@ -2745,7 +2807,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPostMutationError = HTTPValidationError
 
     /**
- * @summary Record KPI Result
+ * @summary Record Campaign KPI Data
  */
 export const useCampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiResultsPost>>, TError,{campaignId: number | null;data: CampaignKPIRecordCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -2762,7 +2824,8 @@ export const useCampaignsRecordKpiResultApiOrchestratorCampaignsCampaignIdKpiRes
     }
     
 /**
- * @summary Aggregate KPI
+ * Aggregate and summarize KPI data for campaign performance analysis
+ * @summary Calculate Campaign KPI Summary
  */
 export const campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost = (
     campaignId: number | null,
@@ -2811,7 +2874,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPostMutationError = HTTPValidationError
 
     /**
- * @summary Aggregate KPI
+ * @summary Calculate Campaign KPI Summary
  */
 export const useCampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKpisPost>>, TError,{campaignId: number | null;data: CampaignAggregationCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -2828,7 +2891,8 @@ export const useCampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregat
     }
     
 /**
- * @summary Create Draft
+ * Start a new content draft with initial parameters and metadata
+ * @summary Create Content Draft
  */
 export const draftsCreateApiOrchestratorDraftsPost = (
     draftSaveRequest: DraftSaveRequest,
@@ -2876,7 +2940,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DraftsCreateApiOrchestratorDraftsPostMutationError = HTTPValidationError
 
     /**
- * @summary Create Draft
+ * @summary Create Content Draft
  */
 export const useDraftsCreateApiOrchestratorDraftsPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -2893,7 +2957,8 @@ export const useDraftsCreateApiOrchestratorDraftsPost = <TError = HTTPValidation
     }
     
 /**
- * @summary Update Draft
+ * Modify the content and structure of an existing draft
+ * @summary Update Draft Content
  */
 export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut = (
     draftId: number | null,
@@ -2941,7 +3006,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DraftsUpdateIrApiOrchestratorDraftsDraftIdIrPutMutationError = HTTPValidationError
 
     /**
- * @summary Update Draft
+ * @summary Update Draft Content
  */
 export const useDraftsUpdateIrApiOrchestratorDraftsDraftIdIrPut = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsUpdateIrApiOrchestratorDraftsDraftIdIrPut>>, TError,{draftId: number | null;data: DraftUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -2958,7 +3023,71 @@ export const useDraftsUpdateIrApiOrchestratorDraftsDraftIdIrPut = <TError = HTTP
     }
     
 /**
- * @summary Create Platform Account
+ * Delete an existing draft
+ * @summary Delete Draft
+ */
+export const draftsDeleteApiOrchestratorDraftsDraftIdDelete = (
+    draftId: number | null,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/drafts/${draftId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsDeleteApiOrchestratorDraftsDraftIdDelete>>, TError,{draftId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftsDeleteApiOrchestratorDraftsDraftIdDelete>>, TError,{draftId: number | null}, TContext> => {
+
+const mutationKey = ['draftsDeleteApiOrchestratorDraftsDraftIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsDeleteApiOrchestratorDraftsDraftIdDelete>>, {draftId: number | null}> = (props) => {
+          const {draftId} = props ?? {};
+
+          return  draftsDeleteApiOrchestratorDraftsDraftIdDelete(draftId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof draftsDeleteApiOrchestratorDraftsDraftIdDelete>>>
+    
+    export type DraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Draft
+ */
+export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsDeleteApiOrchestratorDraftsDraftIdDelete>>, TError,{draftId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof draftsDeleteApiOrchestratorDraftsDraftIdDelete>>,
+        TError,
+        {draftId: number | null},
+        TContext
+      > => {
+
+      const mutationOptions = getDraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Create a new platform account (social media, website, etc.) for the user
+ * @summary Create New Platform Account
  */
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPost = (
     platformAccountCreateCommand: PlatformAccountCreateCommand,
@@ -3006,7 +3135,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationError = HTTPValidationError
 
     /**
- * @summary Create Platform Account
+ * @summary Create New Platform Account
  */
 export const useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3023,7 +3152,8 @@ export const useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost = <TEr
     }
     
 /**
- * @summary Update Platform Account
+ * Update platform account information like username, credentials, or settings
+ * @summary Update Platform Account Details
  */
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = (
     accountId: number | null,
@@ -3071,7 +3201,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationError = HTTPValidationError
 
     /**
- * @summary Update Platform Account
+ * @summary Update Platform Account Details
  */
 export const useAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3088,7 +3218,8 @@ export const useAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPu
     }
     
 /**
- * @summary Delete Platform Account
+ * Permanently delete a platform account and all associated data
+ * @summary Remove Platform Account
  */
 export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = (
     accountId: number | null,
@@ -3135,7 +3266,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationError = HTTPValidationError
 
     /**
- * @summary Delete Platform Account
+ * @summary Remove Platform Account
  */
 export const useAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3152,7 +3283,8 @@ export const useAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDe
     }
     
 /**
- * @summary Create Persona
+ * Create a new persona with specific characteristics for content targeting
+ * @summary Create New Persona Profile
  */
 export const accountsPersonaCreateApiOrchestratorAccountsPersonasPost = (
     personaCreateCommand: PersonaCreateCommand,
@@ -3200,7 +3332,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationError = HTTPValidationError
 
     /**
- * @summary Create Persona
+ * @summary Create New Persona Profile
  */
 export const useAccountsPersonaCreateApiOrchestratorAccountsPersonasPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3217,7 +3349,8 @@ export const useAccountsPersonaCreateApiOrchestratorAccountsPersonasPost = <TErr
     }
     
 /**
- * @summary Update Persona
+ * Modify persona characteristics, demographics, or targeting preferences
+ * @summary Update Persona Profile
  */
 export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = (
     personaId: number | null,
@@ -3265,7 +3398,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationError = HTTPValidationError
 
     /**
- * @summary Update Persona
+ * @summary Update Persona Profile
  */
 export const useAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3282,7 +3415,8 @@ export const useAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut
     }
     
 /**
- * @summary Delete Persona
+ * Permanently delete a persona and all associated targeting data
+ * @summary Remove Persona Profile
  */
 export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = (
     personaId: number | null,
@@ -3327,7 +3461,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationError = HTTPValidationError
 
     /**
- * @summary Delete Persona
+ * @summary Remove Persona Profile
  */
 export const useAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3344,7 +3478,8 @@ export const useAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDel
     }
     
 /**
- * @summary Link Persona Account
+ * Link a persona profile to a specific platform account for targeted content
+ * @summary Connect Persona to Platform Account
  */
 export const accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = (
     personaAccountLinkCommand: PersonaAccountLinkCommand,
@@ -3392,7 +3527,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationError = HTTPValidationError
 
     /**
- * @summary Link Persona Account
+ * @summary Connect Persona to Platform Account
  */
 export const useAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3409,7 +3544,8 @@ export const useAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost
     }
     
 /**
- * @summary Unlink Persona Account
+ * Remove the connection between a persona and a platform account
+ * @summary Disconnect Persona from Platform Account
  */
 export const accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = (
     personaId: number | null,
@@ -3455,7 +3591,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationError = HTTPValidationError
 
     /**
- * @summary Unlink Persona Account
+ * @summary Disconnect Persona from Platform Account
  */
 export const useAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
@@ -3472,7 +3608,98 @@ export const useAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPers
     }
     
 /**
- * @summary Ingest Insight
+ * Retrieve trend analysis data for content strategy and market insights dashboard
+ * @summary Get Trend Analysis Data
+ */
+export const bffTrendsListTrendsApiOrchestratorTrendsGet = (
+    params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TrendsListResponse>(
+      {url: `/api/orchestrator/trends`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffTrendsListTrendsApiOrchestratorTrendsGetQueryKey = (params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams,) => {
+    return [`/api/orchestrator/trends`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffTrendsListTrendsApiOrchestratorTrendsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffTrendsListTrendsApiOrchestratorTrendsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>> = ({ signal }) => bffTrendsListTrendsApiOrchestratorTrendsGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffTrendsListTrendsApiOrchestratorTrendsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>>
+export type BffTrendsListTrendsApiOrchestratorTrendsGetQueryError = HTTPValidationError
+
+
+export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffTrendsListTrendsApiOrchestratorTrendsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
+ params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
+ params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Trend Analysis Data
+ */
+
+export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
+ params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffTrendsListTrendsApiOrchestratorTrendsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Ingest new insight data for analysis and trend detection
+ * @summary Process and Store Insight Data
  */
 export const insightsIngestApiOrchestratorInsightsPost = (
     insightInCommand: InsightInCommand,
@@ -3520,7 +3747,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type InsightsIngestApiOrchestratorInsightsPostMutationError = HTTPValidationError
 
     /**
- * @summary Ingest Insight
+ * @summary Process and Store Insight Data
  */
 export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}

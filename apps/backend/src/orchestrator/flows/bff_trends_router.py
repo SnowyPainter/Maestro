@@ -58,12 +58,13 @@ async def op_list_trends(payload: TrendsQueryPayload, ctx: TaskContext) -> Trend
 
 @FLOWS.flow(
     key="bff.trends.list_trends",
-    title="BFF List Trends",
+    title="Get Trend Analysis Data",
+    description="Retrieve trend analysis data for content strategy and market insights dashboard",
     input_model=TrendsQueryPayload,
     output_model=TrendsListResponse,
     method="get",
     path="/trends",
-    tags=("bff", "trends"),
+    tags=("bff", "trends", "analytics", "insights", "read", "ui", "frontend", "dashboard", "strategy"),
 )
 def _flow_bff_list_trends(builder: FlowBuilder):
     task = builder.task("list_trends", "bff.trends.list_trends")

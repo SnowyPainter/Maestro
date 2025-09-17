@@ -27,6 +27,8 @@ class DraftSaveRequest(BaseModel):
     goal: Optional[str] = None
     ir: DraftIR
 
+class DraftDeleteCommand(BaseModel):
+    draft_id: Optional[int] = None
 
 class DraftOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -36,7 +38,7 @@ class DraftOut(BaseModel):
     title: Optional[str] = None
     tags: Optional[List[str]] = None
     goal: Optional[str] = None
-    ir: dict
+    ir: DraftIR
     schema_version: int
     ir_revision: int
     state: str  # DraftState enum value

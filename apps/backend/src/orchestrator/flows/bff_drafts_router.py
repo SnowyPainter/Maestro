@@ -100,12 +100,13 @@ async def op_list_draft_variants(
 
 @FLOWS.flow(
     key="bff.drafts.read_draft",
-    title="BFF Read Draft",
+    title="Get Draft Content",
+    description="Retrieve complete draft content and metadata for content editing interface",
     input_model=DraftReadPayload,
     output_model=DraftOut,
     method="get",
     path="/drafts/{draft_id}",
-    tags=("bff", "drafts"),
+    tags=("bff", "drafts", "content", "read", "ui", "frontend", "editing"),
 )
 def _flow_bff_read_draft(builder: FlowBuilder):
     task = builder.task("read_draft", "bff.drafts.read_draft")
@@ -114,12 +115,13 @@ def _flow_bff_read_draft(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.drafts.list_drafts",
-    title="BFF List Drafts",
+    title="List All Drafts",
+    description="Get paginated list of all content drafts for content management dashboard",
     input_model=DraftListPayload,
     output_model=DraftList,
     method="get",
     path="/drafts",
-    tags=("bff", "drafts"),
+    tags=("bff", "drafts", "content", "list", "ui", "frontend", "dashboard", "pagination"),
 )
 def _flow_bff_list_drafts(builder: FlowBuilder):
     task = builder.task("list_drafts", "bff.drafts.list_drafts")
@@ -128,12 +130,13 @@ def _flow_bff_list_drafts(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.drafts.list_variants",
-    title="BFF List Draft Variants",
+    title="Get Draft Variants",
+    description="List all variants of a draft for content optimization and A/B testing",
     input_model=DraftVariantsPayload,
     output_model=DraftVariantList,
     method="get",
     path="/drafts/{draft_id}/variants",
-    tags=("bff", "drafts"),
+    tags=("bff", "drafts", "content", "variants", "list", "ui", "frontend", "optimization", "ab-testing"),
 )
 def _flow_bff_list_draft_variants(builder: FlowBuilder):
     task = builder.task("list_draft_variants", "bff.drafts.list_variants")

@@ -9,12 +9,16 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.drafts.models import Draft
-from apps.backend.src.modules.drafts.schemas import DraftIR, DraftOut, DraftSaveRequest
-from apps.backend.src.modules.drafts.service import create_draft, update_draft_ir
+from apps.backend.src.modules.drafts.schemas import DraftIR, DraftOut, DraftSaveRequest, DraftDeleteCommand
+from apps.backend.src.modules.drafts.service import create_draft, delete_draft, update_draft_ir
 from apps.backend.src.modules.users.models import User
 
 from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
+
+
+class MessageOut(BaseModel):
+    message: str
 
 
 class DraftUpdateCommand(BaseModel):
@@ -84,15 +88,28 @@ async def op_update_draft(payload: DraftUpdateCommand, ctx: TaskContext) -> Draf
     )
     return DraftOut.model_validate(updated)
 
+@operator(
+    key="drafts.delete",
+    title="Delete Draft",
+    side_effect="write",
+)
+async def op_delete_draft(payload: DraftDeleteCommand, ctx: TaskContext) -> MessageOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    draft_id = _require_identifier(payload.draft_id, "draft_id")
+    await _load_owned_draft(db, draft_id=draft_id, owner_user_id=user.id)
+    await delete_draft(db, draft_id=draft_id)
+    return MessageOut(message="Draft deleted successfully")
 
 @FLOWS.flow(
     key="drafts.create",
-    title="Create Draft",
+    title="Create Content Draft",
+    description="Start a new content draft with initial parameters and metadata",
     input_model=DraftSaveRequest,
     output_model=DraftOut,
     method="post",
     path="/drafts",
-    tags=("drafts",),
+    tags=("drafts", "content", "create", "writing"),
 )
 def _flow_create_draft(builder: FlowBuilder):
     task = builder.task("create_draft", "drafts.create")
@@ -101,17 +118,31 @@ def _flow_create_draft(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="drafts.update_ir",
-    title="Update Draft",
+    title="Update Draft Content",
+    description="Modify the content and structure of an existing draft",
     input_model=DraftUpdateCommand,
     output_model=DraftOut,
     method="put",
     path="/drafts/{draft_id}/ir",
-    tags=("drafts",),
+    tags=("drafts", "content", "update", "writing", "editing"),
 )
 def _flow_update_draft(builder: FlowBuilder):
     task = builder.task("update_draft", "drafts.update_ir")
     builder.expect_terminal(task)
 
+@FLOWS.flow(
+    key="drafts.delete",
+    title="Delete Draft",
+    description="Delete an existing draft",
+    input_model=DraftDeleteCommand,
+    output_model=MessageOut,
+    method="delete",
+    path="/drafts/{draft_id}",
+    tags=("drafts", "content", "delete", "writing", "editing"),
+)
+def _flow_delete_draft(builder: FlowBuilder):
+    task = builder.task("delete_draft", "drafts.delete")
+    builder.expect_terminal(task)
 
 router = FLOWS.build_router(
     orchestrate_flow,

@@ -59,7 +59,6 @@ async def update_campaign(
     await db.commit()
     return camp
 
-
 async def get_campaign(db: AsyncSession, campaign_id: int) -> Optional[Campaign]:
     return await db.get(Campaign, campaign_id)
 

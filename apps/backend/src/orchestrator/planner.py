@@ -5,9 +5,9 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
-from collections import Counter, deque
-from dataclasses import dataclass
-from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple
+from collections import Counter
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Literal, Optional, Sequence
 
 import re
 
@@ -15,8 +15,8 @@ from pydantic import BaseModel, ValidationError
 
 from apps.backend.src.services.embeddings import embed_texts
 from .cards import card_type_for_model
-from .nlp import IntentResult
-from .registry import FLOWS, FlowBuilder, FlowDefinition, OperatorMeta, REGISTRY
+from .nlp import nlp_engine
+from .registry import FLOWS, FlowDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +38,12 @@ class PlanExecutionStep:
 
 @dataclass
 class ChatPlan:
-    intent: IntentResult
     steps: List[PlanExecutionStep]
     messages: List[str]
     notes: Optional[str] = None
+    primary_match: Optional[FlowMatch] = None
+    slots: Dict[str, Any] = field(default_factory=dict)
+    alternatives: List[FlowMatch] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -176,121 +178,54 @@ class FlowMatcher:
 # ---------------------------------------------------------------------------
 
 
-TARGET_TYPE_HINTS = {
-    "campaign.aggregate_kpis": "CampaignKPIResultOut",
-    "campaign.summary": "CampaignKPIResultOut",
-    "draft.create": "DraftOut",
-}
-
-
 class FlowPlanner:
     def __init__(self) -> None:
         self._matcher = FlowMatcher()
 
-    async def plan(self, message: str, intent: IntentResult) -> ChatPlan:
-        query = " ".join([message, intent.intent, " ".join(intent.keywords)])
-        existing = await self._plan_existing_flow(query, intent)
-        if existing:
-            return existing
+    async def plan(self, message: str) -> ChatPlan:
+        matches = await self._matcher.search(message, top_k=5)
+        if not matches:
+            return ChatPlan(steps=[], messages=self._no_match_messages(message), notes=None)
 
-        dynamic = self._plan_dynamic_chain(intent)
-        if dynamic:
-            return dynamic
-
-        suggestions = [
-            "I couldn't map this request to an orchestration flow yet.",
-        ]
-        if intent.candidates:
-            candidate_text = ", ".join(
-                f"{candidate.intent} ({candidate.confidence:.0%})"
-                for candidate in intent.candidates[:3]
-            )
-            suggestions.append(f"Top intent candidates: {candidate_text}.")
-        if intent.keywords:
-            suggestions.append(
-                "Detected keywords: " + ", ".join(intent.keywords[:5]) + "."
-            )
-        suggestions.append(
-            "Try referencing a campaign id (e.g. #123) or ask me to create a draft explicitly."
-        )
-        return ChatPlan(intent=intent, steps=[], messages=suggestions, notes=None)
-
-    async def _plan_existing_flow(self, query: str, intent: IntentResult) -> Optional[ChatPlan]:
-        matches = await self._matcher.search(query, top_k=5)
-        slots = intent.slots
-        for match in matches:
-            flow = match.flow
-            weighted_score = self._weighted_score(match, intent)
-            min_score = (
-                FlowMatcher.MIN_EMBED_SCORE
-                if match.strategy == "embedding"
-                else FlowMatcher.MIN_KEYWORD_SCORE
-            )
-            if weighted_score < min_score:
-                continue
-            steps = self._build_flow_steps(flow, intent, slots)
+        attempted_slots: Dict[str, Any] = {}
+        for idx, match in enumerate(matches):
+            slots = self._extract_flow_slots(match.flow, message)
+            steps = self._build_flow_steps(match.flow, slots, message)
             if steps:
                 notes = (
-                    f"Matched flow '{flow.title}' via {match.strategy} search "
-                    f"(score {weighted_score:.2f})."
+                    f"Matched flow '{match.flow.title}' via {match.strategy} search "
+                    f"(score {match.score:.2f})."
                 )
-                return ChatPlan(intent=intent, steps=steps, messages=[], notes=notes)
-        return None
+                alternatives = [candidate for pos, candidate in enumerate(matches) if pos != idx]
+                return ChatPlan(
+                    steps=steps,
+                    messages=[],
+                    notes=notes,
+                    primary_match=match,
+                    slots=slots,
+                    alternatives=alternatives,
+                )
+            if not attempted_slots:
+                attempted_slots = slots
 
-    def _plan_dynamic_chain(self, intent: IntentResult) -> Optional[ChatPlan]:
-        operators = [REGISTRY[key] for key in REGISTRY]
-        slots = intent.slots
-
-        start_candidates: List[Tuple[OperatorMeta, Dict[str, Any]]] = []
-        for meta in operators:
-            payload = self._build_payload(meta.input_model, intent, slots)
-            if payload is not None:
-                start_candidates.append((meta, payload))
-
-        if not start_candidates:
-            return None
-
-        target_name = TARGET_TYPE_HINTS.get(intent.intent)
-        path = self._find_operator_path(start_candidates, operators, target_name)
-        if not path:
-            return None
-
-        metas, first_payload = path
-        dynamic_flow = self._build_dynamic_flow(intent, metas)
-        card_hint = card_type_for_model(dynamic_flow.output_model)
-        title = f"Dynamic plan: {' → '.join(meta.key for meta in metas)}"
-
-        step = PlanExecutionStep(
-            kind="dynamic",
-            payload=first_payload,
-            flow=dynamic_flow,
-            title=title,
-            card_hint=card_hint,
+        # No flow produced a valid payload; surface the candidates so the UI can react.
+        suggestions = self._no_match_messages(message, matches=matches)
+        return ChatPlan(
+            steps=[],
+            messages=suggestions,
+            notes=None,
+            primary_match=matches[0],
+            alternatives=matches[1:],
+            slots=attempted_slots,
         )
-        notes = "Orchestrator composed an ad-hoc operator chain automatically."
-        return ChatPlan(intent=intent, steps=[step], messages=[], notes=notes)
-
-    def _weighted_score(self, match: FlowMatch, intent: IntentResult) -> float:
-        base = match.score
-        boost = 1.0
-        for candidate in intent.candidates:
-            if candidate.confidence < 0.3:
-                continue
-            intent_tokens = [candidate.intent, candidate.intent.split(".")[-1]]
-            if any(token and token in match.flow.key for token in intent_tokens):
-                boost = max(boost, 1.0 + candidate.confidence * 0.5)
-                continue
-            if any(token and any(token in tag for tag in match.flow.tags) for token in intent_tokens):
-                boost = max(boost, 1.0 + candidate.confidence * 0.3)
-        return base * boost
 
     def _build_flow_steps(
         self,
         flow: FlowDefinition,
-        intent: IntentResult,
         slots: Dict[str, Any],
+        message: str,
     ) -> List[PlanExecutionStep]:
-        payload = self._build_payload(flow.input_model, intent, slots)
+        payload = self._build_payload(flow.input_model, slots, message)
         card_hint = card_type_for_model(flow.output_model)
 
         if payload is not None:
@@ -310,7 +245,7 @@ class FlowPlanner:
             for cid in campaign_ids:
                 overrides = dict(slots)
                 overrides["campaign_id"] = cid
-                payload = self._build_payload(flow.input_model, intent, overrides)
+                payload = self._build_payload(flow.input_model, overrides, message)
                 if payload is None:
                     continue
                 title = f"Campaign #{cid}"
@@ -328,11 +263,18 @@ class FlowPlanner:
 
         return []
 
+    def _extract_flow_slots(self, flow: FlowDefinition, message: str) -> Dict[str, Any]:
+        try:
+            flow_specific = nlp_engine.extract_slots_for_model(message, flow.input_model)
+        except Exception:  # pragma: no cover - defensive, should not happen
+            flow_specific = {}
+        return flow_specific
+
     def _build_payload(
         self,
         model_cls: type[BaseModel],
-        intent: IntentResult,
         slots: Dict[str, Any],
+        message: str,
     ) -> Optional[Dict[str, Any]]:
         fields = self._model_fields(model_cls)
         data: Dict[str, Any] = {}
@@ -345,14 +287,11 @@ class FlowPlanner:
             if plural in slots and isinstance(slots[plural], list) and slots[plural]:
                 data[name] = slots[plural][0]
                 continue
-            if name == "as_of" and "as_of" in slots:
-                data[name] = slots["as_of"]
-                continue
             if name == "title":
-                data[name] = intent.raw_text[:50].strip() or "Untitled"
+                data[name] = message[:50].strip() or "Untitled"
                 continue
             if name == "ir":
-                data[name] = self._default_draft_ir(intent.raw_text)
+                data[name] = self._default_draft_ir(message)
                 continue
             # skip optional fields (will be handled by model defaults)
 
@@ -361,6 +300,11 @@ class FlowPlanner:
         except ValidationError:
             return None
         return data
+
+    def _model_fields(self, model_cls: type[BaseModel]) -> Dict[str, Any]:
+        if hasattr(model_cls, "model_fields"):
+            return model_cls.model_fields  # type: ignore[attr-defined]
+        return getattr(model_cls, "__fields__", {})
 
     def _default_draft_ir(self, text: str) -> Dict[str, Any]:
         markdown = text.strip() or "Generated draft from chat request."
@@ -374,76 +318,23 @@ class FlowPlanner:
             "options": {},
         }
 
-    def _model_fields(self, model_cls: type[BaseModel]) -> Dict[str, Any]:
-        if hasattr(model_cls, "model_fields"):
-            return model_cls.model_fields  # type: ignore[attr-defined]
-        return getattr(model_cls, "__fields__", {})
-
-    def _find_operator_path(
+    def _no_match_messages(
         self,
-        starts: List[Tuple[OperatorMeta, Dict[str, Any]]],
-        operators: List[OperatorMeta],
-        target_name: Optional[str],
-    ) -> Optional[Tuple[List[OperatorMeta], Dict[str, Any]]]:
-        inputs: Dict[type, List[OperatorMeta]] = {}
-        for meta in operators:
-            inputs.setdefault(meta.input_model, []).append(meta)
-
-        target_type = None
-        if target_name:
-            target_type = next(
-                (meta.output_model for meta in operators if meta.output_model.__name__ == target_name),
-                None,
-            )
-
-        queue: deque[Tuple[OperatorMeta, List[OperatorMeta], Dict[str, Any]]] = deque()
-        visited: set[str] = set()
-
-        for meta, payload in starts:
-            queue.append((meta, [meta], payload))
-            visited.add(meta.key)
-
-        max_depth = 4
-        while queue:
-            meta, path, payload = queue.popleft()
-            if target_type is None or meta.output_model is target_type:
-                return path, payload
-
-            if len(path) >= max_depth:
-                continue
-
-            for candidate in inputs.get(meta.output_model, []):
-                if candidate.key in visited:
-                    continue
-                visited.add(candidate.key)
-                queue.append((candidate, path + [candidate], payload))
-
-        return None
-
-    def _build_dynamic_flow(self, intent: IntentResult, metas: Sequence[OperatorMeta]) -> FlowDefinition:
-        suffix = hashlib.sha1(intent.raw_text.encode("utf-8")).hexdigest()[:10]
-        builder = FlowBuilder(
-            key=f"chat.dynamic.{suffix}",
-            title="Dynamic chat plan",
-            input_model=metas[0].input_model,
-            output_model=metas[-1].output_model,
-            operator_registry=REGISTRY,
-        )
-        previous = None
-        for idx, meta in enumerate(metas):
-            task_id = f"step_{idx}"
-            handle = builder.task(
-                task_id,
-                meta.key,
-                upstream=[previous] if previous else None,
-            )
-            previous = handle
-        builder.expect_entry("step_0")
-        if previous:
-            builder.expect_terminal(previous)
-        return builder.compile()
+        message: str,
+        *,
+        matches: Optional[List[FlowMatch]] = None,
+    ) -> List[str]:
+        base = "I couldn't map this request to an orchestration flow yet."
+        hint = "Try referencing a campaign id (e.g. #123) or ask for a specific action."
+        response = [base]
+        if matches:
+            shortlist = ", ".join(f"{match.flow.key} ({match.score:.2f})" for match in matches[:3])
+            response.append(f"Closest matches were {shortlist}.")
+        if message.strip():
+            response.append(hint)
+        return response
 
 flow_planner = FlowPlanner()
 
 
-__all__ = ["ChatPlan", "PlanExecutionStep", "FlowPlanner", "flow_planner"]
+__all__ = ["ChatPlan", "FlowMatch", "PlanExecutionStep", "FlowPlanner", "flow_planner"]

@@ -43,12 +43,13 @@ async def op_ingest_insight(payload: InsightInCommand, ctx: TaskContext) -> Insi
 
 @FLOWS.flow(
     key="insights.ingest",
-    title="Ingest Insight",
+    title="Process and Store Insight Data",
+    description="Ingest new insight data for analysis and trend detection",
     input_model=InsightInCommand,
     output_model=InsightOut,
     method="post",
     path="/insights",
-    tags=("insights",),
+    tags=("insights", "data", "analytics", "ingestion", "processing"),
 )
 def _flow_ingest_insight(builder: FlowBuilder):
     task = builder.task("ingest_insight", "insights.ingest")

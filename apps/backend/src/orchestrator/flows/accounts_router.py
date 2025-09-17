@@ -257,12 +257,13 @@ async def op_unlink_persona_account(
 
 @FLOWS.flow(
     key="accounts.platform.create",
-    title="Create Platform Account",
+    title="Create New Platform Account",
+    description="Create a new platform account (social media, website, etc.) for the user",
     input_model=PlatformAccountCreateCommand,
     output_model=PlatformAccountOut,
     method="post",
     path="/accounts/platform",
-    tags=("accounts",),
+    tags=("accounts", "platform", "create", "social-media"),
 )
 def _flow_create_platform(builder: FlowBuilder):
     task = builder.task("create_platform", "accounts.platform.create_account")
@@ -271,12 +272,13 @@ def _flow_create_platform(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="accounts.platform.update",
-    title="Update Platform Account",
+    title="Update Platform Account Details",
+    description="Update platform account information like username, credentials, or settings",
     input_model=PlatformAccountUpdateCommand,
     output_model=PlatformAccountOut,
     method="put",
     path="/accounts/platform/{account_id}",
-    tags=("accounts",),
+    tags=("accounts", "platform", "update", "social-media"),
 )
 def _flow_update_platform(builder: FlowBuilder):
     task = builder.task("update_platform", "accounts.platform.update_account")
@@ -285,12 +287,13 @@ def _flow_update_platform(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="accounts.platform.delete",
-    title="Delete Platform Account",
+    title="Remove Platform Account",
+    description="Permanently delete a platform account and all associated data",
     input_model=PlatformAccountDeleteCommand,
     output_model=MessageOut,
     method="delete",
     path="/accounts/platform/{account_id}",
-    tags=("accounts",),
+    tags=("accounts", "platform", "delete", "social-media", "dangerous"),
 )
 def _flow_delete_platform(builder: FlowBuilder):
     task = builder.task("delete_platform", "accounts.platform.delete_account")
@@ -299,12 +302,13 @@ def _flow_delete_platform(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="accounts.persona.create",
-    title="Create Persona",
+    title="Create New Persona Profile",
+    description="Create a new persona with specific characteristics for content targeting",
     input_model=PersonaCreateCommand,
     output_model=PersonaOut,
     method="post",
     path="/accounts/personas",
-    tags=("accounts",),
+    tags=("accounts", "persona", "create", "audience", "targeting"),
 )
 def _flow_create_persona(builder: FlowBuilder):
     task = builder.task("create_persona", "accounts.persona.create_persona")
@@ -313,12 +317,13 @@ def _flow_create_persona(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="accounts.persona.update",
-    title="Update Persona",
+    title="Update Persona Profile",
+    description="Modify persona characteristics, demographics, or targeting preferences",
     input_model=PersonaUpdateCommand,
     output_model=PersonaOut,
     method="put",
     path="/accounts/personas/{persona_id}",
-    tags=("accounts",),
+    tags=("accounts", "persona", "update", "audience", "targeting"),
 )
 def _flow_update_persona(builder: FlowBuilder):
     task = builder.task("update_persona", "accounts.persona.update_persona")
@@ -327,12 +332,13 @@ def _flow_update_persona(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="accounts.persona.delete",
-    title="Delete Persona",
+    title="Remove Persona Profile",
+    description="Permanently delete a persona and all associated targeting data",
     input_model=PersonaDeleteCommand,
     output_model=MessageOut,
     method="delete",
     path="/accounts/personas/{persona_id}",
-    tags=("accounts",),
+    tags=("accounts", "persona", "delete", "audience", "targeting", "dangerous"),
 )
 def _flow_delete_persona(builder: FlowBuilder):
     task = builder.task("delete_persona", "accounts.persona.delete_persona")
@@ -341,12 +347,13 @@ def _flow_delete_persona(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="accounts.link.create",
-    title="Link Persona Account",
+    title="Connect Persona to Platform Account",
+    description="Link a persona profile to a specific platform account for targeted content",
     input_model=PersonaAccountLinkCommand,
     output_model=PersonaAccountOut,
     method="post",
     path="/accounts/persona-account-links",
-    tags=("accounts",),
+    tags=("accounts", "persona", "platform", "link", "targeting"),
 )
 def _flow_link_persona_account(builder: FlowBuilder):
     task = builder.task("link_persona_account", "accounts.link.create_link")
@@ -355,12 +362,13 @@ def _flow_link_persona_account(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="accounts.link.delete",
-    title="Unlink Persona Account",
+    title="Disconnect Persona from Platform Account",
+    description="Remove the connection between a persona and a platform account",
     input_model=PersonaAccountUnlinkCommand,
     output_model=MessageOut,
     method="delete",
     path="/accounts/persona-account-links/{persona_id}/{account_id}",
-    tags=("accounts",),
+    tags=("accounts", "persona", "platform", "unlink", "targeting"),
 )
 def _flow_unlink_persona_account(builder: FlowBuilder):
     task = builder.task("unlink_persona_account", "accounts.link.unlink")

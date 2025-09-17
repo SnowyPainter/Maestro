@@ -1,12 +1,28 @@
 import { useState } from "react";
-import { useBffDraftsReadDraftApiBffDraftsDraftIdGet } from "@/lib/api/generated";
+import {
+  useBffDraftsReadDraftApiBffDraftsDraftIdGet,
+  useDraftsDeleteApiOrchestratorDraftsDraftIdDelete,
+  getBffDraftsListDraftsApiBffDraftsGetQueryKey
+} from "@/lib/api/generated";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { components } from "@/lib/types/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { EditDraftForm } from "@/features/drafts/components/EditDraftForm";
 import { Badge } from "@/components/ui/badge";
+import { useQueryClient } from "@tanstack/react-query";
 
 type DraftIR = components["schemas"]["DraftIR"];
 
@@ -20,7 +36,17 @@ function renderBlock(block: DraftIR['blocks'][0], index: number) {
 
 export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: () => void }) {
   const [isEditing, setIsEditing] = useState(false);
+  const queryClient = useQueryClient();
   const { data: draft, isLoading, isError } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(draftId);
+
+  const { mutate: deleteDraft, isPending: isDeleting } = useDraftsDeleteApiOrchestratorDraftsDraftIdDelete({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getBffDraftsListDraftsApiBffDraftsGetQueryKey() });
+        onDelete();
+      },
+    }
+  });
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
@@ -38,6 +64,10 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
       </Card>
     );
   }
+
+  const handleDelete = () => {
+    deleteDraft({ draftId });
+  };
 
   return (
     <Card>
@@ -77,6 +107,26 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
                 <EditDraftForm draft={draft} onSuccess={() => setIsEditing(false)} />
             </DialogContent>
         </Dialog>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" disabled={isDeleting}>
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete this
+                draft and all its associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );

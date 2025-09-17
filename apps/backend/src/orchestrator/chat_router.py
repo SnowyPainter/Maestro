@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, ValidationError
 
 from .cards import card_type_for_model, serialize_payload
 from .dispatch import ExecutionRuntime, orchestrate_flow, runtime_dependency
-from .nlp import IntentResult, nlp_engine
-from .planner import ChatPlan, flow_planner
-from .registry import FLOWS, FlowDefinition
+from .nlp import IntentCandidate, IntentResult
+from .planner import ChatPlan, FlowMatch, flow_planner
+from .registry import FLOWS
 
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -29,8 +29,19 @@ class ChatCard(BaseModel):
     source_flow: Optional[str] = None
 
 
+class FlowMatchSummary(BaseModel):
+    key: str
+    title: str
+    score: float
+    strategy: Literal["embedding", "keyword"]
+    description: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+
+
 class ChatResponse(BaseModel):
     intent: IntentResult
+    match: Optional[FlowMatchSummary] = None
+    alternative_matches: List[FlowMatchSummary] = Field(default_factory=list)
     plan_notes: Optional[str] = None
     cards: List[ChatCard] = Field(default_factory=list)
     messages: List[str] = Field(default_factory=list)
@@ -50,9 +61,8 @@ async def chat_query(
     payload: ChatQuery,
     runtime: ExecutionRuntime = Depends(runtime_dependency),
 ) -> ChatResponse:
-    intent = nlp_engine.parse(payload.message)
-    plan = await flow_planner.plan(payload.message, intent)
-    response = await _execute_plan(plan, runtime)
+    plan = await flow_planner.plan(payload.message)
+    response = await _execute_plan(payload.message, plan, runtime)
     return response
 
 
@@ -73,8 +83,13 @@ async def get_available_flows() -> List[FlowInfo]:
     ]
 
 
-async def _execute_plan(plan: ChatPlan, runtime: ExecutionRuntime) -> ChatResponse:
-    response = ChatResponse(intent=plan.intent, plan_notes=plan.notes)
+async def _execute_plan(message: str, plan: ChatPlan, runtime: ExecutionRuntime) -> ChatResponse:
+    intent = _intent_from_plan(message, plan)
+    response = ChatResponse(intent=intent, plan_notes=plan.notes)
+    if plan.primary_match:
+        response.match = _summarize_match(plan.primary_match)
+    if plan.alternatives:
+        response.alternative_matches = [_summarize_match(match) for match in plan.alternatives]
     response.messages.extend(plan.messages)
 
     for step in plan.steps:
@@ -121,6 +136,35 @@ async def _execute_plan(plan: ChatPlan, runtime: ExecutionRuntime) -> ChatRespon
         response.messages.append("No actions were executed for this request.")
 
     return response
+
+
+def _intent_from_plan(message: str, plan: ChatPlan) -> IntentResult:
+    intent_key = plan.primary_match.flow.key if plan.primary_match else "unknown"
+    confidence = plan.primary_match.score if plan.primary_match else 0.0
+    candidates = [
+        IntentCandidate(intent=match.flow.key, confidence=match.score)
+        for match in plan.alternatives[:3]
+    ]
+    return IntentResult(
+        intent=intent_key,
+        confidence=confidence,
+        candidates=candidates,
+        slots=plan.slots,
+        raw_text=message,
+        keywords=[],
+    )
+
+
+def _summarize_match(match: FlowMatch) -> FlowMatchSummary:
+    flow = match.flow
+    return FlowMatchSummary(
+        key=flow.key,
+        title=flow.title,
+        description=flow.description,
+        tags=list(flow.tags),
+        score=match.score,
+        strategy=match.strategy,
+    )
 
 
 __all__ = ["router"]
