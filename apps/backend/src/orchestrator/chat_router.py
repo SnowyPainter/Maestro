@@ -104,6 +104,10 @@ async def _execute_plan(plan: ChatPlan, runtime: ExecutionRuntime) -> ChatRespon
 
         card_type = step.card_hint or card_type_for_model(flow.output_model)
         card_data = serialize_payload(result)
+        
+        if isinstance(card_data, list):
+            card_data = {"items": card_data}
+        
         response.cards.append(
             ChatCard(
                 card_type=card_type,
