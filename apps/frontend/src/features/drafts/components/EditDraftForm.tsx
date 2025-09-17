@@ -67,7 +67,7 @@ export function EditDraftForm({ draft, onSuccess }: { draft: DraftOut, onSuccess
         <label htmlFor="text">Content</label>
         <Textarea
           id="text"
-          value={text}
+          value={text as string}
           onChange={(e) => setText(e.target.value)}
           placeholder="Start writing your draft..."
           required

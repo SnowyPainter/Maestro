@@ -9,11 +9,24 @@ from pydantic import BaseModel
 
 
 CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
-    "CampaignKPIResultOut": "campaign_kpi",
-    "CampaignKPIDefListOut": "campaign_kpi_def",
-    "DraftOut": "draft",
-    "PersonaOut": "persona",
-    "TrendsListResponse": "trends",
+    "CampaignKPIResultOut": "campaign.kpi",
+    "CampaignKPIDefListOut": "campaign.kpi_def",
+    "CampaignOut": "campaign.detail",
+    "CampaignList": "campaign.list",
+
+    "DraftOut": "draft.detail",
+    "DraftList": "draft.list",
+    "DraftVariantList": "draft.variant.list",
+    "DraftVariantOut": "draft.variant.detail",
+
+
+    "PersonaOut": "account.persona.detail",
+    "PersonaList": "account.persona.list",
+    "PlatformAccountOut": "account.pa.detail",
+    "PlatformAccountList": "account.pa.list",
+
+    "TrendsListResponse": "trends.list",
+    
     "MessageOut": "info",
 }
 

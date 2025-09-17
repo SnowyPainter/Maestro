@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Message } from "@/pages/ChatPage/ChatPage";
+import { Message } from "@/entities/messages/context/ChatMessagesContext";
 
 const MAX_MESSAGE_LENGTH = 500;
 
