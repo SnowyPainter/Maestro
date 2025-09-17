@@ -61,7 +61,7 @@ router = FLOWS.build_router(
     prefix="",
     tags=["insights"],
     runtime_dependency=runtime_dependency,
-    flow_filter=lambda flow: "insights" in flow.tags,
+    flow_filter=lambda flow: "insights" in flow.tags and "internal" not in flow.tags,
 )
 
 
