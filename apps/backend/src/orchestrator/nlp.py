@@ -43,6 +43,7 @@ INTENT_KEYWORD_OVERRIDES: Dict[str, Sequence[str]] = {
     "campaigns.aggregate_kpis": ["kpi", "performance", "metrics"],
     "campaigns.record_kpi_result": ["record", "log", "metric"],
     "drafts.create": ["draft", "copy", "content"],
+    "bff.trends.list_trends": ["trend", "trending", "popular", "hot", "viral", "buzz", "topics", "insights", "analysis"],
 }
 
 
@@ -50,6 +51,12 @@ class NlpEngine:
     """Extremely lightweight intent parser built for English utterances."""
 
     CAMPAIGN_PATTERN = re.compile(r"(?:campaign|campaigns|camp)\s*(\d+)|#(\d+)", re.IGNORECASE)
+    TREND_PATTERN = re.compile(r"(?:trend|trending|popular|hot|viral|buzz|topic)", re.IGNORECASE)
+    SEARCH_PATTERN = re.compile(r"@(\w+)", re.IGNORECASE)
+    COUNTRY_PATTERN = re.compile(r"(?:in|for|from)\s+(US|USA|United States|UK|United Kingdom|CA|Canada|AU|Australia|DE|Germany|FR|France|JP|Japan|KR|South Korea)", re.IGNORECASE)
+    LIMIT_PATTERN = re.compile(r"(?:top|limit|show)\s+(\d+)", re.IGNORECASE)
+    DATE_RANGE_PATTERN = re.compile(r"(?:from|since|after)\s+(.+?)\s+(?:to|until|before)\s+(.+?)(?:\s|$)", re.IGNORECASE)
+
     LABEL_STOPWORDS: Set[str] = {
         "id",
         "ids",
@@ -184,6 +191,12 @@ class NlpEngine:
                         keywords=["draft", "create"],
                         base_confidence=0.5,
                     ),
+                    _IntentRule(
+                        intent="bff.trends.list_trends",
+                        keywords=["trend", "trending", "popular", "hot", "viral", "buzz"],
+                        base_confidence=0.7,
+                        boost_per_keyword=0.1,
+                    ),
                 ]
             )
         return rules
@@ -226,6 +239,80 @@ class NlpEngine:
             return parsed.date().isoformat()
         return None
 
+    def _extract_country(self, text: str) -> Optional[str]:
+        """Extract country code from trend queries."""
+        match = self.COUNTRY_PATTERN.search(text)
+        if match:
+            country_map = {
+                "US": "US", "USA": "US", "United States": "US",
+                "UK": "UK", "United Kingdom": "UK",
+                "CA": "CA", "Canada": "CA",
+                "AU": "AU", "Australia": "AU",
+                "DE": "DE", "Germany": "DE",
+                "FR": "FR", "France": "FR",
+                "JP": "JP", "Japan": "JP",
+                "KR": "KR", "South Korea": "KR"
+            }
+            return country_map.get(match.group(1), "US")
+        return None
+
+    def _extract_limit(self, text: str) -> Optional[int]:
+        """Extract limit number from queries like 'top 10', 'show 20', 'limit 5'."""
+        match = self.LIMIT_PATTERN.search(text)
+        if match:
+            try:
+                limit = int(match.group(1))
+                return min(limit, 100)  # Cap at 100
+            except ValueError:
+                pass
+        return None
+
+    def _extract_date_range(self, text: str) -> Optional[Dict[str, str]]:
+        """Extract date range from queries like 'from yesterday to today'."""
+        match = self.DATE_RANGE_PATTERN.search(text)
+        if match:
+            since_text, until_text = match.groups()
+            since_date = dateparser.parse(since_text)
+            until_date = dateparser.parse(until_text)
+
+            if since_date and until_date:
+                return {
+                    "since": since_date.date().isoformat(),
+                    "until": until_date.date().isoformat()
+                }
+        return None
+
+    def _extract_single_date(self, text: str) -> Optional[str]:
+        """Extract single date for on_date field, avoiding conflicts with ranges."""
+        # Skip if date range is present
+        if self.DATE_RANGE_PATTERN.search(text):
+            return None
+
+        # Look for specific date mentions
+        date_indicators = ["on", "for", "during", "at"]
+        lowered = text.lower()
+
+        for indicator in date_indicators:
+            if f" {indicator} " in lowered:
+                # Extract text after the indicator
+                parts = lowered.split(f" {indicator} ", 1)
+                if len(parts) > 1:
+                    date_part = parts[1].split()[0]  # Take first word after indicator
+                    parsed = dateparser.parse(date_part)
+                    if parsed:
+                        return parsed.date().isoformat()
+        return None
+
+    def _extract_search_terms(self, text: str) -> Optional[str]:
+        """Extract search terms from @ prefixed words in trend requests."""
+        matches = self.SEARCH_PATTERN.findall(text)
+        if matches:
+            # Take the first search term and clean it up
+            search_term = matches[0].strip()
+            if search_term and len(search_term) > 1:  # Avoid single character terms
+                return search_term
+        return None
+
     def _tokenize(self, text: str) -> List[str]:
         return [token for token in re.findall(r"[a-z0-9]+", text.lower()) if token]
 
@@ -239,6 +326,30 @@ class NlpEngine:
         as_of = self._extract_temporal_slot(text)
         if as_of:
             slots["as_of"] = as_of
+
+        # Extract trend-related slots
+        country = self._extract_country(text)
+        if country:
+            slots["country"] = country
+
+        limit = self._extract_limit(text)
+        if limit:
+            slots["limit"] = limit
+
+        date_range = self._extract_date_range(text)
+        if date_range:
+            slots["since"] = date_range["since"]
+            slots["until"] = date_range["until"]
+        else:
+            # Single date extraction for on_date
+            single_date = self._extract_single_date(text)
+            if single_date:
+                slots["on_date"] = single_date
+
+        # Extract query terms for trends using @ prefix
+        search_terms = self._extract_search_terms(text)
+        if search_terms:
+            slots["q"] = search_terms
 
         return slots
 
@@ -282,6 +393,24 @@ class NlpEngine:
 
         if any(token in name for token in ("as_of", "date", "day")):
             return existing.get("as_of") or self._extract_temporal_slot(message)
+
+        # Trend-specific slot inference
+        if name == "country":
+            return existing.get("country") or self._extract_country(message)
+
+        if name == "limit":
+            return existing.get("limit") or self._extract_limit(message)
+
+        if name in ("since", "until"):
+            date_range = self._extract_date_range(message)
+            if date_range:
+                return date_range[name]
+
+        if name == "on_date":
+            return existing.get("on_date") or self._extract_single_date(message)
+
+        if name == "q":
+            return existing.get("q") or self._extract_search_terms(message)
 
         if expects_int:
             labeled = self._extract_labeled_ids(message, label_candidates)
