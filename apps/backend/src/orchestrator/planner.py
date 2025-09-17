@@ -7,7 +7,7 @@ import logging
 import math
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Sequence
+from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, Tuple
 
 import re
 
@@ -28,8 +28,11 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PlanExecutionStep:
+    id: Optional[str]
     kind: Literal["flow", "dynamic"]
-    payload: Dict[str, Any]
+    payload: Dict[str, Any] = field(default_factory=dict)
+    payload_builder: Optional[Callable[[Mapping[str, Any]], Dict[str, Any]]] = None
+    depends_on: Tuple[str, ...] = field(default_factory=tuple)
     flow_key: Optional[str] = None
     flow: Optional[FlowDefinition] = None
     title: Optional[str] = None
@@ -183,6 +186,12 @@ class FlowPlanner:
         self._matcher = FlowMatcher()
 
     async def plan(self, message: str) -> ChatPlan:
+        segments = self._split_compound_message(message)
+        if len(segments) > 1:
+            return await self._plan_segments(message, segments)
+        return await self._plan_single(message)
+
+    async def _plan_single(self, message: str) -> ChatPlan:
         matches = await self._matcher.search(message, top_k=5)
         if not matches:
             return ChatPlan(steps=[], messages=self._no_match_messages(message), notes=None)
@@ -192,6 +201,7 @@ class FlowPlanner:
             slots = self._extract_flow_slots(match.flow, message)
             steps = self._build_flow_steps(match.flow, slots, message)
             if steps:
+                self._ensure_step_ids(steps)
                 notes = (
                     f"Matched flow '{match.flow.title}' via {match.strategy} search "
                     f"(score {match.score:.2f})."
@@ -203,21 +213,151 @@ class FlowPlanner:
                     notes=notes,
                     primary_match=match,
                     slots=slots,
-                    alternatives=alternatives,
+                    alternatives=self._trim_alternatives(alternatives, match),
                 )
             if not attempted_slots:
                 attempted_slots = slots
 
-        # No flow produced a valid payload; surface the candidates so the UI can react.
         suggestions = self._no_match_messages(message, matches=matches)
         return ChatPlan(
             steps=[],
             messages=suggestions,
             notes=None,
             primary_match=matches[0],
-            alternatives=matches[1:],
+            alternatives=self._trim_alternatives(matches[1:], matches[0]),
             slots=attempted_slots,
         )
+
+    async def _plan_segments(self, original: str, segments: List[str]) -> ChatPlan:
+        combined_steps: List[PlanExecutionStep] = []
+        messages: List[str] = []
+        notes: List[str] = []
+        primary_match: Optional[FlowMatch] = None
+        alternatives: List[FlowMatch] = []
+        merged_slots: Dict[str, Any] = {}
+        step_counter = 0
+
+        for index, segment in enumerate(segments, start=1):
+            segment_text = segment.strip()
+            if not segment_text:
+                continue
+
+            segment_plan = await self._plan_single(segment_text)
+            merged_slots.update(segment_plan.slots)
+            if segment_plan.primary_match and primary_match is None:
+                primary_match = segment_plan.primary_match
+            alternatives.extend(segment_plan.alternatives)
+
+            if segment_plan.steps:
+                label = (
+                    segment_plan.notes
+                    or f"Step {index}: matched {segment_plan.primary_match.flow.key if segment_plan.primary_match else 'flow'}"
+                )
+                notes.append(label)
+                self._ensure_step_ids(segment_plan.steps, start=step_counter + 1, force=True)
+                step_counter += len(segment_plan.steps)
+                combined_steps.extend(segment_plan.steps)
+            else:
+                prefix = f"segment {index} ('{segment_text}')"
+                if segment_plan.messages:
+                    messages.extend(f"{prefix}: {msg}" for msg in segment_plan.messages)
+                else:
+                    messages.append(f"{prefix}: no executable flow identified")
+
+        if not combined_steps:
+            return ChatPlan(
+                steps=[],
+                messages=messages or self._no_match_messages(original),
+                notes=None,
+                primary_match=primary_match,
+                slots=merged_slots,
+                alternatives=self._trim_alternatives(alternatives, primary_match),
+            )
+
+        self._apply_flow_adapters(combined_steps)
+        note_text = "\n".join(note for note in notes if note)
+        return ChatPlan(
+            steps=combined_steps,
+            messages=messages,
+            notes=note_text or None,
+            primary_match=primary_match,
+            slots=merged_slots,
+            alternatives=self._trim_alternatives(alternatives, primary_match),
+        )
+
+    def _split_compound_message(self, message: str) -> List[str]:
+        pattern = re.compile(
+            r"(?i)\b(?:and then|then|and)\b|[,;]|(?:그리고|그다음|그 다음|이후에)"
+        )
+        segments: List[str] = []
+        last_index = 0
+        for match in pattern.finditer(message):
+            segment = message[last_index : match.start()].strip(" .,;")
+            if segment:
+                segments.append(segment)
+            last_index = match.end()
+        tail = message[last_index:].strip(" .,;")
+        if tail:
+            segments.append(tail)
+        return segments if len(segments) > 1 else [message]
+
+    def _ensure_step_ids(
+        self,
+        steps: List[PlanExecutionStep],
+        *,
+        start: int = 1,
+        force: bool = False,
+    ) -> None:
+        for offset, step in enumerate(steps, start=start):
+            if force or step.id is None:
+                step.id = f"step{offset}"
+
+    def _trim_alternatives(
+        self,
+        candidates: List[FlowMatch],
+        primary: Optional[FlowMatch],
+        *,
+        limit: int = 5,
+    ) -> List[FlowMatch]:
+        seen: set[str] = set()
+        if primary:
+            seen.add(primary.flow.key)
+        unique: List[FlowMatch] = []
+        for match in candidates:
+            if match.flow.key in seen:
+                continue
+            seen.add(match.flow.key)
+            unique.append(match)
+            if len(unique) >= limit:
+                break
+        return unique
+
+    def _apply_flow_adapters(self, steps: List[PlanExecutionStep]) -> None:
+        if len(steps) < 2:
+            return
+        try:
+            from .adapters import FLOW_ADAPTERS
+        except ImportError:  # pragma: no cover - adapters optional during tests
+            FLOW_ADAPTERS = {}
+
+        for previous, current in zip(steps, steps[1:]):
+            if previous.flow_key is None or current.flow_key is None:
+                continue
+            if current.payload_builder is not None:
+                continue
+            adapter = FLOW_ADAPTERS.get((previous.flow_key, current.flow_key))
+            if adapter is None:
+                continue
+            prev_id = previous.id or previous.flow_key
+            base_payload = dict(current.payload)
+
+            def builder(result_map: Mapping[str, Any], *, _adapter=adapter, _prev_id=prev_id, _base=base_payload) -> Dict[str, Any]:
+                if _prev_id not in result_map:
+                    raise KeyError(f"Missing result for step '{_prev_id}'")
+                return _adapter(result_map[_prev_id], dict(_base))
+
+            current.payload_builder = builder
+            current.depends_on = tuple(sorted(set(current.depends_on + (prev_id,))))
 
     def _build_flow_steps(
         self,
@@ -231,6 +371,7 @@ class FlowPlanner:
         if payload is not None:
             return [
                 PlanExecutionStep(
+                    id=None,
                     kind="flow",
                     flow_key=flow.key,
                     payload=payload,
@@ -251,6 +392,7 @@ class FlowPlanner:
                 title = f"Campaign #{cid}"
                 steps.append(
                     PlanExecutionStep(
+                        id=None,
                         kind="flow",
                         flow_key=flow.key,
                         payload=payload,

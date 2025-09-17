@@ -92,7 +92,19 @@ async def _execute_plan(message: str, plan: ChatPlan, runtime: ExecutionRuntime)
         response.alternative_matches = [_summarize_match(match) for match in plan.alternatives]
     response.messages.extend(plan.messages)
 
+    results_by_step: Dict[str, Any] = {}
+
     for step in plan.steps:
+        step_label = step.title or step.flow_key or step.id or "dynamic"
+
+        if step.depends_on:
+            missing = [dep for dep in step.depends_on if dep not in results_by_step]
+            if missing:
+                response.messages.append(
+                    f"Skipping step '{step_label}' because dependencies {missing} are unavailable."
+                )
+                continue
+
         try:
             if step.kind == "flow":
                 assert step.flow_key is not None
@@ -100,15 +112,22 @@ async def _execute_plan(message: str, plan: ChatPlan, runtime: ExecutionRuntime)
             else:
                 assert step.flow is not None
                 flow = step.flow
-
-            payload_model = flow.input_model(**step.payload)
+            payload_data: Any = dict(step.payload)
+            if step.payload_builder is not None:
+                payload_data = step.payload_builder(results_by_step)
+            if isinstance(payload_data, BaseModel):
+                payload_data = payload_data.model_dump()
+            payload_model = flow.input_model(**payload_data)
         except ValidationError as exc:
             response.messages.append(
-                f"Unable to build request for step '{step.title or step.flow_key or 'dynamic'}': {exc.errors()[0].get('msg', 'validation error')}"
+                f"Unable to build request for step '{step_label}': {exc.errors()[0].get('msg', 'validation error')}"
             )
             continue
         except KeyError:
             response.messages.append(f"Flow '{step.flow_key}' is not available anymore.")
+            continue
+        except Exception as exc:
+            response.messages.append(f"Failed to prepare payload for step '{step_label}': {exc}")
             continue
 
         try:
@@ -117,9 +136,11 @@ async def _execute_plan(message: str, plan: ChatPlan, runtime: ExecutionRuntime)
             response.messages.append(f"Failed to execute {flow.key}: {exc}")
             continue
 
+        results_by_step[step.id or flow.key] = result
+
         card_type = step.card_hint or card_type_for_model(flow.output_model)
         card_data = serialize_payload(result)
-        
+
         if isinstance(card_data, list):
             card_data = {"items": card_data}
         
