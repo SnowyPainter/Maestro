@@ -6,25 +6,28 @@ interface TableCardProps {
 }
 
 export function TableCard({ title, data }: TableCardProps) {
+  // 실제 테이블 데이터는 data.items에 있음
+  const tableData = data?.items || data;
+  
   // 데이터가 배열인지 확인
-  if (!Array.isArray(data) || data.length === 0) {
+  if (!Array.isArray(tableData) || tableData.length === 0) {
     return (
-      <Card className="w-full max-w-4xl">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-lg">{title || "Data Table"}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No data available</p>
+          <p className="text-muted-foreground text-sm">No data available</p>
         </CardContent>
       </Card>
     );
   }
 
   // 첫 번째 아이템의 키들을 헤더로 사용
-  const headers = Object.keys(data[0]);
+  const headers = Object.keys(tableData[0]);
 
   return (
-    <Card className="w-full max-w-4xl">
+    <Card className="w-full max-w-2xl">
       {title && (
         <CardHeader>
           <CardTitle className="text-lg">{title}</CardTitle>
@@ -32,21 +35,21 @@ export function TableCard({ title, data }: TableCardProps) {
       )}
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-border">
+          <table className="w-full border-collapse border border-border text-xs">
             <thead>
-              <tr className="border-b border-border">
+              <tr className="border-b border-border bg-muted/50">
                 {headers.map((header) => (
-                  <th key={header} className="text-left p-2 font-semibold border-r border-border last:border-r-0">
+                  <th key={header} className="text-left p-2 font-semibold border-r border-border last:border-r-0 text-xs">
                     {header.charAt(0).toUpperCase() + header.slice(1).replace(/_/g, ' ')}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {data.map((row, index) => (
-                <tr key={index} className="border-b border-border last:border-b-0">
+              {tableData.map((row, index) => (
+                <tr key={index} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
                   {headers.map((header) => (
-                    <td key={header} className="p-2 max-w-xs truncate border-r border-border last:border-r-0">
+                    <td key={header} className="p-2 max-w-xs truncate border-r border-border last:border-r-0 text-xs">
                       {typeof row[header] === 'object'
                         ? JSON.stringify(row[header])
                         : String(row[header] || '-')
@@ -58,8 +61,8 @@ export function TableCard({ title, data }: TableCardProps) {
             </tbody>
           </table>
         </div>
-        <div className="mt-2 text-sm text-muted-foreground">
-          {data.length} {data.length === 1 ? 'row' : 'rows'}
+        <div className="mt-2 text-xs text-muted-foreground">
+          {tableData.length} {tableData.length === 1 ? 'row' : 'rows'}
         </div>
       </CardContent>
     </Card>

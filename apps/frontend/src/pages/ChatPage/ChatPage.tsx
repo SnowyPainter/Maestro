@@ -12,6 +12,18 @@ import { InfoCard } from "@/entities/messages/components/InfoCard";
 import { GenericCard } from "@/entities/messages/components/GenericCard";
 import { ChatCard, TrendsListResponse } from "@/lib/api/generated";
 import { useChatQueryApiOrchestratorChatQueryPost, useGetAvailableFlowsApiOrchestratorChatFlowsGet } from "@/lib/api/generated";
+import { CampaignToolCard } from "@/features/campaigns/components/CampaignToolCard";
+import { CreateCampaignForm } from "@/features/campaigns/components/CreateCampaignForm";
+import { CampaignList } from "@/entities/campaigns/components/CampaignList";
+import { CampaignDetail } from "@/entities/campaigns/components/CampaignDetail";
+import { DraftToolCard } from "@/features/drafts/components/DraftToolCard";
+import { CreateDraftForm } from "@/features/drafts/components/CreateDraftForm";
+import { DraftList } from "@/entities/drafts/components/DraftList";
+import { DraftDetail } from "@/entities/drafts/components/DraftDetail";
+import { PersonaToolCard } from "@/features/personas/components/PersonaToolCard";
+import { CreatePersonaForm } from "@/features/personas/components/CreatePersonaForm";
+import { PersonaList } from "@/entities/personas/components/PersonaList";
+import { PersonaDetail } from "@/entities/personas/components/PersonaDetail";
 
 export type Message = {
     id: number;
@@ -123,20 +135,146 @@ export function ChatPage() {
   };
 
   const addTrendQueryCard = () => {
-    // Prevent adding multiple query cards
-    if (messages.some(m => m.type === 'card' && (m.content as React.ReactElement).type === TrendQueryCard)) {
-        return;
-    }
-    setMessages(prev => [...prev, { id: Date.now(), type: 'card', content: <TrendQueryCard onSubmit={handleTrendQuerySubmit} /> }]);
+    setMessages(prev => {
+        const newMessages = prev.filter(m => m.type !== 'card' || (m.content as React.ReactElement).type !== TrendQueryCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <TrendQueryCard onSubmit={handleTrendQuerySubmit} /> }];
+    });
   }
 
   const clearChat = () => {
     setMessages([]);
   }
 
+  const handleCardDelete = (messageId: number) => {
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  }
+
+  // Campaign Handlers
+  const handleNewCampaign = () => {
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== CampaignToolCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <CreateCampaignForm onSuccess={handleCampaignCreateSuccess} /> }];
+    });
+  }
+
+  const handleSelectCampaign = () => {
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== CampaignToolCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <CampaignList onSelectCampaign={handleCampaignSelect} /> }];
+    });
+  }
+
+  const handleCampaignCreateSuccess = (campaignId: number) => {
+    const messageId = Date.now();
+    const cardContent = <CampaignDetail campaignId={campaignId} onDelete={() => handleCardDelete(messageId)} />;
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== CreateCampaignForm);
+        return [...newMessages, { id: messageId, type: 'card', content: cardContent }];
+    });
+  }
+
+  const handleCampaignSelect = (campaignId: number) => {
+    const messageId = Date.now();
+    const cardContent = <CampaignDetail campaignId={campaignId} onDelete={() => handleCardDelete(messageId)} />;
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== CampaignList);
+        return [...newMessages, { id: messageId, type: 'card', content: cardContent }];
+    });
+  }
+
+  // Draft Handlers
+  const handleNewDraft = () => {
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== DraftToolCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <CreateDraftForm onSuccess={handleDraftCreateSuccess} /> }];
+    });
+  }
+
+  const handleSelectDraft = () => {
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== DraftToolCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <DraftList onSelectDraft={handleDraftSelect} /> }];
+    });
+  }
+
+  const handleDraftCreateSuccess = (draftId: number) => {
+    const messageId = Date.now();
+    const cardContent = <DraftDetail draftId={draftId} onDelete={() => handleCardDelete(messageId)} />;
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== CreateDraftForm);
+        return [...newMessages, { id: messageId, type: 'card', content: cardContent }];
+    });
+  }
+
+  const handleDraftSelect = (draftId: number) => {
+    const messageId = Date.now();
+    const cardContent = <DraftDetail draftId={draftId} onDelete={() => handleCardDelete(messageId)} />;
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== DraftList);
+        return [...newMessages, { id: messageId, type: 'card', content: cardContent }];
+    });
+  }
+
+  // Persona Handlers
+  const handleNewPersona = () => {
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== PersonaToolCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <CreatePersonaForm onSuccess={handlePersonaCreateSuccess} /> }];
+    });
+  }
+
+  const handleSelectPersona = () => {
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== PersonaToolCard);
+        return [...newMessages, { id: Date.now(), type: 'card', content: <PersonaList onSelectPersona={handlePersonaSelect} /> }];
+    });
+  }
+
+  const handlePersonaCreateSuccess = (personaId: number) => {
+    const messageId = Date.now();
+    const cardContent = <PersonaDetail personaId={personaId} onDelete={() => handleCardDelete(messageId)} />;
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== CreatePersonaForm);
+        return [...newMessages, { id: messageId, type: 'card', content: cardContent }];
+    });
+  }
+
+  const handlePersonaSelect = (personaId: number) => {
+    const messageId = Date.now();
+    const cardContent = <PersonaDetail personaId={personaId} onDelete={() => handleCardDelete(messageId)} />;
+    setMessages(prev => {
+        const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== PersonaList);
+        return [...newMessages, { id: messageId, type: 'card', content: cardContent }];
+    });
+  }
+
+  const handleToolClick = (toolId: string) => {
+    switch (toolId) {
+        case 'campaigns':
+            setMessages(prev => {
+                const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== CampaignToolCard);
+                return [...newMessages, { id: Date.now(), type: 'card', content: <CampaignToolCard onNew={handleNewCampaign} onSelect={handleSelectCampaign} /> }];
+            });
+            break;
+        case 'draft':
+            setMessages(prev => {
+                const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== DraftToolCard);
+                return [...newMessages, { id: Date.now(), type: 'card', content: <DraftToolCard onNew={handleNewDraft} onSelect={handleSelectDraft} /> }];
+            });
+            break;
+        case 'personas':
+            setMessages(prev => {
+                const newMessages = prev.filter(m => (m.content as React.ReactElement).type !== PersonaToolCard);
+                return [...newMessages, { id: Date.now(), type: 'card', content: <PersonaToolCard onNew={handleNewPersona} onSelect={handleSelectPersona} /> }];
+            });
+            break;
+        // Add cases for 'platforms' here later
+    }
+  }
+
   return (
     <div className="grid md:grid-cols-[256px_1fr] lg:grid-cols-[256px_1fr_280px] h-screen bg-muted/20">
-      <ChatSidebar onQueryTrendsClick={addTrendQueryCard} onNewChatClick={clearChat} flows={flows} />
+      <ChatSidebar onQueryTrendsClick={addTrendQueryCard} onNewChatClick={clearChat} onToolClick={handleToolClick} />
       <ChatStream messages={messages} onSendMessage={handleChatSend} />
       <ChatContextPanel flows={flows} />
     </div>

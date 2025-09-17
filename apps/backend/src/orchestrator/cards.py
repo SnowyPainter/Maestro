@@ -19,7 +19,7 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
 
 CARD_TYPE_RULES: Sequence[Tuple[re.Pattern[str], str]] = (
     (re.compile(r"kpi|metric|chart", re.IGNORECASE), "chart"),
-    (re.compile(r"draft|copy|editor", re.IGNORECASE), "editor"),
+    (re.compile(r"copy|editor", re.IGNORECASE), "editor"),
     (re.compile(r"list|series|collection", re.IGNORECASE), "table"),
     (re.compile(r"persona|profile|user", re.IGNORECASE), "profile"),
 )

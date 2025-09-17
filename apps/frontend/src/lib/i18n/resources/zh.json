@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "chat": "聊天",
+    "timeline": "时间线",
+    "calendar": "日历",
+    "monitoring": "监控",
+    "trends": "趋势",
+    "settings": "设置"
+  },
+  "actions": {
+    "publish": "发布",
+    "schedule": "排程",
+    "delete": "删除",
+    "edit": "编辑"
+  }
+}

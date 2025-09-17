@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Settings, BarChart3, MessageSquare, Calendar, FileText } from "lucide-react";
+import { Settings, BarChart3, MessageSquare, Calendar, FileText, Users, Plug, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/Logo";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -12,7 +12,10 @@ const initialTools = [
     { id: 'new-chat', title: 'New Chat', icon: <MessageSquare className="w-5 h-5 text-primary" /> },
     { id: 'query-trends', title: 'Query Trends', icon: <BarChart3 className="w-5 h-5 text-primary" /> },
     { id: 'schedule', title: 'Schedule', icon: <Calendar className="w-5 h-5 text-primary" /> },
-    { id: 'draft', title: 'Draft', icon: <FileText className="w-5 h-5 text-primary" /> },
+    { id: 'draft', title: 'Drafts', icon: <FileText className="w-5 h-5 text-primary" /> },
+    { id: 'campaigns', title: 'Campaigns', icon: <Volume2 className="w-5 h-5 text-primary" /> },
+    { id: 'personas', title: 'Personas', icon: <Users className="w-5 h-5 text-primary" /> },
+    { id: 'platforms', title: 'Platforms', icon: <Plug className="w-5 h-5 text-primary" /> },
 ];
 
 function SortableToolCard({ tool, onClick, ...props }: {
@@ -44,18 +47,18 @@ function SortableToolCard({ tool, onClick, ...props }: {
 export function ChatSidebar({
     onQueryTrendsClick,
     onNewChatClick,
-    flows
+    onToolClick,
 }: {
     onQueryTrendsClick: () => void,
     onNewChatClick: () => void,
-    flows?: any[]
+    onToolClick: (toolId: string) => void,
 }) {
     const [tools, setTools] = useState(initialTools);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 5, // Require the pointer to move by 5 pixels before activating a drag
+                distance: 5,
             },
         })
     );
@@ -65,12 +68,17 @@ export function ChatSidebar({
         if (savedToolsOrder) {
             try {
                 const toolOrder = JSON.parse(savedToolsOrder) as string[];
-                const savedTools = toolOrder.map(id => initialTools.find(t => t.id === id)).filter(Boolean);
-                if (savedTools.length === initialTools.length) {
-                    setTools(savedTools as typeof initialTools);
-                }
+                // Filter out any tools that are no longer in initialTools
+                const validSavedTools = toolOrder.map(id => initialTools.find(t => t.id === id)).filter(Boolean) as typeof initialTools;
+                // Add any new tools that weren't in the saved order
+                const newTools = initialTools.filter(t => !validSavedTools.some(st => st.id === t.id));
+                const finalTools = [...validSavedTools, ...newTools];
+                
+                setTools(finalTools);
+
             } catch (e) {
-                // ignore parsing errors
+                // ignore parsing errors and default to initialTools
+                setTools(initialTools);
             }
         }
     }, []);
@@ -92,12 +100,12 @@ export function ChatSidebar({
         switch(id) {
             case 'new-chat': return onNewChatClick;
             case 'query-trends': return onQueryTrendsClick;
-            default: return undefined;
+            default: return () => onToolClick(id);
         }
     }
 
     return (
-        <aside className="bg-muted/30 p-2 flex-col gap-3 w-64 border-r hidden md:flex">
+        <aside className="bg-muted/30 p-2 flex flex-col gap-3 w-64 border-r hidden md:flex">
             <div className="p-2">
                 <Logo />
             </div>
@@ -110,7 +118,9 @@ export function ChatSidebar({
                     </div>
                 </SortableContext>
             </DndContext>
+
             <div className="flex-1"></div>
+
             <div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -121,7 +131,14 @@ export function ChatSidebar({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="top" className="w-56">
                         <DropdownMenuItem asChild>
-                            <Link to="/settings">Go to Settings</Link>
+                            <Link to="/settings/platforms" className="flex items-center">
+                                <Plug className="w-4 h-4 mr-2" />
+                                <span>Platform Connections</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                            <Link to="/settings">All Settings</Link>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

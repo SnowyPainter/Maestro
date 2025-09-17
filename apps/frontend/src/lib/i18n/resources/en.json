@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "chat": "Chat",
+    "timeline": "Timeline",
+    "calendar": "Calendar",
+    "monitoring": "Monitoring",
+    "trends": "Trends",
+    "settings": "Settings"
+  },
+  "actions": {
+    "publish": "Publish",
+    "schedule": "Schedule",
+    "delete": "Delete",
+    "edit": "Edit"
+  }
+}

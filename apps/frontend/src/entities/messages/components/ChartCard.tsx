@@ -20,7 +20,7 @@ export function ChartCard({ title, data }: ChartCardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="text-3xl font-bold">{value}</div>
+            <div className="text-2xl font-bold">{value}</div>
             {change && (
               <div className="flex items-center gap-2 text-sm">
                 {trend === 'up' ? (
@@ -41,7 +41,7 @@ export function ChartCard({ title, data }: ChartCardProps) {
 
   // 일반 차트 데이터
   return (
-    <Card className="w-full max-w-4xl">
+    <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-primary" />

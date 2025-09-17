@@ -49,6 +49,7 @@ async def create_platform_account(
     db.add(acc)
     await db.flush()
     await db.refresh(acc)
+    await db.commit()
     return acc
 
 async def get_platform_account(
@@ -89,6 +90,7 @@ async def update_platform_account(
     db.add(account)
     await db.flush()
     await db.refresh(account)
+    await db.commit()
     return account
 
 async def delete_platform_account(
@@ -99,9 +101,11 @@ async def delete_platform_account(
         account.updated_at = _utcnow()
         db.add(account)
         await db.flush()
+        await db.commit()
     else:
         await db.delete(account)
         await db.flush()
+        await db.commit()
 
 
 # ------------------------
@@ -131,6 +135,7 @@ async def create_persona(db: AsyncSession, data: PersonaCreate) -> Persona:
     db.add(p)
     await db.flush()
     await db.refresh(p)
+    await db.commit()
     return p
 
 async def get_persona(
@@ -168,6 +173,7 @@ async def update_persona(
     db.add(persona)
     await db.flush()
     await db.refresh(persona)
+    await db.commit()
     return persona
 
 async def delete_persona(
@@ -176,6 +182,7 @@ async def delete_persona(
     # CASCADE로 PersonaAccount도 함께 제거됨 (FK ondelete="CASCADE")
     await db.delete(persona)
     await db.flush()
+    await db.commit()
 
 
 # ------------------------
@@ -205,6 +212,7 @@ async def link_persona_account(
     db.add(link)
     await db.flush()
     await db.refresh(link)
+    await db.commit()
     return link
 
 async def unlink_persona_account(
@@ -227,6 +235,7 @@ async def unlink_persona_account(
 
     await db.delete(link)
     await db.flush()
+    await db.commit()
 
 async def list_accounts_for_persona(
     db: AsyncSession, *, persona_id: int
