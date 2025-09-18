@@ -1,0 +1,41 @@
+@startuml
+title Chat Flow: Input -> Backend -> cardRouter -> Entities -> Features
+
+actor User
+participant ChatInput as CI
+participant ChatStream as CS
+participant "Backend" as BE
+participant ChatMessagesContext as Ctx
+participant cardRouter as Router
+participant "Entities.*Card" as Card
+participant "Features.*Form" as Form
+participant "lib/api/generated" as API
+participant "app/providers/query" as RQ
+
+User -> CI: type message + submit
+CI -> CS: onSubmit(text)
+CS -> BE: POST /chat (text, session, context)
+BE --> CS: stream messages + card-hint\n{ type: "ChartCard", props: {...} }
+
+CS -> Ctx: dispatch(addMessage, addCardHint)
+Ctx -> Router: resolve(card-hint)
+Router -> Card: render(CardComponent, props)
+
+' Card may be a read-only entity view or actionable widget
+Card -> API: (optional) GET data for view
+API -> RQ: useQuery(fetcher)
+RQ --> Card: cached/fetched data
+
+' Card can expose callbacks that lead to mutations
+User -> Card: click "Edit" / "Create" / "Link"
+Card -> Form: open() with initial values
+User -> Form: submit payload
+Form -> API: POST/PUT/PATCH/DELETE
+API -> RQ: useMutation(fetcher)
+RQ --> Form: success (invalidate queries)
+
+Form -> Ctx: notify(updated/deleted)
+Ctx -> Card: refresh via query invalidation
+Card -> Ctx: push follow-up message (optional)
+
+@enduml

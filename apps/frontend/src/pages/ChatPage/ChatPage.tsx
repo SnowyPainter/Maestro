@@ -1,7 +1,7 @@
 import React from "react";
-import { ChatSidebar } from "./components/ChatSidebar";
+import { ChatSidebar } from "../../widgets/ChatSidebar";
 import { ChatStream } from "@/widgets/ChatStream";
-import { ChatContextPanel } from "./components/ChatContextPanel";
+import { ChatContextPanel } from "../../widgets/ChatContextPanel";
 import { ChatMessagesProvider, useChatMessages } from "@/entities/messages/context/ChatMessagesContext";
 import { useChatPageEvents } from "./useChatPageEvents";
 import { useGetAvailableFlowsApiOrchestratorChatFlowsGet } from "@/lib/api/generated";

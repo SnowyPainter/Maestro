@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Message } from "@/entities/messages/context/ChatMessagesContext";
-import { ChatInput } from "@/pages/ChatPage/components/ChatInput";
+import { ChatInput } from "@/widgets/ChatInput";
 import { Logo } from "@/components/Logo";
 import { MessageBubble } from "@/entities/messages/components/MessageBubble";
 
