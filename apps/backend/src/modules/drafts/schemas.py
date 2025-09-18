@@ -14,6 +14,35 @@ class BlockVideo(BaseModel):
     type: Literal["video"]
     props: dict  # {"asset_id": int, "caption": str|None, "ratio": "9:16"}
 
+"""
+Example of DRAFT IR:
+
+{
+  "blocks": [
+    {
+      "type": "text",
+      "props": {
+        "markdown": "block1"
+      }
+    },
+    {
+      "type": "text", 
+      "props": {
+        "markdown": "block2"
+      }
+    },
+    {
+      "type": "image",
+      "props": {
+        "url": "https://example.com/image1.jpg",
+        "alt": "image1"
+      }
+    }
+  ],
+  "options": {}
+}
+"""
+
 Block = Union[BlockText, BlockImage, BlockVideo]
 
 class DraftIR(BaseModel):

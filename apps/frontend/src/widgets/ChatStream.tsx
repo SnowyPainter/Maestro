@@ -7,9 +7,10 @@ import { MessageBubble } from "@/entities/messages/components/MessageBubble";
 interface ChatStreamProps {
     messages: Message[];
     onSendMessage: (content: string) => Promise<void>;
+    onClearChat: () => void;
 }
 
-export function ChatStream({ messages, onSendMessage }: ChatStreamProps) {
+export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -27,7 +28,7 @@ export function ChatStream({ messages, onSendMessage }: ChatStreamProps) {
                 <Logo size="lg" />
             </div>
             <div className="w-full max-w-3xl px-4">
-                <ChatInput onSendMessage={onSendMessage} placeholder="Ask me anything..."/>
+                <ChatInput onSendMessage={onSendMessage} onClearChat={onClearChat} placeholder="Ask me anything..."/>
             </div>
             <div className="text-xs text-muted-foreground p-2">
                 Maestro can make mistakes. Consider checking important information.
@@ -50,7 +51,7 @@ export function ChatStream({ messages, onSendMessage }: ChatStreamProps) {
       </div>
       <div className="p-4 border-t bg-card">
         <div className="mx-auto max-w-3xl">
-          <ChatInput onSendMessage={onSendMessage} />
+          <ChatInput onSendMessage={onSendMessage} onClearChat={onClearChat} />
         </div>
       </div>
     </main>

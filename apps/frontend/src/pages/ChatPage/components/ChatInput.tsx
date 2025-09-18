@@ -1,20 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Paperclip, Send } from "lucide-react";
+import { useRef } from "react";
 
 interface ChatInputProps {
     onSendMessage: (content: string) => Promise<void>;
+    onClearChat: () => void;
     placeholder?: string;
 }
 
-export function ChatInput({ onSendMessage, placeholder = "Enter a message..." }: ChatInputProps) {
+export function ChatInput({ onSendMessage, onClearChat, placeholder = "Enter a message..." }: ChatInputProps) {
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
     const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            const value = (e.target as HTMLTextAreaElement).value;
-            if (value.trim()) {
+            const value = (e.target as HTMLTextAreaElement).value.trim();
+            if (value === "/clear") {
+                onClearChat();
+                if (textareaRef.current) {
+                    textareaRef.current.value = "";
+                    textareaRef.current.focus();
+                }
+            } else if (value) {
                 try {
                     await onSendMessage(value);
-                    (e.target as HTMLTextAreaElement).value = "";
+                    if (textareaRef.current) {
+                        textareaRef.current.value = "";
+                    }
                 } catch (error) {
                     console.error('Failed to send message:', error);
                 }
@@ -25,6 +37,7 @@ export function ChatInput({ onSendMessage, placeholder = "Enter a message..." }:
     return (
         <div className="relative w-full max-w-3xl">
             <textarea
+                ref={textareaRef}
                 className="border rounded-xl p-3 w-full pr-24 resize-none bg-input"
                 placeholder={placeholder}
                 onKeyDown={handleKeyDown}

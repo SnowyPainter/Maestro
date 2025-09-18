@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Mapping, Tuple
 
 from apps.backend.src.modules.drafts.schemas import DraftSaveRequest
 from apps.backend.src.modules.trends.schemas import TrendItem, TrendsListResponse
-
+from apps.backend.src.modules.drafts.schemas import DraftIR,BlockText, BlockImage, BlockVideo
 
 def _ensure_trends_model(value: Any) -> TrendsListResponse:
     if isinstance(value, TrendsListResponse):
@@ -21,28 +21,53 @@ def _ensure_trends_model(value: Any) -> TrendsListResponse:
 def trends_to_draft_adapter(source: Any, base_payload: Dict[str, Any]) -> DraftSaveRequest:
     """Convert trend research output into a draft payload."""
 
-    trends = _ensure_trends_model(source)
+    trends: TrendsListResponse = _ensure_trends_model(source)
 
     items = list(trends.items or [])[:5]
     if not items:
         raise ValueError("No trend items available to build draft content")
 
-    lines = ["## Trend Highlights"]
-    for idx, item in enumerate(items, start=1):
-        lines.extend(_format_trend_line(idx, item))
-
-    markdown = "\n".join(lines)
     payload = dict(base_payload)
-    payload.setdefault("title", f"{trends.country} trend recap")
-    payload["ir"] = {
-        "blocks": [
-            {
-                "type": "text",
+    payload["title"] = f"{trends.country} trend recap"
+
+    blocks = []
+
+    # 각 트렌드 아이템에 대해 블록 생성
+    for idx, trend in enumerate(items, 1):
+        # 트렌드 텍스트 블록 추가
+        trend_lines = _format_trend_line(idx, trend)
+        markdown = "\n".join(trend_lines)
+        blocks.append({
+            "type": "text",
+            "props": {
+                "markdown": markdown,
+            },
+        })
+
+        # 트렌드에 대표 이미지가 있으면 이미지 블록 추가
+        if trend.picture:
+            blocks.append({
+                "type": "image",
                 "props": {
-                    "markdown": markdown,
+                    "url": trend.picture,
+                    "alt": f"{trend.title} trend image",
                 },
-            }
-        ],
+            })
+
+        # 뉴스 아이템이 있고 이미지가 있으면 추가 이미지 블록
+        news_items = trend.news_items or []
+        for news in news_items[:1]:  # 최대 1개의 뉴스 이미지만
+            if news.news_item_picture:
+                blocks.append({
+                    "type": "image",
+                    "props": {
+                        "url": news.news_item_picture,
+                        "alt": news.news_item_title or f"News image for {trend.title}",
+                    },
+                })
+
+    payload["ir"] = {
+        "blocks": blocks,
         "options": {},
     }
 
