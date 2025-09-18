@@ -23,83 +23,12 @@ import {
 import { EditDraftForm } from "@/features/drafts/components/EditDraftForm";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
-import { DraftIR, DraftIRBlocksItem, DraftIROptions, BlockText, BlockImage, BlockVideo } from "@/lib/api/generated";
-
-function renderBlock(block: DraftIR['blocks'][0], index: number) {
-    switch (block.type) {
-        case 'text':
-            const textProps = block.props as { markdown?: string; mentions?: any[] };
-            return (
-                <div key={index} className="text-sm text-muted-foreground prose prose-sm max-w-none">
-                    {textProps.markdown && (
-                        <div dangerouslySetInnerHTML={{ __html: textProps.markdown }} />
-                    )}
-                </div>
-            );
-
-        case 'image':
-            const imageProps = block.props as { asset_id?: number; alt?: string; crop?: string };
-            return (
-                <div key={index} className="my-4">
-                    {imageProps.asset_id ? (
-                        <img
-                            src={`/api/assets/${imageProps.asset_id}`}
-                            alt={imageProps.alt || "Draft image"}
-                            className="max-w-full h-auto rounded-lg shadow-sm"
-                            style={{
-                                aspectRatio: imageProps.crop ? imageProps.crop.replace(':', '/') : 'auto'
-                            }}
-                        />
-                    ) : (
-                        <div className="w-full h-32 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
-                            Image placeholder
-                        </div>
-                    )}
-                </div>
-            );
-
-        case 'video':
-            const videoProps = block.props as { asset_id?: number; caption?: string; ratio?: string };
-            return (
-                <div key={index} className="my-4">
-                    {videoProps.asset_id ? (
-                        <div>
-                            <video
-                                controls
-                                className="max-w-full h-auto rounded-lg shadow-sm"
-                                style={{
-                                    aspectRatio: videoProps.ratio ? videoProps.ratio.replace(':', '/') : '16/9'
-                                }}
-                            >
-                                <source src={`/api/assets/${videoProps.asset_id}`} type="video/mp4" />
-                                Your browser does not support the video tag.
-                            </video>
-                            {videoProps.caption && (
-                                <p className="text-xs text-muted-foreground mt-2 text-center">
-                                    {videoProps.caption}
-                                </p>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="w-full h-32 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
-                            Video placeholder
-                        </div>
-                    )}
-                </div>
-            );
-
-        default:
-            const unknownBlock = block as { type: string; props: any };
-            return (
-                <div key={index} className="text-sm text-muted-foreground bg-muted p-2 rounded">
-                    Unsupported block type: {unknownBlock.type}
-                </div>
-            );
-    }
-}
+import { DraftIR } from "@/lib/api/generated";
+import { DraftIRBlockRender } from "@/components/Draft/DraftIRBlockRender";
 
 export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: () => void }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
   const { data: draft, isLoading, isError } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(draftId);
 
@@ -145,7 +74,13 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
       <CardContent className="space-y-4">
         <div>
             <h4 className="font-semibold text-sm mb-2">Content</h4>
-            {(draft.ir as DraftIR).blocks.map(renderBlock)}
+            <DraftIRBlockRender
+                blocks={(draft.ir as DraftIR).blocks}
+                compact={true}
+                showExpand={(draft.ir as DraftIR).blocks.length > 2}
+                isExpanded={isExpanded}
+                onToggleExpand={() => setIsExpanded(!isExpanded)}
+            />
         </div>
         {draft.tags && draft.tags.length > 0 && (
             <div>
@@ -164,7 +99,7 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
             <DialogTrigger asChild>
                 <Button variant="outline">Edit</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-[80vw] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit Draft</DialogTitle>
                 </DialogHeader>
