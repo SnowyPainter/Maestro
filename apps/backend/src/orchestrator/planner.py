@@ -5,17 +5,17 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
+import re
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, Tuple
-
-import re
 
 from pydantic import BaseModel, ValidationError
 
 from apps.backend.src.services.embeddings import embed_texts
 from .cards import card_type_for_model
 from .nlp import nlp_engine
+from .persona_context import persona_context_defaults
 from .registry import FLOWS, FlowDefinition
 
 logger = logging.getLogger(__name__)
@@ -409,7 +409,11 @@ class FlowPlanner:
             flow_specific = nlp_engine.extract_slots_for_model(message, flow.input_model)
         except Exception:  # pragma: no cover - defensive, should not happen
             flow_specific = {}
-        return flow_specific
+        slots = dict(flow_specific)
+        context_defaults = self._persona_context_defaults(self._model_fields(flow.input_model))
+        for key, value in context_defaults.items():
+            slots.setdefault(key, value)
+        return slots
 
     def _build_payload(
         self,
@@ -436,11 +440,18 @@ class FlowPlanner:
                 continue
             # skip optional fields (will be handled by model defaults)
 
+        context_defaults = self._persona_context_defaults(fields)
+        for key, value in context_defaults.items():
+            data.setdefault(key, value)
+
         try:
             model_cls(**data)
         except ValidationError:
             return None
         return data
+
+    def _persona_context_defaults(self, fields: Mapping[str, Any]) -> Dict[str, Any]:
+        return persona_context_defaults(fields)
 
     def _model_fields(self, model_cls: type[BaseModel]) -> Dict[str, Any]:
         if hasattr(model_cls, "model_fields"):

@@ -1,5 +1,6 @@
 // src/lib/api/fetcher.ts
 import { useSessionStore } from '@/store/session';
+import { usePersonaContextStore } from '@/store/persona-context';
 
 export type ApiFetchOptions = RequestInit & {
   baseUrl?: string;
@@ -99,6 +100,11 @@ export async function apiFetch<T = unknown>(
   const token = useSessionStore.getState().token || '';
   if (token) headers.set('Authorization', `Bearer ${token}`);
   headers.set('X-Request-ID', crypto.randomUUID());
+
+  const personaAccountId = usePersonaContextStore.getState().personaAccountId;
+  if (personaAccountId !== null) {
+    headers.set('X-Persona-Account-Id', String(personaAccountId));
+  }
 
   const httpMethod = (method || 'GET').toUpperCase();
   const isUnsafe = /^(POST|PUT|PATCH|DELETE)$/i.test(httpMethod);

@@ -259,3 +259,10 @@ async def list_personas_for_account(
     )
     res = await db.execute(q)
     return res.scalars().all()
+
+async def get_persona_account(
+    db: AsyncSession, *, persona_account_id: int
+) -> Optional[PersonaAccount]:
+    q = select(PersonaAccount).where(PersonaAccount.id == persona_account_id)
+    res = await db.execute(q)
+    return res.scalar_one_or_none()

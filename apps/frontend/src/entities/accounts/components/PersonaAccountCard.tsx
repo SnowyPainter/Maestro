@@ -1,10 +1,13 @@
 import { useBffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGet, useBffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet, PersonaAccountOut, useAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete } from "@/lib/api/generated";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Link2, X } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+import { usePersonaContextStore } from "@/store/persona-context";
+import { useCallback } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,9 +26,11 @@ interface PersonaAccountCardProps {
 }
 
 export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardProps) {
-  const queryClient = useQueryClient();
   const { data: persona } = useBffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGet(link.persona_id);
   const { data: account } = useBffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet(link.account_id);
+
+  const setPersonaContext = usePersonaContextStore(state => state.setPersonaContext);
+  const activePersonaAccountId = usePersonaContextStore(state => state.personaAccountId);
 
   const { mutate: unlink } = useAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete({
     mutation: {
@@ -39,13 +44,33 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
     unlink({ personaId: link.persona_id, accountId: link.account_id });
   };
 
+  const handleInject = useCallback(() => {
+    if (!persona || !account) return;
+
+    setPersonaContext({
+      personaAccountId: link.id,
+      personaId: link.persona_id,
+      personaName: persona.name,
+      personaAvatarUrl: persona.avatar_url ?? null,
+      accountId: link.account_id,
+      accountHandle: account.handle,
+      accountPlatform: account.platform,
+      accountAvatarUrl: account.avatar_url ?? null,
+    });
+  }, [persona, account, setPersonaContext, link]);
+
   if (!persona || !account) {
     return <Skeleton className="h-24 w-full" />;
   }
 
+  const isActive = activePersonaAccountId === link.id;
+
   return (
-    <Card className="rounded-2xl border bg-card text-card-foreground shadow-md relative group">
-      <CardContent className="p-4 flex items-center justify-between">
+    <Card className={cn(
+      "rounded-2xl border bg-card text-card-foreground shadow-md relative group transition-shadow",
+      isActive && "border-primary/70 shadow-lg"
+    )}>
+      <CardContent className="p-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">
             <AvatarImage src={persona.avatar_url || ''} />
@@ -57,7 +82,7 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
           </div>
         </div>
 
-        <Link2 className="w-6 h-6 text-muted-foreground" />
+        <Link2 className="w-6 h-6 text-muted-foreground shrink-0" />
 
         <div className="flex items-center gap-3 text-right">
           <div className="text-right">
@@ -70,6 +95,22 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
           </Avatar>
         </div>
       </CardContent>
+      <CardFooter className="p-4 pt-0 flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">
+          Persona Account ID: <span className="font-mono text-foreground">{link.id}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {isActive && <Badge variant="secondary">Active</Badge>}
+          <Button
+            variant={isActive ? "default" : "outline"}
+            size="sm"
+            onClick={handleInject}
+            disabled={isActive}
+          >
+            {isActive ? "Injected" : "Inject"}
+          </Button>
+        </div>
+      </CardFooter>
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">

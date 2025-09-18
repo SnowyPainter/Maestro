@@ -1,8 +1,12 @@
 from contextvars import ContextVar
 from typing import Union
 
+persona_account_id_ctx: ContextVar[Union[str, None]] = ContextVar("persona_account_id", default=None)
 request_id_ctx: ContextVar[Union[str, None]] = ContextVar("request_id", default=None)
 user_id_ctx: ContextVar[Union[str, None]] = ContextVar("user_id", default=None)
+
+def set_persona_account_id(val: Union[str, None]): persona_account_id_ctx.set(val)
+def get_persona_account_id() -> Union[str, None]:  return persona_account_id_ctx.get()
 
 def set_request_id(val: Union[str, None]): request_id_ctx.set(val)
 def get_request_id() -> Union[str, None]:  return request_id_ctx.get()

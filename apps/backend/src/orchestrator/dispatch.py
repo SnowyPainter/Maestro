@@ -20,9 +20,11 @@ from fastapi import Depends
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.backend.src.core.context import get_persona_account_id
 from apps.backend.src.core.deps import get_current_user, get_db
 from apps.backend.src.modules.users.models import User
 
+from .persona_context import inject_persona_context
 from .registry import FlowDefinition, FlowTask, OperatorMeta, REGISTRY, _extract_model_type
 
 
@@ -73,7 +75,6 @@ class ExecutionRuntime:
                     return value
         return None
 
-
 @dataclass
 class TaskContext:
     flow: FlowDefinition
@@ -105,6 +106,7 @@ async def orchestrate_flow(
     payload: BaseModel,
     runtime: Optional[ExecutionRuntime],
 ) -> BaseModel:
+    payload = inject_persona_context(payload)
     state = FlowState(flow=flow, payload=payload, runtime=runtime or ExecutionRuntime())
     for task_id in flow.topological_order():
         task = flow.tasks[task_id]
@@ -277,6 +279,9 @@ async def runtime_dependency(
     runtime = ExecutionRuntime()
     runtime.provide(db, name="db", type_hint=AsyncSession)
     runtime.provide(user, name="user", type_hint=User)
+    # 필수적으로 해당 persona_account_id가 user꺼가 맞는지 확인해야함.
+    runtime.provide(get_persona_account_id(), name="persona_account_id", type_hint=str)
+
     return runtime
 
 

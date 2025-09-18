@@ -11,6 +11,7 @@ from typing import get_args, get_origin
 import dateparser
 from pydantic import BaseModel, Field
 
+from apps.backend.src.core.context import get_persona_account_id
 from .registry import FLOWS
 
 
@@ -351,6 +352,13 @@ class NlpEngine:
         if search_terms:
             slots["q"] = search_terms
 
+        persona_account_id = get_persona_account_id()
+        if persona_account_id:
+            coerced = self._coerce_persona_account_slot(persona_account_id)
+            if coerced is not None:
+                slots.setdefault("persona_account_id", coerced)
+                slots.setdefault("account_persona_id", coerced)
+
         return slots
 
     def _infer_slot_value(
@@ -550,6 +558,14 @@ class NlpEngine:
             if value is not None:
                 return value
         return None
+
+    def _coerce_persona_account_slot(self, raw: Any) -> Optional[Any]:
+        if raw is None:
+            return None
+        try:
+            return int(raw)
+        except (ValueError, TypeError):
+            return raw
 
     def _annotation_is_int(self, annotation: Any) -> bool:
         if annotation is None:

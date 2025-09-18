@@ -60,6 +60,8 @@ from typing import (
 
 from pydantic import BaseModel
 
+from .persona_context import inject_persona_context
+
 logger = logging.getLogger(__name__)
 
 try:  # FastAPI is an optional dependency during unit tests.
@@ -294,6 +296,7 @@ class FlowDefinition:
                 payload_data = {**kwargs, **path_values}
                 payload_obj = self.input_model(**payload_data)
 
+            payload_obj = inject_persona_context(payload_obj)
             enriched_payload = _merge_payload_with_path(payload_obj, path_values)
             result = orchestrate(self, enriched_payload, runtime)
             if isawaitable(result):
