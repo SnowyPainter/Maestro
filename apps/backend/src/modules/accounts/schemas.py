@@ -7,6 +7,7 @@ from apps.backend.src.modules.common.enums import PlatformKind, Permission
 
 # ---------- PlatformAccount ----------
 class PlatformAccountBase(BaseModel):
+    owner_user_id: Optional[int] = None
     platform: PlatformKind
     handle: str = Field(max_length=128)
     external_id: Optional[str] = Field(None, max_length=256)

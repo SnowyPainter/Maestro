@@ -2718,6 +2718,11 @@ components:
       title: PersonaUpdateCommand
     PlatformAccountCreate:
       properties:
+        owner_user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Owner User Id
         platform:
           $ref: '#/components/schemas/PlatformKind'
         handle:
@@ -2785,6 +2790,9 @@ components:
       title: PlatformAccountList
     PlatformAccountOut:
       properties:
+        owner_user_id:
+          type: integer
+          title: Owner User Id
         platform:
           $ref: '#/components/schemas/PlatformKind'
         handle:
@@ -2822,9 +2830,6 @@ components:
         id:
           type: integer
           title: Id
-        owner_user_id:
-          type: integer
-          title: Owner User Id
         last_checked_at:
           title: Last Checked At
           format: date-time
@@ -2844,10 +2849,10 @@ components:
           title: Updated At
       type: object
       required:
+      - owner_user_id
       - platform
       - handle
       - id
-      - owner_user_id
       - created_at
       - updated_at
       title: PlatformAccountOut

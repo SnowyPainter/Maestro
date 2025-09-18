@@ -4,6 +4,7 @@ import { Message, useChatMessagesContext } from "@/entities/messages/context/Cha
 import {
   useChatQueryApiOrchestratorChatQueryPost,
   TrendsListResponse,
+  bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet,
 } from "@/lib/api/generated";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
@@ -19,6 +20,14 @@ import { PersonaToolCard } from "@/features/personas/components/PersonaToolCard"
 import { CreatePersonaForm } from "@/features/personas/components/CreatePersonaForm";
 import { PersonaList } from "@/entities/personas/components/PersonaList";
 import { PersonaDetail } from "@/entities/personas/components/PersonaDetail";
+import { LinkedAccountList } from "@/entities/personas/components/LinkedAccountList";
+import { AccountToolCard } from "@/features/accounts/components/AccountToolCard";
+import { CreateAccountForm } from "@/features/accounts/components/CreateAccountForm";
+import { EditAccountForm } from "@/features/accounts/components/EditAccountForm";
+import { AccountList } from "@/entities/accounts/components/AccountList";
+import { AccountDetail } from "@/entities/accounts/components/AccountDetail";
+import { PersonaAccountList } from "@/entities/accounts/components/PersonaAccountList";
+import { PlatformAccountOut } from "@/lib/api/generated";
 
 const DEFAULT_ERROR_MESSAGE = '죄송합니다. 채팅 처리 중 오류가 발생했습니다.';
 
@@ -262,6 +271,90 @@ export function useChatPageEvents() {
     });
   }, [appendMessage, getNextMessageId, handlePersonaSelect, removeMessagesByComponent]);
 
+  const handleAccountCreateSuccess = useCallback<EntitySuccessHandler>((accountId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    } else {
+      removeMessagesByComponent(CreateAccountForm);
+    }
+    addCardMessage(messageId => (
+      <AccountDetail
+        accountId={accountId}
+        onDelete={() => handleCardDelete(messageId)}
+      />
+    ));
+  }, [addCardMessage, removeMessage, removeMessagesByComponent, handleCardDelete]);
+
+  const handleAccountSelect = useCallback<EntitySelectHandler>((accountId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    removeMessagesByComponent(AccountToolCard);
+    addCardMessage(messageId => (
+      <AccountDetail
+        accountId={accountId}
+        onDelete={() => handleCardDelete(messageId)}
+      />
+    ));
+  }, [addCardMessage, removeMessage, removeMessagesByComponent, handleCardDelete]);
+
+  const handleNewAccount = useCallback(() => {
+    removeMessagesByComponent(AccountToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <CreateAccountForm
+          onSuccess={(account) => handleAccountCreateSuccess(account.id, messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleAccountCreateSuccess, removeMessagesByComponent]);
+
+  const handleSelectAccount = useCallback(() => {
+    removeMessagesByComponent(AccountToolCard);
+    removeMessagesByComponent(AccountList);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <AccountList
+          onSelectAccount={accountId => handleAccountSelect(accountId, messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleAccountSelect, removeMessagesByComponent]);
+
+  const handleShowPersonaAccountLinks = useCallback((accountId: number, sourceMessageId?: number) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addCardMessage(() => <PersonaAccountList accountId={accountId} />);
+  }, [addCardMessage, removeMessage]);
+
+  const handleShowLinkedAccounts = useCallback((personaId: number, sourceMessageId?: number) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addCardMessage(() => <LinkedAccountList personaId={personaId} />);
+  }, [addCardMessage, removeMessage]);
+
+  const handleSelectPersonaForLinks = useCallback(() => {
+    removeMessagesByComponent(AccountToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <PersonaList 
+          onSelectPersona={personaId => handleShowLinkedAccounts(personaId, messageId)} 
+        />
+      )
+    });
+  }, [appendMessage, getNextMessageId, removeMessagesByComponent, handleShowLinkedAccounts]);
+
   const handleToolClick = useCallback((toolId: string) => {
     switch (toolId) {
       case 'campaigns':
@@ -291,10 +384,20 @@ export function useChatPageEvents() {
           />
         ));
         break;
+      case 'accounts':
+        removeMessagesByComponent(AccountToolCard);
+        addCardMessage(() => (
+          <AccountToolCard
+            onNew={handleNewAccount}
+            onSelect={handleSelectAccount}
+            onSelectLinks={handleSelectPersonaForLinks}
+          />
+        ));
+        break;
       default:
         break;
     }
-  }, [addCardMessage, handleNewCampaign, handleNewDraft, handleNewPersona, handleSelectCampaign, handleSelectDraft, handleSelectPersona, removeMessagesByComponent]);
+  }, [addCardMessage, handleNewCampaign, handleNewDraft, handleNewPersona, handleSelectCampaign, handleSelectDraft, handleSelectPersona, handleNewAccount, handleSelectAccount, handleSelectPersonaForLinks, removeMessagesByComponent]);
 
   const clearChat = useCallback(() => {
     clearMessages();
@@ -323,6 +426,7 @@ export function useChatPageEvents() {
             onCampaignSelect: handleCampaignSelect,
             onDraftSelect: handleDraftSelect,
             onPersonaSelect: handlePersonaSelect,
+            onAccountSelect: handleAccountSelect,
           },
         }));
       });

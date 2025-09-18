@@ -13,12 +13,15 @@ import { DraftDetail } from "@/entities/drafts/components/DraftDetail";
 import { DraftList } from "@/entities/drafts/components/DraftList";
 import { PersonaDetail } from "@/entities/personas/components/PersonaDetail";
 import { PersonaList } from "@/entities/personas/components/PersonaList";
+import { AccountList } from "../accounts/components/AccountList";
+import { AccountDetail } from "../accounts/components/AccountDetail";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
   onCampaignSelect?: (campaignId: number, sourceMessageId: number) => void;
   onDraftSelect?: (draftId: number, sourceMessageId: number) => void;
   onPersonaSelect?: (personaId: number, sourceMessageId: number) => void;
+  onAccountSelect?: (accountId: number, sourceMessageId: number) => void;
 }
 
 export interface RenderCardOptions {
@@ -90,6 +93,24 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     );
   }
 
+  // Account 관련 특수 처리
+  if (card_type === 'account.pa.list') {
+    return (
+      <AccountList
+        onSelectAccount={(accountId) => callbacks.onAccountSelect?.(accountId, messageId)}
+      />
+    );
+  }
+
+  if (card_type === 'account.pa.detail' && data?.id) {
+    return (
+      <AccountDetail
+        accountId={data.id as number}
+        onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+      />
+    );
+  }
+
   // 카드 타입에 따라 컴포넌트 선택
   switch (card_type) {
     case 'table':
@@ -98,7 +119,6 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     case 'collection':
     case 'campaign.kpi_def':
     case 'draft.variant.list':
-    case 'account.pa.list':
       return <TableCard title={title || "Data"} data={data || card} />;
 
     case 'chart':

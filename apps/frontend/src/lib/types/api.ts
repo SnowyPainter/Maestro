@@ -1456,6 +1456,8 @@ export interface components {
         };
         /** PlatformAccountCreate */
         PlatformAccountCreate: {
+            /** Owner User Id */
+            owner_user_id?: number | null;
             platform: components["schemas"]["PlatformKind"];
             /** Handle */
             handle: string;
@@ -1490,6 +1492,8 @@ export interface components {
         PlatformAccountList: components["schemas"]["PlatformAccountOut"][];
         /** PlatformAccountOut */
         PlatformAccountOut: {
+            /** Owner User Id */
+            owner_user_id: number;
             platform: components["schemas"]["PlatformKind"];
             /** Handle */
             handle: string;
@@ -1508,8 +1512,6 @@ export interface components {
             is_active: boolean | null;
             /** Id */
             id: number;
-            /** Owner User Id */
-            owner_user_id: number;
             /**
              * Last Checked At
              * Format: date-time

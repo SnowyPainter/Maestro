@@ -1,82 +1,74 @@
-import { useState } from "react";
-import { useBffAccountsListPersonasApiBffAccountsPersonasGet } from "@/lib/api/generated";
+import { useBffAccountsListPersonasApiBffAccountsPersonasGet, PersonaOut } from "@/lib/api/generated";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, WifiOff } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ChevronDown } from "lucide-react";
 
-export function PersonaList({ onSelectPersona }: { onSelectPersona: (personaId: number) => void }) {
+interface PersonaListProps {
+  onSelectPersona: (personaId: number) => void;
+}
+
+export function PersonaList({ onSelectPersona }: PersonaListProps) {
   const { data: personas, isLoading, isError } = useBffAccountsListPersonasApiBffAccountsPersonasGet();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {
-    return <Skeleton className="h-24 w-full" />;
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center gap-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <Skeleton className="h-6 w-1/2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4 mt-2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
   if (isError) {
-    return <p className="p-2 text-sm text-destructive">Failed to load personas.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center rounded-2xl border bg-card text-card-foreground shadow-md p-8">
+        <WifiOff className="w-12 h-12 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold text-destructive">Failed to load personas</h3>
+        <p className="text-muted-foreground text-sm mt-2">An unexpected error occurred.</p>
+      </div>
+    );
   }
 
-  const visiblePersonas = isExpanded ? personas : personas?.slice(0, 3);
+  if (!personas || personas.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-2xl border bg-card text-card-foreground shadow-md p-8">
+        <AlertTriangle className="w-12 h-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold">No Personas Found</h3>
+        <p className="text-muted-foreground text-sm mt-2">There are no personas to display yet.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 border rounded-lg">
-        <h3 className="font-semibold mb-3">Select a Persona</h3>
-        <div className="grid grid-cols-2 gap-3">
-            {visiblePersonas?.map(persona => (
-                <button
-                    key={persona.id}
-                    onClick={() => onSelectPersona(persona.id)}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/50 text-left group transition-colors"
-                >
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                        {persona.avatar_url && (
-                            <AvatarImage src={persona.avatar_url} alt={persona.name} />
-                        )}
-                        <AvatarFallback className="text-xs">
-                            {persona.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm truncate">{persona.name}</span>
-                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5 flex-shrink-0">
-                                #{persona.id}
-                            </Badge>
-                        </div>
-                        {persona.bio && (
-                            <p className="text-xs text-muted-foreground mb-1 line-clamp-1 truncate">
-                                {persona.bio}
-                            </p>
-                        )}
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {persona.language && (
-                                <span className="flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                                    {persona.language.toUpperCase()}
-                                </span>
-                            )}
-                            {persona.tone && (
-                                <span className="flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                                    {persona.tone}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </button>
-            ))}
-        </div>
-        {personas && personas.length > 3 && (
-            <Button variant="link" onClick={() => setIsExpanded(!isExpanded)} className="mt-3 col-span-2">
-                {isExpanded ? "Show Less" : `Show ${personas.length - 3} More`}
-                {isExpanded ? <ChevronDown className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
-            </Button>
-        )}
-        {personas?.length === 0 && (
-            <p className="p-2 text-xs text-muted-foreground col-span-2">No personas found.</p>
-        )}
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {personas.map((persona: PersonaOut) => (
+        <Card key={persona.id} onClick={() => onSelectPersona(persona.id)} className="cursor-pointer rounded-2xl border bg-card text-card-foreground shadow-md hover:bg-muted">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-8 h-8 flex-shrink-0">
+                {persona.avatar_url && <AvatarImage src={persona.avatar_url} alt={persona.name} />}
+                <AvatarFallback className="text-xs">{persona.name.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <CardTitle className="text-sm font-medium">{persona.name}</CardTitle>
+            </div>
+            <span className="text-xs text-muted-foreground">#{persona.id}</span>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground line-clamp-2">{persona.bio || "No bio available."}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

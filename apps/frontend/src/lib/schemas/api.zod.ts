@@ -23,6 +23,7 @@ export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetRes
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseIsActiveDefault = true;
 
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponse = zod.object({
+  "owner_user_id": zod.number(),
   "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
   "handle": zod.string().max(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseHandleMax),
   "external_id": zod.string().max(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseExternalIdMax).nullish(),
@@ -31,7 +32,6 @@ export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetRes
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "is_active": zod.union([zod.boolean(),zod.null()]).default(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseIsActiveDefault),
   "id": zod.number(),
-  "owner_user_id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
@@ -59,6 +59,7 @@ export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseBio
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseIsActiveDefault = true;
 
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseItem = zod.object({
+  "owner_user_id": zod.number(),
   "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
   "handle": zod.string().max(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseHandleMax),
   "external_id": zod.string().max(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseExternalIdMax).nullish(),
@@ -67,7 +68,6 @@ export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseIte
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "is_active": zod.union([zod.boolean(),zod.null()]).default(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseIsActiveDefault),
   "id": zod.number(),
-  "owner_user_id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
@@ -466,6 +466,7 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccoun
 
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostBody = zod.object({
   "account": zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
   "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
   "handle": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccountHandleMax),
   "external_id": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccountExternalIdMax).nullish(),
@@ -486,6 +487,7 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseBi
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseIsActiveDefault = true;
 
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponse = zod.object({
+  "owner_user_id": zod.number(),
   "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
   "handle": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseHandleMax),
   "external_id": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseExternalIdMax).nullish(),
@@ -494,7 +496,6 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponse =
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "is_active": zod.union([zod.boolean(),zod.null()]).default(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseIsActiveDefault),
   "id": zod.number(),
-  "owner_user_id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
@@ -531,6 +532,7 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutRe
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseIsActiveDefault = true;
 
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponse = zod.object({
+  "owner_user_id": zod.number(),
   "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
   "handle": zod.string().max(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseHandleMax),
   "external_id": zod.string().max(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseExternalIdMax).nullish(),
@@ -539,7 +541,6 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutRe
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "is_active": zod.union([zod.boolean(),zod.null()]).default(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseIsActiveDefault),
   "id": zod.number(),
-  "owner_user_id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),

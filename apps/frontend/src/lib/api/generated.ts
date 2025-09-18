@@ -694,11 +694,14 @@ export interface PersonaUpdateCommand {
   data: PersonaUpdate;
 }
 
+export type PlatformAccountCreateOwnerUserId = number | null;
+
 export type PlatformAccountCreateScopes = string[] | null;
 
 export type PlatformAccountCreateIsActive = boolean | null;
 
 export interface PlatformAccountCreate {
+  owner_user_id?: PlatformAccountCreateOwnerUserId;
   platform: PlatformKind;
   /** @maxLength 128 */
   handle: string;
@@ -738,6 +741,7 @@ export type PlatformAccountOutScopes = string[] | null;
 export type PlatformAccountOutIsActive = boolean | null;
 
 export interface PlatformAccountOut {
+  owner_user_id: number;
   platform: PlatformKind;
   /** @maxLength 128 */
   handle: string;
@@ -759,7 +763,6 @@ export interface PlatformAccountOut {
   scopes?: PlatformAccountOutScopes;
   is_active?: PlatformAccountOutIsActive;
   id: number;
-  owner_user_id: number;
   /** @nullable */
   last_checked_at?: string | null;
   /** @nullable */
