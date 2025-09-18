@@ -33,7 +33,7 @@ from apps.backend.src.modules.accounts.service import (
 )
 from apps.backend.src.modules.users.models import User
 
-from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
 
@@ -263,7 +263,7 @@ async def op_unlink_persona_account(
     output_model=PlatformAccountOut,
     method="post",
     path="/accounts/platform",
-    tags=("accounts", "platform", "create", "social-media"),
+    tags=("action", "accounts", "platform", "create", "social-media"),
 )
 def _flow_create_platform(builder: FlowBuilder):
     task = builder.task("create_platform", "accounts.platform.create_account")
@@ -278,7 +278,7 @@ def _flow_create_platform(builder: FlowBuilder):
     output_model=PlatformAccountOut,
     method="put",
     path="/accounts/platform/{account_id}",
-    tags=("accounts", "platform", "update", "social-media"),
+    tags=("action", "accounts", "platform", "update", "social-media"),
 )
 def _flow_update_platform(builder: FlowBuilder):
     task = builder.task("update_platform", "accounts.platform.update_account")
@@ -293,7 +293,7 @@ def _flow_update_platform(builder: FlowBuilder):
     output_model=MessageOut,
     method="delete",
     path="/accounts/platform/{account_id}",
-    tags=("accounts", "platform", "delete", "social-media", "dangerous"),
+    tags=("action", "accounts", "platform", "delete", "social-media", "dangerous"),
 )
 def _flow_delete_platform(builder: FlowBuilder):
     task = builder.task("delete_platform", "accounts.platform.delete_account")
@@ -308,7 +308,7 @@ def _flow_delete_platform(builder: FlowBuilder):
     output_model=PersonaOut,
     method="post",
     path="/accounts/personas",
-    tags=("accounts", "persona", "create", "audience", "targeting"),
+    tags=("action", "accounts", "persona", "create", "audience", "targeting"),
 )
 def _flow_create_persona(builder: FlowBuilder):
     task = builder.task("create_persona", "accounts.persona.create_persona")
@@ -323,7 +323,7 @@ def _flow_create_persona(builder: FlowBuilder):
     output_model=PersonaOut,
     method="put",
     path="/accounts/personas/{persona_id}",
-    tags=("accounts", "persona", "update", "audience", "targeting"),
+    tags=("action", "accounts", "persona", "update", "audience", "targeting"),
 )
 def _flow_update_persona(builder: FlowBuilder):
     task = builder.task("update_persona", "accounts.persona.update_persona")
@@ -338,7 +338,7 @@ def _flow_update_persona(builder: FlowBuilder):
     output_model=MessageOut,
     method="delete",
     path="/accounts/personas/{persona_id}",
-    tags=("accounts", "persona", "delete", "audience", "targeting", "dangerous"),
+    tags=("action", "accounts", "persona", "delete", "audience", "targeting", "dangerous"),
 )
 def _flow_delete_persona(builder: FlowBuilder):
     task = builder.task("delete_persona", "accounts.persona.delete_persona")
@@ -353,7 +353,7 @@ def _flow_delete_persona(builder: FlowBuilder):
     output_model=PersonaAccountOut,
     method="post",
     path="/accounts/persona-account-links",
-    tags=("accounts", "persona", "platform", "link", "targeting"),
+    tags=("action", "accounts", "persona", "platform", "link", "targeting"),
 )
 def _flow_link_persona_account(builder: FlowBuilder):
     task = builder.task("link_persona_account", "accounts.link.create_link")
@@ -368,20 +368,9 @@ def _flow_link_persona_account(builder: FlowBuilder):
     output_model=MessageOut,
     method="delete",
     path="/accounts/persona-account-links/{persona_id}/{account_id}",
-    tags=("accounts", "persona", "platform", "unlink", "targeting"),
+    tags=("action","accounts", "persona", "platform", "unlink", "targeting"),
 )
 def _flow_unlink_persona_account(builder: FlowBuilder):
     task = builder.task("unlink_persona_account", "accounts.link.unlink")
     builder.expect_terminal(task)
 
-
-router = FLOWS.build_router(
-    orchestrate_flow,
-    prefix="",
-    tags=["accounts"],
-    runtime_dependency=runtime_dependency,
-    flow_filter=lambda flow: "accounts" in flow.tags and "bff" not in flow.tags and "internal" not in flow.tags,
-)
-
-
-__all__ = ["router"]

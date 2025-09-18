@@ -28,7 +28,7 @@ from apps.backend.src.modules.campaigns.service import (
 )
 from apps.backend.src.modules.users.models import User
 
-from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
 
@@ -196,7 +196,7 @@ async def op_aggregate_campaign_kpis(
     output_model=CampaignOut,
     method="post",
     path="/campaigns",
-    tags=("campaigns", "marketing", "create", "strategy"),
+    tags=("action", "campaigns", "marketing", "create", "strategy"),
 )
 def _flow_create_campaign(builder: FlowBuilder):
     task = builder.task("create", "campaigns.create")
@@ -211,7 +211,7 @@ def _flow_create_campaign(builder: FlowBuilder):
     output_model=CampaignOut,
     method="put",
     path="/campaigns/{campaign_id}",
-    tags=("campaigns", "marketing", "update", "strategy"),
+    tags=("action", "campaigns", "marketing", "update", "strategy"),
 )
 def _flow_update_campaign(builder: FlowBuilder):
     task = builder.task("update", "campaigns.update")
@@ -226,7 +226,7 @@ def _flow_update_campaign(builder: FlowBuilder):
     output_model=MessageOut,
     method="delete",
     path="/campaigns/{campaign_id}",
-    tags=("campaigns", "marketing", "delete", "dangerous"),
+    tags=("action", "campaigns", "marketing", "delete", "dangerous"),
 )
 def _flow_delete_campaign(builder: FlowBuilder):
     task = builder.task("delete", "campaigns.delete")
@@ -241,7 +241,7 @@ def _flow_delete_campaign(builder: FlowBuilder):
     output_model=CampaignKPIDefListOut,
     method="put",
     path="/campaigns/{campaign_id}/kpi-defs",
-    tags=("campaigns", "kpi", "metrics", "analytics", "measurement"),
+    tags=("action", "campaigns", "kpi", "metrics", "analytics", "measurement"),
 )
 def _flow_upsert_kpi_defs(builder: FlowBuilder):
     task = builder.task("upsert_kpi_defs", "campaigns.upsert_kpi_defs")
@@ -256,7 +256,7 @@ def _flow_upsert_kpi_defs(builder: FlowBuilder):
     output_model=CampaignKPIResultOut,
     method="post",
     path="/campaigns/{campaign_id}/kpi-results",
-    tags=("campaigns", "kpi", "metrics", "data", "tracking"),
+    tags=("action", "campaigns", "kpi", "metrics", "data", "tracking"),
 )
 def _flow_record_kpi(builder: FlowBuilder):
     task = builder.task("record_kpi", "campaigns.record_kpi")
@@ -271,20 +271,9 @@ def _flow_record_kpi(builder: FlowBuilder):
     output_model=CampaignKPIResultOut,
     method="post",
     path="/campaigns/{campaign_id}/aggregate-kpis",
-    tags=("campaigns", "kpi", "analytics", "reporting", "summary"),
+    tags=("action", "campaigns", "kpi", "analytics", "reporting", "summary"),
 )
 def _flow_aggregate_kpis(builder: FlowBuilder):
     task = builder.task("aggregate_kpis", "campaigns.aggregate_kpis")
     builder.expect_terminal(task)
 
-
-router = FLOWS.build_router(
-    orchestrate_flow,
-    prefix="",
-    tags=["campaigns"],
-    runtime_dependency=runtime_dependency,
-    flow_filter=lambda flow: "campaigns" in flow.tags and "bff" not in flow.tags and "internal" not in flow.tags,
-)
-
-
-__all__ = ["router"]

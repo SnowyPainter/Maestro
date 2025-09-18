@@ -992,27 +992,6 @@ export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete
 soft?: boolean;
 };
 
-export type BffTrendsListTrendsApiOrchestratorTrendsGetParams = {
-country?: string;
-limit?: number;
-/**
- * @nullable
- */
-q?: string | null;
-/**
- * @nullable
- */
-on_date?: string | null;
-/**
- * @nullable
- */
-since?: string | null;
-/**
- * @nullable
- */
-until?: string | null;
-};
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
@@ -2366,29 +2345,30 @@ export function useBffTrendsListTrendsApiBffTrendsGet<TData = Awaited<ReturnType
 
 
 /**
- * @summary Signup
+ * Create a new platform account (social media, website, etc.) for the user
+ * @summary Create New Platform Account
  */
-export const signupApiOrchestratorAuthSignupPost = (
-    signupRequest: SignupRequest,
+export const accountsPlatformCreateApiOrchestratorAccountsPlatformPost = (
+    platformAccountCreateCommand: PlatformAccountCreateCommand,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
       
-      return apiFetch<UserResponse>(
-      {url: `/api/orchestrator/auth/signup`, method: 'POST',
+      return apiFetch<PlatformAccountOut>(
+      {url: `/api/orchestrator/accounts/platform`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: signupRequest, signal
+      data: platformAccountCreateCommand, signal
     },
       options);
     }
   
 
 
-export const getSignupApiOrchestratorAuthSignupPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, TError,{data: SignupRequest}, TContext> => {
+export const getAccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext> => {
 
-const mutationKey = ['signupApiOrchestratorAuthSignupPost'];
+const mutationKey = ['accountsPlatformCreateApiOrchestratorAccountsPlatformPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2398,10 +2378,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, {data: SignupRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, {data: PlatformAccountCreateCommand}> = (props) => {
           const {data} = props ?? {};
 
-          return  signupApiOrchestratorAuthSignupPost(data,requestOptions)
+          return  accountsPlatformCreateApiOrchestratorAccountsPlatformPost(data,requestOptions)
         }
 
         
@@ -2409,51 +2389,52 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SignupApiOrchestratorAuthSignupPostMutationResult = NonNullable<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>>
-    export type SignupApiOrchestratorAuthSignupPostMutationBody = SignupRequest
-    export type SignupApiOrchestratorAuthSignupPostMutationError = HTTPValidationError
+    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>>
+    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationBody = PlatformAccountCreateCommand
+    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationError = HTTPValidationError
 
     /**
- * @summary Signup
+ * @summary Create New Platform Account
  */
-export const useSignupApiOrchestratorAuthSignupPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>,
+        Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>,
         TError,
-        {data: SignupRequest},
+        {data: PlatformAccountCreateCommand},
         TContext
       > => {
 
-      const mutationOptions = getSignupApiOrchestratorAuthSignupPostMutationOptions(options);
+      const mutationOptions = getAccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
     
 /**
- * @summary Login
+ * Update platform account information like username, credentials, or settings
+ * @summary Update Platform Account Details
  */
-export const loginApiOrchestratorAuthLoginPost = (
-    loginRequest: LoginRequest,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
+export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = (
+    accountId: number | null,
+    platformAccountUpdateCommand: PlatformAccountUpdateCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
       
       
-      return apiFetch<TokenResponse>(
-      {url: `/api/orchestrator/auth/login`, method: 'POST',
+      return apiFetch<PlatformAccountOut>(
+      {url: `/api/orchestrator/accounts/platform/${accountId}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: loginRequest, signal
+      data: platformAccountUpdateCommand
     },
       options);
     }
   
 
 
-export const getLoginApiOrchestratorAuthLoginPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, TError,{data: LoginRequest}, TContext> => {
+export const getAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext> => {
 
-const mutationKey = ['loginApiOrchestratorAuthLoginPost'];
+const mutationKey = ['accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2463,10 +2444,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, {data: LoginRequest}> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, {accountId: number | null;data: PlatformAccountUpdateCommand}> = (props) => {
+          const {accountId,data} = props ?? {};
 
-          return  loginApiOrchestratorAuthLoginPost(data,requestOptions)
+          return  accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut(accountId,data,requestOptions)
         }
 
         
@@ -2474,23 +2455,413 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type LoginApiOrchestratorAuthLoginPostMutationResult = NonNullable<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>>
-    export type LoginApiOrchestratorAuthLoginPostMutationBody = LoginRequest
-    export type LoginApiOrchestratorAuthLoginPostMutationError = HTTPValidationError
+    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>>
+    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationBody = PlatformAccountUpdateCommand
+    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationError = HTTPValidationError
 
     /**
- * @summary Login
+ * @summary Update Platform Account Details
  */
-export const useLoginApiOrchestratorAuthLoginPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>,
+        Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>,
         TError,
-        {data: LoginRequest},
+        {accountId: number | null;data: PlatformAccountUpdateCommand},
         TContext
       > => {
 
-      const mutationOptions = getLoginApiOrchestratorAuthLoginPostMutationOptions(options);
+      const mutationOptions = getAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Permanently delete a platform account and all associated data
+ * @summary Remove Platform Account
+ */
+export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = (
+    accountId: number | null,
+    params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/accounts/platform/${accountId}`, method: 'DELETE',
+        params
+    },
+      options);
+    }
+  
+
+
+export const getAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext> => {
+
+const mutationKey = ['accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, {accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}> = (props) => {
+          const {accountId,params} = props ?? {};
+
+          return  accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete(accountId,params,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>>
+    
+    export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Remove Platform Account
+ */
+export const useAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>,
+        TError,
+        {accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Create a new persona with specific characteristics for content targeting
+ * @summary Create New Persona Profile
+ */
+export const accountsPersonaCreateApiOrchestratorAccountsPersonasPost = (
+    personaCreateCommand: PersonaCreateCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PersonaOut>(
+      {url: `/api/orchestrator/accounts/personas`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: personaCreateCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getAccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext> => {
+
+const mutationKey = ['accountsPersonaCreateApiOrchestratorAccountsPersonasPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, {data: PersonaCreateCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  accountsPersonaCreateApiOrchestratorAccountsPersonasPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>>
+    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationBody = PersonaCreateCommand
+    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create New Persona Profile
+ */
+export const useAccountsPersonaCreateApiOrchestratorAccountsPersonasPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>,
+        TError,
+        {data: PersonaCreateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Modify persona characteristics, demographics, or targeting preferences
+ * @summary Update Persona Profile
+ */
+export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = (
+    personaId: number | null,
+    personaUpdateCommand: PersonaUpdateCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<PersonaOut>(
+      {url: `/api/orchestrator/accounts/personas/${personaId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: personaUpdateCommand
+    },
+      options);
+    }
+  
+
+
+export const getAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext> => {
+
+const mutationKey = ['accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, {personaId: number | null;data: PersonaUpdateCommand}> = (props) => {
+          const {personaId,data} = props ?? {};
+
+          return  accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut(personaId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>>
+    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationBody = PersonaUpdateCommand
+    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Persona Profile
+ */
+export const useAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>,
+        TError,
+        {personaId: number | null;data: PersonaUpdateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Permanently delete a persona and all associated targeting data
+ * @summary Remove Persona Profile
+ */
+export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = (
+    personaId: number | null,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/accounts/personas/${personaId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null}, TContext> => {
+
+const mutationKey = ['accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, {personaId: number | null}> = (props) => {
+          const {personaId} = props ?? {};
+
+          return  accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete(personaId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>>
+    
+    export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Remove Persona Profile
+ */
+export const useAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>,
+        TError,
+        {personaId: number | null},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Link a persona profile to a specific platform account for targeted content
+ * @summary Connect Persona to Platform Account
+ */
+export const accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = (
+    personaAccountLinkCommand: PersonaAccountLinkCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PersonaAccountOut>(
+      {url: `/api/orchestrator/accounts/persona-account-links`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: personaAccountLinkCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext> => {
+
+const mutationKey = ['accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, {data: PersonaAccountLinkCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>>
+    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationBody = PersonaAccountLinkCommand
+    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Connect Persona to Platform Account
+ */
+export const useAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>,
+        TError,
+        {data: PersonaAccountLinkCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Remove the connection between a persona and a platform account
+ * @summary Disconnect Persona from Platform Account
+ */
+export const accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = (
+    personaId: number | null,
+    accountId: number | null,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/accounts/persona-account-links/${personaId}/${accountId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null}, TContext> => {
+
+const mutationKey = ['accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, {personaId: number | null;accountId: number | null}> = (props) => {
+          const {personaId,accountId} = props ?? {};
+
+          return  accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete(personaId,accountId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>>
+    
+    export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Disconnect Persona from Platform Account
+ */
+export const useAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>,
+        TError,
+        {personaId: number | null;accountId: number | null},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -3086,618 +3457,6 @@ export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPV
     }
     
 /**
- * Create a new platform account (social media, website, etc.) for the user
- * @summary Create New Platform Account
- */
-export const accountsPlatformCreateApiOrchestratorAccountsPlatformPost = (
-    platformAccountCreateCommand: PlatformAccountCreateCommand,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<PlatformAccountOut>(
-      {url: `/api/orchestrator/accounts/platform`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: platformAccountCreateCommand, signal
-    },
-      options);
-    }
-  
-
-
-export const getAccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext> => {
-
-const mutationKey = ['accountsPlatformCreateApiOrchestratorAccountsPlatformPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, {data: PlatformAccountCreateCommand}> = (props) => {
-          const {data} = props ?? {};
-
-          return  accountsPlatformCreateApiOrchestratorAccountsPlatformPost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>>
-    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationBody = PlatformAccountCreateCommand
-    export type AccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationError = HTTPValidationError
-
-    /**
- * @summary Create New Platform Account
- */
-export const useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>, TError,{data: PlatformAccountCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsPlatformCreateApiOrchestratorAccountsPlatformPost>>,
-        TError,
-        {data: PlatformAccountCreateCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsPlatformCreateApiOrchestratorAccountsPlatformPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Update platform account information like username, credentials, or settings
- * @summary Update Platform Account Details
- */
-export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = (
-    accountId: number | null,
-    platformAccountUpdateCommand: PlatformAccountUpdateCommand,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<PlatformAccountOut>(
-      {url: `/api/orchestrator/accounts/platform/${accountId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: platformAccountUpdateCommand
-    },
-      options);
-    }
-  
-
-
-export const getAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext> => {
-
-const mutationKey = ['accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, {accountId: number | null;data: PlatformAccountUpdateCommand}> = (props) => {
-          const {accountId,data} = props ?? {};
-
-          return  accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut(accountId,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>>
-    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationBody = PlatformAccountUpdateCommand
-    export type AccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationError = HTTPValidationError
-
-    /**
- * @summary Update Platform Account Details
- */
-export const useAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>, TError,{accountId: number | null;data: PlatformAccountUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut>>,
-        TError,
-        {accountId: number | null;data: PlatformAccountUpdateCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Permanently delete a platform account and all associated data
- * @summary Remove Platform Account
- */
-export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = (
-    accountId: number | null,
-    params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<MessageOut>(
-      {url: `/api/orchestrator/accounts/platform/${accountId}`, method: 'DELETE',
-        params
-    },
-      options);
-    }
-  
-
-
-export const getAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext> => {
-
-const mutationKey = ['accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, {accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}> = (props) => {
-          const {accountId,params} = props ?? {};
-
-          return  accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete(accountId,params,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>>
-    
-    export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationError = HTTPValidationError
-
-    /**
- * @summary Remove Platform Account
- */
-export const useAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>, TError,{accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete>>,
-        TError,
-        {accountId: number | null;params?: AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Create a new persona with specific characteristics for content targeting
- * @summary Create New Persona Profile
- */
-export const accountsPersonaCreateApiOrchestratorAccountsPersonasPost = (
-    personaCreateCommand: PersonaCreateCommand,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<PersonaOut>(
-      {url: `/api/orchestrator/accounts/personas`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: personaCreateCommand, signal
-    },
-      options);
-    }
-  
-
-
-export const getAccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext> => {
-
-const mutationKey = ['accountsPersonaCreateApiOrchestratorAccountsPersonasPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, {data: PersonaCreateCommand}> = (props) => {
-          const {data} = props ?? {};
-
-          return  accountsPersonaCreateApiOrchestratorAccountsPersonasPost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>>
-    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationBody = PersonaCreateCommand
-    export type AccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationError = HTTPValidationError
-
-    /**
- * @summary Create New Persona Profile
- */
-export const useAccountsPersonaCreateApiOrchestratorAccountsPersonasPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>, TError,{data: PersonaCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsPersonaCreateApiOrchestratorAccountsPersonasPost>>,
-        TError,
-        {data: PersonaCreateCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsPersonaCreateApiOrchestratorAccountsPersonasPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Modify persona characteristics, demographics, or targeting preferences
- * @summary Update Persona Profile
- */
-export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = (
-    personaId: number | null,
-    personaUpdateCommand: PersonaUpdateCommand,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<PersonaOut>(
-      {url: `/api/orchestrator/accounts/personas/${personaId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: personaUpdateCommand
-    },
-      options);
-    }
-  
-
-
-export const getAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext> => {
-
-const mutationKey = ['accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, {personaId: number | null;data: PersonaUpdateCommand}> = (props) => {
-          const {personaId,data} = props ?? {};
-
-          return  accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut(personaId,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>>
-    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationBody = PersonaUpdateCommand
-    export type AccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationError = HTTPValidationError
-
-    /**
- * @summary Update Persona Profile
- */
-export const useAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>, TError,{personaId: number | null;data: PersonaUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut>>,
-        TError,
-        {personaId: number | null;data: PersonaUpdateCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Permanently delete a persona and all associated targeting data
- * @summary Remove Persona Profile
- */
-export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = (
-    personaId: number | null,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<MessageOut>(
-      {url: `/api/orchestrator/accounts/personas/${personaId}`, method: 'DELETE'
-    },
-      options);
-    }
-  
-
-
-export const getAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null}, TContext> => {
-
-const mutationKey = ['accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, {personaId: number | null}> = (props) => {
-          const {personaId} = props ?? {};
-
-          return  accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete(personaId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>>
-    
-    export type AccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationError = HTTPValidationError
-
-    /**
- * @summary Remove Persona Profile
- */
-export const useAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>, TError,{personaId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete>>,
-        TError,
-        {personaId: number | null},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Link a persona profile to a specific platform account for targeted content
- * @summary Connect Persona to Platform Account
- */
-export const accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = (
-    personaAccountLinkCommand: PersonaAccountLinkCommand,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<PersonaAccountOut>(
-      {url: `/api/orchestrator/accounts/persona-account-links`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: personaAccountLinkCommand, signal
-    },
-      options);
-    }
-  
-
-
-export const getAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext> => {
-
-const mutationKey = ['accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, {data: PersonaAccountLinkCommand}> = (props) => {
-          const {data} = props ?? {};
-
-          return  accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>>
-    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationBody = PersonaAccountLinkCommand
-    export type AccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationError = HTTPValidationError
-
-    /**
- * @summary Connect Persona to Platform Account
- */
-export const useAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>, TError,{data: PersonaAccountLinkCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost>>,
-        TError,
-        {data: PersonaAccountLinkCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Remove the connection between a persona and a platform account
- * @summary Disconnect Persona from Platform Account
- */
-export const accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = (
-    personaId: number | null,
-    accountId: number | null,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<MessageOut>(
-      {url: `/api/orchestrator/accounts/persona-account-links/${personaId}/${accountId}`, method: 'DELETE'
-    },
-      options);
-    }
-  
-
-
-export const getAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null}, TContext> => {
-
-const mutationKey = ['accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, {personaId: number | null;accountId: number | null}> = (props) => {
-          const {personaId,accountId} = props ?? {};
-
-          return  accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete(personaId,accountId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>>
-    
-    export type AccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationError = HTTPValidationError
-
-    /**
- * @summary Disconnect Persona from Platform Account
- */
-export const useAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>, TError,{personaId: number | null;accountId: number | null}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDelete>>,
-        TError,
-        {personaId: number | null;accountId: number | null},
-        TContext
-      > => {
-
-      const mutationOptions = getAccountsLinkDeleteApiOrchestratorAccountsPersonaAccountLinksPersonaIdAccountIdDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Retrieve trend analysis data for content strategy and market insights dashboard
- * @summary Get Trend Analysis Data
- */
-export const bffTrendsListTrendsApiOrchestratorTrendsGet = (
-    params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<TrendsListResponse>(
-      {url: `/api/orchestrator/trends`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-  
-
-export const getBffTrendsListTrendsApiOrchestratorTrendsGetQueryKey = (params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams,) => {
-    return [`/api/orchestrator/trends`, ...(params ? [params]: [])] as const;
-    }
-
-    
-export const getBffTrendsListTrendsApiOrchestratorTrendsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getBffTrendsListTrendsApiOrchestratorTrendsGetQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>> = ({ signal }) => bffTrendsListTrendsApiOrchestratorTrendsGet(params, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type BffTrendsListTrendsApiOrchestratorTrendsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>>
-export type BffTrendsListTrendsApiOrchestratorTrendsGetQueryError = HTTPValidationError
-
-
-export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
- params: undefined |  BffTrendsListTrendsApiOrchestratorTrendsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
- params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
- params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Trend Analysis Data
- */
-
-export function useBffTrendsListTrendsApiOrchestratorTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError = HTTPValidationError>(
- params?: BffTrendsListTrendsApiOrchestratorTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTrendsListTrendsApiOrchestratorTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getBffTrendsListTrendsApiOrchestratorTrendsGetQueryOptions(params,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
  * Ingest new insight data for analysis and trend detection
  * @summary Process and Store Insight Data
  */
@@ -3759,6 +3518,136 @@ export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValida
       > => {
 
       const mutationOptions = getInsightsIngestApiOrchestratorInsightsPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Signup
+ */
+export const signupApiOrchestratorAuthSignupPost = (
+    signupRequest: SignupRequest,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<UserResponse>(
+      {url: `/api/orchestrator/auth/signup`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: signupRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getSignupApiOrchestratorAuthSignupPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, TError,{data: SignupRequest}, TContext> => {
+
+const mutationKey = ['signupApiOrchestratorAuthSignupPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, {data: SignupRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  signupApiOrchestratorAuthSignupPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignupApiOrchestratorAuthSignupPostMutationResult = NonNullable<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>>
+    export type SignupApiOrchestratorAuthSignupPostMutationBody = SignupRequest
+    export type SignupApiOrchestratorAuthSignupPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Signup
+ */
+export const useSignupApiOrchestratorAuthSignupPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof signupApiOrchestratorAuthSignupPost>>,
+        TError,
+        {data: SignupRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getSignupApiOrchestratorAuthSignupPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Login
+ */
+export const loginApiOrchestratorAuthLoginPost = (
+    loginRequest: LoginRequest,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TokenResponse>(
+      {url: `/api/orchestrator/auth/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getLoginApiOrchestratorAuthLoginPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, TError,{data: LoginRequest}, TContext> => {
+
+const mutationKey = ['loginApiOrchestratorAuthLoginPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, {data: LoginRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  loginApiOrchestratorAuthLoginPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginApiOrchestratorAuthLoginPostMutationResult = NonNullable<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>>
+    export type LoginApiOrchestratorAuthLoginPostMutationBody = LoginRequest
+    export type LoginApiOrchestratorAuthLoginPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Login
+ */
+export const useLoginApiOrchestratorAuthLoginPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof loginApiOrchestratorAuthLoginPost>>,
+        TError,
+        {data: LoginRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getLoginApiOrchestratorAuthLoginPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -12,7 +12,7 @@ from apps.backend.src.modules.insights.schemas import InsightIn, InsightOut
 from apps.backend.src.modules.insights.service import ingest_insight_sample
 from apps.backend.src.modules.users.models import User
 
-from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
 
@@ -49,21 +49,8 @@ async def op_ingest_insight(payload: InsightInCommand, ctx: TaskContext) -> Insi
     output_model=InsightOut,
     method="post",
     path="/insights",
-    tags=("insights", "data", "analytics", "ingestion", "processing"),
+    tags=("action", "insights", "data", "analytics", "ingestion", "processing"),
 )
 def _flow_ingest_insight(builder: FlowBuilder):
     task = builder.task("ingest_insight", "insights.ingest")
     builder.expect_terminal(task)
-
-
-router = FLOWS.build_router(
-    orchestrate_flow,
-    prefix="",
-    tags=["insights"],
-    runtime_dependency=runtime_dependency,
-    flow_filter=lambda flow: "insights" in flow.tags and "internal" not in flow.tags,
-)
-
-
-__all__ = ["router"]
-

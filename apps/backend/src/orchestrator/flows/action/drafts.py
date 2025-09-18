@@ -13,7 +13,7 @@ from apps.backend.src.modules.drafts.schemas import DraftIR, DraftOut, DraftSave
 from apps.backend.src.modules.drafts.service import create_draft, delete_draft, update_draft_ir
 from apps.backend.src.modules.users.models import User
 
-from apps.backend.src.orchestrator.dispatch import TaskContext, orchestrate_flow, runtime_dependency
+from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
 
@@ -109,7 +109,7 @@ async def op_delete_draft(payload: DraftDeleteCommand, ctx: TaskContext) -> Mess
     output_model=DraftOut,
     method="post",
     path="/drafts",
-    tags=("drafts", "content", "create", "writing"),
+    tags=("action", "drafts", "content", "create", "writing"),
 )
 def _flow_create_draft(builder: FlowBuilder):
     task = builder.task("create_draft", "drafts.create")
@@ -124,7 +124,7 @@ def _flow_create_draft(builder: FlowBuilder):
     output_model=DraftOut,
     method="put",
     path="/drafts/{draft_id}/ir",
-    tags=("drafts", "content", "update", "writing", "editing"),
+    tags=("action", "drafts", "content", "update", "writing", "editing"),
 )
 def _flow_update_draft(builder: FlowBuilder):
     task = builder.task("update_draft", "drafts.update_ir")
@@ -138,19 +138,8 @@ def _flow_update_draft(builder: FlowBuilder):
     output_model=MessageOut,
     method="delete",
     path="/drafts/{draft_id}",
-    tags=("drafts", "content", "delete", "writing", "editing"),
+    tags=("action", "drafts", "content", "delete", "writing", "editing"),
 )
 def _flow_delete_draft(builder: FlowBuilder):
     task = builder.task("delete_draft", "drafts.delete")
     builder.expect_terminal(task)
-
-router = FLOWS.build_router(
-    orchestrate_flow,
-    prefix="",
-    tags=["drafts"],
-    runtime_dependency=runtime_dependency,
-    flow_filter=lambda flow: "drafts" in flow.tags and "bff" not in flow.tags and "internal" not in flow.tags,
-)
-
-
-__all__ = ["router"]

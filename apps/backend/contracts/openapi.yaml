@@ -656,6 +656,673 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/platform:
+    post:
+      tags:
+      - action
+      - action
+      - accounts
+      - platform
+      - create
+      - social-media
+      summary: Create New Platform Account
+      description: Create a new platform account (social media, website, etc.) for
+        the user
+      operationId: accounts_platform_create_api_orchestrator_accounts_platform_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformAccountCreateCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/platform/{account_id}:
+    put:
+      tags:
+      - action
+      - action
+      - accounts
+      - platform
+      - update
+      - social-media
+      summary: Update Platform Account Details
+      description: Update platform account information like username, credentials,
+        or settings
+      operationId: accounts_platform_update_api_orchestrator_accounts_platform__account_id__put
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformAccountUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - action
+      - action
+      - accounts
+      - platform
+      - delete
+      - social-media
+      - dangerous
+      summary: Remove Platform Account
+      description: Permanently delete a platform account and all associated data
+      operationId: accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Id
+      - name: soft
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Soft
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/personas:
+    post:
+      tags:
+      - action
+      - action
+      - accounts
+      - persona
+      - create
+      - audience
+      - targeting
+      summary: Create New Persona Profile
+      description: Create a new persona with specific characteristics for content
+        targeting
+      operationId: accounts_persona_create_api_orchestrator_accounts_personas_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaCreateCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/personas/{persona_id}:
+    put:
+      tags:
+      - action
+      - action
+      - accounts
+      - persona
+      - update
+      - audience
+      - targeting
+      summary: Update Persona Profile
+      description: Modify persona characteristics, demographics, or targeting preferences
+      operationId: accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - action
+      - action
+      - accounts
+      - persona
+      - delete
+      - audience
+      - targeting
+      - dangerous
+      summary: Remove Persona Profile
+      description: Permanently delete a persona and all associated targeting data
+      operationId: accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/persona-account-links:
+    post:
+      tags:
+      - action
+      - action
+      - accounts
+      - persona
+      - platform
+      - link
+      - targeting
+      summary: Connect Persona to Platform Account
+      description: Link a persona profile to a specific platform account for targeted
+        content
+      operationId: accounts_link_create_api_orchestrator_accounts_persona_account_links_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaAccountLinkCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/persona-account-links/{persona_id}/{account_id}:
+    delete:
+      tags:
+      - action
+      - action
+      - accounts
+      - persona
+      - platform
+      - unlink
+      - targeting
+      summary: Disconnect Persona from Platform Account
+      description: Remove the connection between a persona and a platform account
+      operationId: accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete
+      parameters:
+      - name: persona_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns:
+    post:
+      tags:
+      - action
+      - action
+      - campaigns
+      - marketing
+      - create
+      - strategy
+      summary: Create New Marketing Campaign
+      description: Set up a new marketing campaign with goals, timeline, and target
+        audience
+      operationId: campaigns_create_campaign_api_orchestrator_campaigns_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}:
+    put:
+      tags:
+      - action
+      - action
+      - campaigns
+      - marketing
+      - update
+      - strategy
+      summary: Update Campaign Settings
+      description: Modify campaign parameters like name, goals, timeline, or target
+        audience
+      operationId: campaigns_update_campaign_api_orchestrator_campaigns__campaign_id__put
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - action
+      - action
+      - campaigns
+      - marketing
+      - delete
+      - dangerous
+      summary: Delete Campaign
+      description: Permanently delete a campaign and all associated data
+      operationId: campaigns_delete_campaign_api_orchestrator_campaigns__campaign_id__delete
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/kpi-defs:
+    put:
+      tags:
+      - action
+      - action
+      - campaigns
+      - kpi
+      - metrics
+      - analytics
+      - measurement
+      summary: Define Campaign KPIs
+      description: Set up or update Key Performance Indicators for campaign measurement
+      operationId: campaigns_upsert_kpi_defs_api_orchestrator_campaigns__campaign_id__kpi_defs_put
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignKPIDefUpsertCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIDefListOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/kpi-results:
+    post:
+      tags:
+      - action
+      - action
+      - campaigns
+      - kpi
+      - metrics
+      - data
+      - tracking
+      summary: Record Campaign KPI Data
+      description: Log new KPI measurement data for campaign performance tracking
+      operationId: campaigns_record_kpi_result_api_orchestrator_campaigns__campaign_id__kpi_results_post
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignKPIRecordCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIResultOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/campaigns/{campaign_id}/aggregate-kpis:
+    post:
+      tags:
+      - action
+      - action
+      - campaigns
+      - kpi
+      - analytics
+      - reporting
+      - summary
+      summary: Calculate Campaign KPI Summary
+      description: Aggregate and summarize KPI data for campaign performance analysis
+      operationId: campaigns_aggregate_kpis_api_orchestrator_campaigns__campaign_id__aggregate_kpis_post
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignAggregationCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignKPIResultOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts:
+    post:
+      tags:
+      - action
+      - action
+      - drafts
+      - content
+      - create
+      - writing
+      summary: Create Content Draft
+      description: Start a new content draft with initial parameters and metadata
+      operationId: drafts_create_api_orchestrator_drafts_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftSaveRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/{draft_id}/ir:
+    put:
+      tags:
+      - action
+      - action
+      - drafts
+      - content
+      - update
+      - writing
+      - editing
+      summary: Update Draft Content
+      description: Modify the content and structure of an existing draft
+      operationId: drafts_update_ir_api_orchestrator_drafts__draft_id__ir_put
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/{draft_id}:
+    delete:
+      tags:
+      - action
+      - action
+      - drafts
+      - content
+      - delete
+      - writing
+      - editing
+      summary: Delete Draft
+      description: Delete an existing draft
+      operationId: drafts_delete_api_orchestrator_drafts__draft_id__delete
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/insights:
+    post:
+      tags:
+      - action
+      - action
+      - insights
+      - data
+      - analytics
+      - ingestion
+      - processing
+      summary: Process and Store Insight Data
+      description: Ingest new insight data for analysis and trend detection
+      operationId: insights_ingest_api_orchestrator_insights_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightInCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/auth/signup:
     post:
       tags:
@@ -708,731 +1375,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns:
-    post:
-      tags:
-      - campaigns
-      - campaigns
-      - marketing
-      - create
-      - strategy
-      summary: Create New Marketing Campaign
-      description: Set up a new marketing campaign with goals, timeline, and target
-        audience
-      operationId: campaigns_create_campaign_api_orchestrator_campaigns_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampaignCreate'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}:
-    put:
-      tags:
-      - campaigns
-      - campaigns
-      - marketing
-      - update
-      - strategy
-      summary: Update Campaign Settings
-      description: Modify campaign parameters like name, goals, timeline, or target
-        audience
-      operationId: campaigns_update_campaign_api_orchestrator_campaigns__campaign_id__put
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Campaign Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampaignUpdateCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      tags:
-      - campaigns
-      - campaigns
-      - marketing
-      - delete
-      - dangerous
-      summary: Delete Campaign
-      description: Permanently delete a campaign and all associated data
-      operationId: campaigns_delete_campaign_api_orchestrator_campaigns__campaign_id__delete
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Campaign Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}/kpi-defs:
-    put:
-      tags:
-      - campaigns
-      - campaigns
-      - kpi
-      - metrics
-      - analytics
-      - measurement
-      summary: Define Campaign KPIs
-      description: Set up or update Key Performance Indicators for campaign measurement
-      operationId: campaigns_upsert_kpi_defs_api_orchestrator_campaigns__campaign_id__kpi_defs_put
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Campaign Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampaignKPIDefUpsertCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignKPIDefListOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}/kpi-results:
-    post:
-      tags:
-      - campaigns
-      - campaigns
-      - kpi
-      - metrics
-      - data
-      - tracking
-      summary: Record Campaign KPI Data
-      description: Log new KPI measurement data for campaign performance tracking
-      operationId: campaigns_record_kpi_result_api_orchestrator_campaigns__campaign_id__kpi_results_post
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Campaign Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampaignKPIRecordCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignKPIResultOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/campaigns/{campaign_id}/aggregate-kpis:
-    post:
-      tags:
-      - campaigns
-      - campaigns
-      - kpi
-      - analytics
-      - reporting
-      - summary
-      summary: Calculate Campaign KPI Summary
-      description: Aggregate and summarize KPI data for campaign performance analysis
-      operationId: campaigns_aggregate_kpis_api_orchestrator_campaigns__campaign_id__aggregate_kpis_post
-      parameters:
-      - name: campaign_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Campaign Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CampaignAggregationCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CampaignKPIResultOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/drafts:
-    post:
-      tags:
-      - drafts
-      - drafts
-      - content
-      - create
-      - writing
-      summary: Create Content Draft
-      description: Start a new content draft with initial parameters and metadata
-      operationId: drafts_create_api_orchestrator_drafts_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DraftSaveRequest'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DraftOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/drafts/{draft_id}/ir:
-    put:
-      tags:
-      - drafts
-      - drafts
-      - content
-      - update
-      - writing
-      - editing
-      summary: Update Draft Content
-      description: Modify the content and structure of an existing draft
-      operationId: drafts_update_ir_api_orchestrator_drafts__draft_id__ir_put
-      parameters:
-      - name: draft_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Draft Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DraftUpdateCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DraftOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/drafts/{draft_id}:
-    delete:
-      tags:
-      - drafts
-      - drafts
-      - content
-      - delete
-      - writing
-      - editing
-      summary: Delete Draft
-      description: Delete an existing draft
-      operationId: drafts_delete_api_orchestrator_drafts__draft_id__delete
-      parameters:
-      - name: draft_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Draft Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/accounts/platform:
-    post:
-      tags:
-      - accounts
-      - accounts
-      - platform
-      - create
-      - social-media
-      summary: Create New Platform Account
-      description: Create a new platform account (social media, website, etc.) for
-        the user
-      operationId: accounts_platform_create_api_orchestrator_accounts_platform_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlatformAccountCreateCommand'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformAccountOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/accounts/platform/{account_id}:
-    put:
-      tags:
-      - accounts
-      - accounts
-      - platform
-      - update
-      - social-media
-      summary: Update Platform Account Details
-      description: Update platform account information like username, credentials,
-        or settings
-      operationId: accounts_platform_update_api_orchestrator_accounts_platform__account_id__put
-      parameters:
-      - name: account_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Account Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlatformAccountUpdateCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformAccountOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      tags:
-      - accounts
-      - accounts
-      - platform
-      - delete
-      - social-media
-      - dangerous
-      summary: Remove Platform Account
-      description: Permanently delete a platform account and all associated data
-      operationId: accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete
-      parameters:
-      - name: account_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Account Id
-      - name: soft
-        in: query
-        required: false
-        schema:
-          type: boolean
-          default: true
-          title: Soft
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/accounts/personas:
-    post:
-      tags:
-      - accounts
-      - accounts
-      - persona
-      - create
-      - audience
-      - targeting
-      summary: Create New Persona Profile
-      description: Create a new persona with specific characteristics for content
-        targeting
-      operationId: accounts_persona_create_api_orchestrator_accounts_personas_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PersonaCreateCommand'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonaOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/accounts/personas/{persona_id}:
-    put:
-      tags:
-      - accounts
-      - accounts
-      - persona
-      - update
-      - audience
-      - targeting
-      summary: Update Persona Profile
-      description: Modify persona characteristics, demographics, or targeting preferences
-      operationId: accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put
-      parameters:
-      - name: persona_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Persona Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PersonaUpdateCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonaOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
-      tags:
-      - accounts
-      - accounts
-      - persona
-      - delete
-      - audience
-      - targeting
-      - dangerous
-      summary: Remove Persona Profile
-      description: Permanently delete a persona and all associated targeting data
-      operationId: accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete
-      parameters:
-      - name: persona_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Persona Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/accounts/persona-account-links:
-    post:
-      tags:
-      - accounts
-      - accounts
-      - persona
-      - platform
-      - link
-      - targeting
-      summary: Connect Persona to Platform Account
-      description: Link a persona profile to a specific platform account for targeted
-        content
-      operationId: accounts_link_create_api_orchestrator_accounts_persona_account_links_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PersonaAccountLinkCommand'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonaAccountOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/accounts/persona-account-links/{persona_id}/{account_id}:
-    delete:
-      tags:
-      - accounts
-      - accounts
-      - persona
-      - platform
-      - unlink
-      - targeting
-      summary: Disconnect Persona from Platform Account
-      description: Remove the connection between a persona and a platform account
-      operationId: accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete
-      parameters:
-      - name: persona_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Persona Id
-      - name: account_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Account Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/trends:
-    get:
-      tags:
-      - insights
-      - bff
-      - trends
-      - analytics
-      - insights
-      - read
-      - ui
-      - frontend
-      - dashboard
-      - strategy
-      summary: Get Trend Analysis Data
-      description: Retrieve trend analysis data for content strategy and market insights
-        dashboard
-      operationId: bff_trends_list_trends_api_orchestrator_trends_get
-      parameters:
-      - name: country
-        in: query
-        required: false
-        schema:
-          type: string
-          default: US
-          title: Country
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          default: 20
-          title: Limit
-      - name: q
-        in: query
-        required: false
-        schema:
-          title: Q
-          type: string
-          nullable: true
-      - name: on_date
-        in: query
-        required: false
-        schema:
-          title: On Date
-          format: date
-          type: string
-          nullable: true
-      - name: since
-        in: query
-        required: false
-        schema:
-          title: Since
-          format: date
-          type: string
-          nullable: true
-      - name: until
-        in: query
-        required: false
-        schema:
-          title: Until
-          format: date
-          type: string
-          nullable: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TrendsListResponse'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/insights:
-    post:
-      tags:
-      - insights
-      - insights
-      - data
-      - analytics
-      - ingestion
-      - processing
-      summary: Process and Store Insight Data
-      description: Ingest new insight data for analysis and trend detection
-      operationId: insights_ingest_api_orchestrator_insights_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InsightInCommand'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InsightOut'
         '422':
           description: Validation Error
           content:

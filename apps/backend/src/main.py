@@ -2,12 +2,10 @@ from fastapi import FastAPI, APIRouter
 from apps.backend.src.core.middleware import ContextMiddleware
 
 from apps.backend.src.orchestrator.flows.auth_router import router as orchestrator_auth_router
-from apps.backend.src.orchestrator.flows.campaigns_router import router as orchestrator_campaigns_router
-from apps.backend.src.orchestrator.flows.drafts_router import router as orchestrator_drafts_router
-from apps.backend.src.orchestrator.flows.accounts_router import router as orchestrator_accounts_router
-from apps.backend.src.orchestrator.flows.insights_router import router as orchestrator_insights_router
 from apps.backend.src.orchestrator.bff_router import router as orchestrator_bff_router
 from apps.backend.src.orchestrator.chat_router import router as orchestrator_chat_router
+from apps.backend.src.orchestrator.action_router import router as orchestrator_action_router
+
 from apps.backend.src.core.config import settings
 from apps.backend.src.core.db import engine, Base
 from pathlib import Path
@@ -39,13 +37,10 @@ app.add_middleware(ContextMiddleware)
 
 # BFF 라우터(오케스트레이터 기반) 등록
 api.include_router(orchestrator_bff_router, prefix="/bff")
+api.include_router(orchestrator_action_router, prefix="/orchestrator")
 
 # Orchestrator 라우터 등록
 api.include_router(orchestrator_auth_router, prefix="/orchestrator")
-api.include_router(orchestrator_campaigns_router, prefix="/orchestrator")
-api.include_router(orchestrator_drafts_router, prefix="/orchestrator")
-api.include_router(orchestrator_accounts_router, prefix="/orchestrator")
-api.include_router(orchestrator_insights_router, prefix="/orchestrator")
 api.include_router(orchestrator_chat_router, prefix="/orchestrator")
 
 # 헬스체크도 api 아래로

@@ -304,7 +304,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/auth/signup": {
+    "/api/orchestrator/accounts/platform": {
         parameters: {
             query?: never;
             header?: never;
@@ -313,15 +313,42 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Signup */
-        post: operations["signup_api_orchestrator_auth_signup_post"];
+        /**
+         * Create New Platform Account
+         * @description Create a new platform account (social media, website, etc.) for the user
+         */
+        post: operations["accounts_platform_create_api_orchestrator_accounts_platform_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/auth/login": {
+    "/api/orchestrator/accounts/platform/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Platform Account Details
+         * @description Update platform account information like username, credentials, or settings
+         */
+        put: operations["accounts_platform_update_api_orchestrator_accounts_platform__account_id__put"];
+        post?: never;
+        /**
+         * Remove Platform Account
+         * @description Permanently delete a platform account and all associated data
+         */
+        delete: operations["accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/accounts/personas": {
         parameters: {
             query?: never;
             header?: never;
@@ -330,9 +357,76 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Login */
-        post: operations["login_api_orchestrator_auth_login_post"];
+        /**
+         * Create New Persona Profile
+         * @description Create a new persona with specific characteristics for content targeting
+         */
+        post: operations["accounts_persona_create_api_orchestrator_accounts_personas_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/accounts/personas/{persona_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Persona Profile
+         * @description Modify persona characteristics, demographics, or targeting preferences
+         */
+        put: operations["accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put"];
+        post?: never;
+        /**
+         * Remove Persona Profile
+         * @description Permanently delete a persona and all associated targeting data
+         */
+        delete: operations["accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/accounts/persona-account-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect Persona to Platform Account
+         * @description Link a persona profile to a specific platform account for targeted content
+         */
+        post: operations["accounts_link_create_api_orchestrator_accounts_persona_account_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/accounts/persona-account-links/{persona_id}/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Disconnect Persona from Platform Account
+         * @description Remove the connection between a persona and a platform account
+         */
+        delete: operations["accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -502,154 +596,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/accounts/platform": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create New Platform Account
-         * @description Create a new platform account (social media, website, etc.) for the user
-         */
-        post: operations["accounts_platform_create_api_orchestrator_accounts_platform_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/accounts/platform/{account_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Platform Account Details
-         * @description Update platform account information like username, credentials, or settings
-         */
-        put: operations["accounts_platform_update_api_orchestrator_accounts_platform__account_id__put"];
-        post?: never;
-        /**
-         * Remove Platform Account
-         * @description Permanently delete a platform account and all associated data
-         */
-        delete: operations["accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/accounts/personas": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create New Persona Profile
-         * @description Create a new persona with specific characteristics for content targeting
-         */
-        post: operations["accounts_persona_create_api_orchestrator_accounts_personas_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/accounts/personas/{persona_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Persona Profile
-         * @description Modify persona characteristics, demographics, or targeting preferences
-         */
-        put: operations["accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put"];
-        post?: never;
-        /**
-         * Remove Persona Profile
-         * @description Permanently delete a persona and all associated targeting data
-         */
-        delete: operations["accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/accounts/persona-account-links": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Connect Persona to Platform Account
-         * @description Link a persona profile to a specific platform account for targeted content
-         */
-        post: operations["accounts_link_create_api_orchestrator_accounts_persona_account_links_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/accounts/persona-account-links/{persona_id}/{account_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Disconnect Persona from Platform Account
-         * @description Remove the connection between a persona and a platform account
-         */
-        delete: operations["accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/trends": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Trend Analysis Data
-         * @description Retrieve trend analysis data for content strategy and market insights dashboard
-         */
-        get: operations["bff_trends_list_trends_api_orchestrator_trends_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/insights": {
         parameters: {
             query?: never;
@@ -664,6 +610,40 @@ export interface paths {
          * @description Ingest new insight data for analysis and trend detection
          */
         post: operations["insights_ingest_api_orchestrator_insights_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/auth/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Signup */
+        post: operations["signup_api_orchestrator_auth_signup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_orchestrator_auth_login_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2188,7 +2168,7 @@ export interface operations {
             };
         };
     };
-    signup_api_orchestrator_auth_signup_post: {
+    accounts_platform_create_api_orchestrator_accounts_platform_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -2197,17 +2177,17 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SignupRequest"];
+                "application/json": components["schemas"]["PlatformAccountCreateCommand"];
             };
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserResponse"];
+                    "application/json": components["schemas"]["PlatformAccountOut"];
                 };
             };
             /** @description Validation Error */
@@ -2221,16 +2201,18 @@ export interface operations {
             };
         };
     };
-    login_api_orchestrator_auth_login_post: {
+    accounts_platform_update_api_orchestrator_accounts_platform__account_id__put: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                account_id: number | null;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LoginRequest"];
+                "application/json": components["schemas"]["PlatformAccountUpdateCommand"];
             };
         };
         responses: {
@@ -2240,7 +2222,204 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"];
+                    "application/json": components["schemas"]["PlatformAccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete: {
+        parameters: {
+            query?: {
+                soft?: boolean;
+            };
+            header?: never;
+            path: {
+                account_id: number | null;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_persona_create_api_orchestrator_accounts_personas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonaCreateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                persona_id: number | null;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonaUpdateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                persona_id: number | null;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_link_create_api_orchestrator_accounts_persona_account_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonaAccountLinkCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaAccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                persona_id: number | null;
+                account_id: number | null;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
                 };
             };
             /** @description Validation Error */
@@ -2557,307 +2736,6 @@ export interface operations {
             };
         };
     };
-    accounts_platform_create_api_orchestrator_accounts_platform_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformAccountCreateCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlatformAccountOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accounts_platform_update_api_orchestrator_accounts_platform__account_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                account_id: number | null;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlatformAccountUpdateCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlatformAccountOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete: {
-        parameters: {
-            query?: {
-                soft?: boolean;
-            };
-            header?: never;
-            path: {
-                account_id: number | null;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MessageOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accounts_persona_create_api_orchestrator_accounts_personas_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonaCreateCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accounts_persona_update_api_orchestrator_accounts_personas__persona_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                persona_id: number | null;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonaUpdateCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                persona_id: number | null;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MessageOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accounts_link_create_api_orchestrator_accounts_persona_account_links_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonaAccountLinkCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaAccountOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    accounts_link_delete_api_orchestrator_accounts_persona_account_links__persona_id___account_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                persona_id: number | null;
-                account_id: number | null;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MessageOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    bff_trends_list_trends_api_orchestrator_trends_get: {
-        parameters: {
-            query?: {
-                country?: string;
-                limit?: number;
-                q?: string | null;
-                on_date?: string | null;
-                since?: string | null;
-                until?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TrendsListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     insights_ingest_api_orchestrator_insights_post: {
         parameters: {
             query?: never;
@@ -2878,6 +2756,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InsightOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    signup_api_orchestrator_auth_signup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_orchestrator_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
