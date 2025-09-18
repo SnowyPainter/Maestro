@@ -8,15 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
-import { components } from "@/lib/types/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-type DraftIR = components["schemas"]["DraftIR"];
-type DraftOut = components["schemas"]["DraftOut"];
+import { DraftIR, DraftOut } from "@/lib/api/generated";
 
 export function EditDraftForm({ draft, onSuccess }: { draft: DraftOut, onSuccess: () => void }) {
   const [title, setTitle] = useState(draft.title || "");
-  const [text, setText] = useState((draft.ir as DraftIR).blocks[0]?.props.content || "");
+  const [text, setText] = useState((draft.ir as DraftIR).blocks[0]?.props.markdown || "");
   const [goal, setGoal] = useState(draft.goal || "");
   const [tags, setTags] = useState(draft.tags?.join(', ') || "");
   const [campaignId, setCampaignId] = useState<number | null>(draft.campaign_id || null);
@@ -37,7 +34,7 @@ export function EditDraftForm({ draft, onSuccess }: { draft: DraftOut, onSuccess
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const ir: DraftIR = {
-      blocks: [{ type: "text", props: { content: text } }],
+      blocks: [{ type: "text", props: { markdown: text } }],
       options: {}
     };
     updateDraft({ 

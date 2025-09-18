@@ -36,7 +36,7 @@ export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const ir: DraftIR = {
-      blocks: [{ type: "text", props: { content: text } }],
+      blocks: [{ type: "text", props: { markdown: text } }],
       options: {}
     };
     createDraft({ data: { 

@@ -335,10 +335,9 @@ class FlowPlanner:
     def _apply_flow_adapters(self, steps: List[PlanExecutionStep]) -> None:
         if len(steps) < 2:
             return
-        try:
-            from .adapters import FLOW_ADAPTERS
-        except ImportError:  # pragma: no cover - adapters optional during tests
-            FLOW_ADAPTERS = {}
+
+        from .adapters import FLOW_ADAPTERS as imported_adapters
+        FLOW_ADAPTERS = imported_adapters
 
         for previous, current in zip(steps, steps[1:]):
             if previous.flow_key is None or current.flow_key is None:
