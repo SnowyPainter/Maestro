@@ -25,6 +25,9 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "PlatformAccountOut": "account.pa.detail",
     "PlatformAccountList": "account.pa.list",
 
+    "PersonaAccountOut": "account.persona_account.detail",
+    "PersonaAccountList": "account.persona_account.list",
+
     "TrendsListResponse": "trends.list",
     
     "MessageOut": "info",
