@@ -3,7 +3,8 @@ import { useBffAccountsListPersonasApiBffAccountsPersonasGet } from "@/lib/api/g
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ChevronDown } from "lucide-react";
 
 export function PersonaList({ onSelectPersona }: { onSelectPersona: (personaId: number) => void }) {
   const { data: personas, isLoading, isError } = useBffAccountsListPersonasApiBffAccountsPersonasGet();
@@ -21,15 +22,22 @@ export function PersonaList({ onSelectPersona }: { onSelectPersona: (personaId: 
 
   return (
     <div className="p-4 border rounded-lg">
-        <h3 className="font-semibold mb-2">Select a Persona</h3>
-        <div className="flex flex-col gap-2">
+        <h3 className="font-semibold mb-3">Select a Persona</h3>
+        <div className="grid grid-cols-2 gap-3">
             {visiblePersonas?.map(persona => (
                 <button
                     key={persona.id}
                     onClick={() => onSelectPersona(persona.id)}
                     className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/50 text-left group transition-colors"
                 >
-                    <ChevronRight className="w-4 h-4 mt-0.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                    <Avatar className="w-8 h-8 flex-shrink-0">
+                        {persona.avatar_url && (
+                            <AvatarImage src={persona.avatar_url} alt={persona.name} />
+                        )}
+                        <AvatarFallback className="text-xs">
+                            {persona.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-sm truncate">{persona.name}</span>
@@ -38,11 +46,8 @@ export function PersonaList({ onSelectPersona }: { onSelectPersona: (personaId: 
                             </Badge>
                         </div>
                         {persona.bio && (
-                            <p className="text-xs text-muted-foreground mb-1 line-clamp-2 relative">
+                            <p className="text-xs text-muted-foreground mb-1 line-clamp-1 truncate">
                                 {persona.bio}
-                                {persona.bio.length > 80 && (
-                                    <span className="absolute right-0 bottom-0 w-8 h-4 bg-gradient-to-l from-background to-transparent"></span>
-                                )}
                             </p>
                         )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -64,13 +69,13 @@ export function PersonaList({ onSelectPersona }: { onSelectPersona: (personaId: 
             ))}
         </div>
         {personas && personas.length > 3 && (
-            <Button variant="link" onClick={() => setIsExpanded(!isExpanded)} className="mt-2">
+            <Button variant="link" onClick={() => setIsExpanded(!isExpanded)} className="mt-3 col-span-2">
                 {isExpanded ? "Show Less" : `Show ${personas.length - 3} More`}
-                {isExpanded ? <ChevronDown className="w-4 h-4 ml-2" /> : <ChevronRight className="w-4 h-4 ml-2" />}
+                {isExpanded ? <ChevronDown className="w-4 h-4 ml-2" /> : <ChevronDown className="w-4 h-4 ml-2" />}
             </Button>
         )}
         {personas?.length === 0 && (
-            <p className="p-2 text-xs text-muted-foreground">No personas found.</p>
+            <p className="p-2 text-xs text-muted-foreground col-span-2">No personas found.</p>
         )}
     </div>
   );
