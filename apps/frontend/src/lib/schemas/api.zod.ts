@@ -295,6 +295,63 @@ export const bffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResultsGetRes
 
 
 /**
+ * Get the current persona account for the user
+ * @summary Get current persona account
+ */
+export const bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetQueryParams = zod.object({
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetResponse = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "account_id": zod.number(),
+  "can_permissions": zod.array(zod.enum(['read', 'write', 'publish'])),
+  "is_verified_link": zod.boolean(),
+  "default_templates": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({})
+})
+
+
+/**
+ * Get the current connected persona for the user
+ * @summary Get current connected persona
+ */
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetQueryParams = zod.object({
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseNameMax = 100;
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseAvatarUrlMax = 512;
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseBioMax = 200;
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseLanguageDefault = "en";
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseLanguageMax = 10;
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseToneMax = 40;
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseSchemaVersionDefault = 1;
+
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponse = zod.object({
+  "name": zod.string().max(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseNameMax),
+  "avatar_url": zod.string().max(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseAvatarUrlMax).nullish(),
+  "bio": zod.string().max(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseBioMax).nullish(),
+  "language": zod.string().max(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseLanguageMax).default(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseLanguageDefault),
+  "tone": zod.string().max(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseToneMax).nullish(),
+  "style_guide": zod.string().nullish(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.number().default(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseSchemaVersionDefault),
+  "id": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
  * Retrieve complete draft content and metadata for content editing interface
  * @summary Get Draft Content
  */

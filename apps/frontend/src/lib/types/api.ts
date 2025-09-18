@@ -204,6 +204,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/contexts/persona_account/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current persona account
+         * @description Get the current persona account for the user
+         */
+        get: operations["bff_contexts_current_persona_account_api_bff_contexts_persona_account_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/contexts/persona/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current connected persona
+         * @description Get the current connected persona for the user
+         */
+        get: operations["bff_contexts_current_persona_api_bff_contexts_persona_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/drafts/{draft_id}": {
         parameters: {
             query?: never;
@@ -2006,6 +2046,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CampaignKpiResultList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_contexts_current_persona_account_api_bff_contexts_persona_account_current_get: {
+        parameters: {
+            query?: {
+                persona_account_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaAccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_contexts_current_persona_api_bff_contexts_persona_current_get: {
+        parameters: {
+            query?: {
+                persona_account_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaOut"];
                 };
             };
             /** @description Validation Error */

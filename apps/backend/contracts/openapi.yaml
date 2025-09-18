@@ -434,6 +434,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/contexts/persona_account/current:
+    get:
+      tags:
+      - bff
+      - bff
+      - contexts
+      - persona account
+      - current
+      summary: Get current persona account
+      description: Get the current persona account for the user
+      operationId: bff_contexts_current_persona_account_api_bff_contexts_persona_account_current_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/contexts/persona/current:
+    get:
+      tags:
+      - bff
+      - bff
+      - contexts
+      - persona
+      - current
+      summary: Get current connected persona
+      description: Get the current connected persona for the user
+      operationId: bff_contexts_current_persona_api_bff_contexts_persona_current_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/drafts/{draft_id}:
     get:
       tags:

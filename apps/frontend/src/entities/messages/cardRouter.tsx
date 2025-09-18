@@ -16,6 +16,7 @@ import { PersonaList } from "@/entities/personas/components/PersonaList";
 import { AccountList } from "../accounts/components/AccountList";
 import { AccountDetail } from "../accounts/components/AccountDetail";
 import { PersonaAccountList } from "../accounts/components/PersonaAccountList";
+import { PersonaAccountCard } from "../accounts/components/PersonaAccountCard";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -101,6 +102,11 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         //accountId={data.account_id as number}
         palist={data.items as any}
       />
+    );
+  }
+  if (card_type === 'account.persona_account.detail' && data?.id) {
+    return (
+      <PersonaAccountCard link={data as any} />
     );
   }
 

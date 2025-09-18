@@ -964,6 +964,14 @@ end?: string | null;
 limit?: number;
 };
 
+export type BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams = {
+persona_account_id?: number | null;
+};
+
+export type BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams = {
+persona_account_id?: number | null;
+};
+
 export type BffDraftsListDraftsApiBffDraftsGetParams = {
 campaign_id?: number | null;
 limit?: number;
@@ -1889,6 +1897,186 @@ export function useBffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResults
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffCampaignsListKpiResultsApiBffCampaignsCampaignIdKpiResultsGetQueryOptions(campaignId,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get the current persona account for the user
+ * @summary Get current persona account
+ */
+export const bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet = (
+    params?: BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PersonaAccountOut>(
+      {url: `/api/bff/contexts/persona_account/current`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetQueryKey = (params?: BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams,) => {
+    return [`/api/bff/contexts/persona_account/current`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetQueryOptions = <TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError = HTTPValidationError>(params?: BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>> = ({ signal }) => bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>>
+export type BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetQueryError = HTTPValidationError
+
+
+export function useBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError = HTTPValidationError>(
+ params?: BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError = HTTPValidationError>(
+ params?: BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get current persona account
+ */
+
+export function useBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError = HTTPValidationError>(
+ params?: BffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffContextsCurrentPersonaAccountApiBffContextsPersonaAccountCurrentGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get the current connected persona for the user
+ * @summary Get current connected persona
+ */
+export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet = (
+    params?: BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PersonaOut>(
+      {url: `/api/bff/contexts/persona/current`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffContextsCurrentPersonaApiBffContextsPersonaCurrentGetQueryKey = (params?: BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams,) => {
+    return [`/api/bff/contexts/persona/current`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffContextsCurrentPersonaApiBffContextsPersonaCurrentGetQueryOptions = <TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError = HTTPValidationError>(params?: BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffContextsCurrentPersonaApiBffContextsPersonaCurrentGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>> = ({ signal }) => bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>>
+export type BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetQueryError = HTTPValidationError
+
+
+export function useBffContextsCurrentPersonaApiBffContextsPersonaCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffContextsCurrentPersonaApiBffContextsPersonaCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError = HTTPValidationError>(
+ params?: BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffContextsCurrentPersonaApiBffContextsPersonaCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError = HTTPValidationError>(
+ params?: BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get current connected persona
+ */
+
+export function useBffContextsCurrentPersonaApiBffContextsPersonaCurrentGet<TData = Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError = HTTPValidationError>(
+ params?: BffContextsCurrentPersonaApiBffContextsPersonaCurrentGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffContextsCurrentPersonaApiBffContextsPersonaCurrentGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffContextsCurrentPersonaApiBffContextsPersonaCurrentGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
