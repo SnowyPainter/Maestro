@@ -28,18 +28,18 @@
 
 ### Sniffer
 - **역할**: 외부 트렌드 데이터 수집
-- **소스**: Google Trends, Naver 등
+- **소스**: Google Trends 등
 - **특징**: 상시 작동
 
 ### Synchro
 - **역할**: 개인화된 임베딩 엔진
 - **범위**: 사용자별 → 계정별 메타데이터 처리
-
-### Schedular
-- **역할**: Adapter를 이용하여 스케쥴링된 작업 처리
+- **기능**
+  1. 임베딩 서비스
+  2. Insight <-> Trend 시간대 대조 타임라인 생성
 
 ### Generator
-- **워크플로우**: `Injector` → `LLMInterface` → 지침 생성
+- **워크플로우**: `Injector` → `LLMInterface / 규칙 기반` → 지침 생성
 - **역할**: 콘텐츠 생성 지침 제작
 
 ### Adapter
@@ -52,10 +52,18 @@
 - **구조**: 플랫폼별 하위 상속 클래스들
 
 ### CoWorker
-- **워크플로우**:
-  1. `Sniffer` → `Generator` → 지침 이메일 발송
+- **지침 이메일 워크플로우**:
+  1. `Sniffer` → `Adapter` → 플랫폼별 지침 이메일 발송
   2. 사용자 콘텐츠 생성 후 회신
   3. Draft 자동 저장
+- **발행 워크플로우**:
+  1. `Adapter` → DraftVariant 별 스케쥴링 발행
+- **모니터링 워크플로우**:
+  1. 게시된 DraftVariant 
+  2. `Adapter` -> 모니터링(Insight) -> KPI 재집계
+- **글쓰기 도움 워크플로우**:
+  1. 지침 -> 글
+
 - **알림 기능**:
   - 발행 직전 이메일 알람
   - 사용자 선택: 무시(진행) / 취소
