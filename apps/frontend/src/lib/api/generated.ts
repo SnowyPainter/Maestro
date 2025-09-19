@@ -838,7 +838,7 @@ export type TrendItemRetrieved = string | string;
 export type TrendItemNewsItems = NewsItem[] | null;
 
 /**
- * Google Trends 개별 트렌드 아이템 스키마
+ * Trends 개별 트렌드 아이템 스키마
  */
 export interface TrendItem {
   /** 트렌드 순위 */
@@ -861,7 +861,7 @@ export interface TrendItem {
    * 발행 날짜
    * @nullable
    */
-  pubDate?: string | null;
+  pub_date?: string | null;
   /**
    * 대표 이미지 URL
    * @nullable

@@ -34,6 +34,27 @@ for c in _countries:
         "args": (c,),
     }
 
+# 외부 소스 스케줄 (예: Hacker News, Reddit)
+_external_sources = [
+    {
+        "key": "hn_frontpage",
+        "task": "apps.backend.src.workers.Sniffer.tasks.sniff_hn_frontpage",
+    },
+    {
+        "key": "reddit_all",
+        "task": "apps.backend.src.workers.Sniffer.tasks.sniff_reddit_trends",
+        "kwargs": {"subreddit": "all"},
+    },
+]
+
+for src in _external_sources:
+    beat_schedule[f"sniff_trends_{src['key']}"] = {
+        "task": src["task"],
+        "schedule": timedelta(minutes=_interval),
+        "options": {"queue": "sniffer"},
+        **({"kwargs": src["kwargs"]} if "kwargs" in src else {}),
+    }
+
 beat_schedule["refresh_trends_cache"] = {
     "task": "apps.backend.src.workers.Synchro.tasks.refresh_cache",
     "schedule": timedelta(minutes=_interval),

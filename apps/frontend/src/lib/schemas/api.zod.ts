@@ -497,7 +497,7 @@ export const bffTrendsListTrendsApiBffTrendsGetResponse = zod.object({
   "title": zod.string().describe('트렌드 키워드'),
   "approx_traffic": zod.string().nullish().describe('대략적인 트래픽 (예: \'200+\', \'1000+\')'),
   "link": zod.string().nullish().describe('Google Trends 링크'),
-  "pubDate": zod.string().nullish().describe('발행 날짜'),
+  "pub_date": zod.string().nullish().describe('발행 날짜'),
   "picture": zod.string().nullish().describe('대표 이미지 URL'),
   "picture_source": zod.string().nullish().describe('이미지 출처'),
   "news_item": zod.string().nullish().describe('뉴스 아이템 (보통 빈 문자열)'),
@@ -507,7 +507,7 @@ export const bffTrendsListTrendsApiBffTrendsGetResponse = zod.object({
   "news_item_picture": zod.string().nullish(),
   "news_item_source": zod.string().nullish()
 }).describe('개별 뉴스 아이템 스키마')),zod.null()]).optional().describe('관련 뉴스 아이템 목록')
-}).describe('Google Trends 개별 트렌드 아이템 스키마')).describe('트렌드 아이템 목록')
+}).describe('Trends 개별 트렌드 아이템 스키마')).describe('트렌드 아이템 목록')
 })
 
 

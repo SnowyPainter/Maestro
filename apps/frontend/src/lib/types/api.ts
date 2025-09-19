@@ -1628,7 +1628,7 @@ export interface components {
         };
         /**
          * TrendItem
-         * @description Google Trends 개별 트렌드 아이템 스키마
+         * @description Trends 개별 트렌드 아이템 스키마
          */
         TrendItem: {
             /**
@@ -1657,10 +1657,10 @@ export interface components {
              */
             link?: string | null;
             /**
-             * Pubdate
+             * Pub Date
              * @description 발행 날짜
              */
-            pubDate?: string | null;
+            pub_date?: string | null;
             /**
              * Picture
              * @description 대표 이미지 URL

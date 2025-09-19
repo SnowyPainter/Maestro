@@ -81,8 +81,8 @@ def _format_trend_line(idx: int, trend: TrendItem) -> list[str]:
     details = []
     if trend.approx_traffic:
         details.append(f"traffic {trend.approx_traffic}")
-    if trend.pubDate:
-        details.append(f"updated {trend.pubDate}")
+    if trend.pub_date:
+        details.append(f"updated {trend.pub_date}")
     if details:
         line += f" ({', '.join(details)})"
 

@@ -3047,8 +3047,8 @@ components:
           description: Google Trends 링크
           type: string
           nullable: true
-        pubDate:
-          title: Pubdate
+        pub_date:
+          title: Pub Date
           description: 발행 날짜
           type: string
           nullable: true
@@ -3082,7 +3082,7 @@ components:
       - retrieved
       - title
       title: TrendItem
-      description: Google Trends 개별 트렌드 아이템 스키마
+      description: Trends 개별 트렌드 아이템 스키마
     TrendsListResponse:
       properties:
         country:

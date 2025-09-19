@@ -2,12 +2,12 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
-from .schemas import GoogleTrendsResponse, TrendItem, NewsItem
+from .schemas import TrendsResponse, TrendItem, NewsItem
 from apps.backend.src.services.http_clients import SYNC_FETCH, ASYNC_FETCH
 
 _NS = {"ht": "https://trends.google.com/trending/rss"}  # namespace
 
-def get_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
+def get_daily_trends(country: str, max_items: int = 10) -> TrendsResponse:
     url = f"https://trends.google.com/trending/rss?geo={country.upper()}"
     # httpx 재사용 클라이언트 사용
     resp = SYNC_FETCH.get(url)
@@ -50,7 +50,7 @@ def get_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
 
         trends.append(TrendItem(**item_data))
 
-    return GoogleTrendsResponse(
+    return TrendsResponse(
         country=country,
         max_items=max_items,
         retrieved_at=datetime.now().isoformat(timespec="seconds"),
@@ -59,7 +59,7 @@ def get_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
     )
 
 # 선택: 비동기 버전 (원하면 워커/라우터에서 await로 사용)
-async def aget_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsResponse:
+async def aget_daily_trends(country: str, max_items: int = 10) -> TrendsResponse:
     url = f"https://trends.google.com/trending/rss?geo={country.upper()}"
     resp = await ASYNC_FETCH.get(url)
     resp.raise_for_status()
@@ -98,7 +98,7 @@ async def aget_daily_trends(country: str, max_items: int = 10) -> GoogleTrendsRe
 
         trends.append(TrendItem(**item_data))
 
-    return GoogleTrendsResponse(
+    return TrendsResponse(
         country=country,
         max_items=max_items,
         retrieved_at=datetime.now().isoformat(timespec="seconds"),

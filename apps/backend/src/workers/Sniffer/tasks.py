@@ -17,7 +17,7 @@ from apps.backend.src.modules.trends.models import Trend, NewsItem  # type: igno
 
 # Pydantic 스키마 & 수집 함수
 from apps.backend.src.modules.trends.schemas import TrendItem
-from apps.backend.src.modules.trends import trends_google
+from apps.backend.src.modules.trends import trends_google, trends_external
 
 def _save_one(session, country: str, ti: TrendItem):
     trend = Trend(
@@ -27,7 +27,7 @@ def _save_one(session, country: str, ti: TrendItem):
          title=ti.title,
          approx_traffic=ti.approx_traffic,
          link=ti.link,
-         pub_date=ti.pubDate,
+         pub_date=ti.pub_date,
          picture=ti.picture,
          picture_source=ti.picture_source,
          news_item_raw=ti.news_item or None,
@@ -47,25 +47,16 @@ def _save_one(session, country: str, ti: TrendItem):
     session.flush()
     return trend.id
 
-@shared_task(name="apps.backend.src.workers.Sniffer.tasks.sniff_google_trends", queue="sniffer", bind=True, max_retries=3)
-def sniff_google_trends(self, country: str = "KR"):
-    """
-    1) Google Trends 수집
-    2) DB 저장(중복 - UniqueConstraint 충돌 시 스킵)
-    3) 캐시 리프레시 트리거
-    """
-    try:
-        max_items = settings.TRENDS_MAX_ITEMS
-        resp = trends_google.get_daily_trends(country=country, max_items=max_items)
-    except Exception as e:
-        raise self.retry(exc=e, countdown=min(30 * (self.request.retries + 1), 120))
-
+def _process_trends_response(resp, *, source: str, country_override: str | None = None):
+    """공통 TrendResponse 처리 로직"""
     saved = 0
-    trend_ids = []
+    trend_ids: list[int] = []
+    country = country_override or resp.country
+
     with SessionLocal() as session:
         for ti in resp.trends:
             try:
-                trend_id = _save_one(session, resp.country, ti)
+                trend_id = _save_one(session, country, ti)
                 session.commit()
                 saved += 1
                 trend_ids.append(trend_id)
@@ -75,15 +66,57 @@ def sniff_google_trends(self, country: str = "KR"):
                 session.rollback()
                 raise
 
-    from apps.backend.src.workers.Synchro.tasks import enqueue_trend_title_embedding
-    for trend_id in trend_ids:
-        enqueue_trend_title_embedding.delay(trend_id)
+    if trend_ids:
+        from apps.backend.src.workers.Synchro.tasks import enqueue_trend_title_embedding
 
-    # 캐시 리프레시
+        for trend_id in trend_ids:
+            enqueue_trend_title_embedding.delay(trend_id)
+
     try:
         from apps.backend.src.workers.Synchro.tasks import refresh_cache
+
         refresh_cache.delay()
     except Exception:
         pass
 
-    return {"country": country, "fetched": len(resp.trends), "saved": saved}
+    return {
+        "source": source,
+        "country": country,
+        "fetched": len(resp.trends),
+        "saved": saved,
+    }
+
+
+@shared_task(name="apps.backend.src.workers.Sniffer.tasks.sniff_google_trends", queue="sniffer", bind=True, max_retries=3)
+def sniff_google_trends(self, country: str = "KR"):
+    """Google Trends 수집 및 저장"""
+    try:
+        max_items = settings.TRENDS_MAX_ITEMS
+        resp = trends_google.get_daily_trends(country=country, max_items=max_items)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=min(30 * (self.request.retries + 1), 120))
+
+    return _process_trends_response(resp, source=f"google:{country.upper()}")
+
+
+@shared_task(name="apps.backend.src.workers.Sniffer.tasks.sniff_hn_frontpage", queue="sniffer", bind=True, max_retries=3)
+def sniff_hn_frontpage(self, max_items: int | None = None):
+    """Hacker News 프론트페이지 RSS 수집"""
+    try:
+        resp = trends_external.get_hn_frontpage(max_items=max_items or settings.TRENDS_MAX_ITEMS)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=min(30 * (self.request.retries + 1), 120))
+
+    return _process_trends_response(resp, source="hacker_news")
+
+
+@shared_task(name="apps.backend.src.workers.Sniffer.tasks.sniff_reddit_trends", queue="sniffer", bind=True, max_retries=3)
+def sniff_reddit_trends(self, subreddit: str = "all", max_items: int | None = None):
+    """Reddit 서브레딧 RSS 수집"""
+    target = (subreddit or "all").strip() or "all"
+    try:
+        resp = trends_external.get_reddit(subreddit=target, max_items=max_items or settings.TRENDS_MAX_ITEMS)
+    except Exception as e:
+        raise self.retry(exc=e, countdown=min(30 * (self.request.retries + 1), 120))
+
+    return _process_trends_response(resp, source=f"reddit:{target}")
