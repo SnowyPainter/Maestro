@@ -1,0 +1,59 @@
+@startuml
+entity "Draft" as Draft {
+  * id : int <<PK>>
+  --
+  user_id : int
+  campaign_id : int?
+  title : str
+  ir : json
+  state : DraftState
+  created_at : datetime
+  updated_at : datetime
+}
+
+entity "DraftVariant" as Variant {
+  * id : int <<PK>>
+  --
+  draft_id : int <<FK>>
+  platform : PlatformKind
+  status : VariantStatus
+  rendered_caption : text
+  rendered_blocks : json
+  compiled_at : datetime?
+}
+
+entity "PostPublication" as Pub {
+  * id : int <<PK>>
+  --
+  variant_id : int <<FK>>
+  account_persona_id : int <<FK>>
+  platform : PlatformKind
+  external_id : str?
+  status : PostStatus
+  scheduled_at : datetime?
+  published_at : datetime?
+  monitoring_started_at : datetime?
+  monitoring_ended_at : datetime?
+}
+
+entity "InsightSample" as Insight {
+  * id : int <<PK>>
+  --
+  post_publication_id : int <<FK>>
+  variant_id : int <<FK>>
+  draft_id : int <<FK>>
+  platform : PlatformKind
+  platform_post_id : str?
+  ts : datetime
+  metrics : json
+  ingest_key : str <<UQ>>
+  source : InsightSource
+}
+
+Draft ||--o{ Variant : "has many"
+Variant ||--o{ Pub : "publishes"
+Pub ||--o{ Insight : "monitored by"
+Draft ||..o{ Insight : "optional ref"
+Variant ||..o{ Insight : "optional ref"
+
+@enduml
