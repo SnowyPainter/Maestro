@@ -1083,41 +1083,6 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
 
 
 /**
- * Ingest new insight data for analysis and trend detection
- * @summary Process and Store Insight Data
- */
-export const insightsIngestApiOrchestratorInsightsPostBodySourceDefault = "webhook";
-
-export const insightsIngestApiOrchestratorInsightsPostBody = zod.object({
-  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
-  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
-  "platform_post_id": zod.string().nullish(),
-  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "ts": zod.iso.datetime({}),
-  "metrics": zod.record(zod.string(), zod.number()).optional(),
-  "source": zod.enum(['webhook', 'poll', 'manual']).default(insightsIngestApiOrchestratorInsightsPostBodySourceDefault),
-  "ingest_key": zod.string().nullish()
-})
-
-export const insightsIngestApiOrchestratorInsightsPostResponseSourceDefault = "webhook";
-
-export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
-  "owner_user_id": zod.number(),
-  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
-  "platform_post_id": zod.string().nullish(),
-  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "ts": zod.iso.datetime({}),
-  "metrics": zod.record(zod.string(), zod.number()).optional(),
-  "source": zod.enum(['webhook', 'poll', 'manual']).default(insightsIngestApiOrchestratorInsightsPostResponseSourceDefault),
-  "ingest_key": zod.string().nullish(),
-  "id": zod.number(),
-  "ingested_at": zod.iso.datetime({})
-})
-
-
-/**
  * @summary Signup
  */
 export const signupApiOrchestratorAuthSignupPostBodyPasswordMin = 8;

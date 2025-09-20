@@ -33,7 +33,7 @@ async def ingest_insight_sample(db: AsyncSession, payload: InsightIn) -> Insight
 
     row = InsightSample(
         owner_user_id=payload.owner_user_id,
-        draft_id=payload.draft_id,
+        post_publication_id=payload.post_publication_id,
         platform=payload.platform,
         platform_post_id=payload.platform_post_id,
         account_persona_id=payload.account_persona_id,

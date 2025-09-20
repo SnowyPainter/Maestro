@@ -7,23 +7,28 @@ class PlatformKind(str, enum.Enum):
     X = "x"
     BLOG = "blog"
 
-"""
-    cases
-    1) DRAFT -> SCHEDULED -> MONITORING -> finish monitoring -> PUBLISHED
-    2) DRAFT -> MONITORING -> finish monitoring -> PUBLISHED
-"""
 class DraftState(str, enum.Enum):
     DRAFT = "draft"
-    PUBLISHED = "published" # After Published, Monitoring finished/cancel monitoring
-    SCHEDULED = "scheduled" # Scheduled to publish
     DELETED = "deleted" # Soft Delete
-    MONITORING = "monitoring" # After Published, Monitoring started
 
 class VariantStatus(str, enum.Enum):
     PENDING = "pending"      # 아직 미지원/대기
     VALID = "valid"          # 제약 충족
     INVALID = "invalid"      # 제약 위반
     RENDERED = "rendered"    # (선택) 최종 페이로드 확정
+
+"""
+    cases
+    1) DRAFT -> SCHEDULED -> MONITORING -> finish monitoring -> PUBLISHED
+    2) DRAFT -> MONITORING -> finish monitoring -> PUBLISHED
+"""
+class PostStatus(str, enum.Enum):
+    PENDING = "pending" # Pending to publish - Pending && scheduled_at -> Will be published
+    PUBLISHED = "published" # After Published, Monitoring finished/cancel monitoring
+    DELETED = "deleted" # Soft Delete
+    FAILED = "failed" # Failed to publish
+    CANCELLED = "cancelled" # Cancelled to publish
+    MONITORING = "monitoring" # After Published, Monitoring started
 
 class KPIKey(str, enum.Enum):
     REACH = "reach"
@@ -47,3 +52,21 @@ class Permission(str, enum.Enum):
     READ = "read"
     WRITE = "write"
     PUBLISH = "publish"
+
+class MetricsScope(str, enum.Enum):
+    LIFETIME = "lifetime"
+    SINCE_PUBLISH = "since_publish"
+    INTERVAL = "interval"
+
+class ContentKind(str, enum.Enum):
+    POST = "post"          # 정적 이미지/텍스트
+    VIDEO = "video"        # 일반 영상
+    STORY = "story"
+    CAROUSEL = "carousel"
+    LIVE = "live"
+    UNKNOWN = "unknown"
+
+class InsightSource(str, enum.Enum):
+    WEBHOOK = "webhook"
+    POLL = "poll"
+    MANUAL = "manual"

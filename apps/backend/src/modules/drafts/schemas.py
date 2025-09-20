@@ -94,3 +94,24 @@ class DraftVariantOut(BaseModel):
     compiler_version: int
     created_at: datetime
     updated_at: datetime
+
+class PostPublicationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    variant_id: int
+    account_persona_id: int
+    platform: str  # PlatformKind enum value
+    external_id: Optional[str] = None
+    permalink: Optional[str] = None
+    status: str  # PostStatus enum value
+    scheduled_at: Optional[datetime] = None
+    published_at: Optional[datetime] = None
+    deleted_at: Optional[datetime] = None
+    monitoring_started_at: Optional[datetime] = None
+    monitoring_ended_at: Optional[datetime] = None
+    last_polled_at: Optional[datetime] = None
+    errors: Optional[List[str]] = None
+    warnings: Optional[List[str]] = None
+    meta: Optional[dict] = None
+    created_at: datetime
+    updated_at: datetime

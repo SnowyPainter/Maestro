@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import List
 from datetime import datetime
 from typing import Iterable
 
@@ -6,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus, DraftState
-from apps.backend.src.modules.drafts.models import Draft, DraftVariant
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest, DraftDeleteCommand
 from apps.backend.src.modules.drafts.compilers import compile_for_platform
 
@@ -122,7 +123,7 @@ async def _ensure_variants_for_platforms(
         await db.flush()
 
 async def _mark_variants_stale(db: AsyncSession, *, draft_id: int) -> None:
-    rows = (await db.execute(select(DraftVariant).where(DraftVariant.draft_id == draft_id))).scalars().all()
+    rows: List[DraftVariant] = (await db.execute(select(DraftVariant).where(DraftVariant.draft_id == draft_id))).scalars().all()
     for dv in rows:
         dv.status = VariantStatus.PENDING
         dv.errors = None
@@ -143,7 +144,7 @@ async def _compile_supported_variants(db: AsyncSession, draft: Draft) -> None:
     실 구현: Celery task로 오프로딩 권장. 여기서는 동기/더미 스켈레톤.
     지원되는 플랫폼만 컴파일하고, 나머지는 PENDING 유지.
     """
-    rows = (await db.execute(
+    rows: List[DraftVariant] = (await db.execute(
         select(DraftVariant).where(
             DraftVariant.draft_id == draft.id,
             DraftVariant.platform.in_(list(SUPPORTED_COMPILE_PLATFORMS))
