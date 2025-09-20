@@ -1,10 +1,11 @@
 # apps/backend/src/modules/adapters/base.py
 from __future__ import annotations
-from typing import Protocol, Optional, Dict, Any, List, Tuple
+from typing import Protocol, Optional, Dict, Any, List
 from dataclasses import dataclass
 from datetime import datetime
 
 from apps.backend.src.modules.common.enums import ContentKind, PlatformKind, VariantStatus, MetricsScope
+from apps.backend.src.modules.injectors.base import InjectedContent
 
 @dataclass
 class CompileResult:
@@ -47,7 +48,7 @@ class Adapter(Protocol):
     compiler_version: int  # 규칙/렌더러 버전
 
     # IR -> Variant 산출물
-    async def compile(self, ir: dict, *, locale: Optional[str] = None) -> CompileResult: ...
+    async def compile(self, payload: InjectedContent, *, locale: Optional[str] = None) -> CompileResult: ...
 
     # 계정/퍼소나별 발행 (계정 자격증명은 외부에서 주입)
     async def publish(self, rendered_blocks: dict | None, caption: str | None, *, credentials: dict, options: dict | None = None) -> PublishResult: ...

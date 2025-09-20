@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Union
 from typing import List
 from datetime import datetime
 from typing import Iterable
@@ -7,9 +8,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus, DraftState
-from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
-from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest, DraftDeleteCommand
-from apps.backend.src.modules.drafts.compilers import compile_for_platform
+from apps.backend.src.modules.adapters.schemas import CompileResult
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant
+from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
+from apps.backend.src.workers.Adapter.tasks import enqueue_variant_compile
 
 SUPPORTED_COMPILE_PLATFORMS: set[PlatformKind] = {
     PlatformKind.THREADS,
@@ -55,10 +57,10 @@ async def update_draft_ir(
     *,
     draft_id: int,
     ir: DraftIR,
-    title: str | None = None,
-    tags: list[str] | None = None,
-    goal: str | None = None,
-    campaign_id: int | None = None,
+    title: Union[str, None] = None,
+    tags: Union[list[str], None] = None,
+    goal: Union[str, None] = None,
+    campaign_id: Union[int, None] = None,
 ) -> Draft:
     draft = await db.get(Draft, draft_id)
     if not draft:
@@ -87,6 +89,17 @@ async def update_draft_ir(
 
     await db.commit()
     return draft
+
+
+def apply_compile_result_to_variant(variant: DraftVariant, result: CompileResult) -> None:
+    variant.rendered_caption = result.rendered_caption
+    variant.rendered_blocks = result.rendered_blocks
+    variant.metrics = result.metrics
+    variant.errors = result.errors or None
+    variant.warnings = result.warnings or None
+    variant.status = result.status
+    variant.compiled_at = result.compiled_at
+    variant.ir_revision_compiled = result.ir_revision_compiled
 
 async def delete_draft(db: AsyncSession, *, draft_id: int) -> None:
     draft = await db.get(Draft, draft_id)
@@ -140,10 +153,7 @@ async def _mark_variants_stale(db: AsyncSession, *, draft_id: int) -> None:
 
 
 async def _compile_supported_variants(db: AsyncSession, draft: Draft) -> None:
-    """
-    실 구현: Celery task로 오프로딩 권장. 여기서는 동기/더미 스켈레톤.
-    지원되는 플랫폼만 컴파일하고, 나머지는 PENDING 유지.
-    """
+    """Enqueue compilation tasks for supported platforms."""
     rows: List[DraftVariant] = (await db.execute(
         select(DraftVariant).where(
             DraftVariant.draft_id == draft.id,
@@ -151,27 +161,9 @@ async def _compile_supported_variants(db: AsyncSession, draft: Draft) -> None:
         )
     )).scalars().all()
 
-    # 플랫폼 컴파일러를 사용하여 컴파일
     for dv in rows:
-        try:
-            caption, rendered_blocks, metrics, errors, warnings = compile_for_platform(
-                draft.ir, dv.platform.value.lower()
-            )
-            dv.rendered_caption = caption
-            dv.rendered_blocks = rendered_blocks
-            dv.metrics = metrics
-            dv.errors = errors or None
-            dv.warnings = warnings or None
-            dv.status = VariantStatus.VALID if not errors else VariantStatus.INVALID
-            dv.compiled_at = datetime.utcnow()
-            dv.ir_revision_compiled = draft.ir_revision
-        except Exception as e:
-            # 컴파일 실패 시 에러 기록
-            dv.errors = [f"Compilation failed: {str(e)}"]
-            dv.status = VariantStatus.INVALID
-            dv.compiled_at = datetime.utcnow()
-            dv.ir_revision_compiled = draft.ir_revision
-        db.add(dv)
+        enqueue_variant_compile(draft_id=draft.id, variant_id=dv.id)
+
     if rows:
         await db.flush()
 
