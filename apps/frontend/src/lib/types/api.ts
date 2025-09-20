@@ -636,6 +636,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Process and Store Insight Data
+         * @description Ingest new insight data for analysis and trend detection
+         */
+        post: operations["insights_ingest_api_orchestrator_insights_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/auth/signup": {
         parameters: {
             query?: never;
@@ -957,6 +977,11 @@ export interface components {
             /** Messages */
             messages?: string[];
         };
+        /**
+         * ContentKind
+         * @enum {string}
+         */
+        ContentKind: "post" | "video" | "story" | "carousel" | "live" | "unknown";
         /** DraftIR */
         DraftIR: {
             /** Blocks */
@@ -1122,6 +1147,98 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** InsightInCommand */
+        InsightInCommand: {
+            /** Owner User Id */
+            owner_user_id?: number | null;
+            /** Post Publication Id */
+            post_publication_id?: number | null;
+            platform: components["schemas"]["PlatformKind"];
+            /** Platform Post Id */
+            platform_post_id?: string | null;
+            /** Account Persona Id */
+            account_persona_id?: number | null;
+            /**
+             * Ts
+             * Format: date-time
+             */
+            ts: string;
+            /** Metrics */
+            metrics?: {
+                [key: string]: number;
+            };
+            /** @default since_publish */
+            scope: components["schemas"]["MetricsScope"];
+            /** @default unknown */
+            content_kind: components["schemas"]["ContentKind"];
+            /**
+             * Mapping Version
+             * @default 1
+             */
+            mapping_version: number;
+            /** Raw */
+            raw?: {
+                [key: string]: unknown;
+            };
+            /** Warnings */
+            warnings?: string[];
+            /** @default webhook */
+            source: components["schemas"]["InsightSource"];
+            /** Ingest Key */
+            ingest_key?: string | null;
+        };
+        /** InsightOut */
+        InsightOut: {
+            /** Owner User Id */
+            owner_user_id: number;
+            /** Post Publication Id */
+            post_publication_id?: number | null;
+            platform: components["schemas"]["PlatformKind"];
+            /** Platform Post Id */
+            platform_post_id?: string | null;
+            /** Account Persona Id */
+            account_persona_id?: number | null;
+            /**
+             * Ts
+             * Format: date-time
+             */
+            ts: string;
+            /** Metrics */
+            metrics?: {
+                [key: string]: number;
+            };
+            /** @default since_publish */
+            scope: components["schemas"]["MetricsScope"];
+            /** @default unknown */
+            content_kind: components["schemas"]["ContentKind"];
+            /**
+             * Mapping Version
+             * @default 1
+             */
+            mapping_version: number;
+            /** Raw */
+            raw?: {
+                [key: string]: unknown;
+            };
+            /** Warnings */
+            warnings?: string[];
+            /** @default webhook */
+            source: components["schemas"]["InsightSource"];
+            /** Ingest Key */
+            ingest_key?: string | null;
+            /** Id */
+            id: number;
+            /**
+             * Ingested At
+             * Format: date-time
+             */
+            ingested_at: string;
+        };
+        /**
+         * InsightSource
+         * @enum {string}
+         */
+        InsightSource: "webhook" | "poll" | "manual";
         /** IntentCandidate */
         IntentCandidate: {
             /** Intent */
@@ -1172,6 +1289,11 @@ export interface components {
             /** Message */
             message: string;
         };
+        /**
+         * MetricsScope
+         * @enum {string}
+         */
+        MetricsScope: "lifetime" | "since_publish" | "interval";
         /**
          * NewsItem
          * @description 개별 뉴스 아이템 스키마
@@ -2742,6 +2864,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    insights_ingest_api_orchestrator_insights_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InsightInCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightOut"];
                 };
             };
             /** @description Validation Error */

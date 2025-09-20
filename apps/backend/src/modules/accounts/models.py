@@ -80,4 +80,6 @@ class PersonaAccount(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
+    persona = relationship(Persona)
+
     __table_args__ = (UniqueConstraint('persona_id','account_id', name='uq_persona_account'),)

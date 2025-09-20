@@ -15,8 +15,8 @@ from sqlalchemy import text
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.modules.trends.models import Trend, NewsItem
 from apps.backend.src.modules.campaigns.models import Campaign, CampaignKPIDef, CampaignKPIResult
-from apps.backend.src.modules.drafts.models import Draft, DraftVariant
 from apps.backend.src.modules.accounts.models import PlatformAccount, Persona, PersonaAccount
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.insights.models import InsightSample
 
 PRJ_RT = Path(__file__).parent.parent

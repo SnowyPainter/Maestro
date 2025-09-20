@@ -203,6 +203,19 @@ export interface ChatResponse {
   messages?: string[];
 }
 
+export type ContentKind = typeof ContentKind[keyof typeof ContentKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ContentKind = {
+  post: 'post',
+  video: 'video',
+  story: 'story',
+  carousel: 'carousel',
+  live: 'live',
+  unknown: 'unknown',
+} as const;
+
 export type DraftIRBlocksItem = BlockText | BlockImage | BlockVideo;
 
 export type DraftIROptions = { [key: string]: unknown };
@@ -340,6 +353,74 @@ export interface HTTPValidationError {
   detail?: ValidationError[];
 }
 
+export type InsightInCommandOwnerUserId = number | null;
+
+export type InsightInCommandPostPublicationId = number | null;
+
+export type InsightInCommandAccountPersonaId = number | null;
+
+export type InsightInCommandMetrics = {[key: string]: number};
+
+export type InsightInCommandRaw = { [key: string]: unknown };
+
+export interface InsightInCommand {
+  owner_user_id?: InsightInCommandOwnerUserId;
+  post_publication_id?: InsightInCommandPostPublicationId;
+  platform: PlatformKind;
+  /** @nullable */
+  platform_post_id?: string | null;
+  account_persona_id?: InsightInCommandAccountPersonaId;
+  ts: string;
+  metrics?: InsightInCommandMetrics;
+  scope?: MetricsScope;
+  content_kind?: ContentKind;
+  mapping_version?: number;
+  raw?: InsightInCommandRaw;
+  warnings?: string[];
+  source?: InsightSource;
+  /** @nullable */
+  ingest_key?: string | null;
+}
+
+export type InsightOutPostPublicationId = number | null;
+
+export type InsightOutAccountPersonaId = number | null;
+
+export type InsightOutMetrics = {[key: string]: number};
+
+export type InsightOutRaw = { [key: string]: unknown };
+
+export interface InsightOut {
+  owner_user_id: number;
+  post_publication_id?: InsightOutPostPublicationId;
+  platform: PlatformKind;
+  /** @nullable */
+  platform_post_id?: string | null;
+  account_persona_id?: InsightOutAccountPersonaId;
+  ts: string;
+  metrics?: InsightOutMetrics;
+  scope?: MetricsScope;
+  content_kind?: ContentKind;
+  mapping_version?: number;
+  raw?: InsightOutRaw;
+  warnings?: string[];
+  source?: InsightSource;
+  /** @nullable */
+  ingest_key?: string | null;
+  id: number;
+  ingested_at: string;
+}
+
+export type InsightSource = typeof InsightSource[keyof typeof InsightSource];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const InsightSource = {
+  webhook: 'webhook',
+  poll: 'poll',
+  manual: 'manual',
+} as const;
+
 export interface IntentCandidate {
   intent: string;
   confidence: number;
@@ -385,6 +466,16 @@ export interface LoginRequest {
 export interface MessageOut {
   message: string;
 }
+
+export type MetricsScope = typeof MetricsScope[keyof typeof MetricsScope];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const MetricsScope = {
+  lifetime: 'lifetime',
+  since_publish: 'since_publish',
+  interval: 'interval',
+} as const;
 
 /**
  * 개별 뉴스 아이템 스키마
@@ -3579,6 +3670,72 @@ export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPV
       > => {
 
       const mutationOptions = getDraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Ingest new insight data for analysis and trend detection
+ * @summary Process and Store Insight Data
+ */
+export const insightsIngestApiOrchestratorInsightsPost = (
+    insightInCommand: InsightInCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<InsightOut>(
+      {url: `/api/orchestrator/insights`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: insightInCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getInsightsIngestApiOrchestratorInsightsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext> => {
+
+const mutationKey = ['insightsIngestApiOrchestratorInsightsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, {data: InsightInCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  insightsIngestApiOrchestratorInsightsPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InsightsIngestApiOrchestratorInsightsPostMutationResult = NonNullable<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>>
+    export type InsightsIngestApiOrchestratorInsightsPostMutationBody = InsightInCommand
+    export type InsightsIngestApiOrchestratorInsightsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Process and Store Insight Data
+ */
+export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>,
+        TError,
+        {data: InsightInCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getInsightsIngestApiOrchestratorInsightsPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from celery import Celery
 from apps.backend.src.core.config import settings
+from apps.backend.src.core import celery_ctx  # noqa: F401 - ensure signal handlers register
 
 # Celery 인스턴스
 celery_app = Celery(
@@ -13,6 +14,7 @@ celery_app = Celery(
     include=[
         "apps.backend.src.workers.Sniffer.tasks",
         "apps.backend.src.workers.Synchro.tasks",
+        "apps.backend.src.workers.Adapter.tasks",
     ],
 )
 

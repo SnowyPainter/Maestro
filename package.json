@@ -9,7 +9,7 @@
     "dev:backend:and:frontend": "concurrently -n API,FE \"pnpm dev:backend\" \"pnpm dev:frontend\"",
     "dev:stop": "bash ./scripts/dev-stop.sh || true",
     
-    "dev:celery:worker": "celery -A apps.backend.src.core.celery_app:celery_app worker -l info -Q default,sniffer,synchro --concurrency=4",
+    "dev:celery:worker": "celery -A apps.backend.src.core.celery_app:celery_app worker -l info -Q default,sniffer,synchro,adapter --concurrency=4",
     "dev:celery:beat": "celery -A apps.backend.src.core.celery_app:celery_app beat -l info",
     "dev:celery": "concurrently -n WRK,BEAT \"pnpm dev:celery:worker\" \"pnpm dev:celery:beat\"",
     

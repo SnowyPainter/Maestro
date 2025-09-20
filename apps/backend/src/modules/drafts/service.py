@@ -1,30 +1,31 @@
 from __future__ import annotations
-from typing import Union
-from typing import List
-from datetime import datetime
-from typing import Iterable
 
+from datetime import datetime
+from typing import Iterable, List
+
+from apps.backend.src.core.context import get_persona_account_id
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus, DraftState
 from apps.backend.src.modules.adapters.schemas import CompileResult
+from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
+from apps.backend.src.modules.common.enums import DraftState, PlatformKind, VariantStatus
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant
 from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
 from apps.backend.src.workers.Adapter.tasks import enqueue_variant_compile
 
-SUPPORTED_COMPILE_PLATFORMS: set[PlatformKind] = {
-    PlatformKind.THREADS,
-    PlatformKind.INSTAGRAM,
-    PlatformKind.X,
-    PlatformKind.BLOG,
-}
-ALL_PLATFORMS: tuple[PlatformKind, ...] = (
-    PlatformKind.THREADS,
-    PlatformKind.INSTAGRAM,
-    PlatformKind.X,
-    PlatformKind.BLOG,
-)
+
+def _all_platforms() -> tuple[PlatformKind, ...]:
+    return tuple(PlatformKind)
+
+
+def _supported_compile_platforms() -> set[PlatformKind]:
+    return set(ADAPTER_REGISTRY.get_all().keys())
+
+
+def _now() -> datetime:
+    return datetime.utcnow()
+
 
 async def create_draft(
     db: AsyncSession,
@@ -45,7 +46,7 @@ async def create_draft(
     db.add(draft)
     await db.flush()
 
-    await _ensure_variants_for_platforms(db, draft, ALL_PLATFORMS)
+    await _ensure_variants_for_platforms(db, draft, _all_platforms())
     await _compile_supported_variants(db, draft)
 
     await db.commit()
@@ -57,10 +58,10 @@ async def update_draft_ir(
     *,
     draft_id: int,
     ir: DraftIR,
-    title: Union[str, None] = None,
-    tags: Union[list[str], None] = None,
-    goal: Union[str, None] = None,
-    campaign_id: Union[int, None] = None,
+    title: str | None = None,
+    tags: list[str] | None = None,
+    goal: str | None = None,
+    campaign_id: int | None = None,
 ) -> Draft:
     draft = await db.get(Draft, draft_id)
     if not draft:
@@ -76,13 +77,13 @@ async def update_draft_ir(
 
     draft.ir = ir.model_dump()
     draft.ir_revision += 1
-    draft.updated_at = datetime.utcnow()
+    draft.updated_at = _now()
 
     # 기존 Variant들을 "stale" 처리: 상태를 PENDING으로 돌리고 컴파일 대기
     await _mark_variants_stale(db, draft_id=draft.id)
 
     # 누락된 플랫폼 Variant가 있으면 생성
-    await _ensure_variants_for_platforms(db, draft, ALL_PLATFORMS)
+    await _ensure_variants_for_platforms(db, draft, _all_platforms())
 
     # 지원되는 플랫폼만 즉시 재컴파일
     await _compile_supported_variants(db, draft)
@@ -101,17 +102,19 @@ def apply_compile_result_to_variant(variant: DraftVariant, result: CompileResult
     variant.compiled_at = result.compiled_at
     variant.ir_revision_compiled = result.ir_revision_compiled
 
+
 async def delete_draft(db: AsyncSession, *, draft_id: int) -> None:
     draft = await db.get(Draft, draft_id)
     if not draft:
         raise ValueError("draft not found")
-    
+
     draft.state = DraftState.DELETED
-    draft.updated_at = datetime.utcnow()
+    draft.updated_at = _now()
     await db.flush()
     await db.commit()
 
     await _mark_variants_stale(db, draft_id=draft_id)
+
 
 async def _ensure_variants_for_platforms(
     db: AsyncSession,
@@ -124,10 +127,10 @@ async def _ensure_variants_for_platforms(
     existing_set = {row[0] for row in existing}
     to_create = [p for p in platforms if p not in existing_set]
 
-    for p in to_create:
+    for platform in to_create:
         dv = DraftVariant(
             draft_id=draft.id,
-            platform=p,
+            platform=platform,
             status=VariantStatus.PENDING,
             ir_revision_compiled=None,
         )
@@ -135,8 +138,11 @@ async def _ensure_variants_for_platforms(
     if to_create:
         await db.flush()
 
+
 async def _mark_variants_stale(db: AsyncSession, *, draft_id: int) -> None:
-    rows: List[DraftVariant] = (await db.execute(select(DraftVariant).where(DraftVariant.draft_id == draft_id))).scalars().all()
+    rows: List[DraftVariant] = (
+        await db.execute(select(DraftVariant).where(DraftVariant.draft_id == draft_id))
+    ).scalars().all()
     for dv in rows:
         dv.status = VariantStatus.PENDING
         dv.errors = None
@@ -146,7 +152,7 @@ async def _mark_variants_stale(db: AsyncSession, *, draft_id: int) -> None:
         dv.metrics = None
         dv.compiled_at = None
         dv.ir_revision_compiled = None
-        dv.updated_at = datetime.utcnow()
+        dv.updated_at = _now()
         db.add(dv)
     if rows:
         await db.flush()
@@ -154,17 +160,21 @@ async def _mark_variants_stale(db: AsyncSession, *, draft_id: int) -> None:
 
 async def _compile_supported_variants(db: AsyncSession, draft: Draft) -> None:
     """Enqueue compilation tasks for supported platforms."""
-    rows: List[DraftVariant] = (await db.execute(
-        select(DraftVariant).where(
-            DraftVariant.draft_id == draft.id,
-            DraftVariant.platform.in_(list(SUPPORTED_COMPILE_PLATFORMS))
-        )
-    )).scalars().all()
+    supported = _supported_compile_platforms()
+    if not supported:
+        return
 
+    rows: List[DraftVariant] = (
+        await db.execute(
+            select(DraftVariant).where(
+                DraftVariant.draft_id == draft.id,
+                DraftVariant.platform.in_(list(supported)),
+            )
+        )
+    ).scalars().all()
+    
     for dv in rows:
         enqueue_variant_compile(draft_id=draft.id, variant_id=dv.id)
 
     if rows:
         await db.flush()
-
-

@@ -3,8 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
-from apps.backend.src.modules.common.enums import PlatformKind
-from __future__ import annotations
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from apps.backend.src.modules.common.enums import PlatformKind, KPIKey, MetricsScope, ContentKind, InsightSource

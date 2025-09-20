@@ -1,25 +1,29 @@
 # apps/backend/src/modules/adapters/registry.py
-"""Adapter registry for platform-specific content adapters.
+"""Adapter registry with autodiscovery for platform adapters."""
+from __future__ import annotations
 
-This module provides a registry system for content adapters that can compile,
-publish, and manage content across different social media platforms.
-"""
+import importlib
+import inspect
+import pkgutil
+from typing import Dict, Type
 
-from typing import Dict, Type, Optional
-from .schemas import Adapter
 from apps.backend.src.modules.common.enums import PlatformKind
+
+from .schemas import Adapter
 
 
 class AdapterRegistry:
     """Registry for platform adapters."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._adapters: Dict[PlatformKind, Type[Adapter]] = {}
 
     def register(self, adapter_class: Type[Adapter]) -> None:
         """Register an adapter class for its platform."""
-        if not hasattr(adapter_class, 'platform'):
-            raise ValueError(f"Adapter class {adapter_class.__name__} must have a 'platform' attribute")
+        if not hasattr(adapter_class, "platform"):
+            raise ValueError(
+                f"Adapter class {adapter_class.__name__} must have a 'platform' attribute"
+            )
 
         platform = adapter_class.platform
         if platform in self._adapters:
@@ -50,29 +54,37 @@ class AdapterRegistry:
 # Global adapter registry instance
 ADAPTER_REGISTRY = AdapterRegistry()
 
-# Auto-register built-in adapters
-def _register_builtin_adapters():
-    """Automatically register all built-in platform adapters."""
+IMPLS_PACKAGE = "apps.backend.src.modules.adapters.impls"
+
+
+def autodiscover_adapters(package: str = IMPLS_PACKAGE) -> None:
+    """Import all adapter implementations under the impls package and register them."""
+
     try:
-        from .impls.X import XAdapter
-        from .impls.Instagram import InstagramAdapter
-        from .impls.Threads import ThreadsAdapter
-        from .impls.Blog import BlogAdapter
+        base_module = importlib.import_module(package)
+    except ModuleNotFoundError:
+        return
 
-        ADAPTER_REGISTRY.register(XAdapter)
-        ADAPTER_REGISTRY.register(InstagramAdapter)
-        ADAPTER_REGISTRY.register(ThreadsAdapter)
-        ADAPTER_REGISTRY.register(BlogAdapter)
-
-    except ImportError as e:
-        # Handle case where individual adapter files don't exist yet
-        pass
-
-# Register built-in adapters on import
-_register_builtin_adapters()
+    for module_info in pkgutil.iter_modules(base_module.__path__, base_module.__name__ + "."):
+        module = importlib.import_module(module_info.name)
+        _register_module_adapters(module)
 
 
-__all__ = [
-    "AdapterRegistry",
-    "ADAPTER_REGISTRY",
-]
+def _register_module_adapters(module) -> None:
+    for _, obj in inspect.getmembers(module, inspect.isclass):
+        if obj.__module__ != module.__name__:
+            continue
+        if not hasattr(obj, "platform"):
+            continue
+        try:
+            ADAPTER_REGISTRY.register(obj)
+        except ValueError:
+            # Adapter already registered, skip duplicate
+            continue
+
+
+# Discover adapters on import
+autodiscover_adapters()
+
+
+__all__ = ["AdapterRegistry", "ADAPTER_REGISTRY", "autodiscover_adapters"]

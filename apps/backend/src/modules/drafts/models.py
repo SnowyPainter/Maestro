@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.hybrid import hybrid_property
 from apps.backend.src.core.db import Base
 from apps.backend.src.modules.common.enums import DraftState, PlatformKind, VariantStatus, PostStatus
+from apps.backend.src.modules.accounts.models import PersonaAccount
 
 
 class Draft(Base):
@@ -116,7 +117,7 @@ class PostPublication(Base):
     account_persona_id: Mapped[int] = mapped_column(ForeignKey("persona_accounts.id", ondelete="CASCADE"), index=True)
 
     variant = relationship("DraftVariant", back_populates="publications")
-    persona_account = relationship("PersonaAccount")
+    persona_account = relationship(PersonaAccount)
 
     platform: Mapped[PlatformKind] = mapped_column(Enum(PlatformKind), index=True)
 

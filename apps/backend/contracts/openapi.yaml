@@ -1250,6 +1250,145 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts:
+    post:
+      tags:
+      - action
+      - action
+      - drafts
+      - content
+      - create
+      - writing
+      summary: Create Content Draft
+      description: Start a new content draft with initial parameters and metadata
+      operationId: drafts_create_api_orchestrator_drafts_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftSaveRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/{draft_id}/ir:
+    put:
+      tags:
+      - action
+      - action
+      - drafts
+      - content
+      - update
+      - writing
+      - editing
+      summary: Update Draft Content
+      description: Modify the content and structure of an existing draft
+      operationId: drafts_update_ir_api_orchestrator_drafts__draft_id__ir_put
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/{draft_id}:
+    delete:
+      tags:
+      - action
+      - action
+      - drafts
+      - content
+      - delete
+      - writing
+      - editing
+      summary: Delete Draft
+      description: Delete an existing draft
+      operationId: drafts_delete_api_orchestrator_drafts__draft_id__delete
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/insights:
+    post:
+      tags:
+      - action
+      - action
+      - insights
+      - data
+      - analytics
+      - ingestion
+      - processing
+      summary: Process and Store Insight Data
+      description: Ingest new insight data for analysis and trend detection
+      operationId: insights_ingest_api_orchestrator_insights_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightInCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/auth/signup:
     post:
       tags:
@@ -1723,6 +1862,16 @@ components:
       required:
       - intent
       title: ChatResponse
+    ContentKind:
+      type: string
+      enum:
+      - post
+      - video
+      - story
+      - carousel
+      - live
+      - unknown
+      title: ContentKind
     DraftIR:
       properties:
         blocks:
@@ -1819,6 +1968,67 @@ components:
       - created_at
       - updated_at
       title: DraftOut
+    DraftSaveRequest:
+      properties:
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        title:
+          title: Title
+          type: string
+          nullable: true
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+        goal:
+          title: Goal
+          type: string
+          nullable: true
+        ir:
+          $ref: '#/components/schemas/DraftIR'
+      type: object
+      required:
+      - ir
+      title: DraftSaveRequest
+    DraftUpdateCommand:
+      properties:
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        ir:
+          $ref: '#/components/schemas/DraftIR'
+        title:
+          title: Title
+          type: string
+          nullable: true
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+        goal:
+          title: Goal
+          type: string
+          nullable: true
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      type: object
+      required:
+      - ir
+      title: DraftUpdateCommand
     DraftVariantList:
       items:
         $ref: '#/components/schemas/DraftVariantOut'
@@ -1972,6 +2182,147 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    InsightInCommand:
+      properties:
+        owner_user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Owner User Id
+        post_publication_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Post Publication Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        platform_post_id:
+          title: Platform Post Id
+          type: string
+          nullable: true
+        account_persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Persona Id
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        metrics:
+          additionalProperties:
+            type: number
+          type: object
+          title: Metrics
+        scope:
+          $ref: '#/components/schemas/MetricsScope'
+          default: since_publish
+        content_kind:
+          $ref: '#/components/schemas/ContentKind'
+          default: unknown
+        mapping_version:
+          type: integer
+          title: Mapping Version
+          default: 1
+        raw:
+          additionalProperties: true
+          type: object
+          title: Raw
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        source:
+          $ref: '#/components/schemas/InsightSource'
+          default: webhook
+        ingest_key:
+          title: Ingest Key
+          type: string
+          nullable: true
+      type: object
+      required:
+      - platform
+      - ts
+      title: InsightInCommand
+    InsightOut:
+      properties:
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        post_publication_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Post Publication Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        platform_post_id:
+          title: Platform Post Id
+          type: string
+          nullable: true
+        account_persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Persona Id
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        metrics:
+          additionalProperties:
+            type: number
+          type: object
+          title: Metrics
+        scope:
+          $ref: '#/components/schemas/MetricsScope'
+          default: since_publish
+        content_kind:
+          $ref: '#/components/schemas/ContentKind'
+          default: unknown
+        mapping_version:
+          type: integer
+          title: Mapping Version
+          default: 1
+        raw:
+          additionalProperties: true
+          type: object
+          title: Raw
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+        source:
+          $ref: '#/components/schemas/InsightSource'
+          default: webhook
+        ingest_key:
+          title: Ingest Key
+          type: string
+          nullable: true
+        id:
+          type: integer
+          title: Id
+        ingested_at:
+          type: string
+          format: date-time
+          title: Ingested At
+      type: object
+      required:
+      - owner_user_id
+      - platform
+      - ts
+      - id
+      - ingested_at
+      title: InsightOut
+    InsightSource:
+      type: string
+      enum:
+      - webhook
+      - poll
+      - manual
+      title: InsightSource
     IntentCandidate:
       properties:
         intent:
@@ -2055,6 +2406,13 @@ components:
       required:
       - message
       title: MessageOut
+    MetricsScope:
+      type: string
+      enum:
+      - lifetime
+      - since_publish
+      - interval
+      title: MetricsScope
     NewsItem:
       properties:
         news_item_title:

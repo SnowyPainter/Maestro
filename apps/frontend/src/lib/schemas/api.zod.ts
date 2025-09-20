@@ -1083,6 +1083,51 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
 
 
 /**
+ * Ingest new insight data for analysis and trend detection
+ * @summary Process and Store Insight Data
+ */
+export const insightsIngestApiOrchestratorInsightsPostBodyMappingVersionDefault = 1;
+
+export const insightsIngestApiOrchestratorInsightsPostBody = zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ts": zod.iso.datetime({}),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "scope": zod.enum(['lifetime', 'since_publish', 'interval']).optional(),
+  "content_kind": zod.enum(['post', 'video', 'story', 'carousel', 'live', 'unknown']).optional(),
+  "mapping_version": zod.number().default(insightsIngestApiOrchestratorInsightsPostBodyMappingVersionDefault),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "warnings": zod.array(zod.string()).optional(),
+  "source": zod.enum(['webhook', 'poll', 'manual']).optional(),
+  "ingest_key": zod.string().nullish()
+})
+
+export const insightsIngestApiOrchestratorInsightsPostResponseMappingVersionDefault = 1;
+
+export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
+  "owner_user_id": zod.number(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ts": zod.iso.datetime({}),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "scope": zod.enum(['lifetime', 'since_publish', 'interval']).optional(),
+  "content_kind": zod.enum(['post', 'video', 'story', 'carousel', 'live', 'unknown']).optional(),
+  "mapping_version": zod.number().default(insightsIngestApiOrchestratorInsightsPostResponseMappingVersionDefault),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "warnings": zod.array(zod.string()).optional(),
+  "source": zod.enum(['webhook', 'poll', 'manual']).optional(),
+  "ingest_key": zod.string().nullish(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})
+
+
+/**
  * @summary Signup
  */
 export const signupApiOrchestratorAuthSignupPostBodyPasswordMin = 8;
