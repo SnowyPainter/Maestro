@@ -3208,7 +3208,6 @@ components:
       - instagram
       - threads
       - x
-      - blog
       title: PlatformKind
     RenderedMediaItem:
       properties:

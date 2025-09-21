@@ -24,7 +24,7 @@ export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetRes
 
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponse = zod.object({
   "owner_user_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform": zod.enum(['instagram', 'threads', 'x']),
   "handle": zod.string().max(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseHandleMax),
   "external_id": zod.string().max(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseExternalIdMax).nullish(),
   "avatar_url": zod.string().max(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseAvatarUrlMax).nullish(),
@@ -46,7 +46,7 @@ export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetRes
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetQueryLimitDefault = 50;export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetQueryOffsetDefault = 0;
 
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetQueryParams = zod.object({
-  "platform": zod.union([zod.enum(['instagram', 'threads', 'x', 'blog']),zod.null()]).optional(),
+  "platform": zod.union([zod.enum(['instagram', 'threads', 'x']),zod.null()]).optional(),
   "handle": zod.string().nullish(),
   "limit": zod.number().default(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetQueryLimitDefault),
   "offset": zod.number().optional()
@@ -60,7 +60,7 @@ export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseIsA
 
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseItem = zod.object({
   "owner_user_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform": zod.enum(['instagram', 'threads', 'x']),
   "handle": zod.string().max(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseHandleMax),
   "external_id": zod.string().max(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseExternalIdMax).nullish(),
   "avatar_url": zod.string().max(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseAvatarUrlMax).nullish(),
@@ -392,7 +392,7 @@ export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponse = zod.a
  */
 export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetParams = zod.object({
   "draft_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog'])
+  "platform": zod.enum(['instagram', 'threads', 'x'])
 })
 
 export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetResponse = zod.object({
@@ -465,7 +465,7 @@ export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponse = zod.object({
  * @summary List Draft Variants by Platform
  */
 export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetParams = zod.object({
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog'])
+  "platform": zod.enum(['instagram', 'threads', 'x'])
 })
 
 export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem = zod.object({
@@ -602,7 +602,7 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccoun
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostBody = zod.object({
   "account": zod.object({
   "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform": zod.enum(['instagram', 'threads', 'x']),
   "handle": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccountHandleMax),
   "external_id": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccountExternalIdMax).nullish(),
   "avatar_url": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostBodyAccountAvatarUrlMax).nullish(),
@@ -623,7 +623,7 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseIs
 
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponse = zod.object({
   "owner_user_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform": zod.enum(['instagram', 'threads', 'x']),
   "handle": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseHandleMax),
   "external_id": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseExternalIdMax).nullish(),
   "avatar_url": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseAvatarUrlMax).nullish(),
@@ -668,7 +668,7 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutRe
 
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponse = zod.object({
   "owner_user_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform": zod.enum(['instagram', 'threads', 'x']),
   "handle": zod.string().max(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseHandleMax),
   "external_id": zod.string().max(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseExternalIdMax).nullish(),
   "avatar_url": zod.string().max(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseAvatarUrlMax).nullish(),
@@ -1169,7 +1169,7 @@ export const insightsIngestApiOrchestratorInsightsPostBodyMappingVersionDefault 
 export const insightsIngestApiOrchestratorInsightsPostBody = zod.object({
   "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
   "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform": zod.enum(['instagram', 'threads', 'x']),
   "platform_post_id": zod.string().nullish(),
   "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
   "ts": zod.iso.datetime({}),
@@ -1188,7 +1188,7 @@ export const insightsIngestApiOrchestratorInsightsPostResponseMappingVersionDefa
 export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
   "owner_user_id": zod.number(),
   "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads', 'x', 'blog']),
+  "platform": zod.enum(['instagram', 'threads', 'x']),
   "platform_post_id": zod.string().nullish(),
   "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
   "ts": zod.iso.datetime({}),

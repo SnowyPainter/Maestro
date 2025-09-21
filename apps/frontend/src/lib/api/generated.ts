@@ -859,7 +859,6 @@ export const PlatformKind = {
   instagram: 'instagram',
   threads: 'threads',
   x: 'x',
-  blog: 'blog',
 } as const;
 
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];

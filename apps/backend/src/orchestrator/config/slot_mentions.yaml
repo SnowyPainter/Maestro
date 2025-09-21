@@ -29,7 +29,7 @@ slots:
     label: Platform
     description: "Filter by platform slug (e.g. @platform:instagram)."
     value_type: enum
-    choices: [instagram, threads, x, blog]
+    choices: [instagram, threads, x]
     flows:
       - bff.drafts.list_variants_by_platform
       - bff.drafts.read_variant

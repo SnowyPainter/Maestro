@@ -1714,7 +1714,7 @@ export interface components {
          * PlatformKind
          * @enum {string}
          */
-        PlatformKind: "instagram" | "threads" | "x" | "blog";
+        PlatformKind: "instagram" | "threads" | "x";
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**

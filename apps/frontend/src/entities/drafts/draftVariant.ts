@@ -51,11 +51,6 @@ export const platformPresentation: Record<PlatformKind, PlatformPresentation> = 
     badgeClass: "bg-sky-500 text-white",
     accentClass: "border-sky-300/40",
   },
-  [PlatformKind.blog]: {
-    label: "Blog",
-    badgeClass: "bg-orange-500 text-white",
-    accentClass: "border-orange-300/40",
-  },
 };
 
 export function ensurePlatformKind(value: string | PlatformKind): PlatformKind | null {

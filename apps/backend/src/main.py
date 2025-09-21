@@ -54,10 +54,16 @@ async def health():
 async def reset_db():
     # 절대 프로덕션에서 열지 말 것. 내부 토큰 등으로 보호하거나 DEBUG에서만.
     async with engine.begin() as conn:
+        """
         await conn.execute(text("DROP SCHEMA public CASCADE"))
         await conn.execute(text("CREATE SCHEMA public"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        """
+        
+        await conn.execute(text("DELETE FROM draft_variants"))
+        
         await conn.run_sync(Base.metadata.create_all)
+        
     return {"ok": True}
 
 # 최종적으로 app에 붙이기

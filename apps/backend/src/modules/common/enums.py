@@ -5,7 +5,6 @@ class PlatformKind(str, enum.Enum):
     INSTAGRAM = "instagram"
     THREADS = "threads"
     X = "x"
-    BLOG = "blog"
 
 class DraftState(str, enum.Enum):
     DRAFT = "draft"

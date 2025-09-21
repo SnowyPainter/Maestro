@@ -70,9 +70,6 @@ PLATFORM_POLICIES: Dict[PlatformKind, ComposePolicy] = {
         allowed_media=("image", "video"),
         max_media=4,
     ),
-    PlatformKind.BLOG: ComposePolicy(
-        allowed_media=("image", "video"),
-    ),
 }
 
 
