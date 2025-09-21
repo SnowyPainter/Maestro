@@ -53,22 +53,24 @@ function getStatusIcon(status: string) {
 
 export function DraftVariantList({
   draftId,
+  variants: providedVariants,
   onSelect,
   compact = false,
 }: {
-  draftId: number;
+  draftId?: number;
+  variants?: DraftVariantRender[];
   onSelect?: (variant: DraftVariantRender) => void;
   compact?: boolean;
 }) {
-  const { data, isLoading, isError, refetch } = useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet(draftId, {
+  const { data, isLoading, isError, refetch } = useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet(draftId || 0, {
     query: {
-      enabled: draftId !== undefined && draftId !== null,
+      enabled: draftId !== undefined && draftId !== null && !providedVariants,
     },
   });
 
-  const variants = useMemo(() => data ?? [], [data]);
+  const variants = useMemo(() => providedVariants ?? data ?? [], [providedVariants, data]);
 
-  if (isLoading) {
+  if (isLoading && !providedVariants) {
     return (
       <Card className="border-dashed">
         <CardHeader className="flex flex-row items-center gap-2">
@@ -79,7 +81,7 @@ export function DraftVariantList({
     );
   }
 
-  if (isError) {
+  if (isError && !providedVariants) {
     return (
       <Card className="border-destructive/40">
         <CardHeader className="flex items-center justify-between">

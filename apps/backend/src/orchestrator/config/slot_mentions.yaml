@@ -1,0 +1,50 @@
+slots:
+  - name: campaign_id
+    label: Campaign
+    description: "Target a specific campaign (e.g. @campaign_id:123)."
+    value_type: integer
+    synonyms: [campaign]
+    flows:
+      - bff.campaigns.read_campaign
+      - bff.campaigns.list_kpi_defs
+      - bff.campaigns.list_kpi_results
+      - bff.drafts.list_drafts
+  - name: campaign_ids
+    label: Campaigns
+    description: "Filter by multiple campaigns using commas (e.g. @campaign_ids:101,202)."
+    value_type: integer_list
+    synonyms: [campaigns]
+    flows:
+      - campaigns.aggregate_kpis
+      - campaigns.record_kpi_result
+  - name: draft_id
+    label: Draft
+    description: "Select a draft by id (e.g. @draft_id:42)."
+    value_type: integer
+    flows:
+      - bff.drafts.read_draft
+      - bff.drafts.list_variants
+      - bff.drafts.read_variant
+  - name: platform
+    label: Platform
+    description: "Filter by platform slug (e.g. @platform:instagram)."
+    value_type: enum
+    choices: [instagram, threads, x, blog]
+    flows:
+      - bff.drafts.list_variants_by_platform
+      - bff.drafts.read_variant
+  - name: limit
+    label: Limit
+    description: "Limit the number of results (e.g. @limit:10)."
+    value_type: integer
+    flows:
+      - bff.campaigns.list_campaigns
+      - bff.drafts.list_drafts
+      - bff.trends.list_trends
+  - name: q
+    label: Search Term
+    description: "Set a keyword search term (e.g. @q:holiday)."
+    value_type: string
+    flows:
+      - bff.campaigns.list_campaigns
+      - bff.trends.list_trends

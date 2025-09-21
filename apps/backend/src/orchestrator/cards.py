@@ -16,9 +16,8 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
 
     "DraftOut": "draft.detail",
     "DraftList": "draft.list",
-    "DraftVariantList": "draft.variant.list",
-    "DraftVariantOut": "draft.variant.detail",
-
+    "DraftVariantRenderList": "draft.variant.list",
+    "DraftVariantRenderDetail": "draft.variant.detail",
 
     "PersonaOut": "account.persona.detail",
     "PersonaList": "account.persona.list",

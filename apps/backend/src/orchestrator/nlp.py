@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from apps.backend.src.core.context import get_persona_account_id
 from .registry import FLOWS
+from .slot_mentions import parse_slot_mentions
 
 
 class IntentResult(BaseModel):
@@ -98,6 +99,9 @@ class NlpEngine:
 
         keywords = self._extract_keywords(message.lower())
         slots = self._extract_common_slots(message)
+        explicit = parse_slot_mentions(message)
+        if explicit:
+            slots.update(explicit)
 
         fields = self._model_fields(model_cls)
         inferred: Dict[str, Any] = {}

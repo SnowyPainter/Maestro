@@ -304,6 +304,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/drafts/platform/{platform}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Draft Variants by Platform
+         * @description List all variants of a draft for a specific platform
+         */
+        get: operations["bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/drafts": {
         parameters: {
             query?: never;
@@ -739,6 +759,23 @@ export interface paths {
          * @description Get list of all available flows.
          */
         get: operations["get_available_flows_api_orchestrator_chat_flows_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/helpers/slot-hints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Slot Hints */
+        get: operations["list_slot_hints_api_orchestrator_helpers_slot_hints_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1719,6 +1756,29 @@ export interface components {
             /** Display Name */
             display_name?: string | null;
         };
+        /** SlotHintItem */
+        SlotHintItem: {
+            /** Name */
+            name: string;
+            /** Label */
+            label: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Value Type
+             * @default string
+             */
+            value_type: string;
+            /** Choices */
+            choices?: string[];
+            /** Synonyms */
+            synonyms?: string[];
+            /** Flows */
+            flows?: string[];
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -2306,6 +2366,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftVariantRenderList"];
                 };
             };
             /** @description Validation Error */
@@ -3124,6 +3215,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FlowInfo"][];
+                };
+            };
+        };
+    };
+    list_slot_hints_api_orchestrator_helpers_slot_hints_get: {
+        parameters: {
+            query?: {
+                /** @description Filter hints by name or label */
+                query?: string | null;
+                /** @description Filter hints relevant to a specific flow key */
+                flow?: string | null;
+                /** @description Maximum number of hints to return */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlotHintItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatCard, TrendsListResponse } from "@/lib/api/generated";
+import { ChatCard, TrendsListResponse, DraftVariantRender } from "@/lib/api/generated";
 import { TableCard } from "./components/Table";
 import { ChartCard } from "./components/ChartCard";
 import { EditorCard } from "./components/EditorCard";
@@ -17,6 +17,8 @@ import { AccountList } from "../accounts/components/AccountList";
 import { AccountDetail } from "../accounts/components/AccountDetail";
 import { PersonaAccountList } from "../accounts/components/PersonaAccountList";
 import { PersonaAccountCard } from "../accounts/components/PersonaAccountCard";
+import { DraftVariantList } from "../drafts/components/DraftVariantList";
+import { DraftVariantDetail } from "../drafts/components/DraftVariantDetail";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -24,6 +26,7 @@ export interface CardRenderCallbacks {
   onDraftSelect?: (draftId: number, sourceMessageId: number) => void;
   onPersonaSelect?: (personaId: number, sourceMessageId: number) => void;
   onAccountSelect?: (accountId: number, sourceMessageId: number) => void;
+  onDraftVariantSelect?: (variant: DraftVariantRender, sourceMessageId: number) => void;
 }
 
 export interface RenderCardOptions {
@@ -74,6 +77,15 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     return (
       <DraftList
         onSelectDraft={(draftId) => callbacks.onDraftSelect?.(draftId, messageId)}
+      />
+    );
+  }
+
+  if (card_type === 'draft.variant.list') {
+    return (
+      <DraftVariantList
+        onSelect={(variant) => callbacks.onDraftVariantSelect?.(variant, messageId)}
+        variants={data.items as DraftVariantRender[]}
       />
     );
   }

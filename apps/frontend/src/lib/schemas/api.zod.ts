@@ -461,6 +461,41 @@ export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponse = zod.object({
 
 
 /**
+ * List all variants of a draft for a specific platform
+ * @summary List Draft Variants by Platform
+ */
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetParams = zod.object({
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog'])
+})
+
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem = zod.object({
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.string(),
+  "status": zod.string(),
+  "compiled_at": zod.iso.datetime({}).nullish(),
+  "rendered_caption": zod.string().nullish(),
+  "rendered_blocks": zod.union([zod.object({
+  "media": zod.array(zod.object({
+  "type": zod.enum(['image', 'video']).optional(),
+  "url": zod.string().optional(),
+  "alt": zod.string().nullish(),
+  "caption": zod.string().nullish(),
+  "ratio": zod.string().nullish()
+})).optional(),
+  "options": zod.record(zod.string(), zod.any()).optional(),
+  "metrics": zod.record(zod.string(), zod.any()).optional()
+}),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "compiler_version": zod.number(),
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional()
+})
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponse = zod.array(bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem)
+
+
+/**
  * Get paginated list of all content drafts for content management dashboard
  * @summary List All Drafts
  */
@@ -1268,6 +1303,33 @@ export const getAvailableFlowsApiOrchestratorChatFlowsGetResponseItem = zod.obje
   "tags": zod.array(zod.string())
 })
 export const getAvailableFlowsApiOrchestratorChatFlowsGetResponse = zod.array(getAvailableFlowsApiOrchestratorChatFlowsGetResponseItem)
+
+
+/**
+ * @summary List Slot Hints
+ */
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryLimitDefault = 10;
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryLimitMax = 50;
+
+
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryParams = zod.object({
+  "query": zod.string().nullish().describe('Filter hints by name or label'),
+  "flow": zod.string().nullish().describe('Filter hints relevant to a specific flow key'),
+  "limit": zod.number().min(1).max(listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryLimitMax).default(listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryLimitDefault).describe('Maximum number of hints to return')
+})
+
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGetResponseDescriptionDefault = "";export const listSlotHintsApiOrchestratorHelpersSlotHintsGetResponseValueTypeDefault = "string";
+
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGetResponseItem = zod.object({
+  "name": zod.string(),
+  "label": zod.string(),
+  "description": zod.string().optional(),
+  "value_type": zod.string().default(listSlotHintsApiOrchestratorHelpersSlotHintsGetResponseValueTypeDefault),
+  "choices": zod.array(zod.string()).optional(),
+  "synonyms": zod.array(zod.string()).optional(),
+  "flows": zod.array(zod.string()).optional()
+})
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGetResponse = zod.array(listSlotHintsApiOrchestratorHelpersSlotHintsGetResponseItem)
 
 
 /**

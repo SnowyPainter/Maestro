@@ -218,6 +218,18 @@ async def list_draft_variants(
     )
     return (await db.execute(stmt)).scalars().all()
 
+async def list_draft_variants_by_platform(
+    db: AsyncSession,
+    *,
+    user_id: int,
+    platform: PlatformKind,
+) -> list[DraftVariant]:
+    stmt = (
+        select(DraftVariant)
+        .join(Draft, DraftVariant.draft_id == Draft.id)
+        .where(DraftVariant.platform == platform, Draft.user_id == user_id)
+    )
+    return (await db.execute(stmt)).scalars().all()
 
 async def get_draft_variant(
     db: AsyncSession,

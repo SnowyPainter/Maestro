@@ -5,6 +5,7 @@ from apps.backend.src.orchestrator.flows.auth_router import router as orchestrat
 from apps.backend.src.orchestrator.bff_router import router as orchestrator_bff_router
 from apps.backend.src.orchestrator.chat_router import router as orchestrator_chat_router
 from apps.backend.src.orchestrator.action_router import router as orchestrator_action_router
+from apps.backend.src.orchestrator.helper_router import router as orchestrator_helper_router
 
 from apps.backend.src.core.config import settings
 from apps.backend.src.core.db import engine, Base
@@ -42,6 +43,7 @@ api.include_router(orchestrator_action_router, prefix="/orchestrator")
 # Orchestrator 라우터 등록
 api.include_router(orchestrator_auth_router, prefix="/orchestrator")
 api.include_router(orchestrator_chat_router, prefix="/orchestrator")
+api.include_router(orchestrator_helper_router, prefix="/orchestrator")
 
 # 헬스체크도 api 아래로
 @api.get("/health")

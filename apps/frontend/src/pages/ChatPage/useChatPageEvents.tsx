@@ -5,6 +5,7 @@ import {
   useChatQueryApiOrchestratorChatQueryPost,
   TrendsListResponse,
   bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet,
+  DraftVariantRender,
 } from "@/lib/api/generated";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
@@ -28,6 +29,8 @@ import { AccountList } from "@/entities/accounts/components/AccountList";
 import { AccountDetail } from "@/entities/accounts/components/AccountDetail";
 import { PersonaAccountList } from "@/entities/accounts/components/PersonaAccountList";
 import { PlatformAccountOut } from "@/lib/api/generated";
+import { DraftVariantList } from "@/entities/drafts/components/DraftVariantList";
+import { DraftVariantDetail } from "@/entities/drafts/components/DraftVariantDetail";
 
 const DEFAULT_ERROR_MESSAGE = '죄송합니다. 채팅 처리 중 오류가 발생했습니다.';
 
@@ -214,6 +217,19 @@ export function useChatPageEvents() {
       ),
     });
   }, [appendMessage, getNextMessageId, handleDraftSelect, removeMessagesByComponent]);
+
+  const handleDraftVariantSelect = useCallback((variant: DraftVariantRender, sourceMessageId: number) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+      removeMessagesByComponent(DraftVariantList);
+      addCardMessage(messageId => (
+        <DraftVariantDetail
+          draftId={variant.draft_id as number}
+          platform={variant.platform as string}
+        />
+      ));
+  }, [addCardMessage, removeMessage, removeMessagesByComponent]);
 
   const handlePersonaCreateSuccess = useCallback<EntitySuccessHandler>((personaId, sourceMessageId) => {
     if (sourceMessageId) {
@@ -427,6 +443,7 @@ export function useChatPageEvents() {
             onDraftSelect: handleDraftSelect,
             onPersonaSelect: handlePersonaSelect,
             onAccountSelect: handleAccountSelect,
+            onDraftVariantSelect: handleDraftVariantSelect,
           },
         }));
       });
@@ -434,7 +451,7 @@ export function useChatPageEvents() {
       console.error('Chat error:', error);
       addTextMessage(DEFAULT_ERROR_MESSAGE, 'bot');
     }
-  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect]);
+  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleDraftVariantSelect]);
 
   return {
     handleChatSend,

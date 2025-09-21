@@ -903,6 +903,16 @@ export interface SignupRequest {
   display_name?: string | null;
 }
 
+export interface SlotHintItem {
+  name: string;
+  label: string;
+  description?: string;
+  value_type?: string;
+  choices?: string[];
+  synonyms?: string[];
+  flows?: string[];
+}
+
 export interface TokenResponse {
   access_token: string;
   token_type?: string;
@@ -1083,6 +1093,25 @@ until?: string | null;
 
 export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams = {
 soft?: boolean;
+};
+
+export type ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams = {
+/**
+ * Filter hints by name or label
+ * @nullable
+ */
+query?: string | null;
+/**
+ * Filter hints relevant to a specific flow key
+ * @nullable
+ */
+flow?: string | null;
+/**
+ * Maximum number of hints to return
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
 };
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -2433,6 +2462,95 @@ export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<Retu
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffDraftsReadDraftApiBffDraftsDraftIdGetQueryOptions(draftId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * List all variants of a draft for a specific platform
+ * @summary List Draft Variants by Platform
+ */
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet = (
+    platform: PlatformKind,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftVariantRenderList>(
+      {url: `/api/bff/drafts/platform/${platform}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryKey = (platform?: PlatformKind,) => {
+    return [`/api/bff/drafts/platform/${platform}`] as const;
+    }
+
+    
+export const getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryOptions = <TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryKey(platform);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>> = ({ signal }) => bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet(platform, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(platform), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>>
+export type BffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryError = HTTPValidationError
+
+
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Draft Variants by Platform
+ */
+
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryOptions(platform,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -4164,6 +4282,95 @@ export function useGetAvailableFlowsApiOrchestratorChatFlowsGet<TData = Awaited<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetAvailableFlowsApiOrchestratorChatFlowsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List Slot Hints
+ */
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGet = (
+    params?: ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<SlotHintItem[]>(
+      {url: `/api/orchestrator/helpers/slot-hints`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getListSlotHintsApiOrchestratorHelpersSlotHintsGetQueryKey = (params?: ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams,) => {
+    return [`/api/orchestrator/helpers/slot-hints`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getListSlotHintsApiOrchestratorHelpersSlotHintsGetQueryOptions = <TData = Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError = HTTPValidationError>(params?: ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSlotHintsApiOrchestratorHelpersSlotHintsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>> = ({ signal }) => listSlotHintsApiOrchestratorHelpersSlotHintsGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListSlotHintsApiOrchestratorHelpersSlotHintsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>>
+export type ListSlotHintsApiOrchestratorHelpersSlotHintsGetQueryError = HTTPValidationError
+
+
+export function useListSlotHintsApiOrchestratorHelpersSlotHintsGet<TData = Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError = HTTPValidationError>(
+ params: undefined |  ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSlotHintsApiOrchestratorHelpersSlotHintsGet<TData = Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError = HTTPValidationError>(
+ params?: ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSlotHintsApiOrchestratorHelpersSlotHintsGet<TData = Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError = HTTPValidationError>(
+ params?: ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Slot Hints
+ */
+
+export function useListSlotHintsApiOrchestratorHelpersSlotHintsGet<TData = Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError = HTTPValidationError>(
+ params?: ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listSlotHintsApiOrchestratorHelpersSlotHintsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListSlotHintsApiOrchestratorHelpersSlotHintsGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

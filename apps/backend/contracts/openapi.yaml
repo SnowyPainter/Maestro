@@ -583,9 +583,8 @@ paths:
       - drafts
       - content
       - read
-      - ui
-      - frontend
-      - editing
+      - get
+      - one
       summary: Get Draft Content
       description: Retrieve complete draft content and metadata for content editing
         interface
@@ -604,6 +603,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DraftOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/platform/{platform}:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - variants
+      - list
+      - by platform
+      summary: List Draft Variants by Platform
+      description: List all variants of a draft for a specific platform
+      operationId: bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftVariantRenderList'
         '422':
           description: Validation Error
           content:
@@ -1528,6 +1559,59 @@ paths:
                   $ref: '#/components/schemas/FlowInfo'
                 type: array
                 title: Response Get Available Flows Api Orchestrator Chat Flows Get
+  /api/orchestrator/helpers/slot-hints:
+    get:
+      tags:
+      - helpers
+      summary: List Slot Hints
+      operationId: list_slot_hints_api_orchestrator_helpers_slot_hints_get
+      parameters:
+      - name: query
+        in: query
+        required: false
+        schema:
+          description: Filter hints by name or label
+          title: Query
+          type: string
+          nullable: true
+        description: Filter hints by name or label
+      - name: flow
+        in: query
+        required: false
+        schema:
+          description: Filter hints relevant to a specific flow key
+          title: Flow
+          type: string
+          nullable: true
+        description: Filter hints relevant to a specific flow key
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          description: Maximum number of hints to return
+          default: 10
+          title: Limit
+        description: Maximum number of hints to return
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SlotHintItem'
+                title: Response List Slot Hints Api Orchestrator Helpers Slot Hints
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/health:
     get:
       summary: Health
@@ -3188,6 +3272,42 @@ components:
       - email
       - password
       title: SignupRequest
+    SlotHintItem:
+      properties:
+        name:
+          type: string
+          title: Name
+        label:
+          type: string
+          title: Label
+        description:
+          type: string
+          title: Description
+          default: ''
+        value_type:
+          type: string
+          title: Value Type
+          default: string
+        choices:
+          items:
+            type: string
+          type: array
+          title: Choices
+        synonyms:
+          items:
+            type: string
+          type: array
+          title: Synonyms
+        flows:
+          items:
+            type: string
+          type: array
+          title: Flows
+      type: object
+      required:
+      - name
+      - label
+      title: SlotHintItem
     TokenResponse:
       properties:
         access_token:

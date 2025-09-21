@@ -21,6 +21,7 @@ from apps.backend.src.modules.drafts.service import (
     get_draft_for_user,
     get_draft_variant,
     list_draft_variants,
+    list_draft_variants_by_platform,
 )
 from apps.backend.src.modules.users.models import User
 
@@ -45,6 +46,8 @@ class DraftListPayload(BaseModel):
 class DraftVariantsPayload(BaseModel):
     draft_id: int
 
+class DraftVariantsByPlatformPayload(BaseModel):
+    platform: PlatformKind
 
 class DraftVariantDetailPayload(BaseModel):
     draft_id: int
@@ -165,6 +168,23 @@ async def op_list_draft_variants(
     items = [DraftVariantRender.from_model(variant) for variant in variants]
     return DraftVariantRenderList(root=items)
 
+@operator(
+    key="bff.drafts.list_variants_by_platform",
+    title="BFF List Draft Variants by Platform",
+    side_effect="read",
+)
+async def op_list_draft_variants_by_platform(
+    payload: DraftVariantsByPlatformPayload,
+    ctx: TaskContext,
+) -> DraftVariantRenderList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    variants = await list_draft_variants_by_platform(
+        db,
+        user_id=user.id,
+        platform=payload.platform,
+    )
+    return DraftVariantRenderList(root=[DraftVariantRender.from_model(variant) for variant in variants])
 
 @operator(
     key="bff.drafts.read_variant",
@@ -240,12 +260,25 @@ def _flow_bff_read_draft_variant(builder: FlowBuilder):
     output_model=DraftOut,
     method="get",
     path="/drafts/{draft_id}",
-    tags=("bff", "drafts", "content", "read", "ui", "frontend", "editing"),
+    tags=("bff", "drafts", "content", "read", "get", "one"),
 )
 def _flow_bff_read_draft(builder: FlowBuilder):
     task = builder.task("read_draft", "bff.drafts.read_draft")
     builder.expect_terminal(task)
 
+@FLOWS.flow(
+    key="bff.drafts.list_variants_by_platform",
+    title="List Draft Variants by Platform",
+    description="List all variants of a draft for a specific platform",
+    input_model=DraftVariantsByPlatformPayload,
+    output_model=DraftVariantRenderList,
+    method="get",
+    path="/drafts/platform/{platform}",
+    tags=("bff", "drafts", "content", "variants", "list", "by platform"),
+)
+def _flow_bff_list_draft_variants_by_platform(builder: FlowBuilder):
+    task = builder.task("list_draft_variants_by_platform", "bff.drafts.list_variants_by_platform")
+    builder.expect_terminal(task)
 
 @FLOWS.flow(
     key="bff.drafts.list_drafts",

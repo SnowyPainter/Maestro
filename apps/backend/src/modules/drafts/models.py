@@ -94,6 +94,15 @@ class DraftVariant(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
     draft = relationship("Draft", back_populates="variants")
+
+    @hybrid_property
+    def draft_owner_id(self) -> int:
+        return self.draft.user_id
+
+    @draft_owner_id.expression
+    def draft_owner_id(cls):
+        return select(Draft.user_id).where(Draft.id == cls.draft_id).scalar_subquery()
+
     publications = relationship(
         "PostPublication",
         back_populates="variant",
