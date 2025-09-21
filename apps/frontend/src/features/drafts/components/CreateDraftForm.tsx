@@ -10,12 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { components } from "@/lib/types/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DraftIREditor } from "@/components/Draft/DraftIREditor";
 
 type DraftIR = components["schemas"]["DraftIR"];
 
 export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) => void }) {
   const [title, setTitle] = useState("");
-  const [text, setText] = useState("");
+  const [blocks, setBlocks] = useState<DraftIR['blocks']>([]);
   const [goal, setGoal] = useState("");
   const [tags, setTags] = useState("");
   const [campaignId, setCampaignId] = useState<number | null>(null);
@@ -36,7 +37,7 @@ export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const ir: DraftIR = {
-      blocks: [{ type: "text", props: { markdown: text } }],
+      blocks: blocks,
       options: {}
     };
     createDraft({ data: { 
@@ -61,12 +62,9 @@ export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) =>
       </div>
       <div className="grid gap-2">
         <label htmlFor="text">Content</label>
-        <Textarea
-          id="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Start writing your draft..."
-          required
+        <DraftIREditor
+          initialBlocks={[]}
+          onBlocksChange={setBlocks}
         />
       </div>
       <div className="grid gap-2">
