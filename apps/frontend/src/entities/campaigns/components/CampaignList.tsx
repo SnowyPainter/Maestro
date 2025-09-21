@@ -3,11 +3,13 @@ import { useBffCampaignsListCampaignsApiBffCampaignsGet } from "@/lib/api/genera
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, Calendar } from "lucide-react";
+import { ChevronDown, ChevronRight, Calendar, Zap } from "lucide-react";
+import { usePersonaContextStore } from "@/store/persona-context";
 
 export function CampaignList({ onSelectCampaign }: { onSelectCampaign: (campaignId: number) => void }) {
   const { data: campaigns, isLoading, isError } = useBffCampaignsListCampaignsApiBffCampaignsGet();
   const [isExpanded, setIsExpanded] = useState(false);
+  const setCampaignContext = usePersonaContextStore((state) => state.setCampaignContext);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
@@ -65,6 +67,18 @@ export function CampaignList({ onSelectCampaign }: { onSelectCampaign: (campaign
                             </div>
                         )}
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setCampaignContext(campaign.id);
+                        }}
+                    >
+                        <Zap className="h-3 w-3" />
+                    </Button>
                 </button>
             ))}
         </div>

@@ -101,9 +101,33 @@ export async function apiFetch<T = unknown>(
   if (token) headers.set('Authorization', `Bearer ${token}`);
   headers.set('X-Request-ID', crypto.randomUUID());
 
-  const personaAccountId = usePersonaContextStore.getState().personaAccountId;
+  const {
+    personaAccountId,
+    draftId,
+    draftEnabled,
+    campaignId,
+    campaignEnabled,
+    userMemo,
+    userMemoEnabled,
+  } = usePersonaContextStore.getState();
+
   if (personaAccountId !== null) {
     headers.set('X-Persona-Account-Id', String(personaAccountId));
+  }
+
+  if (draftEnabled && draftId !== null) {
+    headers.set('X-Draft-Id', String(draftId));
+  }
+
+  if (campaignEnabled && campaignId !== null) {
+    headers.set('X-Campaign-Id', String(campaignId));
+  }
+
+  if (userMemoEnabled && userMemo) {
+    const sanitizedMemo = userMemo.replace(/\r?\n/g, ' ').trim();
+    if (sanitizedMemo) {
+      headers.set('X-User-Memo', sanitizedMemo);
+    }
   }
 
   const httpMethod = (method || 'GET').toUpperCase();

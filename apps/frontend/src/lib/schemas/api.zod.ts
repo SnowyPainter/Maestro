@@ -437,7 +437,7 @@ export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetResponse 
 
 
 /**
- * Retrieve complete draft content and metadata for content editing interface
+ * Show the draft content
  * @summary Get Draft Content
  */
 export const bffDraftsReadDraftApiBffDraftsDraftIdGetParams = zod.object({

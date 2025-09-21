@@ -11,7 +11,7 @@ from typing import get_args, get_origin
 import dateparser
 from pydantic import BaseModel, Field
 
-from apps.backend.src.core.context import get_persona_account_id
+from apps.backend.src.core.context import get_persona_account_id, get_draft_id, get_campaign_id, get_user_memo
 from .registry import FLOWS
 from .slot_mentions import parse_slot_mentions
 
@@ -363,6 +363,18 @@ class NlpEngine:
                 slots.setdefault("persona_account_id", coerced)
                 slots.setdefault("account_persona_id", coerced)
 
+        draft_id = get_draft_id()
+        if draft_id:
+            slots.setdefault("draft_id", draft_id)
+
+        campaign_id = get_campaign_id()
+        if campaign_id:
+            slots.setdefault("campaign_id", campaign_id)
+
+        user_memo = get_user_memo()
+        if user_memo:
+            slots.setdefault("user_memo", user_memo)
+
         return slots
 
     def _infer_slot_value(
@@ -398,10 +410,16 @@ class NlpEngine:
         if "campaign" in name and name.endswith("ids"):
             return existing.get("campaign_ids") or self._extract_campaign_ids(message)
 
+        if "draft" in name:
+            return existing.get("draft_id") or self._extract_draft_id(message)
+
         if "campaign" in name and name.endswith("id"):
             ids = existing.get("campaign_ids") or self._extract_campaign_ids(message)
             if ids:
                 return ids[0]
+
+        if "user_memo" in name:
+            return existing.get("user_memo") or self._extract_user_memo(message)
 
         if any(token in name for token in ("as_of", "date", "day")):
             return existing.get("as_of") or self._extract_temporal_slot(message)

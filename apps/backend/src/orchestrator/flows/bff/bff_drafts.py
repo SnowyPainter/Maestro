@@ -255,7 +255,7 @@ def _flow_bff_read_draft_variant(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.drafts.read_draft",
     title="Get Draft Content",
-    description="Retrieve complete draft content and metadata for content editing interface",
+    description="Show the draft content",
     input_model=DraftReadPayload,
     output_model=DraftOut,
     method="get",

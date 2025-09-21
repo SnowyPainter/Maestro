@@ -3,11 +3,13 @@ import { useBffDraftsListDraftsApiBffDraftsGet } from "@/lib/api/generated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, Target, Clock } from "lucide-react";
+import { ChevronDown, ChevronRight, Target, Clock, Zap } from "lucide-react";
+import { usePersonaContextStore } from "@/store/persona-context";
 
 export function DraftList({ onSelectDraft }: { onSelectDraft: (draftId: number) => void }) {
   const { data: drafts, isLoading, isError } = useBffDraftsListDraftsApiBffDraftsGet();
   const [isExpanded, setIsExpanded] = useState(false);
+  const setDraftContext = usePersonaContextStore((state) => state.setDraftContext);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -84,6 +86,18 @@ export function DraftList({ onSelectDraft }: { onSelectDraft: (draftId: number) 
                             <span>Created {formatDate(draft.created_at)}</span>
                         </div>
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setDraftContext(draft.id);
+                        }}
+                    >
+                        <Zap className="h-3 w-3" />
+                    </Button>
                 </button>
             ))}
         </div>

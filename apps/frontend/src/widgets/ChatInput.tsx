@@ -3,6 +3,8 @@ import { Send } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useListSlotHintsApiOrchestratorHelpersSlotHintsGet, SlotHintItem } from "@/lib/api/generated";
+import { usePersonaContextStore } from "@/store/persona-context";
+import { useChatMessagesContext } from "@/entities/messages/context/ChatMessagesContext";
 
 interface ChatInputProps {
     onSendMessage: (content: string) => Promise<void>;
@@ -20,6 +22,9 @@ export function ChatInput({ onSendMessage, onClearChat, placeholder = "Enter a m
     const [suggestions, setSuggestions] = useState<SlotHintItem[]>([]);
     const [highlightIndex, setHighlightIndex] = useState(0);
     const suggestionRefs = useRef<(HTMLLIElement | null)[]>([]);
+
+    const { appendMessage } = useChatMessagesContext();
+
 
     const closeMention = useCallback(() => {
         setMentionOpen(false);
@@ -163,6 +168,42 @@ export function ChatInput({ onSendMessage, onClearChat, placeholder = "Enter a m
             requestAnimationFrame(() => textareaRef.current?.focus());
             return;
         }
+        if (trimmed.toLowerCase().startsWith("/memo")) {
+            const memoBody = trimmed.slice(5).trim();
+            // Get actions directly from store to avoid hook dependency issues
+            const actions = usePersonaContextStore.getState();
+
+            let feedbackMessage = "";
+            if (!memoBody) {
+                actions.clearUserMemo();
+                feedbackMessage = "📝 Memo cleared";
+            } else if (["off", "disable", "disabled"].includes(memoBody.toLowerCase())) {
+                actions.setUserMemoEnabled(false);
+                feedbackMessage = "📝 Memo disabled";
+            } else if (["on", "enable", "enabled"].includes(memoBody.toLowerCase())) {
+                actions.setUserMemoEnabled(true);
+                feedbackMessage = "📝 Memo enabled";
+            } else if (memoBody.toLowerCase() === "clear") {
+                actions.clearUserMemo();
+                feedbackMessage = "📝 Memo cleared";
+            } else {
+                actions.setUserMemo(memoBody);
+                actions.setUserMemoEnabled(true);
+                feedbackMessage = `📝 Memo set: "${memoBody.length > 50 ? memoBody.slice(0, 47) + '...' : memoBody}"`;
+            }
+
+            // Add system feedback message to chat
+            appendMessage({
+                id: Date.now(),
+                type: 'bot',
+                content: feedbackMessage,
+            });
+
+            setInputValue("");
+            closeMention();
+            requestAnimationFrame(() => textareaRef.current?.focus());
+            return;
+        }
         try {
             await onSendMessage(trimmed);
             setInputValue("");
@@ -171,7 +212,7 @@ export function ChatInput({ onSendMessage, onClearChat, placeholder = "Enter a m
             console.error("Failed to send message:", error);
         }
         requestAnimationFrame(() => textareaRef.current?.focus());
-    }, [closeMention, inputValue, onClearChat, onSendMessage]);
+    }, [inputValue, onClearChat, onSendMessage]);
 
     const handleKeyDown = useCallback(
         async (event: KeyboardEvent<HTMLTextAreaElement>) => {
