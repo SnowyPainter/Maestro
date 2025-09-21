@@ -1,6 +1,6 @@
 # apps/backend/src/modules/adapters/base.py
 from __future__ import annotations
-from typing import Protocol, Optional, Dict, Any, List, Literal, TypedDict
+from typing import Protocol, Optional, Dict, Any, List, Literal, TypedDict, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -67,6 +67,54 @@ class MetricsResult:
     raw: Dict[str, Any]
     warnings: list[str]
     errors: list[str]
+
+def _coerce_str(values: Mapping[str, Any], keys: List[str]) -> Optional[str]:
+    for key in keys:
+        value = values.get(key)
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped:
+                return stripped
+    return None
+
+
+@dataclass(frozen=True)
+class ThreadsCredentials:
+    access_token: str
+    user_id: Optional[str]
+
+    @classmethod
+    def from_mapping(
+        cls,
+        raw: Mapping[str, Any] | None,
+        *,
+        require_user_id: bool = True,
+    ) -> tuple[Optional["ThreadsCredentials"], List[str]]:
+        if not isinstance(raw, Mapping):
+            return None, ["access_token", "threads user id"] if require_user_id else ["access_token"]
+
+        access_token = _coerce_str(raw, ["access_token", "token"])
+        user_id = _coerce_str(
+            raw,
+            [
+                "threads_user_id",
+                "user_id",
+                "profile_id",
+                "external_id",
+            ],
+        )
+
+        missing: List[str] = []
+        if not access_token:
+            missing.append("access_token")
+        if require_user_id and not user_id:
+            missing.append("threads user id")
+
+        if missing:
+            return None, missing
+
+        return cls(access_token=access_token, user_id=user_id), []
+
 
 class Adapter(Protocol):
     platform: PlatformKind

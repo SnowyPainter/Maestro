@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { useBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet, oauthStartApiOrchestratorAuthOauthPlatformStartGet } from "@/lib/api/generated";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,14 +17,15 @@ type OAuthStartResponse = {
 
 
 export function PersonaAccountContext() {
-    const { 
-        personaAccountId, 
-        personaName, 
-        accountId, 
-        accountHandle, 
-        accountPlatform, 
-        accountAvatarUrl, 
-        clearPersonaContext 
+    const {
+        personaAccountId,
+        personaName,
+        accountId,
+        accountHandle,
+        accountPlatform,
+        accountAvatarUrl,
+        clearPersonaContext,
+        setPersonaContext
     } = usePersonaContextStore();
 
     const [isReconnecting, setIsReconnecting] = useState(false);
@@ -37,6 +38,18 @@ export function PersonaAccountContext() {
         accountId || 0, // Use 0 as fallback since accountId can be null, but query will be disabled
         { query: { enabled: shouldCheckValidity } }
     );
+
+    // Clear store and reload after OAuth callback
+    useEffect(() => {
+        const shouldRefetch = sessionStorage.getItem('personaAccountRefetch');
+        if (shouldRefetch) {
+            sessionStorage.removeItem('personaAccountRefetch');
+            // Clear the store to force reload of latest data
+            clearPersonaContext();
+            // Optionally reload the page to ensure all components get fresh data
+            window.location.reload();
+        }
+    }, [clearPersonaContext]);
 
     const handleClearPersona = () => {
         clearPersonaContext();
@@ -59,6 +72,8 @@ export function PersonaAccountContext() {
                 return;
             }
 
+            // Store refetch function to call after OAuth callback
+            sessionStorage.setItem('personaAccountRefetch', 'true');
             window.location.href = response.authorize_url;
         } catch (error: any) {
             const message = error?.data?.detail || error?.message || "OAuth start failed";

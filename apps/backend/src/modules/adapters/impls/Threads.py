@@ -16,6 +16,8 @@ from apps.backend.src.modules.adapters.schemas import (
     DeleteResult,
     MetricsResult,
     PublishResult,
+    RenderedVariantBlocks,
+    ThreadsCredentials,
 )
 from apps.backend.src.modules.common.enums import (
     ContentKind,
@@ -49,45 +51,45 @@ class ThreadsAdapter(Adapter):
 
     async def publish(
         self,
-        rendered_blocks: dict | None,
+        rendered_blocks: RenderedVariantBlocks | None,
         caption: str | None,
         *,
         credentials: dict,
         options: dict | None = None,
     ) -> PublishResult:
         warnings: list[str] = []
-        access_token, user_id = self._resolve_credentials(credentials)
-        missing_fields: list[str] = []
-        if not access_token:
-            missing_fields.append("access_token")
-        if not user_id:
-            missing_fields.append("threads user id")
-        if missing_fields:
+        resolved_credentials, missing_fields = self._resolve_credentials(credentials)
+        if missing_fields or not resolved_credentials:
             return PublishResult(
                 ok=False,
                 external_id=None,
                 errors=[
-                    "missing credentials: " + ", ".join(missing_fields),
+                    "missing credentials: " + ", ".join(missing_fields or ["access_token", "threads user id"]),
                 ],
                 warnings=[],
             )
 
+        access_token = resolved_credentials.access_token
+        user_id = resolved_credentials.user_id or ""
+
         blocks_media = (rendered_blocks or {}).get("media") or []
-        if blocks_media:
-            warnings.append(
-                f"threads adapter currently posts caption only; dropped {len(blocks_media)} media item(s)"
-            )
+        media_payload, media_warnings = self._prepare_media_payload(blocks_media)
+        warnings.extend(media_warnings)
 
         text = (caption or "").strip()
-        if not text:
+        if not text and not media_payload:
             return PublishResult(
                 ok=False,
                 external_id=None,
-                errors=["threads publish requires non-empty caption text"],
+                errors=["threads publish requires caption text or at least one supported image"],
                 warnings=warnings,
             )
 
-        payload: Dict[str, Any] = {"text": text}
+        payload: Dict[str, Any] = {}
+        if text:
+            payload["text"] = text
+        if media_payload:
+            payload.update(media_payload)
         payload.update(self._extract_publish_options(options))
 
         client = ThreadsGraphClient(
@@ -149,12 +151,18 @@ class ThreadsAdapter(Adapter):
         return PublishResult(ok=True, external_id=external_id, errors=[], warnings=warnings)
 
     async def delete(self, external_id: str, *, credentials: dict) -> DeleteResult:
-        access_token, _ = self._resolve_credentials(credentials)
-        if not access_token:
-            return DeleteResult(ok=False, errors=["missing credentials: access_token"])
+        resolved_credentials, missing_fields = self._resolve_credentials(
+            credentials,
+            require_user_id=False,
+        )
+        if missing_fields or not resolved_credentials:
+            return DeleteResult(
+                ok=False,
+                errors=["missing credentials: access_token"],
+            )
 
         client = ThreadsGraphClient(
-            access_token=access_token,
+            access_token=resolved_credentials.access_token,
             http=self._http,
             base_url=self._base_url,
         )
@@ -166,8 +174,11 @@ class ThreadsAdapter(Adapter):
         return DeleteResult(ok=True, errors=[])
 
     async def sync_metrics(self, external_id: str, *, credentials: dict) -> MetricsResult:
-        access_token, _ = self._resolve_credentials(credentials)
-        if not access_token:
+        resolved_credentials, missing_fields = self._resolve_credentials(
+            credentials,
+            require_user_id=False,
+        )
+        if missing_fields or not resolved_credentials:
             return MetricsResult(
                 ok=False,
                 metrics={},
@@ -181,7 +192,7 @@ class ThreadsAdapter(Adapter):
             )
 
         client = ThreadsGraphClient(
-            access_token=access_token,
+            access_token=resolved_credentials.access_token,
             http=self._http,
             base_url=self._base_url,
         )
@@ -218,25 +229,26 @@ class ThreadsAdapter(Adapter):
         )
 
     @staticmethod
-    def _resolve_credentials(credentials: dict | None) -> tuple[Optional[str], Optional[str]]:
-        if not isinstance(credentials, dict):
-            return None, None
-        access_token = credentials.get("access_token") or credentials.get("token")
-        user_id = (
-            credentials.get("threads_user_id")
-            or credentials.get("user_id")
-            or credentials.get("profile_id")
-            or credentials.get("external_id")
+    def _resolve_credentials(
+        credentials: ThreadsCredentials | Dict[str, Any] | None,
+        *,
+        require_user_id: bool = True,
+    ) -> tuple[Optional[ThreadsCredentials], list[str]]:
+        if isinstance(credentials, ThreadsCredentials):
+            missing: list[str] = []
+            if not credentials.access_token:
+                missing.append("access_token")
+            if require_user_id and not credentials.user_id:
+                missing.append("threads user id")
+            if missing:
+                return None, missing
+            return credentials, []
+
+        resolved, missing = ThreadsCredentials.from_mapping(
+            credentials,
+            require_user_id=require_user_id,
         )
-        if isinstance(access_token, str):
-            access_token = access_token.strip() or None
-        else:
-            access_token = None
-        if isinstance(user_id, str):
-            user_id = user_id.strip() or None
-        else:
-            user_id = None
-        return access_token, user_id
+        return resolved, missing
 
     @staticmethod
     def _extract_publish_options(options: dict | None) -> Dict[str, Any]:
@@ -264,6 +276,71 @@ class ThreadsAdapter(Adapter):
             else:
                 extracted[target_key] = str(value)
         return extracted
+
+    @staticmethod
+    def _prepare_media_payload(
+        media_items: list[Dict[str, Any]],
+    ) -> tuple[Dict[str, Any], list[str]]:
+        if not media_items:
+            return {}, []
+
+        warnings: list[str] = []
+        image_items: list[Dict[str, Any]] = []
+        invalid_count = 0
+        video_count = 0
+
+        for item in media_items:
+            if not isinstance(item, dict):
+                invalid_count += 1
+                continue
+
+            kind = item.get("type")
+            if kind == "image":
+                url = item.get("url")
+                if isinstance(url, str) and url.strip():
+                    image_items.append(item)
+                else:
+                    invalid_count += 1
+            elif kind == "video":
+                video_count += 1
+            else:
+                invalid_count += 1
+
+        if video_count:
+            warnings.append(
+                f"threads adapter dropped {video_count} video media item(s); video media is not yet supported",
+            )
+        if invalid_count:
+            warnings.append(
+                f"threads adapter dropped {invalid_count} unsupported media item(s)",
+            )
+
+        if not image_items:
+            return {}, warnings
+
+        if len(image_items) > 1:
+            warnings.append(
+                f"threads adapter only supports the first image; dropped {len(image_items) - 1} additional image(s)",
+            )
+
+        image = image_items[0]
+        url = image.get("url")
+        if not isinstance(url, str):
+            warnings.append("threads adapter image missing url; dropped selected image")
+            return {}, warnings
+
+        payload: Dict[str, Any] = {
+            "media_type": "IMAGE",
+            "image_url": url.strip(),
+        }
+
+        alt_text_raw = image.get("alt") or image.get("caption")
+        if isinstance(alt_text_raw, str):
+            alt_text = alt_text_raw.strip()
+            if alt_text:
+                payload["image_alt_text"] = alt_text
+
+        return payload, warnings
 
 
 def _threads_metric_hook(state: CompileState) -> None:
