@@ -29,7 +29,7 @@ api = APIRouter(prefix="/api")  # 필요하면 "/api/v1"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # 개발 프론트 주소
+    allow_origins=["https://localhost:5173", "http://localhost:5173"],  # 개발 프론트 주소
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

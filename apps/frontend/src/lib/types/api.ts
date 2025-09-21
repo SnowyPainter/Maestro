@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/bff/accounts/platform/{account_id}/is-valid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check if platform account is valid
+         * @description Check if a platform account is valid for UI display
+         */
+        get: operations["bff_accounts_is_valid_platform_account_api_bff_accounts_platform__account_id__is_valid_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/accounts/platform/{account_id}": {
         parameters: {
             query?: never;
@@ -730,6 +750,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/auth/oauth/{platform}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Oauth Start
+         * @description Initiate OAuth by returning the provider authorize URL.
+         */
+        get: operations["oauth_start_api_orchestrator_auth_oauth__platform__start_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/auth/oauth/{platform}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Auth Oauth Callback
+         * @description Handle OAuth callback for Threads (and future platforms).
+         */
+        get: operations["auth_oauth_callback_api_orchestrator_auth_oauth__platform__callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/auth/oauth/{platform}/delete-app": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Oauth Delete App
+         * @description Delete OAuth app for a platform.
+         */
+        post: operations["auth_oauth_delete_app_api_orchestrator_auth_oauth__platform__delete_app_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/auth/oauth/{platform}/remove-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Auth Oauth Remove Data
+         * @description Remove data for a platform.
+         */
+        post: operations["auth_oauth_remove_data_api_orchestrator_auth_oauth__platform__remove_data_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/chat/query": {
         parameters: {
             query?: never;
@@ -1344,6 +1444,11 @@ export interface components {
             /** Keywords */
             keywords?: string[];
         };
+        /** IsValidOut */
+        IsValidOut: {
+            /** Is Valid */
+            is_valid: boolean;
+        };
         /**
          * KPIKey
          * @enum {string}
@@ -1382,6 +1487,15 @@ export interface components {
             news_item_picture?: string | null;
             /** News Item Source */
             news_item_source?: string | null;
+        };
+        /** OAuthStartResponse */
+        OAuthStartResponse: {
+            /** Authorize Url */
+            authorize_url: string;
+            /** State */
+            state: string;
+            /** Callback Url */
+            callback_url: string;
         };
         /**
          * Permission
@@ -1672,6 +1786,11 @@ export interface components {
             /** Last Error */
             last_error?: string | null;
             /**
+             * Token Expires At
+             * Format: date-time
+             */
+            token_expires_at?: string | null;
+            /**
              * Created At
              * Format: date-time
              */
@@ -1714,7 +1833,7 @@ export interface components {
          * PlatformKind
          * @enum {string}
          */
-        PlatformKind: "instagram" | "threads" | "x";
+        PlatformKind: "instagram" | "threads";
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**
@@ -1902,6 +2021,37 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    bff_accounts_is_valid_platform_account_api_bff_accounts_platform__account_id__is_valid_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IsValidOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_accounts_read_platform_account_api_bff_accounts_platform__account_id__get: {
         parameters: {
             query?: never;
@@ -3153,6 +3303,137 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    oauth_start_api_orchestrator_auth_oauth__platform__start_get: {
+        parameters: {
+            query?: {
+                return_url?: string | null;
+            };
+            header?: never;
+            path: {
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OAuthStartResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_oauth_callback_api_orchestrator_auth_oauth__platform__callback_get: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
+                error_description?: string | null;
+            };
+            header?: never;
+            path: {
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_oauth_delete_app_api_orchestrator_auth_oauth__platform__delete_app_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    auth_oauth_remove_data_api_orchestrator_auth_oauth__platform__remove_data_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

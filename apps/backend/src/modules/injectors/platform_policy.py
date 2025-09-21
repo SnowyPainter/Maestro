@@ -78,15 +78,6 @@ PLATFORM_POLICIES: Dict[PlatformKind, ComposePolicy] = {
             "allow_direct_urls": True,
         },
     ),
-    PlatformKind.X: ComposePolicy(
-        char_limit=280,
-        allowed_media=("image", "video"),
-        max_media=4,
-        link_guidance={
-            "preferred_mode": "direct",
-            "allow_direct_urls": True,
-        },
-    ),
 }
 
 

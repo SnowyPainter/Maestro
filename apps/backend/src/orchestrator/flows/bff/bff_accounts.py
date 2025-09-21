@@ -16,6 +16,7 @@ from apps.backend.src.modules.accounts.schemas import (
 from apps.backend.src.modules.accounts.service import (
     get_persona,
     get_platform_account,
+    is_valid_platform_account,
     list_accounts_for_persona,
     list_personas,
     list_personas_for_account,
@@ -72,6 +73,8 @@ class PersonaList(RootModel[list[PersonaOut]]):
 class PersonaAccountList(RootModel[list[PersonaAccountOut]]):
     pass
 
+class IsValidOut(BaseModel):
+    is_valid: bool
 
 @operator(
     key="bff.accounts.read_platform_account",
@@ -91,6 +94,16 @@ async def op_read_platform_account(
         raise HTTPException(status_code=404, detail="Platform account not found")
     return PlatformAccountOut.model_validate(account)
 
+@operator(
+    key="bff.accounts.is_valid_platform_account",
+    title="Check if platform account is valid",
+    side_effect="read",
+)
+async def op_is_valid_platform_account(payload: PlatformAccountReadPayload, ctx: TaskContext) -> IsValidOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    is_valid = await is_valid_platform_account(db, account_id=payload.account_id, owner_user_id=user.id)
+    return IsValidOut(is_valid=is_valid)
 
 @operator(
     key="bff.accounts.list_platform_accounts",
@@ -187,6 +200,19 @@ async def op_list_personas_for_account(
     items = [PersonaAccountOut.model_validate(link) for link in links]
     return PersonaAccountList(root=items)
 
+@FLOWS.flow(
+    key="bff.accounts.is_valid_platform_account",
+    title="Check if platform account is valid",
+    description="Check if a platform account is valid for UI display",
+    input_model=PlatformAccountReadPayload,
+    output_model=IsValidOut,
+    method="get",
+    path="/accounts/platform/{account_id}/is-valid",
+    tags=("bff", "accounts", "platform", "read", "ui", "frontend", "validation"),
+)
+def _flow_bff_is_valid_platform_account(builder: FlowBuilder):
+    task = builder.task("is_valid_platform_account", "bff.accounts.is_valid_platform_account")
+    builder.expect_terminal(task)
 
 @FLOWS.flow(
     key="bff.accounts.read_platform_account",
@@ -201,7 +227,6 @@ async def op_list_personas_for_account(
 def _flow_bff_read_platform_account(builder: FlowBuilder):
     task = builder.task("read_platform_account", "bff.accounts.read_platform_account")
     builder.expect_terminal(task)
-
 
 @FLOWS.flow(
     key="bff.accounts.list_platform_accounts",

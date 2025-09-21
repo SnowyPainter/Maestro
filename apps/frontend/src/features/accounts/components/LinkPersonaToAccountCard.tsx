@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost, useBffAccountsListPersonasApiBffAccountsPersonasGet, useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet } from "@/lib/api/generated";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,11 +23,13 @@ export function LinkPersonaToAccountCard({ onSuccess }: { onSuccess?: () => void
     }
   }, [accounts]);
 
+  const handleSuccess = useCallback(() => {
+    onSuccess?.();
+  }, [onSuccess]);
+
   const { mutate: linkAccount, isPending, error } = useAccountsLinkCreateApiOrchestratorAccountsPersonaAccountLinksPost({
     mutation: {
-      onSuccess: () => {
-        onSuccess?.();
-      },
+      onSuccess: handleSuccess,
     },
   });
 

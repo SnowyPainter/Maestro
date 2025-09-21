@@ -3,6 +3,40 @@ info:
   title: Maestro Backend
   version: 0.1.0
 paths:
+  /api/bff/accounts/platform/{account_id}/is-valid:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      - platform
+      - read
+      - ui
+      - frontend
+      - validation
+      summary: Check if platform account is valid
+      description: Check if a platform account is valid for UI display
+      operationId: bff_accounts_is_valid_platform_account_api_bff_accounts_platform__account_id__is_valid_get
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Account Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IsValidOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/accounts/platform/{account_id}:
     get:
       tags:
@@ -1517,6 +1551,158 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/auth/oauth/{platform}/start:
+    get:
+      tags:
+      - auth
+      - authentication
+      - security
+      - login
+      - signup
+      summary: Oauth Start
+      description: Initiate OAuth by returning the provider authorize URL.
+      operationId: oauth_start_api_orchestrator_auth_oauth__platform__start_get
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      - name: return_url
+        in: query
+        required: false
+        schema:
+          title: Return Url
+          type: string
+          nullable: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthStartResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/auth/oauth/{platform}/callback:
+    get:
+      tags:
+      - auth
+      - authentication
+      - security
+      - login
+      - signup
+      summary: Auth Oauth Callback
+      description: Handle OAuth callback for Threads (and future platforms).
+      operationId: auth_oauth_callback_api_orchestrator_auth_oauth__platform__callback_get
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      - name: code
+        in: query
+        required: false
+        schema:
+          title: Code
+          type: string
+          nullable: true
+      - name: state
+        in: query
+        required: false
+        schema:
+          title: State
+          type: string
+          nullable: true
+      - name: error
+        in: query
+        required: false
+        schema:
+          title: Error
+          type: string
+          nullable: true
+      - name: error_description
+        in: query
+        required: false
+        schema:
+          title: Error Description
+          type: string
+          nullable: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/auth/oauth/{platform}/delete-app:
+    post:
+      tags:
+      - auth
+      - authentication
+      - security
+      - login
+      - signup
+      summary: Auth Oauth Delete App
+      description: Delete OAuth app for a platform.
+      operationId: auth_oauth_delete_app_api_orchestrator_auth_oauth__platform__delete_app_post
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/auth/oauth/{platform}/remove-data:
+    post:
+      tags:
+      - auth
+      - authentication
+      - security
+      - login
+      - signup
+      summary: Auth Oauth Remove Data
+      description: Remove data for a platform.
+      operationId: auth_oauth_remove_data_api_orchestrator_auth_oauth__platform__remove_data_post
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/chat/query:
     post:
       tags:
@@ -2542,6 +2728,15 @@ components:
       - raw_text
       title: IntentResult
       description: Structured output describing an analysed user utterance.
+    IsValidOut:
+      properties:
+        is_valid:
+          type: boolean
+          title: Is Valid
+      type: object
+      required:
+      - is_valid
+      title: IsValidOut
     KPIKey:
       type: string
       enum:
@@ -2608,6 +2803,23 @@ components:
       type: object
       title: NewsItem
       description: 개별 뉴스 아이템 스키마
+    OAuthStartResponse:
+      properties:
+        authorize_url:
+          type: string
+          title: Authorize Url
+        state:
+          type: string
+          title: State
+        callback_url:
+          type: string
+          title: Callback Url
+      type: object
+      required:
+      - authorize_url
+      - state
+      - callback_url
+      title: OAuthStartResponse
     Permission:
       type: string
       enum:
@@ -3131,6 +3343,11 @@ components:
           title: Last Error
           type: string
           nullable: true
+        token_expires_at:
+          title: Token Expires At
+          format: date-time
+          type: string
+          nullable: true
         created_at:
           type: string
           format: date-time
@@ -3207,7 +3424,6 @@ components:
       enum:
       - instagram
       - threads
-      - x
       title: PlatformKind
     RenderedMediaItem:
       properties:

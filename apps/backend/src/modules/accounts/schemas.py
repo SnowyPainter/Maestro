@@ -37,6 +37,7 @@ class PlatformAccountOut(PlatformAccountBase):
     owner_user_id: int
     last_checked_at: Optional[datetime] = None
     last_error: Optional[str] = None
+    token_expires_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 

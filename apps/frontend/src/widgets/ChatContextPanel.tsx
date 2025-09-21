@@ -1,8 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { usePersonaContextStore } from "@/store/persona-context";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PersonaAccountContext } from "./PersonaAccountContext";
 
 interface FlowInfo {
     title?: string;
@@ -12,56 +9,12 @@ interface FlowInfo {
 }
 
 export function ChatContextPanel({ flows }: { flows?: FlowInfo[] }) {
-    const personaAccountId = usePersonaContextStore(state => state.personaAccountId);
-    const personaName = usePersonaContextStore(state => state.personaName);
-    const accountHandle = usePersonaContextStore(state => state.accountHandle);
-    const accountPlatform = usePersonaContextStore(state => state.accountPlatform);
-    const accountAvatarUrl = usePersonaContextStore(state => state.accountAvatarUrl);
-    const clearPersonaContext = usePersonaContextStore(state => state.clearPersonaContext);
-
-    const hasPersona = personaAccountId !== null;
-
-    const handleClearPersona = () => {
-        clearPersonaContext();
-    };
 
     return (
         <aside className="bg-card border-l p-4 h-screen hidden lg:block">
             <h2 className="text-lg font-semibold mb-4">Context</h2>
             <div className="space-y-6">
-                <section>
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Persona Account</h3>
-                    <div className="mt-2 rounded-lg border bg-muted/40 p-3 text-sm relative group">
-                        {hasPersona ? (
-                            <div className="flex items-start gap-3">
-                                <Avatar className="w-8 h-8 flex-shrink-0">
-                                    <AvatarImage src={accountAvatarUrl || ''} alt={accountHandle || ''} />
-                                    <AvatarFallback className="text-xs">{accountHandle?.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-foreground text-sm">{personaName}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        @{accountHandle}
-                                        {accountPlatform ? ` · ${accountPlatform}` : ""}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        ID: <span className="font-mono text-foreground">{personaAccountId}</span>
-                                    </p>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2"
-                                    onClick={handleClearPersona}
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ) : (
-                            <p className="text-xs text-muted-foreground">No persona account injected yet.</p>
-                        )}
-                    </div>
-                </section>
+                <PersonaAccountContext />
 
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="flows">

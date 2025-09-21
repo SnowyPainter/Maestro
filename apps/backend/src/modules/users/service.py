@@ -8,6 +8,10 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     res = await db.execute(select(User).where(User.email == email))
     return res.scalar_one_or_none()
 
+async def get_user_by_id(db: AsyncSession, user_id: int) -> User | None:
+    res = await db.execute(select(User).where(User.id == user_id))
+    return res.scalar_one_or_none()
+
 async def create_user(db: AsyncSession, email: str, password: str, display_name: str | None) -> User:
     exists = await get_user_by_email(db, email)
     if exists:

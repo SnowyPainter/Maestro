@@ -3,7 +3,7 @@ import { useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet } from "@/l
 import { PlatformAccountOut } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, WifiOff } from "lucide-react";
+import { AlertTriangle, WifiOff, Ban } from "lucide-react";
 
 interface AccountListProps {
   onSelectAccount?: (accountId: number) => void;
@@ -53,9 +53,20 @@ export function AccountList({ onSelectAccount }: AccountListProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {accounts.map((account: PlatformAccountOut) => (
-        <Card key={account.id} onClick={() => onSelectAccount?.(account.id)} className="cursor-pointer rounded-2xl border bg-card text-card-foreground shadow-md hover:bg-muted">
+        <Card
+          key={account.id}
+          onClick={() => account.is_active !== false && onSelectAccount?.(account.id)}
+          className={`rounded-2xl border bg-card text-card-foreground shadow-md ${
+            account.is_active === false
+              ? 'opacity-50 cursor-not-allowed'
+              : 'cursor-pointer hover:bg-muted'
+          }`}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{account.handle}</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              {account.is_active === false && <Ban className="w-4 h-4 text-muted-foreground" />}
+              {account.handle}
+            </CardTitle>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">#{account.id}</span>
               <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{account.platform}</span>

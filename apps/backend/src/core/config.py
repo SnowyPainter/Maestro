@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from optparse import Option
 from pathlib import Path
 from typing import Optional
 
@@ -46,6 +47,12 @@ class Settings(BaseSettings):
     TRENDS_COUNTRIES: str = "US,HK" #중국 시장은 없음. HK 홍콩
     TRENDS_INTERVAL_MINUTES: int = 60
     TRENDS_MAX_ITEMS: int = 20
+
+    # ----- SNS -----
+    TEST_DOMAIN: str = ""
+    PRD_DOMAIN: Optional[str] = None
+    THREADS_CLIENT_ID: str = ""
+    THREADS_CLIENT_SECRET: str = ""
 
     @model_validator(mode="after")
     def _fill_database_urls(self) -> "Settings":

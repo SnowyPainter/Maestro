@@ -465,6 +465,10 @@ export interface IntentResult {
   keywords?: string[];
 }
 
+export interface IsValidOut {
+  is_valid: boolean;
+}
+
 export type KPIKey = typeof KPIKey[keyof typeof KPIKey];
 
 
@@ -514,6 +518,12 @@ export interface NewsItem {
   news_item_picture?: string | null;
   /** @nullable */
   news_item_source?: string | null;
+}
+
+export interface OAuthStartResponse {
+  authorize_url: string;
+  state: string;
+  callback_url: string;
 }
 
 export type Permission = typeof Permission[keyof typeof Permission];
@@ -819,6 +829,8 @@ export interface PlatformAccountOut {
   last_checked_at?: string | null;
   /** @nullable */
   last_error?: string | null;
+  /** @nullable */
+  token_expires_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -858,7 +870,6 @@ export type PlatformKind = typeof PlatformKind[keyof typeof PlatformKind];
 export const PlatformKind = {
   instagram: 'instagram',
   threads: 'threads',
-  x: 'x',
 } as const;
 
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
@@ -1094,6 +1105,32 @@ export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete
 soft?: boolean;
 };
 
+export type OauthStartApiOrchestratorAuthOauthPlatformStartGetParams = {
+/**
+ * @nullable
+ */
+return_url?: string | null;
+};
+
+export type AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams = {
+/**
+ * @nullable
+ */
+code?: string | null;
+/**
+ * @nullable
+ */
+state?: string | null;
+/**
+ * @nullable
+ */
+error?: string | null;
+/**
+ * @nullable
+ */
+error_description?: string | null;
+};
+
 export type ListSlotHintsApiOrchestratorHelpersSlotHintsGetParams = {
 /**
  * Filter hints by name or label
@@ -1114,6 +1151,95 @@ limit?: number;
 };
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * Check if a platform account is valid for UI display
+ * @summary Check if platform account is valid
+ */
+export const bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet = (
+    accountId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<IsValidOut>(
+      {url: `/api/bff/accounts/platform/${accountId}/is-valid`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGetQueryKey = (accountId?: number,) => {
+    return [`/api/bff/accounts/platform/${accountId}/is-valid`] as const;
+    }
+
+    
+export const getBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGetQueryOptions = <TData = Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError = HTTPValidationError>(accountId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGetQueryKey(accountId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>> = ({ signal }) => bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet(accountId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(accountId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>>
+export type BffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGetQueryError = HTTPValidationError
+
+
+export function useBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet<TData = Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError = HTTPValidationError>(
+ accountId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet<TData = Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError = HTTPValidationError>(
+ accountId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet<TData = Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError = HTTPValidationError>(
+ accountId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Check if platform account is valid
+ */
+
+export function useBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet<TData = Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError = HTTPValidationError>(
+ accountId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffAccountsIsValidPlatformAccountApiBffAccountsPlatformAccountIdIsValidGetQueryOptions(accountId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
 
@@ -4134,6 +4260,328 @@ export const useLoginApiOrchestratorAuthLoginPost = <TError = HTTPValidationErro
       > => {
 
       const mutationOptions = getLoginApiOrchestratorAuthLoginPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Initiate OAuth by returning the provider authorize URL.
+ * @summary Oauth Start
+ */
+export const oauthStartApiOrchestratorAuthOauthPlatformStartGet = (
+    platform: PlatformKind,
+    params?: OauthStartApiOrchestratorAuthOauthPlatformStartGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<OAuthStartResponse>(
+      {url: `/api/orchestrator/auth/oauth/${platform}/start`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getOauthStartApiOrchestratorAuthOauthPlatformStartGetQueryKey = (platform?: PlatformKind,
+    params?: OauthStartApiOrchestratorAuthOauthPlatformStartGetParams,) => {
+    return [`/api/orchestrator/auth/oauth/${platform}/start`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getOauthStartApiOrchestratorAuthOauthPlatformStartGetQueryOptions = <TData = Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError = HTTPValidationError>(platform: PlatformKind,
+    params?: OauthStartApiOrchestratorAuthOauthPlatformStartGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getOauthStartApiOrchestratorAuthOauthPlatformStartGetQueryKey(platform,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>> = ({ signal }) => oauthStartApiOrchestratorAuthOauthPlatformStartGet(platform,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(platform), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type OauthStartApiOrchestratorAuthOauthPlatformStartGetQueryResult = NonNullable<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>>
+export type OauthStartApiOrchestratorAuthOauthPlatformStartGetQueryError = HTTPValidationError
+
+
+export function useOauthStartApiOrchestratorAuthOauthPlatformStartGet<TData = Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params: undefined |  OauthStartApiOrchestratorAuthOauthPlatformStartGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>,
+          TError,
+          Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOauthStartApiOrchestratorAuthOauthPlatformStartGet<TData = Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params?: OauthStartApiOrchestratorAuthOauthPlatformStartGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>,
+          TError,
+          Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOauthStartApiOrchestratorAuthOauthPlatformStartGet<TData = Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params?: OauthStartApiOrchestratorAuthOauthPlatformStartGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Oauth Start
+ */
+
+export function useOauthStartApiOrchestratorAuthOauthPlatformStartGet<TData = Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params?: OauthStartApiOrchestratorAuthOauthPlatformStartGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof oauthStartApiOrchestratorAuthOauthPlatformStartGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getOauthStartApiOrchestratorAuthOauthPlatformStartGetQueryOptions(platform,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Handle OAuth callback for Threads (and future platforms).
+ * @summary Auth Oauth Callback
+ */
+export const authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet = (
+    platform: PlatformKind,
+    params?: AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<unknown>(
+      {url: `/api/orchestrator/auth/oauth/${platform}/callback`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetQueryKey = (platform?: PlatformKind,
+    params?: AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams,) => {
+    return [`/api/orchestrator/auth/oauth/${platform}/callback`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetQueryOptions = <TData = Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError = HTTPValidationError>(platform: PlatformKind,
+    params?: AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetQueryKey(platform,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>> = ({ signal }) => authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet(platform,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(platform), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetQueryResult = NonNullable<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>>
+export type AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetQueryError = HTTPValidationError
+
+
+export function useAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet<TData = Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params: undefined |  AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>,
+          TError,
+          Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet<TData = Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params?: AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>,
+          TError,
+          Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet<TData = Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params?: AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Auth Oauth Callback
+ */
+
+export function useAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet<TData = Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind,
+    params?: AuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof authOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAuthOauthCallbackApiOrchestratorAuthOauthPlatformCallbackGetQueryOptions(platform,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Delete OAuth app for a platform.
+ * @summary Auth Oauth Delete App
+ */
+export const authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost = (
+    platform: PlatformKind,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<unknown>(
+      {url: `/api/orchestrator/auth/oauth/${platform}/delete-app`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getAuthOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost>>, TError,{platform: PlatformKind}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost>>, TError,{platform: PlatformKind}, TContext> => {
+
+const mutationKey = ['authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost>>, {platform: PlatformKind}> = (props) => {
+          const {platform} = props ?? {};
+
+          return  authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost(platform,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPostMutationResult = NonNullable<Awaited<ReturnType<typeof authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost>>>
+    
+    export type AuthOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Auth Oauth Delete App
+ */
+export const useAuthOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost>>, TError,{platform: PlatformKind}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof authOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPost>>,
+        TError,
+        {platform: PlatformKind},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthOauthDeleteAppApiOrchestratorAuthOauthPlatformDeleteAppPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Remove data for a platform.
+ * @summary Auth Oauth Remove Data
+ */
+export const authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost = (
+    platform: PlatformKind,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<unknown>(
+      {url: `/api/orchestrator/auth/oauth/${platform}/remove-data`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getAuthOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost>>, TError,{platform: PlatformKind}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost>>, TError,{platform: PlatformKind}, TContext> => {
+
+const mutationKey = ['authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost>>, {platform: PlatformKind}> = (props) => {
+          const {platform} = props ?? {};
+
+          return  authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost(platform,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPostMutationResult = NonNullable<Awaited<ReturnType<typeof authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost>>>
+    
+    export type AuthOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Auth Oauth Remove Data
+ */
+export const useAuthOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost>>, TError,{platform: PlatformKind}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof authOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPost>>,
+        TError,
+        {platform: PlatformKind},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthOauthRemoveDataApiOrchestratorAuthOauthPlatformRemoveDataPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

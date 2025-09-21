@@ -61,6 +61,28 @@ async def get_platform_account(
     res = await db.execute(q)
     return res.scalar_one_or_none()
 
+async def is_valid_platform_account(
+    db: AsyncSession, *, account_id: int, owner_user_id: int
+) -> bool:
+    account = await get_platform_account(db, account_id=account_id, owner_user_id=owner_user_id)
+
+    if not account or not account.is_active:
+        return False
+    
+    # access_token도 없고 expires도 없으면 False
+    if account.access_token is None and account.token_expires_at is None:
+        return False
+
+    # expires는 없는데 access_token 있으면 True
+    if account.token_expires_at is None and account.access_token is not None:
+        return True
+
+    # expires가 있으면 만료 시간 체크
+    if account.token_expires_at is not None and account.token_expires_at < _utcnow():
+        return False
+    
+    return True
+
 async def list_platform_accounts(
     db: AsyncSession,
     *,

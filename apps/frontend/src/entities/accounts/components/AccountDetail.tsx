@@ -3,6 +3,7 @@ import { useBffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet, us
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, WifiOff, Pencil, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PersonaBadge } from "@/entities/personas/components/PersonaBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,12 +19,11 @@ interface AccountDetailProps {
 const platformColors: Record<PlatformKind, string> = {
   [PlatformKind.instagram]: "bg-pink-500",
   [PlatformKind.threads]: "bg-gray-800",
-  [PlatformKind.x]: "bg-blue-400",
-  [PlatformKind.blog]: "bg-orange-500",
 };
 
 export function AccountDetail({ accountId, onDelete }: AccountDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { data: account, isLoading, isError, error, refetch } = useBffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet(accountId);
   const { data: personas } = useBffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGet(accountId);
@@ -37,9 +37,12 @@ export function AccountDetail({ accountId, onDelete }: AccountDetailProps) {
   });
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this account?")) {
-      deleteAccount({ accountId });
-    }
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    deleteAccount({ accountId });
+    setIsDeleteDialogOpen(false);
   };
 
   if (isLoading) {
@@ -127,10 +130,26 @@ export function AccountDetail({ accountId, onDelete }: AccountDetailProps) {
           <Pencil className="h-4 w-4 mr-2" />
           Edit
         </Button>
-        <Button variant="destructive" size="sm" onClick={handleDelete}>
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete
-        </Button>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Account</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this account? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );

@@ -45,12 +45,7 @@ export const platformPresentation: Record<PlatformKind, PlatformPresentation> = 
     label: "Threads",
     badgeClass: "bg-gray-900 text-white",
     accentClass: "border-gray-300/40",
-  },
-  [PlatformKind.x]: {
-    label: "X",
-    badgeClass: "bg-sky-500 text-white",
-    accentClass: "border-sky-300/40",
-  },
+  }
 };
 
 export function ensurePlatformKind(value: string | PlatformKind): PlatformKind | null {
