@@ -8,6 +8,10 @@ import { ChatPage } from '@/pages/ChatPage/ChatPage';
 
 import { SettingsPage } from "./pages/SettingsPage/SettingsPage";
 import { ControlTowerPage } from "./pages/ControlTowerPage/ControlTowerPage";
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { DataDeletionPolicyPage } from './pages/DataDeletionPolicyPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
+
 
 import { ProtectedRoute } from '@/components/Auth/ProtectedRoute';
 
@@ -27,6 +31,18 @@ const router = createBrowserRouter([
       {
         path: 'signup',
         element: <SignupPage />,
+      },
+      {
+        path: 'privacy-policy',
+        element: <PrivacyPolicyPage />,
+      },
+      {
+        path: 'data-deletion-policy',
+        element: <DataDeletionPolicyPage />,
+      },
+      {
+        path: 'terms-of-service',
+        element: <TermsOfServicePage />,
       },
       {
         element: <ProtectedRoute />,
