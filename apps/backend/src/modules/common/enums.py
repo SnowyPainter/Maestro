@@ -21,7 +21,7 @@ class VariantStatus(str, enum.Enum):
     2) DRAFT -> MONITORING -> finish monitoring -> PUBLISHED
 """
 class PostStatus(str, enum.Enum):
-    PENDING = "pending" # Pending to publish - Pending && scheduled_at -> Will be published
+    PENDING = "pending" # Pending to publish
     PUBLISHED = "published" # After Published, Monitoring finished/cancel monitoring
     DELETED = "deleted" # Soft Delete
     FAILED = "failed" # Failed to publish
