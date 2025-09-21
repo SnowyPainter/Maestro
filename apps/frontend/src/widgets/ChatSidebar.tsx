@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Settings, BarChart3, MessageSquare, Calendar, FileText, BadgeCheck, Plug, Volume2, PersonStanding } from "lucide-react";
+import { Settings, BarChart3, MessageSquare, Calendar, FileText, BadgeCheck, Plug, Volume2, PersonStanding, TowerControl } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/Logo";
@@ -11,7 +11,7 @@ import { CSS } from "@dnd-kit/utilities";
 const initialTools = [
     { id: 'new-chat', title: 'New Chat', icon: <MessageSquare className="w-5 h-5 text-primary" /> },
     { id: 'query-trends', title: 'Query Trends', icon: <BarChart3 className="w-5 h-5 text-primary" /> },
-    { id: 'schedule', title: 'Schedule', icon: <Calendar className="w-5 h-5 text-primary" /> },
+    { id: 'control-tower', title: 'Control Tower', icon: <TowerControl className="w-5 h-5 text-primary" /> },
     { id: 'draft', title: 'Drafts', icon: <FileText className="w-5 h-5 text-primary" /> },
     { id: 'campaigns', title: 'Campaigns', icon: <Volume2 className="w-5 h-5 text-primary" /> },
     { id: 'personas', title: 'Personas', icon: <PersonStanding className="w-5 h-5 text-primary" /> },

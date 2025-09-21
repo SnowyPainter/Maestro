@@ -6,7 +6,8 @@ import { LoginPage } from '@/pages/Auth/LoginPage';
 import { SignupPage } from '@/pages/Auth/SignupPage';
 import { ChatPage } from '@/pages/ChatPage/ChatPage';
 
-import { SettingsPage } from '@/pages/SettingsPage/SettingsPage';
+import { SettingsPage } from "./pages/SettingsPage/SettingsPage";
+import { ControlTowerPage } from "./pages/ControlTowerPage/ControlTowerPage";
 
 import { ProtectedRoute } from '@/components/Auth/ProtectedRoute';
 
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
           {
             path: 'settings',
             element: <SettingsPage />,
+          },
+          {
+            path: 'control-tower',
+            element: <ControlTowerPage />,
           },
         ]
       }
