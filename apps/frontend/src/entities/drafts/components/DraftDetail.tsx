@@ -34,7 +34,7 @@ import type { DraftVariantRenderDetail } from "@/lib/api/generated";
 export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: () => void }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeVariantPlatform, setActiveVariantPlatform] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<DraftVariantRenderDetail | null>(null);
   const queryClient = useQueryClient();
   const { data: draft, isLoading, isError } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(draftId);
 
@@ -69,7 +69,7 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
   };
 
   const handleVariantSelect = (variant: DraftVariantRenderDetail) => {
-    setActiveVariantPlatform(String(variant.platform));
+    setSelectedVariant(variant);
   };
 
   return (
@@ -102,30 +102,28 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
         )}
         <div>
             <h4 className="font-semibold text-sm mb-2">Platform Variants</h4>
-            <div className="flex gap-4 max-h-96">
-                <div className="flex-1 min-w-0">
-                    <DraftVariantList draftId={draft.id} onSelect={handleVariantSelect} compact={true} />
-                </div>
-                <div className="flex-1 min-w-0 max-h-96 overflow-hidden">
-                    {activeVariantPlatform ? (
-                        <DraftVariantDetail draftId={draft.id} platform={activeVariantPlatform} />
-                    ) : (
-                        <Card className="border-dashed h-full">
-                            <CardHeader className="py-4">
-                                <CardTitle className="text-sm text-muted-foreground">Select a variant to preview</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-xs text-muted-foreground">
-                                Choose a platform variant to review compiled content, media, and validation notes.
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
-            </div>
+            <DraftVariantList draftId={draft.id} onSelect={handleVariantSelect} compact={true} />
         </div>
         <div className="text-xs text-muted-foreground pt-4">
             Created: {new Date(draft.created_at).toLocaleString()} | Last Updated: {new Date(draft.updated_at).toLocaleString()}
         </div>
       </CardContent>
+
+      {/* Variant Detail Modal */}
+      <Dialog open={!!selectedVariant} onOpenChange={(open) => !open && setSelectedVariant(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Variant Detail</DialogTitle>
+          </DialogHeader>
+          {selectedVariant && (
+            <DraftVariantDetail
+              draftId={draft.id}
+              platform={String(selectedVariant.platform)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <CardFooter className="flex justify-end gap-2">
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
             <DialogTrigger asChild>

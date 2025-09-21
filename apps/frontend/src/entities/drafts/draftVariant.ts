@@ -94,3 +94,35 @@ export function countListItems(items?: string[] | null) {
   return Array.isArray(items) ? items.length : 0;
 }
 
+export function formatOptionValue(value: unknown, maxLength = 100): string {
+  if (value === null || value === undefined) {
+    return String(value);
+  }
+
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    const str = String(value);
+    return str.length > maxLength ? `${str.slice(0, maxLength)}...` : str;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    const preview = value.slice(0, 3).map(item =>
+      typeof item === 'object' && item !== null ? '[Object]' : String(item)
+    ).join(', ');
+    const suffix = value.length > 3 ? ` (+${value.length - 3} more)` : '';
+    return `[${preview}${suffix}]`;
+  }
+
+  if (typeof value === 'object') {
+    try {
+      const str = JSON.stringify(value, null, 2);
+      return str.length > maxLength ? `${str.slice(0, maxLength)}...` : str;
+    } catch {
+      return '[Complex Object]';
+    }
+  }
+
+  return String(value);
+}
+
+
