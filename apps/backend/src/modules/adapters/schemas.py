@@ -1,18 +1,43 @@
 # apps/backend/src/modules/adapters/base.py
 from __future__ import annotations
-from typing import Protocol, Optional, Dict, Any, List
+from typing import Protocol, Optional, Dict, Any, List, Literal, TypedDict
 from dataclasses import dataclass
 from datetime import datetime
 
 from apps.backend.src.modules.common.enums import ContentKind, PlatformKind, VariantStatus, MetricsScope
 from apps.backend.src.modules.injectors.base import InjectedContent
 
+from typing_extensions import TypedDict as TypedDict_
+"""
+[API] Failed to import apps.backend.src.orchestrator.flows.action.drafts during flow autodiscovery: Please use `typing_extensions.TypedDict` instead of `typing.TypedDict` on Python < 3.12.
+[API] 
+[API] For further information visit https://errors.pydantic.dev/2.11/u/typed-dict-version
+[API] Failed to import apps.backend.src.orchestrator.flows.bff.bff_drafts during flow autodiscovery: Please use `typing_extensions.TypedDict` instead of `typing.TypedDict` on Python < 3.12.
+"""
+
+class RenderedMediaItem(TypedDict_, total=False):
+    type: Literal["image", "video"]
+    url: str
+    alt: Optional[str]
+    caption: Optional[str]
+    ratio: Optional[str]
+
+
+RenderedMetrics = Dict[str, Any]
+
+
+class RenderedVariantBlocks(TypedDict_, total=False):
+    media: List[RenderedMediaItem]
+    options: Dict[str, Any]
+    metrics: RenderedMetrics
+
+
 @dataclass
 class CompileResult:
     status: VariantStatus
     rendered_caption: Optional[str]
-    rendered_blocks: Optional[Dict[str, Any]]
-    metrics: Optional[Dict[str, Any]]
+    rendered_blocks: Optional[RenderedVariantBlocks]
+    metrics: Optional[RenderedMetrics]
     errors: List[str]
     warnings: List[str]
     compiler_version: int
@@ -51,7 +76,14 @@ class Adapter(Protocol):
     async def compile(self, payload: InjectedContent, *, locale: Optional[str] = None) -> CompileResult: ...
 
     # 계정/퍼소나별 발행 (계정 자격증명은 외부에서 주입)
-    async def publish(self, rendered_blocks: dict | None, caption: str | None, *, credentials: dict, options: dict | None = None) -> PublishResult: ...
+    async def publish(
+        self,
+        rendered_blocks: RenderedVariantBlocks | None,
+        caption: str | None,
+        *,
+        credentials: dict,
+        options: dict | None = None,
+    ) -> PublishResult: ...
 
     # 외부 리소스 삭제
     async def delete(self, external_id: str, *, credentials: dict) -> DeleteResult: ...

@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Maestro Backend
   version: 0.1.0
@@ -500,6 +500,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/{draft_id}/variants:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - variants
+      - list
+      - ui
+      - frontend
+      - optimization
+      - ab-testing
+      summary: Get Draft Variants
+      description: List all variants of a draft for content optimization and A/B testing
+      operationId: bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Draft Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftVariantRenderList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/{draft_id}/variants/{platform}:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - variant
+      - detail
+      - ui
+      - frontend
+      summary: Get Draft Variant Detail
+      description: Retrieve rendered payload for a specific platform variant
+      operationId: bff_drafts_read_variant_api_bff_drafts__draft_id__variants__platform__get
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Draft Id
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftVariantRenderDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/drafts/{draft_id}:
     get:
       tags:
@@ -581,42 +656,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DraftList'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/bff/drafts/{draft_id}/variants:
-    get:
-      tags:
-      - bff
-      - bff
-      - drafts
-      - content
-      - variants
-      - list
-      - ui
-      - frontend
-      - optimization
-      - ab-testing
-      summary: Get Draft Variants
-      description: List all variants of a draft for content optimization and A/B testing
-      operationId: bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get
-      parameters:
-      - name: draft_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Draft Id
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DraftVariantList'
         '422':
           description: Validation Error
           content:
@@ -2029,16 +2068,11 @@ components:
       required:
       - ir
       title: DraftUpdateCommand
-    DraftVariantList:
-      items:
-        $ref: '#/components/schemas/DraftVariantOut'
-      type: array
-      title: DraftVariantList
-    DraftVariantOut:
+    DraftVariantRender:
       properties:
-        id:
+        variant_id:
           type: integer
-          title: Id
+          title: Variant Id
         draft_id:
           type: integer
           title: Draft Id
@@ -2048,13 +2082,19 @@ components:
         status:
           type: string
           title: Status
-        errors:
+        compiled_at:
+          title: Compiled At
+          format: date-time
+          type: string
+          nullable: true
+        rendered_caption:
+          title: Rendered Caption
+          type: string
+          nullable: true
+        rendered_blocks:
           anyOf:
-          - items:
-              type: string
-            type: array
+          - $ref: '#/components/schemas/RenderedVariantBlocks'
           - type: 'null'
-          title: Errors
         warnings:
           anyOf:
           - items:
@@ -2062,53 +2102,103 @@ components:
             type: array
           - type: 'null'
           title: Warnings
-        rendered_caption:
-          title: Rendered Caption
-          type: string
-          nullable: true
-        rendered_blocks:
+        errors:
           anyOf:
-          - additionalProperties: true
-            type: object
+          - items:
+              type: string
+            type: array
           - type: 'null'
-          title: Rendered Blocks
+          title: Errors
         metrics:
           anyOf:
           - additionalProperties: true
             type: object
           - type: 'null'
           title: Metrics
-        compiled_at:
-          title: Compiled At
-          format: date-time
-          type: string
-          nullable: true
+        compiler_version:
+          type: integer
+          title: Compiler Version
         ir_revision_compiled:
           anyOf:
           - type: integer
           - type: 'null'
           title: Ir Revision Compiled
-        compiler_version:
-          type: integer
-          title: Compiler Version
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-        updated_at:
-          type: string
-          format: date-time
-          title: Updated At
       type: object
       required:
-      - id
+      - variant_id
       - draft_id
       - platform
       - status
       - compiler_version
-      - created_at
-      - updated_at
-      title: DraftVariantOut
+      title: DraftVariantRender
+    DraftVariantRenderDetail:
+      properties:
+        variant_id:
+          type: integer
+          title: Variant Id
+        draft_id:
+          type: integer
+          title: Draft Id
+        platform:
+          type: string
+          title: Platform
+        status:
+          type: string
+          title: Status
+        compiled_at:
+          title: Compiled At
+          format: date-time
+          type: string
+          nullable: true
+        rendered_caption:
+          title: Rendered Caption
+          type: string
+          nullable: true
+        rendered_blocks:
+          anyOf:
+          - $ref: '#/components/schemas/RenderedVariantBlocks'
+          - type: 'null'
+        warnings:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Warnings
+        errors:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Errors
+        metrics:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metrics
+        compiler_version:
+          type: integer
+          title: Compiler Version
+        ir_revision_compiled:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ir Revision Compiled
+      type: object
+      required:
+      - variant_id
+      - draft_id
+      - platform
+      - status
+      - compiler_version
+      title: DraftVariantRenderDetail
+    DraftVariantRenderList:
+      items:
+        $ref: '#/components/schemas/DraftVariantRender'
+      type: array
+      title: DraftVariantRenderList
     FlowInfo:
       properties:
         key:
@@ -3036,6 +3126,48 @@ components:
       - x
       - blog
       title: PlatformKind
+    RenderedMediaItem:
+      properties:
+        type:
+          type: string
+          enum:
+          - image
+          - video
+          title: Type
+        url:
+          type: string
+          title: Url
+        alt:
+          title: Alt
+          type: string
+          nullable: true
+        caption:
+          title: Caption
+          type: string
+          nullable: true
+        ratio:
+          title: Ratio
+          type: string
+          nullable: true
+      type: object
+      title: RenderedMediaItem
+    RenderedVariantBlocks:
+      properties:
+        media:
+          items:
+            $ref: '#/components/schemas/RenderedMediaItem'
+          type: array
+          title: Media
+        options:
+          additionalProperties: true
+          type: object
+          title: Options
+        metrics:
+          additionalProperties: true
+          type: object
+          title: Metrics
+      type: object
+      title: RenderedVariantBlocks
     SignupRequest:
       properties:
         email:

@@ -80,7 +80,7 @@ async def update_draft_ir(
     draft.updated_at = _now()
 
     # 기존 Variant들을 "stale" 처리: 상태를 PENDING으로 돌리고 컴파일 대기
-    await _mark_variants_stale(db, draft_id=draft.id)
+    await _mark_variants_stale(db, draft_id=draft.id, current_ir_revision=draft.ir_revision)
 
     # 누락된 플랫폼 Variant가 있으면 생성
     await _ensure_variants_for_platforms(db, draft, _all_platforms())
@@ -113,7 +113,7 @@ async def delete_draft(db: AsyncSession, *, draft_id: int) -> None:
     await db.flush()
     await db.commit()
 
-    await _mark_variants_stale(db, draft_id=draft_id)
+    await _mark_variants_stale(db, draft_id=draft_id, current_ir_revision=draft.ir_revision)
 
 
 async def _ensure_variants_for_platforms(
@@ -139,21 +139,23 @@ async def _ensure_variants_for_platforms(
         await db.flush()
 
 
-async def _mark_variants_stale(db: AsyncSession, *, draft_id: int) -> None:
+async def _mark_variants_stale(db: AsyncSession, *, draft_id: int, current_ir_revision: int) -> None:
     rows: List[DraftVariant] = (
         await db.execute(select(DraftVariant).where(DraftVariant.draft_id == draft_id))
     ).scalars().all()
     for dv in rows:
-        dv.status = VariantStatus.PENDING
-        dv.errors = None
-        dv.warnings = None
-        dv.rendered_caption = None
-        dv.rendered_blocks = None
-        dv.metrics = None
-        dv.compiled_at = None
-        dv.ir_revision_compiled = None
-        dv.updated_at = _now()
-        db.add(dv)
+        # IR revision이 현재 revision보다 작거나 None인 경우에만 stale로 처리
+        if dv.ir_revision_compiled is None or dv.ir_revision_compiled < current_ir_revision:
+            dv.status = VariantStatus.PENDING
+            dv.errors = None
+            dv.warnings = None
+            dv.rendered_caption = None
+            dv.rendered_blocks = None
+            dv.metrics = None
+            dv.compiled_at = None
+            dv.ir_revision_compiled = None
+            dv.updated_at = _now()
+            db.add(dv)
     if rows:
         await db.flush()
 
@@ -178,3 +180,63 @@ async def _compile_supported_variants(db: AsyncSession, draft: Draft) -> None:
 
     if rows:
         await db.flush()
+
+
+async def get_draft_for_user(
+    db: AsyncSession,
+    *,
+    draft_id: int,
+    user_id: int,
+) -> Draft | None:
+    draft = await db.get(Draft, draft_id)
+    if not draft:
+        return None
+    if draft.user_id != user_id:
+        raise PermissionError("draft does not belong to user")
+    return draft
+
+
+async def list_draft_variants(
+    db: AsyncSession,
+    *,
+    draft_id: int,
+    user_id: int,
+    draft: Draft | None = None,
+) -> list[DraftVariant]:
+    owning_draft = draft or await get_draft_for_user(
+        db,
+        draft_id=draft_id,
+        user_id=user_id,
+    )
+    if not owning_draft:
+        return []
+
+    stmt = (
+        select(DraftVariant)
+        .where(DraftVariant.draft_id == owning_draft.id)
+        .order_by(DraftVariant.platform.asc())
+    )
+    return (await db.execute(stmt)).scalars().all()
+
+
+async def get_draft_variant(
+    db: AsyncSession,
+    *,
+    draft_id: int,
+    user_id: int,
+    platform: PlatformKind,
+    draft: Draft | None = None,
+) -> DraftVariant | None:
+    owning_draft = draft or await get_draft_for_user(
+        db,
+        draft_id=draft_id,
+        user_id=user_id,
+    )
+    if not owning_draft:
+        return None
+
+    stmt = select(DraftVariant).where(
+        DraftVariant.draft_id == owning_draft.id,
+        DraftVariant.platform == platform,
+    )
+    return (await db.execute(stmt)).scalars().first()

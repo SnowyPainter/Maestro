@@ -352,6 +352,76 @@ export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponse = 
 
 
 /**
+ * List all variants of a draft for content optimization and A/B testing
+ * @summary Get Draft Variants
+ */
+export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetParams = zod.object({
+  "draft_id": zod.number()
+})
+
+export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponseItem = zod.object({
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.string(),
+  "status": zod.string(),
+  "compiled_at": zod.iso.datetime({}).nullish(),
+  "rendered_caption": zod.string().nullish(),
+  "rendered_blocks": zod.union([zod.object({
+  "media": zod.array(zod.object({
+  "type": zod.enum(['image', 'video']).optional(),
+  "url": zod.string().optional(),
+  "alt": zod.string().nullish(),
+  "caption": zod.string().nullish(),
+  "ratio": zod.string().nullish()
+})).optional(),
+  "options": zod.record(zod.string(), zod.any()).optional(),
+  "metrics": zod.record(zod.string(), zod.any()).optional()
+}),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "compiler_version": zod.number(),
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional()
+})
+export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponse = zod.array(bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponseItem)
+
+
+/**
+ * Retrieve rendered payload for a specific platform variant
+ * @summary Get Draft Variant Detail
+ */
+export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetParams = zod.object({
+  "draft_id": zod.number(),
+  "platform": zod.enum(['instagram', 'threads', 'x', 'blog'])
+})
+
+export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetResponse = zod.object({
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.string(),
+  "status": zod.string(),
+  "compiled_at": zod.iso.datetime({}).nullish(),
+  "rendered_caption": zod.string().nullish(),
+  "rendered_blocks": zod.union([zod.object({
+  "media": zod.array(zod.object({
+  "type": zod.enum(['image', 'video']).optional(),
+  "url": zod.string().optional(),
+  "alt": zod.string().nullish(),
+  "caption": zod.string().nullish(),
+  "ratio": zod.string().nullish()
+})).optional(),
+  "options": zod.record(zod.string(), zod.any()).optional(),
+  "metrics": zod.record(zod.string(), zod.any()).optional()
+}),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "compiler_version": zod.number(),
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional()
+})
+
+
+/**
  * Retrieve complete draft content and metadata for content editing interface
  * @summary Get Draft Content
  */
@@ -432,33 +502,6 @@ export const bffDraftsListDraftsApiBffDraftsGetResponseItem = zod.object({
   "updated_at": zod.iso.datetime({})
 })
 export const bffDraftsListDraftsApiBffDraftsGetResponse = zod.array(bffDraftsListDraftsApiBffDraftsGetResponseItem)
-
-
-/**
- * List all variants of a draft for content optimization and A/B testing
- * @summary Get Draft Variants
- */
-export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetParams = zod.object({
-  "draft_id": zod.number()
-})
-
-export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponseItem = zod.object({
-  "id": zod.number(),
-  "draft_id": zod.number(),
-  "platform": zod.string(),
-  "status": zod.string(),
-  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "rendered_caption": zod.string().nullish(),
-  "rendered_blocks": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
-  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
-  "compiled_at": zod.iso.datetime({}).nullish(),
-  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
-  "compiler_version": zod.number(),
-  "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
-})
-export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponse = zod.array(bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponseItem)
 
 
 /**

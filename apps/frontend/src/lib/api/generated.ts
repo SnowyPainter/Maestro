@@ -285,40 +285,65 @@ export interface DraftUpdateCommand {
   campaign_id?: DraftUpdateCommandCampaignId;
 }
 
-export type DraftVariantList = DraftVariantOut[];
+export type DraftVariantRenderRenderedBlocks = RenderedVariantBlocks | null;
 
-export type DraftVariantOutErrors = string[] | null;
+export type DraftVariantRenderWarnings = string[] | null;
 
-export type DraftVariantOutWarnings = string[] | null;
+export type DraftVariantRenderErrors = string[] | null;
 
-export type DraftVariantOutRenderedBlocksAnyOf = { [key: string]: unknown };
+export type DraftVariantRenderMetricsAnyOf = { [key: string]: unknown };
 
-export type DraftVariantOutRenderedBlocks = DraftVariantOutRenderedBlocksAnyOf | null;
+export type DraftVariantRenderMetrics = DraftVariantRenderMetricsAnyOf | null;
 
-export type DraftVariantOutMetricsAnyOf = { [key: string]: unknown };
+export type DraftVariantRenderIrRevisionCompiled = number | null;
 
-export type DraftVariantOutMetrics = DraftVariantOutMetricsAnyOf | null;
-
-export type DraftVariantOutIrRevisionCompiled = number | null;
-
-export interface DraftVariantOut {
-  id: number;
+export interface DraftVariantRender {
+  variant_id: number;
   draft_id: number;
   platform: string;
   status: string;
-  errors?: DraftVariantOutErrors;
-  warnings?: DraftVariantOutWarnings;
-  /** @nullable */
-  rendered_caption?: string | null;
-  rendered_blocks?: DraftVariantOutRenderedBlocks;
-  metrics?: DraftVariantOutMetrics;
   /** @nullable */
   compiled_at?: string | null;
-  ir_revision_compiled?: DraftVariantOutIrRevisionCompiled;
+  /** @nullable */
+  rendered_caption?: string | null;
+  rendered_blocks?: DraftVariantRenderRenderedBlocks;
+  warnings?: DraftVariantRenderWarnings;
+  errors?: DraftVariantRenderErrors;
+  metrics?: DraftVariantRenderMetrics;
   compiler_version: number;
-  created_at: string;
-  updated_at: string;
+  ir_revision_compiled?: DraftVariantRenderIrRevisionCompiled;
 }
+
+export type DraftVariantRenderDetailRenderedBlocks = RenderedVariantBlocks | null;
+
+export type DraftVariantRenderDetailWarnings = string[] | null;
+
+export type DraftVariantRenderDetailErrors = string[] | null;
+
+export type DraftVariantRenderDetailMetricsAnyOf = { [key: string]: unknown };
+
+export type DraftVariantRenderDetailMetrics = DraftVariantRenderDetailMetricsAnyOf | null;
+
+export type DraftVariantRenderDetailIrRevisionCompiled = number | null;
+
+export interface DraftVariantRenderDetail {
+  variant_id: number;
+  draft_id: number;
+  platform: string;
+  status: string;
+  /** @nullable */
+  compiled_at?: string | null;
+  /** @nullable */
+  rendered_caption?: string | null;
+  rendered_blocks?: DraftVariantRenderDetailRenderedBlocks;
+  warnings?: DraftVariantRenderDetailWarnings;
+  errors?: DraftVariantRenderDetailErrors;
+  metrics?: DraftVariantRenderDetailMetrics;
+  compiler_version: number;
+  ir_revision_compiled?: DraftVariantRenderDetailIrRevisionCompiled;
+}
+
+export type DraftVariantRenderList = DraftVariantRender[];
 
 export interface FlowInfo {
   key: string;
@@ -836,6 +861,36 @@ export const PlatformKind = {
   x: 'x',
   blog: 'blog',
 } as const;
+
+export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RenderedMediaItemType = {
+  image: 'image',
+  video: 'video',
+} as const;
+
+export interface RenderedMediaItem {
+  type?: RenderedMediaItemType;
+  url?: string;
+  /** @nullable */
+  alt?: string | null;
+  /** @nullable */
+  caption?: string | null;
+  /** @nullable */
+  ratio?: string | null;
+}
+
+export type RenderedVariantBlocksOptions = { [key: string]: unknown };
+
+export type RenderedVariantBlocksMetrics = { [key: string]: unknown };
+
+export interface RenderedVariantBlocks {
+  media?: RenderedMediaItem[];
+  options?: RenderedVariantBlocksOptions;
+  metrics?: RenderedVariantBlocksMetrics;
+}
 
 export interface SignupRequest {
   email: string;
@@ -2116,6 +2171,191 @@ export function useBffContextsCurrentPersonaApiBffContextsPersonaCurrentGet<TDat
 
 
 /**
+ * List all variants of a draft for content optimization and A/B testing
+ * @summary Get Draft Variants
+ */
+export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet = (
+    draftId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftVariantRenderList>(
+      {url: `/api/bff/drafts/${draftId}/variants`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryKey = (draftId?: number,) => {
+    return [`/api/bff/drafts/${draftId}/variants`] as const;
+    }
+
+    
+export const getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryKey(draftId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>> = ({ signal }) => bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet(draftId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(draftId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>>
+export type BffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryError = HTTPValidationError
+
+
+export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
+ draftId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
+ draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
+ draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Draft Variants
+ */
+
+export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
+ draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryOptions(draftId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve rendered payload for a specific platform variant
+ * @summary Get Draft Variant Detail
+ */
+export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet = (
+    draftId: number,
+    platform: PlatformKind,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftVariantRenderDetail>(
+      {url: `/api/bff/drafts/${draftId}/variants/${platform}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetQueryKey = (draftId?: number,
+    platform?: PlatformKind,) => {
+    return [`/api/bff/drafts/${draftId}/variants/${platform}`] as const;
+    }
+
+    
+export const getBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetQueryOptions = <TData = Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError = HTTPValidationError>(draftId: number,
+    platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetQueryKey(draftId,platform);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>> = ({ signal }) => bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet(draftId,platform, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(draftId && platform), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>>
+export type BffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetQueryError = HTTPValidationError
+
+
+export function useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError = HTTPValidationError>(
+ draftId: number,
+    platform: PlatformKind, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError = HTTPValidationError>(
+ draftId: number,
+    platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError = HTTPValidationError>(
+ draftId: number,
+    platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Draft Variant Detail
+ */
+
+export function useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError = HTTPValidationError>(
+ draftId: number,
+    platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetQueryOptions(draftId,platform,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Retrieve complete draft content and metadata for content editing interface
  * @summary Get Draft Content
  */
@@ -2283,95 +2523,6 @@ export function useBffDraftsListDraftsApiBffDraftsGet<TData = Awaited<ReturnType
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffDraftsListDraftsApiBffDraftsGetQueryOptions(params,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * List all variants of a draft for content optimization and A/B testing
- * @summary Get Draft Variants
- */
-export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet = (
-    draftId: number,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<DraftVariantList>(
-      {url: `/api/bff/drafts/${draftId}/variants`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-export const getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryKey = (draftId?: number,) => {
-    return [`/api/bff/drafts/${draftId}/variants`] as const;
-    }
-
-    
-export const getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryKey(draftId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>> = ({ signal }) => bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet(draftId, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(draftId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type BffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>>
-export type BffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryError = HTTPValidationError
-
-
-export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
- draftId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
- draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
- draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Draft Variants
- */
-
-export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError = HTTPValidationError>(
- draftId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsApiBffDraftsDraftIdVariantsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryOptions(draftId,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -2,6 +2,11 @@ from typing import Literal, Union, List, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, conlist, ConfigDict
 
+from apps.backend.src.modules.adapters.schemas import (
+    RenderedMetrics,
+    RenderedVariantBlocks,
+)
+
 class BlockText(BaseModel):
     type: Literal["text"]
     props: dict  # {"markdown": "...", "mentions":[...]} 등
@@ -87,8 +92,8 @@ class DraftVariantOut(BaseModel):
     errors: Optional[List[str]] = None
     warnings: Optional[List[str]] = None
     rendered_caption: Optional[str] = None
-    rendered_blocks: Optional[dict] = None
-    metrics: Optional[dict] = None
+    rendered_blocks: Optional[RenderedVariantBlocks] = None
+    metrics: Optional[RenderedMetrics] = None
     compiled_at: Optional[datetime] = None
     ir_revision_compiled: Optional[int] = None
     compiler_version: int

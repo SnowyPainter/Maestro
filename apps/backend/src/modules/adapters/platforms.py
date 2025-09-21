@@ -7,17 +7,21 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from apps.backend.src.modules.common.enums import VariantStatus
-from apps.backend.src.modules.adapters.schemas import CompileResult
+from apps.backend.src.modules.adapters.schemas import (
+    CompileResult,
+    RenderedMediaItem,
+    RenderedVariantBlocks,
+)
 
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _extract_blocks(ir: Dict[str, Any]) -> Tuple[str, List[Dict[str, Any]], List[str]]:
+def _extract_blocks(ir: Dict[str, Any]) -> Tuple[str, List[RenderedMediaItem], List[str]]:
     warnings: List[str] = []
     texts: List[str] = []
-    media: List[Dict[str, Any]] = []
+    media: List[RenderedMediaItem] = []
 
     for block in ir.get("blocks", []) or []:
         btype = (block or {}).get("type")
@@ -35,11 +39,20 @@ def _extract_blocks(ir: Dict[str, Any]) -> Tuple[str, List[Dict[str, Any]], List
             if not url:
                 warnings.append(f"{btype} block missing url")
                 continue
-            media.append({
+            media_item: RenderedMediaItem = {
                 "type": btype,
                 "url": url,
-                "alt": props.get("alt"),
-            })
+            }
+            alt = props.get("alt")
+            if alt:
+                media_item["alt"] = alt
+            caption = props.get("caption")
+            if caption:
+                media_item["caption"] = caption
+            ratio = props.get("ratio") or props.get("crop")
+            if ratio:
+                media_item["ratio"] = ratio
+            media.append(media_item)
         else:
             warnings.append(f"unknown block type: {btype}")
 
@@ -64,10 +77,10 @@ def _truncate(text: str, limit: Optional[int]) -> Tuple[str, Optional[str]]:
 
 
 def _limit_media(
-    media: Sequence[Dict[str, Any]],
+    media: Sequence[RenderedMediaItem],
     max_count: Optional[int],
     allowed_types: Iterable[str],
-) -> Tuple[List[Dict[str, Any]], List[str]]:
+) -> Tuple[List[RenderedMediaItem], List[str]]:
     warnings: List[str] = []
     allowed = tuple(allowed_types)
 
@@ -82,7 +95,7 @@ def _limit_media(
     return filtered, warnings
 
 
-def _build_metrics(caption: str, media: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _build_metrics(caption: str, media: List[RenderedMediaItem]) -> Dict[str, Any]:
     return {
         "char_count": len(caption or ""),
         "line_breaks": caption.count("\n") if caption else 0,
@@ -125,7 +138,7 @@ def _mk_compile_result(
     *,
     status: VariantStatus,
     caption: Optional[str],
-    blocks: Optional[Dict[str, Any]],
+    blocks: Optional[RenderedVariantBlocks],
     warnings: List[str],
     errors: List[str],
     compiler_version: int,

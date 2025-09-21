@@ -2,7 +2,9 @@ import { useState } from "react";
 import {
   useBffDraftsReadDraftApiBffDraftsDraftIdGet,
   useDraftsDeleteApiOrchestratorDraftsDraftIdDelete,
-  getBffDraftsListDraftsApiBffDraftsGetQueryKey
+  getBffDraftsListDraftsApiBffDraftsGetQueryKey,
+  getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryKey,
+  getBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetQueryKey
 } from "@/lib/api/generated";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,10 +27,14 @@ import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { DraftIR } from "@/lib/api/generated";
 import { DraftIRBlockRender } from "@/components/Draft/DraftIRBlockRender";
+import { DraftVariantList } from "./DraftVariantList";
+import { DraftVariantDetail } from "./DraftVariantDetail";
+import type { DraftVariantRenderDetail } from "@/lib/api/generated";
 
 export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: () => void }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [activeVariantPlatform, setActiveVariantPlatform] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { data: draft, isLoading, isError } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(draftId);
 
@@ -62,6 +68,10 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
     deleteDraft({ draftId });
   };
 
+  const handleVariantSelect = (variant: DraftVariantRenderDetail) => {
+    setActiveVariantPlatform(String(variant.platform));
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -90,6 +100,28 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
                 </div>
             </div>
         )}
+        <div>
+            <h4 className="font-semibold text-sm mb-2">Platform Variants</h4>
+            <div className="flex gap-4 max-h-96">
+                <div className="flex-1 min-w-0">
+                    <DraftVariantList draftId={draft.id} onSelect={handleVariantSelect} compact={true} />
+                </div>
+                <div className="flex-1 min-w-0 max-h-96 overflow-hidden">
+                    {activeVariantPlatform ? (
+                        <DraftVariantDetail draftId={draft.id} platform={activeVariantPlatform} />
+                    ) : (
+                        <Card className="border-dashed h-full">
+                            <CardHeader className="py-4">
+                                <CardTitle className="text-sm text-muted-foreground">Select a variant to preview</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-xs text-muted-foreground">
+                                Choose a platform variant to review compiled content, media, and validation notes.
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            </div>
+        </div>
         <div className="text-xs text-muted-foreground pt-4">
             Created: {new Date(draft.created_at).toLocaleString()} | Last Updated: {new Date(draft.updated_at).toLocaleString()}
         </div>
@@ -103,7 +135,22 @@ export function DraftDetail({ draftId, onDelete }: { draftId: number, onDelete: 
                 <DialogHeader>
                     <DialogTitle>Edit Draft</DialogTitle>
                 </DialogHeader>
-                <EditDraftForm draft={draft} onSuccess={() => setIsEditing(false)} />
+                <EditDraftForm draft={draft} onSuccess={() => {
+                  setIsEditing(false);
+                  queryClient.invalidateQueries({
+                    queryKey: getBffDraftsListVariantsApiBffDraftsDraftIdVariantsGetQueryKey(draftId)
+                  });
+                  queryClient.invalidateQueries({
+                    predicate: (query) => {
+                      const queryKey = query.queryKey;
+                      return Array.isArray(queryKey) &&
+                             queryKey.length >= 2 &&
+                             queryKey[0] === '/api/bff/drafts' &&
+                             queryKey[1] === draftId &&
+                             queryKey[2] === 'variants';
+                    }
+                  });
+                }} />
             </DialogContent>
         </Dialog>
         <AlertDialog>

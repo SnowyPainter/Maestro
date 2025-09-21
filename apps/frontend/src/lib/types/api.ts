@@ -244,6 +244,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/drafts/{draft_id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Draft Variants
+         * @description List all variants of a draft for content optimization and A/B testing
+         */
+        get: operations["bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts/{draft_id}/variants/{platform}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Draft Variant Detail
+         * @description Retrieve rendered payload for a specific platform variant
+         */
+        get: operations["bff_drafts_read_variant_api_bff_drafts__draft_id__variants__platform__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/drafts/{draft_id}": {
         parameters: {
             query?: never;
@@ -276,26 +316,6 @@ export interface paths {
          * @description Get paginated list of all content drafts for content management dashboard
          */
         get: operations["bff_drafts_list_drafts_api_bff_drafts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/bff/drafts/{draft_id}/variants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Draft Variants
-         * @description List all variants of a draft for content optimization and A/B testing
-         */
-        get: operations["bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1063,52 +1083,70 @@ export interface components {
             /** Campaign Id */
             campaign_id?: number | null;
         };
-        /** DraftVariantList */
-        DraftVariantList: components["schemas"]["DraftVariantOut"][];
-        /** DraftVariantOut */
-        DraftVariantOut: {
-            /** Id */
-            id: number;
+        /** DraftVariantRender */
+        DraftVariantRender: {
+            /** Variant Id */
+            variant_id: number;
             /** Draft Id */
             draft_id: number;
             /** Platform */
             platform: string;
             /** Status */
             status: string;
-            /** Errors */
-            errors?: string[] | null;
-            /** Warnings */
-            warnings?: string[] | null;
-            /** Rendered Caption */
-            rendered_caption?: string | null;
-            /** Rendered Blocks */
-            rendered_blocks?: {
-                [key: string]: unknown;
-            } | null;
-            /** Metrics */
-            metrics?: {
-                [key: string]: unknown;
-            } | null;
             /**
              * Compiled At
              * Format: date-time
              */
             compiled_at?: string | null;
-            /** Ir Revision Compiled */
-            ir_revision_compiled?: number | null;
+            /** Rendered Caption */
+            rendered_caption?: string | null;
+            rendered_blocks?: components["schemas"]["RenderedVariantBlocks"] | null;
+            /** Warnings */
+            warnings?: string[] | null;
+            /** Errors */
+            errors?: string[] | null;
+            /** Metrics */
+            metrics?: {
+                [key: string]: unknown;
+            } | null;
             /** Compiler Version */
             compiler_version: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
+            /** Ir Revision Compiled */
+            ir_revision_compiled?: number | null;
         };
+        /** DraftVariantRenderDetail */
+        DraftVariantRenderDetail: {
+            /** Variant Id */
+            variant_id: number;
+            /** Draft Id */
+            draft_id: number;
+            /** Platform */
+            platform: string;
+            /** Status */
+            status: string;
+            /**
+             * Compiled At
+             * Format: date-time
+             */
+            compiled_at?: string | null;
+            /** Rendered Caption */
+            rendered_caption?: string | null;
+            rendered_blocks?: components["schemas"]["RenderedVariantBlocks"] | null;
+            /** Warnings */
+            warnings?: string[] | null;
+            /** Errors */
+            errors?: string[] | null;
+            /** Metrics */
+            metrics?: {
+                [key: string]: unknown;
+            } | null;
+            /** Compiler Version */
+            compiler_version: number;
+            /** Ir Revision Compiled */
+            ir_revision_compiled?: number | null;
+        };
+        /** DraftVariantRenderList */
+        DraftVariantRenderList: components["schemas"]["DraftVariantRender"][];
         /** FlowInfo */
         FlowInfo: {
             /** Key */
@@ -1640,6 +1678,35 @@ export interface components {
          * @enum {string}
          */
         PlatformKind: "instagram" | "threads" | "x" | "blog";
+        /** RenderedMediaItem */
+        RenderedMediaItem: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type?: "image" | "video";
+            /** Url */
+            url?: string;
+            /** Alt */
+            alt?: string | null;
+            /** Caption */
+            caption?: string | null;
+            /** Ratio */
+            ratio?: string | null;
+        };
+        /** RenderedVariantBlocks */
+        RenderedVariantBlocks: {
+            /** Media */
+            media?: components["schemas"]["RenderedMediaItem"][];
+            /** Options */
+            options?: {
+                [key: string]: unknown;
+            };
+            /** Metrics */
+            metrics?: {
+                [key: string]: unknown;
+            };
+        };
         /** SignupRequest */
         SignupRequest: {
             /**
@@ -2158,6 +2225,69 @@ export interface operations {
             };
         };
     };
+    bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftVariantRenderList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_read_variant_api_bff_drafts__draft_id__variants__platform__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftVariantRenderDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_drafts_read_draft_api_bff_drafts__draft_id__get: {
         parameters: {
             query?: never;
@@ -2209,37 +2339,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                draft_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftVariantList"];
                 };
             };
             /** @description Validation Error */

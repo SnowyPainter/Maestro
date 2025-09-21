@@ -1,4 +1,4 @@
-# apps/backend/src/modules/adapters/impls/Instagram.py
+# apps/backend/src/modules/adapters/impls/Blog.py
 from __future__ import annotations
 
 import uuid
@@ -26,8 +26,8 @@ from ..platforms import (
     _check_banned_words,
     _extract_blocks,
     _limit_media,
-    _mk_compile_result,
     _merge_options,
+    _mk_compile_result,
     _truncate,
 )
 
@@ -38,15 +38,15 @@ def _utcnow():
     return datetime.now(timezone.utc)
 
 
-class InstagramAdapter(Adapter):
-    platform = PlatformKind.INSTAGRAM
+class BlogAdapter(Adapter):
+    platform = PlatformKind.BLOG
     compiler_version = 1
 
     DEFAULT_POLICY = {
-        "char_limit": 2200,
+        "char_limit": None,
         "allowed_media": ("image", "video"),
-        "max_media": 10,
-        "linebreak_rule": "single-to-double",
+        "max_media": None,
+        "linebreak_rule": None,
     }
 
     async def compile(self, payload: InjectedContent, *, locale: Optional[str] = None) -> CompileResult:
@@ -78,6 +78,12 @@ class InstagramAdapter(Adapter):
             warnings.extend(_check_banned_words(caption, banned_words))
 
         metrics = _build_metrics(caption, media_final)
+        reading_time = 0.0
+        if caption:
+            words = max(len(caption.split()), 1)
+            reading_time = words / 200 * 60  # assume 200 wpm
+        metrics["estimated_reading_time_seconds"] = round(reading_time, 2)
+
         options = _merge_options(payload.options, {"policy": {**policy, "allowed_media": list(allowed_media)}})
 
         rendered_blocks: RenderedVariantBlocks = {
@@ -106,7 +112,7 @@ class InstagramAdapter(Adapter):
         credentials: dict,
         options: dict | None = None,
     ) -> PublishResult:
-        external_id = f"ig:{uuid.uuid4()}"
+        external_id = f"blog:{uuid.uuid4()}"
         return PublishResult(ok=True, external_id=external_id, errors=[], warnings=[])
 
     async def delete(self, external_id: str, *, credentials: dict) -> DeleteResult:
@@ -115,8 +121,8 @@ class InstagramAdapter(Adapter):
     async def sync_metrics(self, external_id: str, *, credentials: dict) -> MetricsResult:
         return MetricsResult(
             ok=True,
-            metrics={"impressions": 0.0, "likes": 0.0, "comments": 0.0, "saves": 0.0},
-            scope=MetricsScope.SINCE_PUBLISH,
+            metrics={"views": 0.0, "reads": 0.0, "shares": 0.0},
+            scope=MetricsScope.LIFETIME,
             content_kind=ContentKind.POST,
             mapping_version=1,
             collected_at=_utcnow(),
