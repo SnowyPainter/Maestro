@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { AlertTriangle, Loader2, RefreshCw, FileWarning, CheckCircle2, Clock, X, CheckCircle } from "lucide-react";
 
 import { useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet } from "@/lib/api/generated";
@@ -69,6 +69,19 @@ export function DraftVariantList({
   });
 
   const variants = useMemo(() => providedVariants ?? data ?? [], [providedVariants, data]);
+
+  // 컴파일 중인 variants가 있으면 자동 갱신
+  const hasPendingVariants = variants.some(variant => variant.status.toLowerCase() === 'pending');
+
+  useEffect(() => {
+    if (!hasPendingVariants) return;
+
+    const interval = setInterval(() => {
+      refetch();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [hasPendingVariants, refetch]);
 
   if (isLoading && !providedVariants) {
     return (

@@ -4,33 +4,24 @@ from __future__ import annotations
 import uuid
 from typing import Optional
 
+from apps.backend.src.modules.adapters.engine import (
+    CompileState,
+    compile_with_spec,
+    get_compile_spec,
+)
 from apps.backend.src.modules.adapters.schemas import (
     Adapter,
     CompileResult,
     DeleteResult,
     MetricsResult,
     PublishResult,
-    RenderedVariantBlocks,
 )
 from apps.backend.src.modules.common.enums import (
     ContentKind,
     MetricsScope,
     PlatformKind,
-    VariantStatus,
 )
 from apps.backend.src.modules.injectors.base import InjectedContent
-
-from ..platforms import (
-    _apply_linebreak_rule,
-    _build_metrics,
-    _check_banned_words,
-    _extract_blocks,
-    _limit_media,
-    _merge_options,
-    _mk_compile_result,
-    _truncate,
-)
-
 
 def _utcnow():
     from datetime import datetime, timezone
@@ -42,63 +33,8 @@ class ThreadsAdapter(Adapter):
     platform = PlatformKind.THREADS
     compiler_version = 1
 
-    DEFAULT_POLICY = {
-        "char_limit": 500,
-        "allowed_media": ("image", "video"),
-        "max_media": 10,
-        "linebreak_rule": "single-to-double",
-    }
-
     async def compile(self, payload: InjectedContent, *, locale: Optional[str] = None) -> CompileResult:
-        policy = {**self.DEFAULT_POLICY, **(payload.policy or {})}
-        allowed_media = tuple(policy.get("allowed_media") or self.DEFAULT_POLICY["allowed_media"])
-        max_media = policy.get("max_media", self.DEFAULT_POLICY["max_media"])
-        char_limit = policy.get("char_limit", self.DEFAULT_POLICY["char_limit"])
-        linebreak_rule = policy.get("linebreak_rule", self.DEFAULT_POLICY["linebreak_rule"])
-
-        caption_source, media_source, block_warnings = _extract_blocks(payload.ir)
-
-        caption = _apply_linebreak_rule(caption_source, linebreak_rule)
-        caption, trunc_warning = _truncate(caption, char_limit)
-
-        media_final, media_warnings = _limit_media(media_source, max_media, allowed_media)
-
-        warnings: list[str] = list(payload.warnings)
-        errors: list[str] = list(payload.errors)
-        if block_warnings:
-            warnings.extend(block_warnings)
-        if trunc_warning:
-            warnings.append(trunc_warning)
-        if media_warnings:
-            warnings.extend(media_warnings)
-
-        persona_directives = payload.persona_directives or {}
-        banned_words = persona_directives.get("banned_words") or []
-        if banned_words:
-            warnings.extend(_check_banned_words(caption, banned_words))
-
-        metrics = _build_metrics(caption, media_final)
-        metrics["thread_length"] = caption.count("\n\n") + 1 if caption else 0
-
-        options = _merge_options(payload.options, {"policy": {**policy, "allowed_media": list(allowed_media)}})
-
-        rendered_blocks: RenderedVariantBlocks = {
-            "media": media_final,
-            "options": options,
-            "metrics": metrics,
-        }
-
-        status = VariantStatus.INVALID if errors else VariantStatus.VALID
-
-        return _mk_compile_result(
-            status=status,
-            caption=caption,
-            blocks=rendered_blocks,
-            warnings=warnings,
-            errors=errors,
-            compiler_version=self.compiler_version,
-            ir_revision=payload.ir_revision,
-        )
+        return await compile_with_spec(payload, SPEC)
 
     async def publish(
         self,
@@ -126,3 +62,20 @@ class ThreadsAdapter(Adapter):
             warnings=[],
             errors=[],
         )
+
+
+def _threads_metric_hook(state: CompileState) -> None:
+    caption = state.caption or ""
+    if caption:
+        state.metrics["thread_length"] = caption.count("\n\n") + 1
+    else:
+        state.metrics["thread_length"] = 0
+
+
+SPEC = get_compile_spec(
+    PlatformKind.THREADS,
+    ThreadsAdapter.compiler_version,
+    hooks=(
+        _threads_metric_hook,
+    ),
+)

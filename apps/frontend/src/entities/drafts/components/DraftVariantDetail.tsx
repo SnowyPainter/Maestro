@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { Loader2, RefreshCw, AlertTriangle, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet } from "@/lib/api/generated";
+import { useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet, PlatformKind, RenderedMediaItem } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  DraftVariantRenderDetail,
-  RenderedMediaItem,
-} from "@/lib/api/generated";
 import {
   ensurePlatformKind,
   formatCompiledAt,
@@ -30,6 +26,12 @@ function formatMetricKey(key: string): string {
     virality_score: "Virality",
     seo_score: "SEO Score",
     content_quality_score: "Quality",
+    char_count: "Character Count",
+    line_breaks: "Line Breaks",
+    media_count: "Media Items",
+    hashtag_count: "Hashtag Count",
+    thread_length: "Thread Length",
+    style_alignment: "Style Alignment Score",
   };
 
   return keyMappings[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -131,9 +133,12 @@ export function DraftVariantDetail({
   platform: string;
 }) {
   const [mediaStartIndex, setMediaStartIndex] = useState(0);
-  const { data, isLoading, isError, refetch } = useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet(draftId, platform as any, {
+  const requestedPlatform = ensurePlatformKind(platform);
+  const normalizedPlatform = requestedPlatform ?? PlatformKind.instagram;
+
+  const { data, isLoading, isError, refetch } = useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet(draftId, normalizedPlatform, {
     query: {
-      enabled: Boolean(draftId && platform),
+      enabled: Boolean(draftId && requestedPlatform),
     },
   });
 
@@ -170,6 +175,34 @@ export function DraftVariantDetail({
   const warningCount = countListItems(data.warnings);
   const errorCount = countListItems(data.errors);
   const mediaItems = data.rendered_blocks?.media ?? [];
+  const options = data.rendered_blocks?.options as Record<string, unknown> | undefined;
+  const policyOptions = options?.policy as Record<string, unknown> | undefined;
+  const compileOptions = options?.compile as Record<string, unknown> | undefined;
+  const personaAdjustments = compileOptions?.persona as Record<string, unknown> | undefined;
+  const personaHashtags = personaAdjustments?.hashtags as {
+    appended?: string[];
+    skipped?: string[];
+  } | undefined;
+  const personaReplace = personaAdjustments?.replace_map as {
+    applied?: Array<{ source: string; target: string }>;
+    skipped?: string[];
+  } | undefined;
+  const personaMediaPrefs = personaAdjustments?.media_prefs as {
+    preferred_ratio?: string;
+    allow_carousel?: boolean;
+  } | undefined;
+  const personaMisc = personaAdjustments
+    ? Object.entries(personaAdjustments).filter(([key]) => !["hashtags", "replace_map", "media_prefs"].includes(key))
+    : [];
+  const compileMetaEntries = compileOptions
+    ? Object.entries(compileOptions).filter(([key]) => key !== "persona")
+    : [];
+  const extraOptionEntries = options
+    ? Object.entries(options).filter(([key]) => key !== "policy" && key !== "compile")
+    : [];
+  const otherBlockEntries = Object.entries(data.rendered_blocks ?? {}).filter(
+    ([key]) => !["media", "options", "metrics"].includes(key)
+  );
 
   // Media navigation
   const maxVisibleMedia = 3;
@@ -193,6 +226,72 @@ export function DraftVariantDetail({
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85 break-words overflow-wrap-anywhere">
             {data.rendered_caption}
           </p>
+        </div>
+      )}
+
+      {personaAdjustments && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Persona Adjustments</h4>
+          {personaHashtags?.appended?.length ? (
+            <div className="space-y-1 text-xs">
+              <p className="text-muted-foreground uppercase tracking-wide">Appended Hashtags</p>
+              <div className="flex flex-wrap gap-1">
+                {personaHashtags.appended.map((tag) => (
+                  <Badge key={tag} variant="secondary">{tag}</Badge>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {personaHashtags?.skipped?.length ? (
+            <p className="text-xs text-muted-foreground">
+              Skipped default hashtags: {personaHashtags.skipped.join(', ')}
+            </p>
+          ) : null}
+          {personaReplace?.applied?.length ? (
+            <div className="space-y-1 text-xs">
+              <p className="text-muted-foreground uppercase tracking-wide">Replace Map</p>
+              <div className="space-y-1">
+                {personaReplace.applied.map((pair, index) => (
+                  <div key={`${pair.source}-${index}`} className="flex items-center gap-2">
+                    <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{pair.source}</code>
+                    <span className="text-muted-foreground">→</span>
+                    <span className="text-sm">{pair.target}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {personaReplace?.skipped?.length ? (
+            <p className="text-xs text-muted-foreground">
+              Placeholders not found: {personaReplace.skipped.join(', ')}
+            </p>
+          ) : null}
+          {personaMediaPrefs?.preferred_ratio ? (
+            <div className="space-y-1 text-xs">
+              <p className="text-muted-foreground uppercase tracking-wide">Preferred Image Ratio</p>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{personaMediaPrefs.preferred_ratio}</Badge>
+                {mediaItems.some((item) => item.type === 'image' && item.ratio && item.ratio !== personaMediaPrefs.preferred_ratio) ? (
+                  <span className="text-amber-600">Check media crops</span>
+                ) : (
+                  <span className="text-green-600">All matching</span>
+                )}
+              </div>
+            </div>
+          ) : null}
+          {personaMediaPrefs?.allow_carousel !== undefined ? (
+            <p className="text-xs text-muted-foreground">Carousel allowed: {personaMediaPrefs.allow_carousel ? 'Yes' : 'No'}</p>
+          ) : null}
+          {personaMisc.length ? (
+            <div className="space-y-1 text-xs">
+              {personaMisc.map(([key, value]) => (
+                <div key={key} className="rounded bg-muted/30 px-2 py-1">
+                  <span className="font-semibold mr-1">{key}:</span>
+                  {renderOptionValue(value)}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -229,6 +328,8 @@ export function DraftVariantDetail({
           <div className="flex gap-3 overflow-hidden">
             {visibleMediaItems.map((item: RenderedMediaItem, index) => {
               const globalIndex = mediaStartIndex + index;
+              const preferredRatio = personaMediaPrefs?.preferred_ratio;
+              const ratioMismatch = preferredRatio && item.type === 'image' && item.ratio && item.ratio !== preferredRatio;
               return (
                 <div key={`${item.url}-${globalIndex}`} className="flex-1 min-w-0">
                   <div className="aspect-square bg-muted/20 rounded border overflow-hidden mb-2">
@@ -253,7 +354,16 @@ export function DraftVariantDetail({
                   <div className="space-y-1">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <span className="uppercase tracking-wide font-medium">{item.type}</span>
-                      {item.ratio && <span>• {item.ratio}</span>}
+                      {item.ratio && (
+                        <span className={ratioMismatch ? 'text-amber-600 font-semibold' : ''}>
+                          • {item.ratio}
+                        </span>
+                      )}
+                      {preferredRatio && item.type === 'image' ? (
+                        <span className="text-xs text-muted-foreground/80">
+                          target {preferredRatio}
+                        </span>
+                      ) : null}
                     </div>
                     <p className="break-all text-xs text-muted-foreground/80 leading-tight" title={item.url || undefined}>
                       {item.url && item.url.length > 40 ? `${item.url.slice(0, 40)}...` : (item.url || 'No URL')}
@@ -271,11 +381,39 @@ export function DraftVariantDetail({
         </div>
       )}
 
-      {(Boolean(data.rendered_blocks?.options) && Object.keys(data.rendered_blocks?.options ?? {}).length) && (
+      {policyOptions && Object.keys(policyOptions).length ? (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Platform Policy</h4>
+          <div className="grid gap-1 text-xs">
+            {Object.entries(policyOptions).map(([key, value]) => (
+              <div key={key} className="flex items-center gap-2">
+                <span className="uppercase tracking-wide text-muted-foreground min-w-[110px]">{key}</span>
+                <div>{renderOptionValue(value)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {compileMetaEntries.length ? (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Compile Insights</h4>
+          <div className="space-y-1 text-xs">
+            {compileMetaEntries.map(([key, value]) => (
+              <div key={key} className="rounded bg-muted/30 px-3 py-2">
+                <span className="font-semibold text-foreground/80 mr-2">{key}</span>
+                {renderOptionValue(value)}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {extraOptionEntries.length ? (
         <div className="space-y-2">
           <h4 className="text-sm font-medium">Options</h4>
           <div className="space-y-2">
-            {Object.entries(data.rendered_blocks?.options ?? {}).map(([key, value]) => (
+            {extraOptionEntries.map(([key, value]) => (
               <div key={key} className="rounded bg-muted/30 px-3 py-3 text-xs">
                 <div className="flex items-start gap-2">
                   <span className="font-semibold text-foreground/80 min-w-0 flex-shrink-0">{key}:</span>
@@ -287,7 +425,23 @@ export function DraftVariantDetail({
             ))}
           </div>
         </div>
-      )}
+      ) : null}
+
+      {otherBlockEntries.length ? (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Additional Blocks</h4>
+          <div className="space-y-2">
+            {otherBlockEntries.map(([key, value]) => (
+              <div key={key} className="rounded bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground/80 mb-1 uppercase tracking-wide">{key}</p>
+                <pre className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                  {JSON.stringify(value, null, 2)}
+                </pre>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {Boolean(data.metrics && Object.keys(data.metrics ?? {}).length) && (
         <div className="space-y-2">

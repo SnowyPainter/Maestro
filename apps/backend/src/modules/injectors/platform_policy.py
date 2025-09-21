@@ -64,6 +64,8 @@ PLATFORM_POLICIES: Dict[PlatformKind, ComposePolicy] = {
     PlatformKind.THREADS: ComposePolicy(
         char_limit=500,
         allowed_media=("image", "video"),
+        max_media=10,
+        linebreak_rule="single-to-double",
     ),
     PlatformKind.X: ComposePolicy(
         char_limit=280,
