@@ -89,6 +89,16 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
     const rows = toKeyValueRows(utmRecord, "utm");
     return rows.length ? rows : [{ id: createRowId("utm"), key: "utm_source", value: "" }];
   });
+  const initialInlinePolicy = (initialLinkPolicy?.inline_link as Record<string, unknown>) || {};
+  const [inlineLinkStrategy, setInlineLinkStrategy] = useState<"keep" | "remove" | "replace">(
+    typeof initialInlinePolicy?.strategy === "string"
+      && ["keep", "remove", "replace"].includes(initialInlinePolicy.strategy)
+      ? (initialInlinePolicy.strategy as "keep" | "remove" | "replace")
+      : "keep"
+  );
+  const [inlineLinkReplacement, setInlineLinkReplacement] = useState(
+    typeof initialInlinePolicy?.replacement_text === "string" ? initialInlinePolicy.replacement_text : ""
+  );
 
   const initialMediaPrefs = persona.media_prefs ?? {};
   const [preferredRatio, setPreferredRatio] = useState(
@@ -188,6 +198,20 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
         linkPolicy.utm = utm;
       }
 
+      if (inlineLinkStrategy !== "keep") {
+        const inlineLinkConfig: Record<string, unknown> = {
+          strategy: inlineLinkStrategy,
+        };
+        if (inlineLinkStrategy === "replace") {
+          const replacement = inlineLinkReplacement.trim();
+          if (!replacement) {
+            throw new Error("Replacement text is required when replacing inline links");
+          }
+          inlineLinkConfig.replacement_text = replacement;
+        }
+        linkPolicy.inline_link = inlineLinkConfig;
+      }
+
       const mediaPrefs: Record<string, unknown> = {};
       if (preferredRatio.trim()) {
         mediaPrefs.preferred_ratio = preferredRatio.trim();
@@ -258,7 +282,7 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 p-4 border rounded-lg max-h-[70vh] overflow-y-auto">
+    <form onSubmit={handleSubmit} className="grid gap-6 max-h-[80vh] overflow-y-auto p-1">
       {formError ? (
         <p className="text-sm text-red-500" role="alert">{formError}</p>
       ) : null}
@@ -410,6 +434,27 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
               onChange={(e) => setLinkInBio(e.target.value)}
               placeholder="https://example.com"
             />
+          </div>
+          <div className="grid gap-1">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">Inline Links</span>
+            <Select value={inlineLinkStrategy} onValueChange={(value) => setInlineLinkStrategy(value as "keep" | "remove" | "replace")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="keep">Keep as-is</SelectItem>
+                <SelectItem value="remove">Remove links</SelectItem>
+                <SelectItem value="replace">Replace with text</SelectItem>
+              </SelectContent>
+            </Select>
+            {inlineLinkStrategy === "replace" ? (
+              <Input
+                className="mt-2"
+                value={inlineLinkReplacement}
+                onChange={(e) => setInlineLinkReplacement(e.target.value)}
+                placeholder="e.g. Link in bio"
+              />
+            ) : null}
           </div>
           <div className="space-y-2">
             {utmParams.map((row) => (

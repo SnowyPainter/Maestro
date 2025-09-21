@@ -197,6 +197,15 @@ def _apply_persona_rules(
             if value not in (None, "")
         }
 
+    caption, link_policy_summary, link_policy_warnings = _apply_link_policy(
+        caption,
+        directives.get("link_policy"),
+    )
+    if link_policy_summary:
+        applied["link_policy"] = link_policy_summary
+    if link_policy_warnings:
+        warnings.extend(link_policy_warnings)
+
     hashtag_info = _apply_hashtag_rules(caption, directives)
     caption = hashtag_info.caption
     if hashtag_info.applied or hashtag_info.skipped:
@@ -224,6 +233,7 @@ class _HashtagResult:
 
 
 _HASHTAG_PATTERN = re.compile(r"#(?P<tag>[A-Za-z0-9_]+)")
+_URL_PATTERN = re.compile(r"https?://\S+", re.IGNORECASE)
 
 
 def _apply_replace_map(
@@ -393,6 +403,81 @@ async def _fetch_style_embeddings(texts: List[str]) -> List[List[float]]:
         if "Event loop is closed" not in str(exc):
             raise
         return await asyncio.to_thread(embed_texts_sync, texts)
+
+
+def _apply_link_policy(
+    caption: str,
+    link_policy: Any,
+) -> Tuple[str, Dict[str, Any], List[str]]:
+    if not isinstance(link_policy, dict) or not link_policy:
+        return caption, {}, []
+
+    summary: Dict[str, Any] = {}
+    warnings: List[str] = []
+
+    link_in_bio = link_policy.get("link_in_bio")
+    if isinstance(link_in_bio, str) and link_in_bio.strip():
+        summary["link_in_bio"] = link_in_bio.strip()
+
+    utm = link_policy.get("utm")
+    if isinstance(utm, dict):
+        clean_utm = {
+            str(key): str(value)
+            for key, value in utm.items()
+            if key not in (None, "") and value not in (None, "")
+        }
+        if clean_utm:
+            summary["utm"] = clean_utm
+
+    inline_cfg = link_policy.get("inline_link")
+    strategy = None
+    replacement_text = None
+    if isinstance(inline_cfg, dict):
+        raw_strategy = inline_cfg.get("strategy")
+        if raw_strategy in {"keep", "remove", "replace"}:
+            strategy = raw_strategy
+        replacement = inline_cfg.get("replacement_text")
+        if isinstance(replacement, str):
+            replacement_text = replacement
+
+    text = caption or ""
+    urls = _URL_PATTERN.findall(text)
+    processed_urls: List[str] = []
+
+    if strategy in {"remove", "replace"} and urls:
+        for url in urls:
+            if strategy == "replace":
+                replacement = replacement_text or ""
+                if not replacement:
+                    warnings.append("inline link strategy 'replace' missing replacement text; removing URLs instead")
+                    text = text.replace(url, "")
+                else:
+                    text = text.replace(url, replacement)
+            else:
+                text = text.replace(url, "")
+            processed_urls.append(url)
+
+        # cleanup leftover spaces without collapsing intentional line breaks
+        text = re.sub(r"[ \t]{2,}", " ", text)
+        text = re.sub(r"\n[ \t]+", "\n", text)
+        text = text.strip()
+
+    if summary.get("link_in_bio") and urls and strategy in (None, "keep"):
+        warnings.append(
+            "link policy requests link-in-bio, but caption still contains direct URL"
+        )
+
+    inline_summary: Dict[str, Any] = {}
+    if strategy:
+        inline_summary["strategy"] = strategy
+        if strategy == "replace" and replacement_text:
+            inline_summary["replacement_text"] = replacement_text
+    if processed_urls:
+        inline_summary["processed_urls"] = processed_urls
+    if inline_summary:
+        summary["inline_link"] = inline_summary
+
+    return text, summary, warnings
 
 
 def get_compile_spec(platform: PlatformKind, compiler_version: int, hooks: Sequence[CompileHook] | None = None) -> CompileSpec:

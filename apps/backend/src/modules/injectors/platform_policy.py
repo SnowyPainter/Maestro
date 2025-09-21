@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from apps.backend.src.modules.common.enums import PlatformKind
 
@@ -16,6 +16,7 @@ class ComposePolicy:
     allowed_media: tuple[str, ...] = ()
     max_media: Optional[int] = None
     linebreak_rule: Optional[str] = None
+    link_guidance: Optional[Dict[str, Any]] = None
 
     def as_dict(self) -> Dict[str, object]:
         payload: Dict[str, object] = {}
@@ -27,6 +28,8 @@ class ComposePolicy:
             payload["max_media"] = self.max_media
         if self.linebreak_rule:
             payload["linebreak_rule"] = self.linebreak_rule
+        if self.link_guidance:
+            payload["link_guidance"] = self.link_guidance
         return payload
 
 
@@ -60,17 +63,29 @@ PLATFORM_POLICIES: Dict[PlatformKind, ComposePolicy] = {
         allowed_media=("image", "video"),
         max_media=10,
         linebreak_rule="single-to-double",
+        link_guidance={
+            "preferred_mode": "link_in_bio",
+            "allow_direct_urls": False,
+        },
     ),
     PlatformKind.THREADS: ComposePolicy(
         char_limit=500,
         allowed_media=("image", "video"),
         max_media=10,
         linebreak_rule="single-to-double",
+        link_guidance={
+            "preferred_mode": "either",
+            "allow_direct_urls": True,
+        },
     ),
     PlatformKind.X: ComposePolicy(
         char_limit=280,
         allowed_media=("image", "video"),
         max_media=4,
+        link_guidance={
+            "preferred_mode": "direct",
+            "allow_direct_urls": True,
+        },
     ),
 }
 
