@@ -60,8 +60,8 @@ class TimelineQueryPayload(BaseModel):
     since: Optional[datetime] = None
     until: Optional[datetime] = None
     limit: Optional[int] = Field(default=200, ge=1, le=2000)
-    events: Optional[TimelineEventCollection] = Field(default=None, exclude=True)
+    events: Optional[TimelineEventCollection] = Field(default=None, exclude=False)
 
 class TimelineEventCollectionOut(TimelineEventCollection):
     """Flow result that preserves payload info and emits merged events."""
-    pass
+    payload: Dict[str, Any] = Field(default_factory=dict)

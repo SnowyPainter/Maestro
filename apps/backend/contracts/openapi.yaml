@@ -910,6 +910,136 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/timeline/campaigns:
+    get:
+      tags:
+      - bff
+      - bff
+      - timeline
+      - ui
+      - frontend
+      - read
+      summary: Get Campaign KPI Timeline
+      description: Retrieve timeline events sourced from campaign KPI results
+      operationId: bff_timeline_campaigns_api_bff_timeline_campaigns_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Persona Account Id
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date-time
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date-time
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 200
+          title: Limit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/TimelineEventCollection'
+              - type: 'null'
+              title: Events
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEventCollectionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/timeline/trends:
+    get:
+      tags:
+      - bff
+      - bff
+      - timeline
+      - ui
+      - frontend
+      - read
+      summary: Get Trends Timeline
+      description: Retrieve timeline events sourced from trends data
+      operationId: bff_timeline_trends_api_bff_timeline_trends_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Persona Account Id
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date-time
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date-time
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 200
+          title: Limit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/TimelineEventCollection'
+              - type: 'null'
+              title: Events
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEventCollectionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/trends:
     get:
       tags:
@@ -4005,6 +4135,10 @@ components:
             $ref: '#/components/schemas/TimelineEvent'
           type: array
           title: Events
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
       type: object
       required:
       - source

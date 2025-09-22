@@ -464,6 +464,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/timeline/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Campaign KPI Timeline
+         * @description Retrieve timeline events sourced from campaign KPI results
+         */
+        get: operations["bff_timeline_campaigns_api_bff_timeline_campaigns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/timeline/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Trends Timeline
+         * @description Retrieve timeline events sourced from trends data
+         */
+        get: operations["bff_timeline_trends_api_bff_timeline_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/trends": {
         parameters: {
             query?: never;
@@ -2176,6 +2216,10 @@ export interface components {
             source: string;
             /** Events */
             events?: components["schemas"]["TimelineEvent"][];
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
         };
         /** TokenResponse */
         TokenResponse: {
@@ -2992,6 +3036,82 @@ export interface operations {
         };
     };
     bff_timeline_post_publications_api_bff_timeline_post_publications_get: {
+        parameters: {
+            query: {
+                persona_account_id: number;
+                since?: string | null;
+                until?: string | null;
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TimelineEventCollection"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineEventCollectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_timeline_campaigns_api_bff_timeline_campaigns_get: {
+        parameters: {
+            query: {
+                persona_account_id: number;
+                since?: string | null;
+                until?: string | null;
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TimelineEventCollection"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineEventCollectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_timeline_trends_api_bff_timeline_trends_get: {
         parameters: {
             query: {
                 persona_account_id: number;

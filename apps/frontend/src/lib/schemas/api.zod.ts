@@ -712,7 +712,102 @@ export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetRespons
   "operators": zod.array(zod.string()).optional(),
   "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
   "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional(),
+  "payload": zod.record(zod.string(), zod.any()).optional()
+}).describe('Flow result that preserves payload info and emits merged events.')
+
+
+/**
+ * Retrieve timeline events sourced from campaign KPI results
+ * @summary Get Campaign KPI Timeline
+ */
+export const bffTimelineCampaignsApiBffTimelineCampaignsGetQueryLimitDefault = 200;
+
+export const bffTimelineCampaignsApiBffTimelineCampaignsGetQueryParams = zod.object({
+  "persona_account_id": zod.number(),
+  "since": zod.iso.datetime({}).nullish(),
+  "until": zod.iso.datetime({}).nullish(),
+  "limit": zod.union([zod.number(),zod.null()]).default(bffTimelineCampaignsApiBffTimelineCampaignsGetQueryLimitDefault)
+})
+
+export const bffTimelineCampaignsApiBffTimelineCampaignsGetBody = zod.union([zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
 }).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).describe('Container returned by source-specific timeline operators.'),zod.null()])
+
+export const bffTimelineCampaignsApiBffTimelineCampaignsGetResponse = zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional(),
+  "payload": zod.record(zod.string(), zod.any()).optional()
+}).describe('Flow result that preserves payload info and emits merged events.')
+
+
+/**
+ * Retrieve timeline events sourced from trends data
+ * @summary Get Trends Timeline
+ */
+export const bffTimelineTrendsApiBffTimelineTrendsGetQueryLimitDefault = 200;
+
+export const bffTimelineTrendsApiBffTimelineTrendsGetQueryParams = zod.object({
+  "persona_account_id": zod.number(),
+  "since": zod.iso.datetime({}).nullish(),
+  "until": zod.iso.datetime({}).nullish(),
+  "limit": zod.union([zod.number(),zod.null()]).default(bffTimelineTrendsApiBffTimelineTrendsGetQueryLimitDefault)
+})
+
+export const bffTimelineTrendsApiBffTimelineTrendsGetBody = zod.union([zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).describe('Container returned by source-specific timeline operators.'),zod.null()])
+
+export const bffTimelineTrendsApiBffTimelineTrendsGetResponse = zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional(),
+  "payload": zod.record(zod.string(), zod.any()).optional()
 }).describe('Flow result that preserves payload info and emits merged events.')
 
 

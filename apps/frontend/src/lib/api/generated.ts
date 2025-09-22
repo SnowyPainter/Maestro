@@ -1045,12 +1045,15 @@ export interface TimelineEventCollection {
   events?: TimelineEvent[];
 }
 
+export type TimelineEventCollectionOutPayload = { [key: string]: unknown };
+
 /**
  * Flow result that preserves payload info and emits merged events.
  */
 export interface TimelineEventCollectionOut {
   source: string;
   events?: TimelineEvent[];
+  payload?: TimelineEventCollectionOutPayload;
 }
 
 export interface TokenResponse {
@@ -1224,6 +1227,36 @@ limit?: number | null;
 };
 
 export type BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody = TimelineEventCollection | null;
+
+export type BffTimelineCampaignsApiBffTimelineCampaignsGetParams = {
+persona_account_id: number;
+/**
+ * @nullable
+ */
+since?: string | null;
+/**
+ * @nullable
+ */
+until?: string | null;
+limit?: number | null;
+};
+
+export type BffTimelineCampaignsApiBffTimelineCampaignsGetBody = TimelineEventCollection | null;
+
+export type BffTimelineTrendsApiBffTimelineTrendsGetParams = {
+persona_account_id: number;
+/**
+ * @nullable
+ */
+since?: string | null;
+/**
+ * @nullable
+ */
+until?: string | null;
+limit?: number | null;
+};
+
+export type BffTimelineTrendsApiBffTimelineTrendsGetBody = TimelineEventCollection | null;
 
 export type BffTrendsListTrendsApiBffTrendsGetParams = {
 country?: string;
@@ -3296,6 +3329,202 @@ export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryOptions(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve timeline events sourced from campaign KPI results
+ * @summary Get Campaign KPI Timeline
+ */
+export const bffTimelineCampaignsApiBffTimelineCampaignsGet = (
+    bffTimelineCampaignsApiBffTimelineCampaignsGetBody: BffTimelineCampaignsApiBffTimelineCampaignsGetBody,
+    params: BffTimelineCampaignsApiBffTimelineCampaignsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TimelineEventCollectionOut>(
+      {url: `/api/bff/timeline/campaigns`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffTimelineCampaignsApiBffTimelineCampaignsGetQueryKey = (bffTimelineCampaignsApiBffTimelineCampaignsGetBody?: BffTimelineCampaignsApiBffTimelineCampaignsGetBody,
+    params?: BffTimelineCampaignsApiBffTimelineCampaignsGetParams,) => {
+    return [`/api/bff/timeline/campaigns`, ...(params ? [params]: []), bffTimelineCampaignsApiBffTimelineCampaignsGetBody] as const;
+    }
+
+    
+export const getBffTimelineCampaignsApiBffTimelineCampaignsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError = HTTPValidationError>(bffTimelineCampaignsApiBffTimelineCampaignsGetBody: BffTimelineCampaignsApiBffTimelineCampaignsGetBody,
+    params: BffTimelineCampaignsApiBffTimelineCampaignsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffTimelineCampaignsApiBffTimelineCampaignsGetQueryKey(bffTimelineCampaignsApiBffTimelineCampaignsGetBody,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>> = ({ signal }) => bffTimelineCampaignsApiBffTimelineCampaignsGet(bffTimelineCampaignsApiBffTimelineCampaignsGetBody,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffTimelineCampaignsApiBffTimelineCampaignsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>>
+export type BffTimelineCampaignsApiBffTimelineCampaignsGetQueryError = HTTPValidationError
+
+
+export function useBffTimelineCampaignsApiBffTimelineCampaignsGet<TData = Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError = HTTPValidationError>(
+ bffTimelineCampaignsApiBffTimelineCampaignsGetBody: BffTimelineCampaignsApiBffTimelineCampaignsGetBody,
+    params: BffTimelineCampaignsApiBffTimelineCampaignsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineCampaignsApiBffTimelineCampaignsGet<TData = Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError = HTTPValidationError>(
+ bffTimelineCampaignsApiBffTimelineCampaignsGetBody: BffTimelineCampaignsApiBffTimelineCampaignsGetBody,
+    params: BffTimelineCampaignsApiBffTimelineCampaignsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineCampaignsApiBffTimelineCampaignsGet<TData = Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError = HTTPValidationError>(
+ bffTimelineCampaignsApiBffTimelineCampaignsGetBody: BffTimelineCampaignsApiBffTimelineCampaignsGetBody,
+    params: BffTimelineCampaignsApiBffTimelineCampaignsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Campaign KPI Timeline
+ */
+
+export function useBffTimelineCampaignsApiBffTimelineCampaignsGet<TData = Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError = HTTPValidationError>(
+ bffTimelineCampaignsApiBffTimelineCampaignsGetBody: BffTimelineCampaignsApiBffTimelineCampaignsGetBody,
+    params: BffTimelineCampaignsApiBffTimelineCampaignsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineCampaignsApiBffTimelineCampaignsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffTimelineCampaignsApiBffTimelineCampaignsGetQueryOptions(bffTimelineCampaignsApiBffTimelineCampaignsGetBody,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve timeline events sourced from trends data
+ * @summary Get Trends Timeline
+ */
+export const bffTimelineTrendsApiBffTimelineTrendsGet = (
+    bffTimelineTrendsApiBffTimelineTrendsGetBody: BffTimelineTrendsApiBffTimelineTrendsGetBody,
+    params: BffTimelineTrendsApiBffTimelineTrendsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TimelineEventCollectionOut>(
+      {url: `/api/bff/timeline/trends`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffTimelineTrendsApiBffTimelineTrendsGetQueryKey = (bffTimelineTrendsApiBffTimelineTrendsGetBody?: BffTimelineTrendsApiBffTimelineTrendsGetBody,
+    params?: BffTimelineTrendsApiBffTimelineTrendsGetParams,) => {
+    return [`/api/bff/timeline/trends`, ...(params ? [params]: []), bffTimelineTrendsApiBffTimelineTrendsGetBody] as const;
+    }
+
+    
+export const getBffTimelineTrendsApiBffTimelineTrendsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError = HTTPValidationError>(bffTimelineTrendsApiBffTimelineTrendsGetBody: BffTimelineTrendsApiBffTimelineTrendsGetBody,
+    params: BffTimelineTrendsApiBffTimelineTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffTimelineTrendsApiBffTimelineTrendsGetQueryKey(bffTimelineTrendsApiBffTimelineTrendsGetBody,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>> = ({ signal }) => bffTimelineTrendsApiBffTimelineTrendsGet(bffTimelineTrendsApiBffTimelineTrendsGetBody,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffTimelineTrendsApiBffTimelineTrendsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>>
+export type BffTimelineTrendsApiBffTimelineTrendsGetQueryError = HTTPValidationError
+
+
+export function useBffTimelineTrendsApiBffTimelineTrendsGet<TData = Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError = HTTPValidationError>(
+ bffTimelineTrendsApiBffTimelineTrendsGetBody: BffTimelineTrendsApiBffTimelineTrendsGetBody,
+    params: BffTimelineTrendsApiBffTimelineTrendsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineTrendsApiBffTimelineTrendsGet<TData = Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError = HTTPValidationError>(
+ bffTimelineTrendsApiBffTimelineTrendsGetBody: BffTimelineTrendsApiBffTimelineTrendsGetBody,
+    params: BffTimelineTrendsApiBffTimelineTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineTrendsApiBffTimelineTrendsGet<TData = Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError = HTTPValidationError>(
+ bffTimelineTrendsApiBffTimelineTrendsGetBody: BffTimelineTrendsApiBffTimelineTrendsGetBody,
+    params: BffTimelineTrendsApiBffTimelineTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Trends Timeline
+ */
+
+export function useBffTimelineTrendsApiBffTimelineTrendsGet<TData = Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError = HTTPValidationError>(
+ bffTimelineTrendsApiBffTimelineTrendsGetBody: BffTimelineTrendsApiBffTimelineTrendsGetBody,
+    params: BffTimelineTrendsApiBffTimelineTrendsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineTrendsApiBffTimelineTrendsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffTimelineTrendsApiBffTimelineTrendsGetQueryOptions(bffTimelineTrendsApiBffTimelineTrendsGetBody,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

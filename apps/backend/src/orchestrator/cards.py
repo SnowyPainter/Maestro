@@ -28,6 +28,8 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "PersonaAccountList": "account.persona_account.list",
 
     "TrendsListResponse": "trends.list",
+
+    "TimelineEventCollectionOut": "timeline.events.composed",
     
     "MessageOut": "info",
 }

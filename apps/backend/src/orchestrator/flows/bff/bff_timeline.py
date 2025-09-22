@@ -10,8 +10,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.common.enums import PostStatus
 from apps.backend.src.modules.drafts.schemas import PostPublicationOut
+from apps.backend.src.modules.campaigns.service import list_kpi_results
+from apps.backend.src.modules.trends.service import query_trends
 from apps.backend.src.orchestrator.adapters.timeline import (
     compose_timeline_collections,
+)
+from apps.backend.src.orchestrator.adapters.utils import (
+    safe_datetime_to_date,
+    _utcnow,
+    to_aware_utc,
 )
 from apps.backend.src.modules.drafts.service import (
     list_post_publications_by_account_persona,
@@ -33,20 +40,18 @@ TimelineQueryPayload(...ctx) -> PostPublication Timeline -> Adapter(TimelineQuer
 """
 
 
-def _filter_by_range(
-    events: Iterable[TimelineEvent],
-    *,
-    since: Optional[datetime],
-    until: Optional[datetime],
-) -> List[TimelineEvent]:
-    filtered: List[TimelineEvent] = []
-    for event in events:
-        if since and event.timestamp < since:
+def _filter_by_range(events: List[TimelineEvent], *, since: datetime | None, until: datetime | None) -> List[TimelineEvent]:
+    s = to_aware_utc(since)
+    u = to_aware_utc(until)
+    out: List[TimelineEvent] = []
+    for ev in events:
+        ts = to_aware_utc(ev.timestamp)
+        if s and ts < s:
             continue
-        if until and event.timestamp > until:
+        if u and ts > u:
             continue
-        filtered.append(event)
-    return filtered
+        out.append(ev)
+    return out
 
 
 def _post_publication_events(publication: PostPublicationOut) -> List[TimelineEvent]:
@@ -97,6 +102,166 @@ def _post_publication_events(publication: PostPublicationOut) -> List[TimelineEv
     return events
 
 
+def _campaign_kpi_events(kpi_result, account_persona_id: int) -> List[TimelineEvent]:
+    """Generate timeline events for campaign KPI results."""
+    base_payload = {
+        "campaign_id": kpi_result.campaign_id,
+        "as_of": kpi_result.as_of.isoformat(),
+        "values": kpi_result.values,
+    }
+    base_kwargs: Dict[str, object] = {
+        "persona_account_id": account_persona_id,
+        "source": "campaign_kpi",
+        "kind": "campaign.kpi_result",
+        "payload": {
+            "phase_source": "campaign_kpi",
+            "kpi_result": base_payload,
+        },
+        "operators": ("bff.timeline.campaigns",),
+        "correlation_keys": {
+            "campaign_id": str(kpi_result.campaign_id),
+        },
+        "origin_flow": "bff.timeline.campaigns",
+    }
+
+    events: List[TimelineEvent] = []
+
+    # Create event for KPI result recording
+    event = TimelineEvent(
+        event_id=f"campaign_kpi:{kpi_result.campaign_id}:{kpi_result.as_of.isoformat()}",
+        timestamp=kpi_result.as_of,
+        status="recorded",
+        **base_kwargs,
+    )
+    event.payload["phase"] = "recorded"
+    events.append(event)
+
+    return events
+
+
+def _trends_events(trends_data, account_persona_id: int, country: str) -> List[TimelineEvent]:
+    """Generate timeline events for trends data."""
+    events: List[TimelineEvent] = []
+
+    base_kwargs: Dict[str, object] = {
+        "persona_account_id": account_persona_id,
+        "source": "trends",
+        "kind": "trends.query_result",
+        "payload": {
+            "phase_source": "trends",
+            "country": country,
+            "source_type": trends_data.get("source"),
+        },
+        "operators": ("bff.timeline.trends",),
+        "correlation_keys": {
+            "country": country,
+        },
+        "origin_flow": "bff.timeline.trends",
+    }
+
+    # Create events for each trend item
+    for row in trends_data.get("rows", []):
+        timestamp = row.get("date") or _utcnow()
+        event = TimelineEvent(
+            event_id=f"trend:{country}:{row.get('keyword', 'unknown')}:{timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)}",
+            timestamp=timestamp if isinstance(timestamp, datetime) else _utcnow(),
+            status="queried",
+            **base_kwargs,
+        )
+        event.payload["trend_data"] = row
+        event.payload["phase"] = "queried"
+        events.append(event)
+
+    return events
+
+
+@operator(
+    key="bff.timeline.campaigns",
+    title="Timeline Events for Campaign KPIs",
+    side_effect="read",
+)
+async def op_timeline_campaigns(
+    payload: TimelineQueryPayload,
+    _ctx: TaskContext,
+    db: AsyncSession,
+) -> TimelineEventCollectionOut:
+    # For now, get campaigns for the account_persona_id
+    # This is a simplified version - in reality you might need to filter campaigns by owner
+    from apps.backend.src.modules.campaigns.service import list_campaigns
+
+    campaigns, _ = await list_campaigns(
+        db,
+        owner_user_id=payload.persona_account_id,  # Assuming persona_account_id maps to user_id
+        limit=50
+    )
+    since_date = safe_datetime_to_date(payload.since)
+    until_date = safe_datetime_to_date(payload.until)
+
+
+    events: List[TimelineEvent] = []
+    for campaign in campaigns:
+        # Get KPI results for each campaign
+        kpi_results = await list_kpi_results(
+            db,
+            campaign_id=campaign.id,
+            start=to_aware_utc(since_date),
+            end=to_aware_utc(until_date),
+            limit=100
+        )
+
+        for kpi_result in kpi_results:
+            events.extend(_campaign_kpi_events(kpi_result, payload.persona_account_id))
+
+    filtered = _filter_by_range(events, since=payload.since, until=payload.until)
+    combined = compose_timeline_collections([
+        payload.events,
+        TimelineEventCollection(source="campaigns", events=filtered),
+    ])
+
+    return TimelineEventCollectionOut(
+        source=combined.source,
+        payload=payload.model_dump(), #DO NOT exclude events
+        events=combined.events,
+    )
+
+
+@operator(
+    key="bff.timeline.trends",
+    title="Timeline Events for Trends",
+    side_effect="read",
+)
+async def op_timeline_trends(
+    payload: TimelineQueryPayload,
+    _ctx: TaskContext,
+    db: AsyncSession,
+) -> TimelineEventCollectionOut:
+    since_date = safe_datetime_to_date(payload.since)
+    until_date = safe_datetime_to_date(payload.until)
+
+    trends_data = await query_trends(
+        db,
+        country="US",  # Default country, could be from payload
+        limit=50,
+        q=None,
+        on_date=None,
+        since=to_aware_utc(since_date),
+        until=to_aware_utc(until_date),
+    )
+
+    events = _trends_events(trends_data, payload.persona_account_id, "US")
+
+    filtered = _filter_by_range(events, since=payload.since, until=payload.until)
+    combined = compose_timeline_collections([
+        payload.events,
+        TimelineEventCollection(source="trends", events=filtered),
+    ])
+
+    return TimelineEventCollectionOut(
+        source=combined.source,
+        payload=payload.model_dump(), #DO NOT exclude events
+        events=combined.events,
+    )
+
 @operator(
     key="bff.timeline.post_publications",
     title="Timeline Events for Post Publications",
@@ -125,6 +290,7 @@ async def op_timeline_post_publications(
 
     return TimelineEventCollectionOut(
         source=combined.source,
+        payload=payload.model_dump(), #DO NOT exclude events
         events=combined.events,
     )
 
@@ -141,6 +307,36 @@ async def op_timeline_post_publications(
 def _flow_bff_post_publications(builder: FlowBuilder) -> None:
     post_publications = builder.task("post_publications", "bff.timeline.post_publications")
     builder.expect_terminal(post_publications)
+
+
+@FLOWS.flow(
+    key="bff.timeline.campaigns",
+    title="Get Campaign KPI Timeline",
+    description="Retrieve timeline events sourced from campaign KPI results",
+    input_model=TimelineQueryPayload,
+    output_model=TimelineEventCollectionOut,
+    method="get",
+    path="/timeline/campaigns",
+    tags=("bff", "timeline", "ui", "frontend", "read"),
+)
+def _flow_bff_campaigns(builder: FlowBuilder) -> None:
+    campaigns = builder.task("campaigns", "bff.timeline.campaigns")
+    builder.expect_terminal(campaigns)
+
+
+@FLOWS.flow(
+    key="bff.timeline.trends",
+    title="Get Trends Timeline",
+    description="Retrieve timeline events sourced from trends data",
+    input_model=TimelineQueryPayload,
+    output_model=TimelineEventCollectionOut,
+    method="get",
+    path="/timeline/trends",
+    tags=("bff", "timeline", "ui", "frontend", "read"),
+)
+def _flow_bff_trends(builder: FlowBuilder) -> None:
+    trends = builder.task("trends", "bff.timeline.trends")
+    builder.expect_terminal(trends)
 
 
 __all__ = []
