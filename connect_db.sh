@@ -1,0 +1,1 @@
+docker exec -it maestro-postgres psql -U postgres -d maestro
