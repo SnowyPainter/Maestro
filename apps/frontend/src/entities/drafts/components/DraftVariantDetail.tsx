@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2, RefreshCw, AlertTriangle, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet, PlatformKind, RenderedMediaItem } from "@/lib/api/generated";
+import { useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet, PlatformKind, RenderedMediaItem, DraftVariantRenderDetail } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -136,19 +136,25 @@ function renderOptionValue(value: unknown): React.ReactNode {
 export function DraftVariantDetail({
   draftId,
   platform,
+  variantData,
 }: {
-  draftId: number;
-  platform: string;
+  draftId?: number;
+  platform?: string;
+  variantData?: DraftVariantRenderDetail;
 }) {
   const [mediaStartIndex, setMediaStartIndex] = useState(0);
-  const requestedPlatform = ensurePlatformKind(platform);
-  const normalizedPlatform = requestedPlatform ?? PlatformKind.instagram;
 
-  const { data, isLoading, isError, refetch } = useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet(draftId, normalizedPlatform, {
-    query: {
-      enabled: Boolean(draftId && requestedPlatform),
-    },
-  });
+  const requestedPlatform = platform ? ensurePlatformKind(platform) : undefined;
+  const normalizedPlatform = requestedPlatform ?? PlatformKind.instagram;
+  const { data, isLoading, isError, refetch } = useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet(
+    draftId!,
+    normalizedPlatform,
+    {
+      query: {
+        enabled: Boolean(draftId && requestedPlatform && !variantData),
+      },
+    }
+  );
 
   if (isLoading) {
     return (
@@ -161,7 +167,7 @@ export function DraftVariantDetail({
     );
   }
 
-  if (isError || !data) {
+  if (isError || (draftId && platform && !data) || (!variantData)) {
     return (
       <Card className="border-destructive/40">
         <CardHeader className="flex justify-between items-center">
@@ -178,12 +184,13 @@ export function DraftVariantDetail({
     );
   }
 
-  const kind = ensurePlatformKind(data.platform);
+  const displayData = variantData || data;
+  const kind = ensurePlatformKind(displayData.platform);
   const platformMeta = kind ? platformPresentation[kind] : null;
-  const warningCount = countListItems(data.warnings);
-  const errorCount = countListItems(data.errors);
-  const mediaItems = data.rendered_blocks?.media ?? [];
-  const options = data.rendered_blocks?.options as Record<string, unknown> | undefined;
+  const warningCount = countListItems(displayData.warnings);
+  const errorCount = countListItems(displayData.errors);
+  const mediaItems = displayData.rendered_blocks?.media ?? [];
+  const options = displayData.rendered_blocks?.options as Record<string, unknown> | undefined;
   const policyOptions = options?.policy as Record<string, unknown> | undefined;
   const compileOptions = options?.compile as Record<string, unknown> | undefined;
   const personaAdjustments = compileOptions?.persona as Record<string, unknown> | undefined;
@@ -224,7 +231,7 @@ export function DraftVariantDetail({
   const extraOptionEntries = options
     ? Object.entries(options).filter(([key]) => key !== "policy" && key !== "compile")
     : [];
-  const otherBlockEntries = Object.entries(data.rendered_blocks ?? {}).filter(
+  const otherBlockEntries = Object.entries(displayData.rendered_blocks ?? {}).filter(
     ([key]) => !["media", "options", "metrics"].includes(key)
   );
 
@@ -252,11 +259,11 @@ export function DraftVariantDetail({
       </TabsList>
 
       <TabsContent value="content" className="mt-4 space-y-4">
-        {data.rendered_caption && (
+        {displayData.rendered_caption && (
           <div>
             <h4 className="text-sm font-medium mb-1">Caption</h4>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85 break-words overflow-wrap-anywhere">
-              {data.rendered_caption}
+              {displayData.rendered_caption}
             </p>
           </div>
         )}
@@ -349,11 +356,11 @@ export function DraftVariantDetail({
       </TabsContent>
 
       <TabsContent value="analysis" className="mt-4 space-y-4">
-        {Boolean(data.metrics && Object.keys(data.metrics ?? {}).length) && (
+        {Boolean(displayData.metrics && Object.keys(displayData.metrics ?? {}).length) && (
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Metrics Snapshot</h4>
             <div className="grid gap-2 sm:grid-cols-2">
-              {Object.entries(data.metrics ?? {}).map(([key, value]) => (
+              {Object.entries(displayData.metrics ?? {}).map(([key, value]) => (
                 <div key={key} className="rounded bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground/80">{formatMetricKey(key)}</span>: {formatMetricValue(value)}
                 </div>
@@ -369,7 +376,7 @@ export function DraftVariantDetail({
               <div className="rounded border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
                 <p className="mb-2 font-semibold uppercase tracking-wide">Errors</p>
                 <ul className="list-disc space-y-1 pl-4">
-                  {(data.errors ?? []).map((err, idx) => (
+                  {(displayData.errors ?? []).map((err, idx) => (
                     <li key={`err-${idx}`} className="break-words overflow-wrap-anywhere">{err}</li>
                   ))}
                 </ul>
@@ -379,7 +386,7 @@ export function DraftVariantDetail({
               <div className="rounded border border-amber-300 bg-amber-100/40 p-3 text-xs text-amber-900">
                 <p className="mb-2 font-semibold uppercase tracking-wide">Warnings</p>
                 <ul className="list-disc space-y-1 pl-4">
-                  {(data.warnings ?? []).map((warn, idx) => (
+                  {(displayData.warnings ?? []).map((warn, idx) => (
                     <li key={`warn-${idx}`} className="break-words overflow-wrap-anywhere">{warn}</li>
                   ))}
                 </ul>
@@ -580,15 +587,15 @@ export function DraftVariantDetail({
             </span>
           ) : (
             <span className="px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
-              {data.platform}
+              {displayData.platform}
             </span>
           )}
           <Badge variant="outline" className="capitalize text-xs">
-            {data.status.toLowerCase()}
+            {displayData.status.toLowerCase()}
           </Badge>
         </div>
         <CardTitle className="text-base font-semibold">Platform Variant Detail</CardTitle>
-        <p className="text-xs text-muted-foreground">Compiled {formatCompiledAt(data.compiled_at)}</p>
+        <p className="text-xs text-muted-foreground">Compiled {formatCompiledAt(displayData.compiled_at)}</p>
       </CardHeader>
       <CardContent>
         {renderVariantContent()}

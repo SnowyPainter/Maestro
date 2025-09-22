@@ -737,6 +737,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/variants/{variant_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - variant
+      - detail
+      - ui
+      - frontend
+      summary: Get Draft Variant by ID
+      description: Retrieve rendered payload for a variant by its ID
+      operationId: bff_drafts_read_variant_by_id_api_bff_drafts_variants__variant_id__get
+      parameters:
+      - name: variant_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Variant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftVariantRenderDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/drafts/{draft_id}:
     get:
       tags:
@@ -851,11 +885,13 @@ paths:
       - bff
       - bff
       - timeline
-      - ui
-      - frontend
+      - post publications timeline
+      - time series
+      - schedules
+      - publishes
       - read
       summary: Get Post Publication Timeline
-      description: Retrieve timeline events sourced from post publications
+      description: Get timeline events sourced from post publications
       operationId: bff_timeline_post_publications_api_bff_timeline_post_publications_get
       parameters:
       - name: persona_account_id
@@ -916,11 +952,12 @@ paths:
       - bff
       - bff
       - timeline
-      - ui
-      - frontend
+      - campaigns timeline
+      - time series
+      - kpis
       - read
       summary: Get Campaign KPI Timeline
-      description: Retrieve timeline events sourced from campaign KPI results
+      description: Get timeline events sourced from campaign KPI results
       operationId: bff_timeline_campaigns_api_bff_timeline_campaigns_get
       parameters:
       - name: persona_account_id
@@ -981,11 +1018,12 @@ paths:
       - bff
       - bff
       - timeline
-      - ui
-      - frontend
+      - trends timeline
+      - time series
+      - trends
       - read
       summary: Get Trends Timeline
-      description: Retrieve timeline events sourced from trends data
+      description: Get timeline events sourced from trends data
       operationId: bff_timeline_trends_api_bff_timeline_trends_get
       parameters:
       - name: persona_account_id

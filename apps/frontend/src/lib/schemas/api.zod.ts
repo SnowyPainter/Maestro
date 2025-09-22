@@ -577,6 +577,43 @@ export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetResponse 
 
 
 /**
+ * Retrieve rendered payload for a variant by its ID
+ * @summary Get Draft Variant by ID
+ */
+export const bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetParams = zod.object({
+  "variant_id": zod.number()
+})
+
+export const bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetResponse = zod.object({
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.string(),
+  "status": zod.string(),
+  "compiled_at": zod.iso.datetime({}).nullish(),
+  "rendered_caption": zod.string().nullish(),
+  "rendered_blocks": zod.union([zod.object({
+  "media": zod.array(zod.object({
+  "type": zod.enum(['image', 'video']).optional(),
+  "url": zod.string().optional(),
+  "alt": zod.string().nullish(),
+  "caption": zod.string().nullish(),
+  "ratio": zod.string().nullish()
+})).optional(),
+  "options": zod.record(zod.string(), zod.any()).optional(),
+  "metrics": zod.record(zod.string(), zod.any()).optional()
+}),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "compiler_version": zod.number(),
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_status": zod.string().nullish(),
+  "post_publication_scheduled_at": zod.iso.datetime({}).nullish()
+})
+
+
+/**
  * Show the draft content
  * @summary Get Draft Content
  */
@@ -671,7 +708,7 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
 
 
 /**
- * Retrieve timeline events sourced from post publications
+ * Get timeline events sourced from post publications
  * @summary Get Post Publication Timeline
  */
 export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryLimitDefault = 200;
@@ -718,7 +755,7 @@ export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetRespons
 
 
 /**
- * Retrieve timeline events sourced from campaign KPI results
+ * Get timeline events sourced from campaign KPI results
  * @summary Get Campaign KPI Timeline
  */
 export const bffTimelineCampaignsApiBffTimelineCampaignsGetQueryLimitDefault = 200;
@@ -765,7 +802,7 @@ export const bffTimelineCampaignsApiBffTimelineCampaignsGetResponse = zod.object
 
 
 /**
- * Retrieve timeline events sourced from trends data
+ * Get timeline events sourced from trends data
  * @summary Get Trends Timeline
  */
 export const bffTimelineTrendsApiBffTimelineTrendsGetQueryLimitDefault = 200;

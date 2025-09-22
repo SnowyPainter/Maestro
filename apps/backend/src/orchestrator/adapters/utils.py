@@ -1,7 +1,7 @@
 """Utility functions for adapters."""
 
 from typing import Any, Iterable, Mapping, Sequence, Optional
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timezone, timedelta
 from pydantic import ValidationError
 
 from apps.backend.src.modules.trends.schemas import TrendsListResponse
@@ -30,7 +30,6 @@ def safe_datetime_to_date(dt: Optional[datetime]) -> Optional[date]:
     else:
         # Timezone-naive, get date directly
         return dt.date()
-
 
 def to_aware_utc(v: datetime | date | None) -> datetime | None:
     if v is None:

@@ -384,6 +384,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/drafts/variants/{variant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Draft Variant by ID
+         * @description Retrieve rendered payload for a variant by its ID
+         */
+        get: operations["bff_drafts_read_variant_by_id_api_bff_drafts_variants__variant_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/drafts/{draft_id}": {
         parameters: {
             query?: never;
@@ -453,7 +473,7 @@ export interface paths {
         };
         /**
          * Get Post Publication Timeline
-         * @description Retrieve timeline events sourced from post publications
+         * @description Get timeline events sourced from post publications
          */
         get: operations["bff_timeline_post_publications_api_bff_timeline_post_publications_get"];
         put?: never;
@@ -473,7 +493,7 @@ export interface paths {
         };
         /**
          * Get Campaign KPI Timeline
-         * @description Retrieve timeline events sourced from campaign KPI results
+         * @description Get timeline events sourced from campaign KPI results
          */
         get: operations["bff_timeline_campaigns_api_bff_timeline_campaigns_get"];
         put?: never;
@@ -493,7 +513,7 @@ export interface paths {
         };
         /**
          * Get Trends Timeline
-         * @description Retrieve timeline events sourced from trends data
+         * @description Get timeline events sourced from trends data
          */
         get: operations["bff_timeline_trends_api_bff_timeline_trends_get"];
         put?: never;
@@ -2926,6 +2946,37 @@ export interface operations {
             path: {
                 draft_id: number;
                 platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftVariantRenderDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_read_variant_by_id_api_bff_drafts_variants__variant_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                variant_id: number;
             };
             cookie?: never;
         };

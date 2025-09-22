@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, RootModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from apps.backend.src.modules.adapters.core.types import (
     RenderedMetrics,
@@ -54,6 +55,9 @@ class DraftVariantsByPlatformPayload(BaseModel):
 class DraftVariantDetailPayload(BaseModel):
     draft_id: int
     platform: PlatformKind
+
+class DraftVariantByIdPayload(BaseModel):
+    variant_id: int
 
 class DraftList(RootModel[list[DraftOut]]):
     pass
@@ -283,6 +287,38 @@ async def op_read_draft_variant(
         persona_account_id=persona_account_id,
     )
 
+
+@operator(
+    key="bff.drafts.read_variant_by_id",
+    title="BFF Read Draft Variant by Variant ID",
+    side_effect="read",
+)
+async def op_read_draft_variant_by_id(
+    payload: DraftVariantByIdPayload,
+    ctx: TaskContext,
+) -> DraftVariantRenderDetail:
+    persona_account_id = _parse_persona_account_id(ctx)
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    # Get variant by ID with draft ownership check and eager load publications
+    stmt = (
+        select(DraftVariant)
+        .join(Draft, DraftVariant.draft_id == Draft.id)
+        .where(DraftVariant.id == payload.variant_id)
+        .where(Draft.user_id == user.id)
+        .options(selectinload(DraftVariant.publications))
+    )
+    variant = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not variant:
+        raise HTTPException(status_code=404, detail="Variant not found")
+
+    return DraftVariantRenderDetail.from_model(
+        variant,
+        persona_account_id=persona_account_id,
+    )
+
 @operator(
     key="bff.drafts.list_post_publications_by_variant",
     title="BFF List Post Publications by Variant",
@@ -412,7 +448,6 @@ def _flow_bff_list_draft_variants(builder: FlowBuilder):
     task = builder.task("list_draft_variants", "bff.drafts.list_variants")
     builder.expect_terminal(task)
 
-
 @FLOWS.flow(
     key="bff.drafts.read_variant",
     title="Get Draft Variant Detail",
@@ -425,6 +460,20 @@ def _flow_bff_list_draft_variants(builder: FlowBuilder):
 )
 def _flow_bff_read_draft_variant(builder: FlowBuilder):
     task = builder.task("read_draft_variant", "bff.drafts.read_variant")
+    builder.expect_terminal(task)
+
+@FLOWS.flow(
+    key="bff.drafts.read_variant_by_id",
+    title="Get Draft Variant by ID",
+    description="Retrieve rendered payload for a variant by its ID",
+    input_model=DraftVariantByIdPayload,
+    output_model=DraftVariantRenderDetail,
+    method="get",
+    path="/drafts/variants/{variant_id}",
+    tags=("bff", "drafts", "content", "variant", "detail", "ui", "frontend"),
+)
+def _flow_bff_read_draft_variant_by_id(builder: FlowBuilder):
+    task = builder.task("read_draft_variant_by_id", "bff.drafts.read_variant_by_id")
     builder.expect_terminal(task)
 
 @FLOWS.flow(

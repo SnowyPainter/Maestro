@@ -48,3 +48,19 @@ slots:
     flows:
       - bff.campaigns.list_campaigns
       - bff.trends.list_trends
+  - name: since
+    label: Since
+    description: "Set a since date (e.g. @since:2025-01-01)."
+    value_type: date
+    flows:
+      - bff.timeline.trends
+      - bff.timeline.post_publications
+      - bff.timeline.campaigns
+  - name: until
+    label: Until
+    description: "Set a until date (e.g. @until:2025-01-01)."
+    value_type: date
+    flows:
+      - bff.timeline.trends
+      - bff.timeline.post_publications
+      - bff.timeline.campaigns

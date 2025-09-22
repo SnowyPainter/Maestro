@@ -67,7 +67,9 @@ def timeline_result_adapter(source: Any, base_payload: Dict[str, Any]) -> Dict[s
     existing_events = payload.get("events")
     combined = compose_timeline_collections([existing_events, result.events])
     payload["events"] = combined
-    
+    payload["since"] = result.payload.get("since")
+    payload["until"] = payload.get("until", result.payload.get("until"))
+
     # Validate and return the accumulated TimelineQueryPayload
     validated_payload = TimelineQueryPayload.model_validate(payload)
     return validated_payload.model_dump()

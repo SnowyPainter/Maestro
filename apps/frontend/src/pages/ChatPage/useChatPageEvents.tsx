@@ -6,6 +6,7 @@ import {
   TrendsListResponse,
   bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet,
   DraftVariantRender,
+  ChatCard,
 } from "@/lib/api/generated";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
@@ -434,7 +435,14 @@ export function useChatPageEvents() {
         addTextMessage(message, 'bot');
       });
 
+      // Group cards by card_type and only render the last one for each type
+      const cardsByType = new Map<string, ChatCard>();
       response.cards?.forEach(card => {
+        cardsByType.set(card.card_type, card);
+      });
+
+      // Render only the last card for each card_type
+      cardsByType.forEach(card => {
         addCardMessage(messageId => renderCardByType(card, {
           messageId,
           callbacks: {

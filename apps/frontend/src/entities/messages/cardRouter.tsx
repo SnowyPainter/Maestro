@@ -19,6 +19,8 @@ import { PersonaAccountList } from "../accounts/components/PersonaAccountList";
 import { PersonaAccountCard } from "../accounts/components/PersonaAccountCard";
 import { DraftVariantList } from "../drafts/components/DraftVariantList";
 import { DraftVariantDetail } from "../drafts/components/DraftVariantDetail";
+import { TimelineCard } from "@/entities/timeline/components/TimelineCard";
+import { TimelineEvent } from "@/entities/timeline/model/types";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -41,8 +43,11 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
   const { card_type, data, title } = card;
   const messageId = options?.messageId ?? -1;
   const callbacks = options?.callbacks ?? {};
+  
+  if (card_type === 'timeline.events.composed' && data?.events) {
+    return <TimelineCard title={title || "Timeline"} events={data.events as TimelineEvent[]} />;
+  }
 
-  // Trends 카드 특별 처리
   if (card_type === 'trends' || (data && data.source && data.items)) {
     return <TrendResultCard query={title || "Trends"} results={data as unknown as TrendsListResponse} />;
   }

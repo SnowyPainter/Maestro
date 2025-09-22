@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Iterable
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 class TimelineEvent(BaseModel):
     """Normalized representation for a single timeline datapoint."""
@@ -60,7 +60,7 @@ class TimelineQueryPayload(BaseModel):
     since: Optional[datetime] = None
     until: Optional[datetime] = None
     limit: Optional[int] = Field(default=200, ge=1, le=2000)
-    events: Optional[TimelineEventCollection] = Field(default=None, exclude=False)
+    events: Optional["TimelineEventCollection"] = Field(default=None, exclude=False)
 
 class TimelineEventCollectionOut(TimelineEventCollection):
     """Flow result that preserves payload info and emits merged events."""

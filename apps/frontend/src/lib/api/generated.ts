@@ -2975,6 +2975,95 @@ export function useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet<TD
 
 
 /**
+ * Retrieve rendered payload for a variant by its ID
+ * @summary Get Draft Variant by ID
+ */
+export const bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet = (
+    variantId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftVariantRenderDetail>(
+      {url: `/api/bff/drafts/variants/${variantId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetQueryKey = (variantId?: number,) => {
+    return [`/api/bff/drafts/variants/${variantId}`] as const;
+    }
+
+    
+export const getBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetQueryOptions = <TData = Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError = HTTPValidationError>(variantId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetQueryKey(variantId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>> = ({ signal }) => bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet(variantId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(variantId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>>
+export type BffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetQueryError = HTTPValidationError
+
+
+export function useBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError = HTTPValidationError>(
+ variantId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError = HTTPValidationError>(
+ variantId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError = HTTPValidationError>(
+ variantId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Draft Variant by ID
+ */
+
+export function useBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet<TData = Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError = HTTPValidationError>(
+ variantId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetQueryOptions(variantId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Show the draft content
  * @summary Get Draft Content
  */
@@ -3243,7 +3332,7 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
 
 
 /**
- * Retrieve timeline events sourced from post publications
+ * Get timeline events sourced from post publications
  * @summary Get Post Publication Timeline
  */
 export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet = (
@@ -3341,7 +3430,7 @@ export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<
 
 
 /**
- * Retrieve timeline events sourced from campaign KPI results
+ * Get timeline events sourced from campaign KPI results
  * @summary Get Campaign KPI Timeline
  */
 export const bffTimelineCampaignsApiBffTimelineCampaignsGet = (
@@ -3439,7 +3528,7 @@ export function useBffTimelineCampaignsApiBffTimelineCampaignsGet<TData = Awaite
 
 
 /**
- * Retrieve timeline events sourced from trends data
+ * Get timeline events sourced from trends data
  * @summary Get Trends Timeline
  */
 export const bffTimelineTrendsApiBffTimelineTrendsGet = (

@@ -241,7 +241,7 @@ async def op_timeline_trends(
     trends_data = await query_trends(
         db,
         country="US",  # Default country, could be from payload
-        limit=50,
+        limit=payload.limit,
         q=None,
         on_date=None,
         since=to_aware_utc(since_date),
@@ -297,12 +297,12 @@ async def op_timeline_post_publications(
 @FLOWS.flow(
     key="bff.timeline.post_publications",
     title="Get Post Publication Timeline",
-    description="Retrieve timeline events sourced from post publications",
+    description="Get timeline events sourced from post publications",
     input_model=TimelineQueryPayload,
     output_model=TimelineEventCollectionOut,
     method="get",
     path="/timeline/post-publications",
-    tags=("bff", "timeline", "ui", "frontend", "read"),
+    tags=("bff", "timeline", "post publications timeline", "time series", "schedules" ,"publishes" ,"read"),
 )
 def _flow_bff_post_publications(builder: FlowBuilder) -> None:
     post_publications = builder.task("post_publications", "bff.timeline.post_publications")
@@ -312,12 +312,12 @@ def _flow_bff_post_publications(builder: FlowBuilder) -> None:
 @FLOWS.flow(
     key="bff.timeline.campaigns",
     title="Get Campaign KPI Timeline",
-    description="Retrieve timeline events sourced from campaign KPI results",
+    description="Get timeline events sourced from campaign KPI results",
     input_model=TimelineQueryPayload,
     output_model=TimelineEventCollectionOut,
     method="get",
     path="/timeline/campaigns",
-    tags=("bff", "timeline", "ui", "frontend", "read"),
+    tags=("bff", "timeline", "campaigns timeline", "time series", "kpis" ,"read"),
 )
 def _flow_bff_campaigns(builder: FlowBuilder) -> None:
     campaigns = builder.task("campaigns", "bff.timeline.campaigns")
@@ -327,12 +327,12 @@ def _flow_bff_campaigns(builder: FlowBuilder) -> None:
 @FLOWS.flow(
     key="bff.timeline.trends",
     title="Get Trends Timeline",
-    description="Retrieve timeline events sourced from trends data",
+    description="Get timeline events sourced from trends data",
     input_model=TimelineQueryPayload,
     output_model=TimelineEventCollectionOut,
     method="get",
     path="/timeline/trends",
-    tags=("bff", "timeline", "ui", "frontend", "read"),
+    tags=("bff", "timeline", "trends timeline", "time series", "trends" ,"read"),
 )
 def _flow_bff_trends(builder: FlowBuilder) -> None:
     trends = builder.task("trends", "bff.timeline.trends")

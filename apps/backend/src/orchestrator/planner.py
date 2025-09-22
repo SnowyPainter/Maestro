@@ -8,7 +8,7 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, Tuple, Union
 
 from pydantic import BaseModel, ValidationError
 
@@ -17,6 +17,61 @@ from .cards import card_type_for_model
 from .nlp import nlp_engine
 from .persona_context import persona_context_defaults
 from .registry import FLOWS, FlowDefinition
+
+from typing import Any, Dict, Optional, get_origin, get_args
+from datetime import datetime, date, time, timezone
+try:
+    # Pydantic v2
+    from pydantic import TypeAdapter
+    def _cast_to_type(tp, value):
+        # Optional[T] 처리
+        origin = get_origin(tp)
+        if origin is Optional or origin is Union:
+            args = [a for a in get_args(tp) if a is not type(None)]
+            if args:
+                tp = args[0]
+        # datetime/date 특수 처리(느슨한 문자열 허용)
+        if tp is datetime and isinstance(value, str):
+            # 'YYYY-MM-DD'만 온 경우 자정으로 보정 (UTC or 원하는 TZ)
+            try:
+                if len(value) == 10:
+                    d = date.fromisoformat(value)
+                    return datetime.combine(d, time.min)  # 필요시 .replace(tzinfo=timezone.utc)
+                return datetime.fromisoformat(value)
+            except ValueError:
+                # TypeAdapter에 한 번 더 맡겨보기(포맷이 잘 맞으면 여기서 통과)
+                return TypeAdapter(tp).validate_python(value)
+        if tp is date and isinstance(value, str):
+            try:
+                return date.fromisoformat(value)
+            except ValueError:
+                return TypeAdapter(tp).validate_python(value)
+        # 그 외 타입은 TypeAdapter로 위임(숫자/부울 등 느슨한 캐스팅)
+        return TypeAdapter(tp).validate_python(value)
+except ImportError:
+    # Pydantic v1
+    from pydantic import parse_obj_as
+    def _cast_to_type(tp, value):
+        origin = get_origin(tp)
+        if origin is Optional or origin is Union:
+            args = [a for a in get_args(tp) if a is not type(None)]
+            if args:
+                tp = args[0]
+        if tp is datetime and isinstance(value, str):
+            try:
+                if len(value) == 10:
+                    d = date.fromisoformat(value)
+                    return datetime.combine(d, time.min)
+                return datetime.fromisoformat(value)
+            except ValueError:
+                return parse_obj_as(tp, value)
+        if tp is date and isinstance(value, str):
+            try:
+                return date.fromisoformat(value)
+            except ValueError:
+                return parse_obj_as(tp, value)
+        return parse_obj_as(tp, value)
+
 
 logger = logging.getLogger(__name__)
 
@@ -434,34 +489,48 @@ class FlowPlanner:
         slots: Dict[str, Any],
         message: str,
     ) -> Optional[Dict[str, Any]]:
-        fields = self._model_fields(model_cls)
+        fields = self._model_fields(model_cls)  # pydantic FieldInfo 사전이라고 가정
         data: Dict[str, Any] = {}
 
-        for name in fields.keys():
+        for name, field in fields.items():
             if name in slots:
-                data[name] = slots[name]
+                v = slots[name]
+                try:
+                    data[name] = _cast_to_type(field.annotation, v)
+                except Exception:
+                    data[name] = v
                 continue
+
             plural = f"{name}s"
             if plural in slots and isinstance(slots[plural], list) and slots[plural]:
-                data[name] = slots[plural][0]
+                v = slots[plural][0]
+                try:
+                    data[name] = _cast_to_type(field.annotation, v)
+                except Exception:
+                    data[name] = v
                 continue
+
             if name == "title":
-                data[name] = message[:50].strip() or "Untitled"
+                data[name] = (message[:50].strip() or "Untitled")
                 continue
+
             if name == "ir":
                 data[name] = self._default_draft_ir(message)
                 continue
-            # skip optional fields (will be handled by model defaults)
+            # 나머지 optional은 모델 기본값에 맡김
 
+        # persona 컨텍스트 기본값 주입(이미 있는 키는 건드리지 않음)
         context_defaults = self._persona_context_defaults(fields)
         for key, value in context_defaults.items():
             data.setdefault(key, value)
 
+        # 최종 모델 검증(여기서 한 번 더 안전망)
         try:
             model_cls(**data)
         except ValidationError:
             return None
         return data
+
 
     def _persona_context_defaults(self, fields: Mapping[str, Any]) -> Dict[str, Any]:
         return persona_context_defaults(fields)
