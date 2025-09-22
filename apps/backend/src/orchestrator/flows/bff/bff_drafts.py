@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, RootModel
@@ -14,14 +14,18 @@ from apps.backend.src.modules.adapters.core.types import (
     RenderedMetrics,
     RenderedVariantBlocks,
 )
-from apps.backend.src.modules.common.enums import PlatformKind
+from apps.backend.src.modules.common.enums import PlatformKind, PostStatus
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant
-from apps.backend.src.modules.drafts.schemas import DraftOut
+from apps.backend.src.modules.drafts.schemas import DraftOut, PostPublicationOut
 from apps.backend.src.modules.drafts.service import (
     get_draft_for_user,
     get_draft_variant,
     list_draft_variants,
     list_draft_variants_by_platform,
+    list_post_publications_by_variant,
+    list_post_publications_by_platform,
+    list_post_publications_by_status,
+    list_post_publications_by_account_persona,
 )
 from apps.backend.src.modules.users.models import User
 
@@ -36,12 +40,10 @@ from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 class DraftReadPayload(BaseModel):
     draft_id: int
 
-
 class DraftListPayload(BaseModel):
     campaign_id: Optional[int] = None
     limit: int = 20
     offset: int = 0
-
 
 class DraftVariantsPayload(BaseModel):
     draft_id: int
@@ -53,8 +55,22 @@ class DraftVariantDetailPayload(BaseModel):
     draft_id: int
     platform: PlatformKind
 
-
 class DraftList(RootModel[list[DraftOut]]):
+    pass
+
+class DraftPostPublicationsPayload(BaseModel):
+    account_persona_id: int
+
+class DraftPostPublicationsByVariantPayload(DraftPostPublicationsPayload):
+    variant_id: int
+
+class DraftPostPublicationsByPlatformPayload(DraftPostPublicationsPayload):
+    platform: List[PlatformKind]
+
+class DraftPostPublicationsByStatusPayload(DraftPostPublicationsPayload):
+    status: List[PostStatus]
+
+class DraftPostPublicationsList(RootModel[list[PostPublicationOut]]):
     pass
 
 
@@ -267,6 +283,120 @@ async def op_read_draft_variant(
         persona_account_id=persona_account_id,
     )
 
+@operator(
+    key="bff.drafts.list_post_publications_by_variant",
+    title="BFF List Post Publications by Variant",
+    side_effect="read",
+)
+async def op_list_post_publications_by_variant(
+    payload: DraftPostPublicationsByVariantPayload,
+    ctx: TaskContext,
+) -> DraftPostPublicationsList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    publications = await list_post_publications_by_variant(
+        db,
+        variant_id=payload.variant_id,
+        account_persona_id=payload.account_persona_id,
+    )
+    return DraftPostPublicationsList(root=[PostPublicationOut.model_validate(publication) for publication in publications])
+
+@operator(
+    key="bff.drafts.list_post_publications_by_platform",
+    title="BFF List Post Publications by Platform",
+    side_effect="read",
+)
+async def op_list_post_publications_by_platform(
+    payload: DraftPostPublicationsByPlatformPayload,
+    ctx: TaskContext,
+) -> DraftPostPublicationsList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    publications = await list_post_publications_by_platform(
+        db,
+        account_persona_id=payload.account_persona_id,
+        platform=payload.platform,
+    )
+    return DraftPostPublicationsList(root=[PostPublicationOut.model_validate(publication) for publication in publications])
+
+@operator(
+    key="bff.drafts.list_post_publications_by_status",
+    title="BFF List Post Publications by Status",
+    side_effect="read",
+)
+async def op_list_post_publications_by_status(
+    payload: DraftPostPublicationsByStatusPayload,
+    ctx: TaskContext,
+) -> DraftPostPublicationsList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    publications = await list_post_publications_by_status(
+        db,
+        account_persona_id=payload.account_persona_id,
+        status=payload.status,
+    )
+    return DraftPostPublicationsList(root=[PostPublicationOut.model_validate(publication) for publication in publications])
+
+"""
+Payload 중 query string으로 불가한 것은 bff에서 불가피하게 post 요청
+"""
+
+@FLOWS.flow(
+    key="bff.drafts.list_post_publications_by_variant",
+    title="List Post Publications by Variant",
+    description="List all post publications for a specific variant",
+    input_model=DraftPostPublicationsByVariantPayload,
+    output_model=DraftPostPublicationsList,
+    method="post",
+    path="/drafts/post-publications/variant",
+    tags=("bff", "drafts", "content", "post-publications", "list", "by variant"),
+)
+def _flow_bff_list_post_publications_by_variant(builder: FlowBuilder):
+    task = builder.task("list_post_publications_by_variant", "bff.drafts.list_post_publications_by_variant")
+    builder.expect_terminal(task)
+
+@FLOWS.flow(
+    key="bff.drafts.list_post_publications_by_platform",
+    title="List Post Publications by Platform",
+    description="List all post publications for a specific platform",
+    input_model=DraftPostPublicationsByPlatformPayload,
+    output_model=DraftPostPublicationsList,
+    method="post",
+    path="/drafts/post-publications/platform",
+    tags=("bff", "drafts", "content", "post-publications", "list", "by platform"),
+)
+def _flow_bff_list_post_publications_by_platform(builder: FlowBuilder):
+    task = builder.task("list_post_publications_by_platform", "bff.drafts.list_post_publications_by_platform")
+    builder.expect_terminal(task)
+
+@FLOWS.flow(
+    key="bff.drafts.list_post_publications_by_status",
+    title="List Post Publications by Status",
+    description="List all post publications for a specific status",
+    input_model=DraftPostPublicationsByStatusPayload,
+    output_model=DraftPostPublicationsList,
+    method="post",
+    path="/drafts/post-publications/status",
+    tags=("bff", "drafts", "content", "post-publications", "list", "by status"),
+)
+def _flow_bff_list_post_publications_by_status(builder: FlowBuilder):
+    task = builder.task("list_post_publications_by_status", "bff.drafts.list_post_publications_by_status")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.drafts.list_variants_by_platform",
+    title="List Draft Variants by Platform",
+    description="List all variants of a draft for a specific platform",
+    input_model=DraftVariantsByPlatformPayload,
+    output_model=DraftVariantRenderList,
+    method="get",
+    path="/drafts/platform/{platform}",
+    tags=("bff", "drafts", "content", "variants", "list", "by platform"),
+)
+def _flow_bff_list_draft_variants_by_platform(builder: FlowBuilder):
+    task = builder.task("list_draft_variants_by_platform", "bff.drafts.list_variants_by_platform")
+    builder.expect_terminal(task)
 
 @FLOWS.flow(
     key="bff.drafts.list_variants",
@@ -309,20 +439,6 @@ def _flow_bff_read_draft_variant(builder: FlowBuilder):
 )
 def _flow_bff_read_draft(builder: FlowBuilder):
     task = builder.task("read_draft", "bff.drafts.read_draft")
-    builder.expect_terminal(task)
-
-@FLOWS.flow(
-    key="bff.drafts.list_variants_by_platform",
-    title="List Draft Variants by Platform",
-    description="List all variants of a draft for a specific platform",
-    input_model=DraftVariantsByPlatformPayload,
-    output_model=DraftVariantRenderList,
-    method="get",
-    path="/drafts/platform/{platform}",
-    tags=("bff", "drafts", "content", "variants", "list", "by platform"),
-)
-def _flow_bff_list_draft_variants_by_platform(builder: FlowBuilder):
-    task = builder.task("list_draft_variants_by_platform", "bff.drafts.list_variants_by_platform")
     builder.expect_terminal(task)
 
 @FLOWS.flow(
