@@ -55,20 +55,6 @@ export interface BlockVideo {
   props: BlockVideoProps;
 }
 
-export type BodyBffTimelineListApiBffTimelineGetEvents = TimelineEventCollection | null;
-
-export interface BodyBffTimelineListApiBffTimelineGet {
-  sources?: TimelineSource[];
-  events?: BodyBffTimelineListApiBffTimelineGetEvents;
-}
-
-export type BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetEvents = TimelineEventCollection | null;
-
-export interface BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet {
-  sources?: TimelineSource[];
-  events?: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetEvents;
-}
-
 export type CampaignAggregationCommandCampaignId = number | null;
 
 export interface CampaignAggregationCommand {
@@ -1055,31 +1041,17 @@ export interface TimelineEvent {
  * Container returned by source-specific timeline operators.
  */
 export interface TimelineEventCollection {
+  source: string;
   events?: TimelineEvent[];
 }
-
-export type TimelineOutPayload = { [key: string]: unknown };
 
 /**
  * Flow result that preserves payload info and emits merged events.
  */
-export interface TimelineOut {
-  payload?: TimelineOutPayload;
-  events?: TimelineEventCollection;
-  generated_at: string;
-  total_events: number;
+export interface TimelineEventCollectionOut {
+  source: string;
+  events?: TimelineEvent[];
 }
-
-/**
- * Enumerates timeline-capable data sources.
- */
-export type TimelineSource = typeof TimelineSource[keyof typeof TimelineSource];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TimelineSource = {
-  post_publications: 'post_publications',
-} as const;
 
 export interface TokenResponse {
   access_token: string;
@@ -1251,18 +1223,7 @@ until?: string | null;
 limit?: number | null;
 };
 
-export type BffTimelineListApiBffTimelineGetParams = {
-persona_account_id: number;
-/**
- * @nullable
- */
-since?: string | null;
-/**
- * @nullable
- */
-until?: string | null;
-limit?: number | null;
-};
+export type BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody = TimelineEventCollection | null;
 
 export type BffTrendsListTrendsApiBffTrendsGetParams = {
 country?: string;
@@ -3253,13 +3214,13 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
  * @summary Get Post Publication Timeline
  */
 export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet = (
-    bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,
     params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
       
-      return apiFetch<TimelineOut>(
+      return apiFetch<TimelineEventCollectionOut>(
       {url: `/api/bff/timeline/post-publications`, method: 'GET',
       headers: {'Content-Type': 'application/json', },
         params, signal
@@ -3268,23 +3229,23 @@ export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet = (
     }
   
 
-export const getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryKey = (bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet?: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+export const getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryKey = (bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody?: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,
     params?: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams,) => {
-    return [`/api/bff/timeline/post-publications`, ...(params ? [params]: []), bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet] as const;
+    return [`/api/bff/timeline/post-publications`, ...(params ? [params]: []), bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody] as const;
     }
 
     
-export const getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+export const getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,
     params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryKey(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,params);
+  const queryKey =  queryOptions?.queryKey ?? getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryKey(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>> = ({ signal }) => bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>> = ({ signal }) => bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,params, requestOptions, signal);
 
       
 
@@ -3298,7 +3259,7 @@ export type BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryErr
 
 
 export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
- bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+ bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,
     params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>,
@@ -3309,7 +3270,7 @@ export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
- bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+ bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,
     params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>,
@@ -3320,7 +3281,7 @@ export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
- bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+ bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,
     params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -3329,110 +3290,12 @@ export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<
  */
 
 export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
- bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+ bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,
     params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryOptions(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,params,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * Compose multi-source timeline events for a persona
- * @summary Get Persona Timeline
- */
-export const bffTimelineListApiBffTimelineGet = (
-    bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
-    params: BffTimelineListApiBffTimelineGetParams,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<TimelineOut>(
-      {url: `/api/bff/timeline`, method: 'GET',
-      headers: {'Content-Type': 'application/json', },
-        params, signal
-    },
-      options);
-    }
-  
-
-export const getBffTimelineListApiBffTimelineGetQueryKey = (bodyBffTimelineListApiBffTimelineGet?: BodyBffTimelineListApiBffTimelineGet,
-    params?: BffTimelineListApiBffTimelineGetParams,) => {
-    return [`/api/bff/timeline`, ...(params ? [params]: []), bodyBffTimelineListApiBffTimelineGet] as const;
-    }
-
-    
-export const getBffTimelineListApiBffTimelineGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
-    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getBffTimelineListApiBffTimelineGetQueryKey(bodyBffTimelineListApiBffTimelineGet,params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>> = ({ signal }) => bffTimelineListApiBffTimelineGet(bodyBffTimelineListApiBffTimelineGet,params, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type BffTimelineListApiBffTimelineGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>>
-export type BffTimelineListApiBffTimelineGetQueryError = HTTPValidationError
-
-
-export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
- bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
-    params: BffTimelineListApiBffTimelineGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
- bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
-    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
- bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
-    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Persona Timeline
- */
-
-export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
- bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
-    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getBffTimelineListApiBffTimelineGetQueryOptions(bodyBffTimelineListApiBffTimelineGet,params,options)
+  const queryOptions = getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryOptions(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

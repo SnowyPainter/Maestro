@@ -1,21 +1,10 @@
-"""Adapters that bridge outputs from one flow to the payload of another."""
+"""Draft-related adapters for flow chaining."""
 
-from __future__ import annotations
-
-from typing import Any, Callable, Dict, Mapping, Tuple
+from typing import Any, Dict, List
 
 from apps.backend.src.modules.drafts.schemas import DraftSaveRequest
 from apps.backend.src.modules.trends.schemas import TrendItem, TrendsListResponse
-from apps.backend.src.modules.drafts.schemas import DraftIR,BlockText, BlockImage, BlockVideo
-
-def _ensure_trends_model(value: Any) -> TrendsListResponse:
-    if isinstance(value, TrendsListResponse):
-        return value
-    if hasattr(value, "model_dump"):
-        return TrendsListResponse.model_validate(value.model_dump())
-    if isinstance(value, Mapping):
-        return TrendsListResponse.model_validate(value)
-    raise TypeError("Unsupported adapter payload type")
+from apps.backend.src.orchestrator.adapters.utils import _ensure_trends_model
 
 
 def trends_to_draft_adapter(source: Any, base_payload: Dict[str, Any]) -> DraftSaveRequest:
@@ -77,7 +66,7 @@ def trends_to_draft_adapter(source: Any, base_payload: Dict[str, Any]) -> DraftS
 
 
 def _format_trend_line(idx: int, trend: TrendItem) -> list[str]:
-    line = f"{idx}. **{trend.title}**"
+    line = f"{idx}. {trend.title}"
     details = []
     if trend.approx_traffic:
         details.append(f"traffic {trend.approx_traffic}")
@@ -94,12 +83,4 @@ def _format_trend_line(idx: int, trend: TrendItem) -> list[str]:
     return extra_lines
 
 
-PayloadAdapter = Callable[[Any, Dict[str, Any]], Dict[str, Any]]
-
-
-FLOW_ADAPTERS: Dict[Tuple[str, str], PayloadAdapter] = {
-    ("bff.trends.list_trends", "drafts.create"): trends_to_draft_adapter,
-}
-
-
-__all__ = ["FLOW_ADAPTERS", "PayloadAdapter", "trends_to_draft_adapter"]
+__all__ = ["trends_to_draft_adapter"]

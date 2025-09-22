@@ -683,11 +683,8 @@ export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryPa
   "limit": zod.union([zod.number(),zod.null()]).default(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryLimitDefault)
 })
 
-export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBodySourcesDefault = ["post_publications"];
-
-export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody = zod.object({
-  "sources": zod.array(zod.enum(['post_publications']).describe('Enumerates timeline-capable data sources.')).default(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBodySourcesDefault),
-  "events": zod.union([zod.object({
+export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody = zod.union([zod.object({
+  "source": zod.string(),
   "events": zod.array(zod.object({
   "event_id": zod.string(),
   "persona_account_id": zod.number(),
@@ -700,12 +697,10 @@ export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody = 
   "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
   "origin_flow": zod.string().nullish()
 }).describe('Normalized representation for a single timeline datapoint.')).optional()
-}).describe('Container returned by source-specific timeline operators.'),zod.null()]).optional()
-})
+}).describe('Container returned by source-specific timeline operators.'),zod.null()])
 
 export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetResponse = zod.object({
-  "payload": zod.record(zod.string(), zod.any()).optional(),
-  "events": zod.object({
+  "source": zod.string(),
   "events": zod.array(zod.object({
   "event_id": zod.string(),
   "persona_account_id": zod.number(),
@@ -718,63 +713,6 @@ export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetRespons
   "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
   "origin_flow": zod.string().nullish()
 }).describe('Normalized representation for a single timeline datapoint.')).optional()
-}).optional().describe('Container returned by source-specific timeline operators.'),
-  "generated_at": zod.iso.datetime({}),
-  "total_events": zod.number()
-}).describe('Flow result that preserves payload info and emits merged events.')
-
-
-/**
- * Compose multi-source timeline events for a persona
- * @summary Get Persona Timeline
- */
-export const bffTimelineListApiBffTimelineGetQueryLimitDefault = 200;
-
-export const bffTimelineListApiBffTimelineGetQueryParams = zod.object({
-  "persona_account_id": zod.number(),
-  "since": zod.iso.datetime({}).nullish(),
-  "until": zod.iso.datetime({}).nullish(),
-  "limit": zod.union([zod.number(),zod.null()]).default(bffTimelineListApiBffTimelineGetQueryLimitDefault)
-})
-
-export const bffTimelineListApiBffTimelineGetBodySourcesDefault = ["post_publications"];
-
-export const bffTimelineListApiBffTimelineGetBody = zod.object({
-  "sources": zod.array(zod.enum(['post_publications']).describe('Enumerates timeline-capable data sources.')).default(bffTimelineListApiBffTimelineGetBodySourcesDefault),
-  "events": zod.union([zod.object({
-  "events": zod.array(zod.object({
-  "event_id": zod.string(),
-  "persona_account_id": zod.number(),
-  "source": zod.string(),
-  "kind": zod.string(),
-  "timestamp": zod.iso.datetime({}),
-  "status": zod.string(),
-  "payload": zod.record(zod.string(), zod.any()).optional(),
-  "operators": zod.array(zod.string()).optional(),
-  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
-  "origin_flow": zod.string().nullish()
-}).describe('Normalized representation for a single timeline datapoint.')).optional()
-}).describe('Container returned by source-specific timeline operators.'),zod.null()]).optional()
-})
-
-export const bffTimelineListApiBffTimelineGetResponse = zod.object({
-  "payload": zod.record(zod.string(), zod.any()).optional(),
-  "events": zod.object({
-  "events": zod.array(zod.object({
-  "event_id": zod.string(),
-  "persona_account_id": zod.number(),
-  "source": zod.string(),
-  "kind": zod.string(),
-  "timestamp": zod.iso.datetime({}),
-  "status": zod.string(),
-  "payload": zod.record(zod.string(), zod.any()).optional(),
-  "operators": zod.array(zod.string()).optional(),
-  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
-  "origin_flow": zod.string().nullish()
-}).describe('Normalized representation for a single timeline datapoint.')).optional()
-}).optional().describe('Container returned by source-specific timeline operators.'),
-  "generated_at": zod.iso.datetime({}),
-  "total_events": zod.number()
 }).describe('Flow result that preserves payload info and emits merged events.')
 
 

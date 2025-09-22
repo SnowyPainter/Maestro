@@ -70,6 +70,5 @@ class InsightSource(str, enum.Enum):
     POLL = "poll"
     MANUAL = "manual"
 
-
 DO_NOT_RECOMPILE_STATUS = {PostStatus.SCHEDULED, PostStatus.PUBLISHED, PostStatus.MONITORING}
 ALREADY_PUBLISHED_STATUS = {PostStatus.PUBLISHED, PostStatus.MONITORING}

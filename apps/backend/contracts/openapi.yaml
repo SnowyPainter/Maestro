@@ -893,76 +893,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get'
+              anyOf:
+              - $ref: '#/components/schemas/TimelineEventCollection'
+              - type: 'null'
+              title: Events
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimelineOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/bff/timeline:
-    get:
-      tags:
-      - bff
-      - bff
-      - timeline
-      - ui
-      - frontend
-      - read
-      summary: Get Persona Timeline
-      description: Compose multi-source timeline events for a persona
-      operationId: bff_timeline_list_api_bff_timeline_get
-      parameters:
-      - name: persona_account_id
-        in: query
-        required: true
-        schema:
-          type: integer
-          title: Persona Account Id
-      - name: since
-        in: query
-        required: false
-        schema:
-          title: Since
-          format: date-time
-          type: string
-          nullable: true
-      - name: until
-        in: query
-        required: false
-        schema:
-          title: Until
-          format: date-time
-          type: string
-          nullable: true
-      - name: limit
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          default: 200
-          title: Limit
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Body_bff_timeline_list_api_bff_timeline_get'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TimelineOut'
+                $ref: '#/components/schemas/TimelineEventCollectionOut'
         '422':
           description: Validation Error
           content:
@@ -2126,36 +2067,6 @@ components:
       - type
       - props
       title: BlockVideo
-    Body_bff_timeline_list_api_bff_timeline_get:
-      properties:
-        sources:
-          items:
-            $ref: '#/components/schemas/TimelineSource'
-          type: array
-          title: Sources
-          default:
-          - post_publications
-        events:
-          anyOf:
-          - $ref: '#/components/schemas/TimelineEventCollection'
-          - type: 'null'
-      type: object
-      title: Body_bff_timeline_list_api_bff_timeline_get
-    Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get:
-      properties:
-        sources:
-          items:
-            $ref: '#/components/schemas/TimelineSource'
-          type: array
-          title: Sources
-          default:
-          - post_publications
-        events:
-          anyOf:
-          - $ref: '#/components/schemas/TimelineEventCollection'
-          - type: 'null'
-      type: object
-      title: Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get
     CampaignAggregationCommand:
       properties:
         campaign_id:
@@ -4071,41 +3982,34 @@ components:
       description: Normalized representation for a single timeline datapoint.
     TimelineEventCollection:
       properties:
+        source:
+          type: string
+          title: Source
         events:
           items:
             $ref: '#/components/schemas/TimelineEvent'
           type: array
           title: Events
       type: object
+      required:
+      - source
       title: TimelineEventCollection
       description: Container returned by source-specific timeline operators.
-    TimelineOut:
+    TimelineEventCollectionOut:
       properties:
-        payload:
-          additionalProperties: true
-          type: object
-          title: Payload
-        events:
-          $ref: '#/components/schemas/TimelineEventCollection'
-        generated_at:
+        source:
           type: string
-          format: date-time
-          title: Generated At
-        total_events:
-          type: integer
-          title: Total Events
+          title: Source
+        events:
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+          type: array
+          title: Events
       type: object
       required:
-      - generated_at
-      - total_events
-      title: TimelineOut
+      - source
+      title: TimelineEventCollectionOut
       description: Flow result that preserves payload info and emits merged events.
-    TimelineSource:
-      type: string
-      enum:
-      - post_publications
-      title: TimelineSource
-      description: Enumerates timeline-capable data sources.
     TokenResponse:
       properties:
         access_token:

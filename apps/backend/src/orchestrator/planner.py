@@ -336,24 +336,37 @@ class FlowPlanner:
         if len(steps) < 2:
             return
 
-        from .adapters import FLOW_ADAPTERS as imported_adapters
-        FLOW_ADAPTERS = imported_adapters
+        from .adapters.registry import ADAPTERS
 
         for previous, current in zip(steps, steps[1:]):
             if previous.flow_key is None or current.flow_key is None:
                 continue
             if current.payload_builder is not None:
                 continue
-            adapter = FLOW_ADAPTERS.get((previous.flow_key, current.flow_key))
-            if adapter is None:
+            has_pattern = ADAPTERS.maybe_applicable(from_key=previous.flow_key, to_key=current.flow_key)
+            if not has_pattern:
                 continue
+
             prev_id = previous.id or previous.flow_key
             base_payload = dict(current.payload)
 
-            def builder(result_map: Mapping[str, Any], *, _adapter=adapter, _prev_id=prev_id, _base=base_payload) -> Dict[str, Any]:
+            def builder(
+                result_map: Mapping[str, Any],
+                *,
+                _from=previous.flow_key,
+                _to=current.flow_key,
+                _prev_id=prev_id,
+                _base=base_payload,
+            ) -> Dict[str, Any]:
                 if _prev_id not in result_map:
                     raise KeyError(f"Missing result for step '{_prev_id}'")
-                return _adapter(result_map[_prev_id], dict(_base))
+                source = result_map[_prev_id]
+
+                adapter = ADAPTERS.resolve(source=source, from_key=_from, to_key=_to)
+                if adapter is None:
+                    raise LookupError(f"No adapter resolved for from={_from!r} to={_to!r} with source={type(source).__name__}")
+
+                return adapter(source, dict(_base))
 
             current.payload_builder = builder
             current.depends_on = tuple(sorted(set(current.depends_on + (prev_id,))))

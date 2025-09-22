@@ -464,26 +464,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/bff/timeline": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Persona Timeline
-         * @description Compose multi-source timeline events for a persona
-         */
-        get: operations["bff_timeline_list_api_bff_timeline_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/bff/trends": {
         parameters: {
             query?: never;
@@ -1065,28 +1045,6 @@ export interface components {
             props: {
                 [key: string]: unknown;
             };
-        };
-        /** Body_bff_timeline_list_api_bff_timeline_get */
-        Body_bff_timeline_list_api_bff_timeline_get: {
-            /**
-             * Sources
-             * @default [
-             *       "post_publications"
-             *     ]
-             */
-            sources: components["schemas"]["TimelineSource"][];
-            events?: components["schemas"]["TimelineEventCollection"] | null;
-        };
-        /** Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get */
-        Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get: {
-            /**
-             * Sources
-             * @default [
-             *       "post_publications"
-             *     ]
-             */
-            sources: components["schemas"]["TimelineSource"][];
-            events?: components["schemas"]["TimelineEventCollection"] | null;
         };
         /** CampaignAggregationCommand */
         CampaignAggregationCommand: {
@@ -2204,33 +2162,21 @@ export interface components {
          * @description Container returned by source-specific timeline operators.
          */
         TimelineEventCollection: {
+            /** Source */
+            source: string;
             /** Events */
             events?: components["schemas"]["TimelineEvent"][];
         };
         /**
-         * TimelineOut
+         * TimelineEventCollectionOut
          * @description Flow result that preserves payload info and emits merged events.
          */
-        TimelineOut: {
-            /** Payload */
-            payload?: {
-                [key: string]: unknown;
-            };
-            events?: components["schemas"]["TimelineEventCollection"];
-            /**
-             * Generated At
-             * Format: date-time
-             */
-            generated_at: string;
-            /** Total Events */
-            total_events: number;
+        TimelineEventCollectionOut: {
+            /** Source */
+            source: string;
+            /** Events */
+            events?: components["schemas"]["TimelineEvent"][];
         };
-        /**
-         * TimelineSource
-         * @description Enumerates timeline-capable data sources.
-         * @enum {string}
-         */
-        TimelineSource: "post_publications";
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -3059,7 +3005,7 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get"];
+                "application/json": components["schemas"]["TimelineEventCollection"] | null;
             };
         };
         responses: {
@@ -3069,45 +3015,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TimelineOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    bff_timeline_list_api_bff_timeline_get: {
-        parameters: {
-            query: {
-                persona_account_id: number;
-                since?: string | null;
-                until?: string | null;
-                limit?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["Body_bff_timeline_list_api_bff_timeline_get"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimelineOut"];
+                    "application/json": components["schemas"]["TimelineEventCollectionOut"];
                 };
             };
             /** @description Validation Error */
