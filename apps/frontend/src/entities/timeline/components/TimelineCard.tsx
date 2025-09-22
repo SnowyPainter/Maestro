@@ -59,8 +59,7 @@ export const TimelineCard: React.FC<TimelineCardProps> = ({ events, title = "Tim
               </div>
             ))}
             <div className="sticky top-0 z-10 bg-background border-b font-semibold text-sm flex items-center justify-center p-2">Summary</div>
-
-
+            
             {/* Past Events */}
             {timeBuckets.slice(0, futureStartIndex !== -1 ? futureStartIndex : timeBuckets.length).map(bucketKey => {
                 const sourceMap = bucketedEvents.get(bucketKey)!;

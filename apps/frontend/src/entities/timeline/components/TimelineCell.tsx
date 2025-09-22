@@ -46,11 +46,12 @@ const getEventTitle = (event: TimelineEventType) => {
 export const TimelineCell: React.FC<TimelineCellProps> = ({ events, bucketKey, source }) => {
   const eventCount = events.length;
   const [bgClass, textClass, secondaryTextClass] = getIntensityClasses(eventCount);
-
+  
   const popoverContent = (
     <PopoverContent className="w-96 max-h-[280px] overflow-y-auto" sideOffset={10} collisionPadding={10}>
         <div className="space-y-2 mb-4">
-            <h4 className="font-medium leading-none capitalize">{source}</h4>
+            {/* Apply smaller font size, inline-block for width control, and max-width */}
+            <h4 className="font-medium leading-none capitalize text-sm inline-block max-w-[100px]">{source}</h4>
             <p className="text-sm text-muted-foreground">
                 Events around {new Date(bucketKey).toLocaleString()}
             </p>
@@ -79,7 +80,11 @@ export const TimelineCell: React.FC<TimelineCellProps> = ({ events, bucketKey, s
             <div className={cn("space-y-1", secondaryTextClass)}>
                 {events.slice(0, 3).map(event => (
                     <p key={event.event_id} className="text-2xs truncate font-medium">
-                        {getEventTitle(event)}
+                        {(() => {
+                            const title = getEventTitle(event);
+                            const wordCount = title.split(' ').length;
+                            return wordCount >= 4 ? `${title.substring(0, 25)}...` : title;
+                        })()}
                     </p>
                 ))}
             </div>
