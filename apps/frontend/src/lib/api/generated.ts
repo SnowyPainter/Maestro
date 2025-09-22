@@ -55,6 +55,20 @@ export interface BlockVideo {
   props: BlockVideoProps;
 }
 
+export type BodyBffTimelineListApiBffTimelineGetEvents = TimelineEventCollection | null;
+
+export interface BodyBffTimelineListApiBffTimelineGet {
+  sources?: TimelineSource[];
+  events?: BodyBffTimelineListApiBffTimelineGetEvents;
+}
+
+export type BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetEvents = TimelineEventCollection | null;
+
+export interface BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet {
+  sources?: TimelineSource[];
+  events?: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetEvents;
+}
+
 export type CampaignAggregationCommandCampaignId = number | null;
 
 export interface CampaignAggregationCommand {
@@ -253,6 +267,23 @@ export interface DraftOut {
   created_at: string;
   updated_at: string;
 }
+
+export interface DraftPostPublicationsByPlatformPayload {
+  account_persona_id: number;
+  platform: PlatformKind[];
+}
+
+export interface DraftPostPublicationsByStatusPayload {
+  account_persona_id: number;
+  status: PostStatus[];
+}
+
+export interface DraftPostPublicationsByVariantPayload {
+  account_persona_id: number;
+  variant_id: number;
+}
+
+export type DraftPostPublicationsList = PostPublicationOut[];
 
 export type DraftSaveRequestCampaignId = number | null;
 
@@ -933,6 +964,20 @@ export interface PostPublicationOut {
   updated_at: string;
 }
 
+export type PostStatus = typeof PostStatus[keyof typeof PostStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostStatus = {
+  pending: 'pending',
+  scheduled: 'scheduled',
+  published: 'published',
+  deleted: 'deleted',
+  failed: 'failed',
+  cancelled: 'cancelled',
+  monitoring: 'monitoring',
+} as const;
+
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
 
 
@@ -983,6 +1028,58 @@ export interface SlotHintItem {
   synonyms?: string[];
   flows?: string[];
 }
+
+export type TimelineEventPayload = { [key: string]: unknown };
+
+export type TimelineEventCorrelationKeys = {[key: string]: string};
+
+/**
+ * Normalized representation for a single timeline datapoint.
+ */
+export interface TimelineEvent {
+  event_id: string;
+  persona_account_id: number;
+  source: string;
+  kind: string;
+  timestamp: string;
+  status: string;
+  payload?: TimelineEventPayload;
+  operators?: string[];
+  correlation_keys?: TimelineEventCorrelationKeys;
+  /** @nullable */
+  origin_flow?: string | null;
+  [key: string]: unknown;
+ }
+
+/**
+ * Container returned by source-specific timeline operators.
+ */
+export interface TimelineEventCollection {
+  events?: TimelineEvent[];
+}
+
+export type TimelineOutPayload = { [key: string]: unknown };
+
+/**
+ * Flow result that preserves payload info and emits merged events.
+ */
+export interface TimelineOut {
+  payload?: TimelineOutPayload;
+  events?: TimelineEventCollection;
+  generated_at: string;
+  total_events: number;
+}
+
+/**
+ * Enumerates timeline-capable data sources.
+ */
+export type TimelineSource = typeof TimelineSource[keyof typeof TimelineSource];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TimelineSource = {
+  post_publications: 'post_publications',
+} as const;
 
 export interface TokenResponse {
   access_token: string;
@@ -1139,6 +1236,32 @@ export type BffDraftsListDraftsApiBffDraftsGetParams = {
 campaign_id?: number | null;
 limit?: number;
 offset?: number;
+};
+
+export type BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams = {
+persona_account_id: number;
+/**
+ * @nullable
+ */
+since?: string | null;
+/**
+ * @nullable
+ */
+until?: string | null;
+limit?: number | null;
+};
+
+export type BffTimelineListApiBffTimelineGetParams = {
+persona_account_id: number;
+/**
+ * @nullable
+ */
+since?: string | null;
+/**
+ * @nullable
+ */
+until?: string | null;
+limit?: number | null;
 };
 
 export type BffTrendsListTrendsApiBffTrendsGetParams = {
@@ -2386,6 +2509,293 @@ export function useBffContextsCurrentPersonaApiBffContextsPersonaCurrentGet<TDat
 
 
 /**
+ * List all post publications for a specific variant
+ * @summary List Post Publications by Variant
+ */
+export const bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost = (
+    draftPostPublicationsByVariantPayload: DraftPostPublicationsByVariantPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftPostPublicationsList>(
+      {url: `/api/bff/drafts/post-publications/variant`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: draftPostPublicationsByVariantPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost>>, TError,{data: DraftPostPublicationsByVariantPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost>>, TError,{data: DraftPostPublicationsByVariantPayload}, TContext> => {
+
+const mutationKey = ['bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost>>, {data: DraftPostPublicationsByVariantPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost>>>
+    export type BffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostMutationBody = DraftPostPublicationsByVariantPayload
+    export type BffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostMutationError = HTTPValidationError
+
+    /**
+ * @summary List Post Publications by Variant
+ */
+export const useBffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost>>, TError,{data: DraftPostPublicationsByVariantPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPost>>,
+        TError,
+        {data: DraftPostPublicationsByVariantPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * List all post publications for a specific platform
+ * @summary List Post Publications by Platform
+ */
+export const bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost = (
+    draftPostPublicationsByPlatformPayload: DraftPostPublicationsByPlatformPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftPostPublicationsList>(
+      {url: `/api/bff/drafts/post-publications/platform`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: draftPostPublicationsByPlatformPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost>>, TError,{data: DraftPostPublicationsByPlatformPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost>>, TError,{data: DraftPostPublicationsByPlatformPayload}, TContext> => {
+
+const mutationKey = ['bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost>>, {data: DraftPostPublicationsByPlatformPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost>>>
+    export type BffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostMutationBody = DraftPostPublicationsByPlatformPayload
+    export type BffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostMutationError = HTTPValidationError
+
+    /**
+ * @summary List Post Publications by Platform
+ */
+export const useBffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost>>, TError,{data: DraftPostPublicationsByPlatformPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPost>>,
+        TError,
+        {data: DraftPostPublicationsByPlatformPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * List all post publications for a specific status
+ * @summary List Post Publications by Status
+ */
+export const bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost = (
+    draftPostPublicationsByStatusPayload: DraftPostPublicationsByStatusPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftPostPublicationsList>(
+      {url: `/api/bff/drafts/post-publications/status`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: draftPostPublicationsByStatusPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost>>, TError,{data: DraftPostPublicationsByStatusPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost>>, TError,{data: DraftPostPublicationsByStatusPayload}, TContext> => {
+
+const mutationKey = ['bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost>>, {data: DraftPostPublicationsByStatusPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost>>>
+    export type BffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostMutationBody = DraftPostPublicationsByStatusPayload
+    export type BffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostMutationError = HTTPValidationError
+
+    /**
+ * @summary List Post Publications by Status
+ */
+export const useBffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost>>, TError,{data: DraftPostPublicationsByStatusPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPost>>,
+        TError,
+        {data: DraftPostPublicationsByStatusPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * List all variants of a draft for a specific platform
+ * @summary List Draft Variants by Platform
+ */
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet = (
+    platform: PlatformKind,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftVariantRenderList>(
+      {url: `/api/bff/drafts/platform/${platform}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryKey = (platform?: PlatformKind,) => {
+    return [`/api/bff/drafts/platform/${platform}`] as const;
+    }
+
+    
+export const getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryOptions = <TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryKey(platform);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>> = ({ signal }) => bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet(platform, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(platform), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>>
+export type BffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryError = HTTPValidationError
+
+
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Draft Variants by Platform
+ */
+
+export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
+ platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryOptions(platform,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * List all variants of a draft for content optimization and A/B testing
  * @summary Get Draft Variants
  */
@@ -2660,95 +3070,6 @@ export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<Retu
 
 
 /**
- * List all variants of a draft for a specific platform
- * @summary List Draft Variants by Platform
- */
-export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet = (
-    platform: PlatformKind,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<DraftVariantRenderList>(
-      {url: `/api/bff/drafts/platform/${platform}`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-export const getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryKey = (platform?: PlatformKind,) => {
-    return [`/api/bff/drafts/platform/${platform}`] as const;
-    }
-
-    
-export const getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryOptions = <TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryKey(platform);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>> = ({ signal }) => bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet(platform, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(platform), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type BffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>>
-export type BffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryError = HTTPValidationError
-
-
-export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
- platform: PlatformKind, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
- platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>,
-          TError,
-          Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
- platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Draft Variants by Platform
- */
-
-export function useBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet<TData = Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError = HTTPValidationError>(
- platform: PlatformKind, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getBffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetQueryOptions(platform,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
  * Get paginated list of all content drafts for content management dashboard
  * @summary List All Drafts
  */
@@ -2916,6 +3237,202 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffMeReadMeApiBffMeGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve timeline events sourced from post publications
+ * @summary Get Post Publication Timeline
+ */
+export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet = (
+    bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TimelineOut>(
+      {url: `/api/bff/timeline/post-publications`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryKey = (bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet?: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    params?: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams,) => {
+    return [`/api/bff/timeline/post-publications`, ...(params ? [params]: []), bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet] as const;
+    }
+
+    
+export const getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryKey(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>> = ({ signal }) => bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>>
+export type BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryError = HTTPValidationError
+
+
+export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
+ bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
+ bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
+ bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Post Publication Timeline
+ */
+
+export function useBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet<TData = Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError = HTTPValidationError>(
+ bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet: BodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,
+    params: BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePostPublicationsApiBffTimelinePostPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryOptions(bodyBffTimelinePostPublicationsApiBffTimelinePostPublicationsGet,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Compose multi-source timeline events for a persona
+ * @summary Get Persona Timeline
+ */
+export const bffTimelineListApiBffTimelineGet = (
+    bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
+    params: BffTimelineListApiBffTimelineGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TimelineOut>(
+      {url: `/api/bff/timeline`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffTimelineListApiBffTimelineGetQueryKey = (bodyBffTimelineListApiBffTimelineGet?: BodyBffTimelineListApiBffTimelineGet,
+    params?: BffTimelineListApiBffTimelineGetParams,) => {
+    return [`/api/bff/timeline`, ...(params ? [params]: []), bodyBffTimelineListApiBffTimelineGet] as const;
+    }
+
+    
+export const getBffTimelineListApiBffTimelineGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
+    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffTimelineListApiBffTimelineGetQueryKey(bodyBffTimelineListApiBffTimelineGet,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>> = ({ signal }) => bffTimelineListApiBffTimelineGet(bodyBffTimelineListApiBffTimelineGet,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffTimelineListApiBffTimelineGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>>
+export type BffTimelineListApiBffTimelineGetQueryError = HTTPValidationError
+
+
+export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
+ bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
+    params: BffTimelineListApiBffTimelineGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
+ bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
+    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
+ bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
+    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Persona Timeline
+ */
+
+export function useBffTimelineListApiBffTimelineGet<TData = Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError = HTTPValidationError>(
+ bodyBffTimelineListApiBffTimelineGet: BodyBffTimelineListApiBffTimelineGet,
+    params: BffTimelineListApiBffTimelineGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineListApiBffTimelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffTimelineListApiBffTimelineGetQueryOptions(bodyBffTimelineListApiBffTimelineGet,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

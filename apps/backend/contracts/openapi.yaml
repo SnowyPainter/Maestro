@@ -534,6 +534,134 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/post-publications/variant:
+    post:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - post-publications
+      - list
+      - by variant
+      summary: List Post Publications by Variant
+      description: List all post publications for a specific variant
+      operationId: bff_drafts_list_post_publications_by_variant_api_bff_drafts_post_publications_variant_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftPostPublicationsByVariantPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftPostPublicationsList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/post-publications/platform:
+    post:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - post-publications
+      - list
+      - by platform
+      summary: List Post Publications by Platform
+      description: List all post publications for a specific platform
+      operationId: bff_drafts_list_post_publications_by_platform_api_bff_drafts_post_publications_platform_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftPostPublicationsByPlatformPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftPostPublicationsList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/post-publications/status:
+    post:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - post-publications
+      - list
+      - by status
+      summary: List Post Publications by Status
+      description: List all post publications for a specific status
+      operationId: bff_drafts_list_post_publications_by_status_api_bff_drafts_post_publications_status_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftPostPublicationsByStatusPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftPostPublicationsList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/platform/{platform}:
+    get:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - variants
+      - list
+      - by platform
+      summary: List Draft Variants by Platform
+      description: List all variants of a draft for a specific platform
+      operationId: bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get
+      parameters:
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftVariantRenderList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/drafts/{draft_id}/variants:
     get:
       tags:
@@ -642,38 +770,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/bff/drafts/platform/{platform}:
-    get:
-      tags:
-      - bff
-      - bff
-      - drafts
-      - content
-      - variants
-      - list
-      - by platform
-      summary: List Draft Variants by Platform
-      description: List all variants of a draft for a specific platform
-      operationId: bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get
-      parameters:
-      - name: platform
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/PlatformKind'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DraftVariantRenderList'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/drafts:
     get:
       tags:
@@ -749,6 +845,130 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+  /api/bff/timeline/post-publications:
+    get:
+      tags:
+      - bff
+      - bff
+      - timeline
+      - ui
+      - frontend
+      - read
+      summary: Get Post Publication Timeline
+      description: Retrieve timeline events sourced from post publications
+      operationId: bff_timeline_post_publications_api_bff_timeline_post_publications_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Persona Account Id
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date-time
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date-time
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 200
+          title: Limit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/timeline:
+    get:
+      tags:
+      - bff
+      - bff
+      - timeline
+      - ui
+      - frontend
+      - read
+      summary: Get Persona Timeline
+      description: Compose multi-source timeline events for a persona
+      operationId: bff_timeline_list_api_bff_timeline_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Persona Account Id
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date-time
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date-time
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 200
+          title: Limit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Body_bff_timeline_list_api_bff_timeline_get'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/trends:
     get:
       tags:
@@ -1906,6 +2126,36 @@ components:
       - type
       - props
       title: BlockVideo
+    Body_bff_timeline_list_api_bff_timeline_get:
+      properties:
+        sources:
+          items:
+            $ref: '#/components/schemas/TimelineSource'
+          type: array
+          title: Sources
+          default:
+          - post_publications
+        events:
+          anyOf:
+          - $ref: '#/components/schemas/TimelineEventCollection'
+          - type: 'null'
+      type: object
+      title: Body_bff_timeline_list_api_bff_timeline_get
+    Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get:
+      properties:
+        sources:
+          items:
+            $ref: '#/components/schemas/TimelineSource'
+          type: array
+          title: Sources
+          default:
+          - post_publications
+        events:
+          anyOf:
+          - $ref: '#/components/schemas/TimelineEventCollection'
+          - type: 'null'
+      type: object
+      title: Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get
     CampaignAggregationCommand:
       properties:
         campaign_id:
@@ -2321,6 +2571,54 @@ components:
       - created_at
       - updated_at
       title: DraftOut
+    DraftPostPublicationsByPlatformPayload:
+      properties:
+        account_persona_id:
+          type: integer
+          title: Account Persona Id
+        platform:
+          items:
+            $ref: '#/components/schemas/PlatformKind'
+          type: array
+          title: Platform
+      type: object
+      required:
+      - account_persona_id
+      - platform
+      title: DraftPostPublicationsByPlatformPayload
+    DraftPostPublicationsByStatusPayload:
+      properties:
+        account_persona_id:
+          type: integer
+          title: Account Persona Id
+        status:
+          items:
+            $ref: '#/components/schemas/PostStatus'
+          type: array
+          title: Status
+      type: object
+      required:
+      - account_persona_id
+      - status
+      title: DraftPostPublicationsByStatusPayload
+    DraftPostPublicationsByVariantPayload:
+      properties:
+        account_persona_id:
+          type: integer
+          title: Account Persona Id
+        variant_id:
+          type: integer
+          title: Variant Id
+      type: object
+      required:
+      - account_persona_id
+      - variant_id
+      title: DraftPostPublicationsByVariantPayload
+    DraftPostPublicationsList:
+      items:
+        $ref: '#/components/schemas/PostPublicationOut'
+      type: array
+      title: DraftPostPublicationsList
     DraftSaveRequest:
       properties:
         campaign_id:
@@ -3612,6 +3910,17 @@ components:
       - created_at
       - updated_at
       title: PostPublicationOut
+    PostStatus:
+      type: string
+      enum:
+      - pending
+      - scheduled
+      - published
+      - deleted
+      - failed
+      - cancelled
+      - monitoring
+      title: PostStatus
     RenderedMediaItem:
       properties:
         type:
@@ -3710,6 +4019,93 @@ components:
       - name
       - label
       title: SlotHintItem
+    TimelineEvent:
+      properties:
+        event_id:
+          type: string
+          title: Event Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        source:
+          type: string
+          title: Source
+        kind:
+          type: string
+          title: Kind
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+        status:
+          type: string
+          title: Status
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        operators:
+          items:
+            type: string
+          type: array
+          title: Operators
+        correlation_keys:
+          additionalProperties:
+            type: string
+          type: object
+          title: Correlation Keys
+        origin_flow:
+          title: Origin Flow
+          type: string
+          nullable: true
+      additionalProperties: true
+      type: object
+      required:
+      - event_id
+      - persona_account_id
+      - source
+      - kind
+      - timestamp
+      - status
+      title: TimelineEvent
+      description: Normalized representation for a single timeline datapoint.
+    TimelineEventCollection:
+      properties:
+        events:
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+          type: array
+          title: Events
+      type: object
+      title: TimelineEventCollection
+      description: Container returned by source-specific timeline operators.
+    TimelineOut:
+      properties:
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        events:
+          $ref: '#/components/schemas/TimelineEventCollection'
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        total_events:
+          type: integer
+          title: Total Events
+      type: object
+      required:
+      - generated_at
+      - total_events
+      title: TimelineOut
+      description: Flow result that preserves payload info and emits merged events.
+    TimelineSource:
+      type: string
+      enum:
+      - post_publications
+      title: TimelineSource
+      description: Enumerates timeline-capable data sources.
     TokenResponse:
       properties:
         access_token:

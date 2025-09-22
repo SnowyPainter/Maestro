@@ -367,6 +367,140 @@ export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponse = 
 
 
 /**
+ * List all post publications for a specific variant
+ * @summary List Post Publications by Variant
+ */
+export const bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostBody = zod.object({
+  "account_persona_id": zod.number(),
+  "variant_id": zod.number()
+})
+
+export const bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostResponseItem = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostResponse = zod.array(bffDraftsListPostPublicationsByVariantApiBffDraftsPostPublicationsVariantPostResponseItem)
+
+
+/**
+ * List all post publications for a specific platform
+ * @summary List Post Publications by Platform
+ */
+export const bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostBody = zod.object({
+  "account_persona_id": zod.number(),
+  "platform": zod.array(zod.enum(['instagram', 'threads']))
+})
+
+export const bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostResponseItem = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostResponse = zod.array(bffDraftsListPostPublicationsByPlatformApiBffDraftsPostPublicationsPlatformPostResponseItem)
+
+
+/**
+ * List all post publications for a specific status
+ * @summary List Post Publications by Status
+ */
+export const bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostBody = zod.object({
+  "account_persona_id": zod.number(),
+  "status": zod.array(zod.enum(['pending', 'scheduled', 'published', 'deleted', 'failed', 'cancelled', 'monitoring']))
+})
+
+export const bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostResponseItem = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostResponse = zod.array(bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostResponseItem)
+
+
+/**
+ * List all variants of a draft for a specific platform
+ * @summary List Draft Variants by Platform
+ */
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetParams = zod.object({
+  "platform": zod.enum(['instagram', 'threads'])
+})
+
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem = zod.object({
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.string(),
+  "status": zod.string(),
+  "compiled_at": zod.iso.datetime({}).nullish(),
+  "rendered_caption": zod.string().nullish(),
+  "rendered_blocks": zod.union([zod.object({
+  "media": zod.array(zod.object({
+  "type": zod.enum(['image', 'video']).optional(),
+  "url": zod.string().optional(),
+  "alt": zod.string().nullish(),
+  "caption": zod.string().nullish(),
+  "ratio": zod.string().nullish()
+})).optional(),
+  "options": zod.record(zod.string(), zod.any()).optional(),
+  "metrics": zod.record(zod.string(), zod.any()).optional()
+}),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "compiler_version": zod.number(),
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_status": zod.string().nullish(),
+  "post_publication_scheduled_at": zod.iso.datetime({}).nullish()
+})
+export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponse = zod.array(bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem)
+
+
+/**
  * List all variants of a draft for content optimization and A/B testing
  * @summary Get Draft Variants
  */
@@ -482,44 +616,6 @@ export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponse = zod.object({
 
 
 /**
- * List all variants of a draft for a specific platform
- * @summary List Draft Variants by Platform
- */
-export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetParams = zod.object({
-  "platform": zod.enum(['instagram', 'threads'])
-})
-
-export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem = zod.object({
-  "variant_id": zod.number(),
-  "draft_id": zod.number(),
-  "platform": zod.string(),
-  "status": zod.string(),
-  "compiled_at": zod.iso.datetime({}).nullish(),
-  "rendered_caption": zod.string().nullish(),
-  "rendered_blocks": zod.union([zod.object({
-  "media": zod.array(zod.object({
-  "type": zod.enum(['image', 'video']).optional(),
-  "url": zod.string().optional(),
-  "alt": zod.string().nullish(),
-  "caption": zod.string().nullish(),
-  "ratio": zod.string().nullish()
-})).optional(),
-  "options": zod.record(zod.string(), zod.any()).optional(),
-  "metrics": zod.record(zod.string(), zod.any()).optional()
-}),zod.null()]).optional(),
-  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
-  "compiler_version": zod.number(),
-  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
-  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
-  "post_publication_status": zod.string().nullish(),
-  "post_publication_scheduled_at": zod.iso.datetime({}).nullish()
-})
-export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponse = zod.array(bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem)
-
-
-/**
  * Get paginated list of all content drafts for content management dashboard
  * @summary List All Drafts
  */
@@ -572,6 +668,114 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
   "email": zod.email(),
   "display_name": zod.string().nullish()
 })
+
+
+/**
+ * Retrieve timeline events sourced from post publications
+ * @summary Get Post Publication Timeline
+ */
+export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryLimitDefault = 200;
+
+export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryParams = zod.object({
+  "persona_account_id": zod.number(),
+  "since": zod.iso.datetime({}).nullish(),
+  "until": zod.iso.datetime({}).nullish(),
+  "limit": zod.union([zod.number(),zod.null()]).default(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetQueryLimitDefault)
+})
+
+export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBodySourcesDefault = ["post_publications"];
+
+export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBody = zod.object({
+  "sources": zod.array(zod.enum(['post_publications']).describe('Enumerates timeline-capable data sources.')).default(bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetBodySourcesDefault),
+  "events": zod.union([zod.object({
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).describe('Container returned by source-specific timeline operators.'),zod.null()]).optional()
+})
+
+export const bffTimelinePostPublicationsApiBffTimelinePostPublicationsGetResponse = zod.object({
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "events": zod.object({
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).optional().describe('Container returned by source-specific timeline operators.'),
+  "generated_at": zod.iso.datetime({}),
+  "total_events": zod.number()
+}).describe('Flow result that preserves payload info and emits merged events.')
+
+
+/**
+ * Compose multi-source timeline events for a persona
+ * @summary Get Persona Timeline
+ */
+export const bffTimelineListApiBffTimelineGetQueryLimitDefault = 200;
+
+export const bffTimelineListApiBffTimelineGetQueryParams = zod.object({
+  "persona_account_id": zod.number(),
+  "since": zod.iso.datetime({}).nullish(),
+  "until": zod.iso.datetime({}).nullish(),
+  "limit": zod.union([zod.number(),zod.null()]).default(bffTimelineListApiBffTimelineGetQueryLimitDefault)
+})
+
+export const bffTimelineListApiBffTimelineGetBodySourcesDefault = ["post_publications"];
+
+export const bffTimelineListApiBffTimelineGetBody = zod.object({
+  "sources": zod.array(zod.enum(['post_publications']).describe('Enumerates timeline-capable data sources.')).default(bffTimelineListApiBffTimelineGetBodySourcesDefault),
+  "events": zod.union([zod.object({
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).describe('Container returned by source-specific timeline operators.'),zod.null()]).optional()
+})
+
+export const bffTimelineListApiBffTimelineGetResponse = zod.object({
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "events": zod.object({
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).optional().describe('Container returned by source-specific timeline operators.'),
+  "generated_at": zod.iso.datetime({}),
+  "total_events": zod.number()
+}).describe('Flow result that preserves payload info and emits merged events.')
 
 
 /**

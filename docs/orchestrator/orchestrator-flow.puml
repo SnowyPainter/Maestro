@@ -1,0 +1,45 @@
+@startuml Orchestrator Flow Architecture
+
+actor User as user
+participant "chat_router.py" as router
+participant "nlp.py" as nlp
+participant "planner.py" as planner
+participant "registry.py" as registry
+participant "dispatch.py" as dispatch
+participant "adapters.py" as adapters
+database "Database/API" as db
+
+== Message Reception ==
+user -> router: POST /chat/query\n"create draft about AI"
+router -> planner: plan(message)
+
+== Intent Analysis ==
+planner -> nlp: parse(message)
+nlp --> planner: IntentResult(intent, slots)
+
+== Flow Matching ==
+planner -> registry: search flows by intent
+registry --> planner: FlowDefinition[]
+
+== Plan Generation ==
+planner -> planner: build execution plan
+planner --> router: ChatPlan(steps, messages)
+
+== Flow Execution ==
+router -> dispatch: orchestrate_flow(flow, payload)
+dispatch -> registry: get operator metadata
+registry --> dispatch: OperatorMeta
+
+dispatch -> dispatch: execute tasks in topological order
+dispatch -> db: execute business logic
+db --> dispatch: operation result
+
+== Data Transformation (if needed) ==
+dispatch -> adapters: transform data between flows
+adapters --> dispatch: converted payload
+
+== Response ==
+dispatch --> router: final result
+router --> user: ChatResponse(cards, messages)
+
+@enduml

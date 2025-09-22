@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Iterable, List, Optional
 
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -18,8 +18,8 @@ from apps.backend.src.modules.common.enums import (
     VariantStatus,
 )
 from apps.backend.src.modules.accounts.models import PersonaAccount
-from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
-from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication, PostPublication
+from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest, PostPublicationOut
 from apps.backend.src.workers.Adapter.tasks import enqueue_variant_compile
 
 
@@ -384,3 +384,41 @@ async def cancel_post_publication(
     db.add(publication)
     await db.flush()
     return publication
+
+async def list_post_publications_by_variant(
+    db: AsyncSession,
+    *,
+    variant_id: int,
+    account_persona_id: int,
+) -> List[PostPublication]:
+    stmt = select(PostPublication).where(
+        PostPublication.variant_id == variant_id,
+        PostPublication.account_persona_id == account_persona_id,
+    )
+    return (await db.execute(stmt)).scalars().all()
+
+async def list_post_publications_by_account_persona(
+    db: AsyncSession,
+    *,
+    account_persona_id: int,
+) -> List[PostPublication]:
+    stmt = select(PostPublication).where(PostPublication.account_persona_id == account_persona_id)
+    return (await db.execute(stmt)).scalars().all()
+
+async def list_post_publications_by_platform(
+    db: AsyncSession,
+    *,
+    account_persona_id: int,
+    platform: List[PlatformKind],
+) -> List[PostPublication]:
+    stmt = select(PostPublication).where(PostPublication.account_persona_id == account_persona_id, PostPublication.platform.in_(platform))
+    return (await db.execute(stmt)).scalars().all()
+
+async def list_post_publications_by_status(
+    db: AsyncSession,
+    *,
+    account_persona_id: int,
+    status: List[PostStatus],
+) -> List[PostPublication]:
+    stmt = select(PostPublication).where(PostPublication.account_persona_id == account_persona_id, PostPublication.status.in_(status))
+    return (await db.execute(stmt)).scalars().all()

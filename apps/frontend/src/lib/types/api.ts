@@ -264,6 +264,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/drafts/post-publications/variant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * List Post Publications by Variant
+         * @description List all post publications for a specific variant
+         */
+        post: operations["bff_drafts_list_post_publications_by_variant_api_bff_drafts_post_publications_variant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts/post-publications/platform": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * List Post Publications by Platform
+         * @description List all post publications for a specific platform
+         */
+        post: operations["bff_drafts_list_post_publications_by_platform_api_bff_drafts_post_publications_platform_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts/post-publications/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * List Post Publications by Status
+         * @description List all post publications for a specific status
+         */
+        post: operations["bff_drafts_list_post_publications_by_status_api_bff_drafts_post_publications_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts/platform/{platform}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Draft Variants by Platform
+         * @description List all variants of a draft for a specific platform
+         */
+        get: operations["bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/drafts/{draft_id}/variants": {
         parameters: {
             query?: never;
@@ -324,26 +404,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/bff/drafts/platform/{platform}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Draft Variants by Platform
-         * @description List all variants of a draft for a specific platform
-         */
-        get: operations["bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/bff/drafts": {
         parameters: {
             query?: never;
@@ -376,6 +436,46 @@ export interface paths {
          * @description Retrieve authenticated user profile information for user interface and settings
          */
         get: operations["bff_me_read_me_api_bff_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/timeline/post-publications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Post Publication Timeline
+         * @description Retrieve timeline events sourced from post publications
+         */
+        get: operations["bff_timeline_post_publications_api_bff_timeline_post_publications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Persona Timeline
+         * @description Compose multi-source timeline events for a persona
+         */
+        get: operations["bff_timeline_list_api_bff_timeline_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -966,6 +1066,28 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** Body_bff_timeline_list_api_bff_timeline_get */
+        Body_bff_timeline_list_api_bff_timeline_get: {
+            /**
+             * Sources
+             * @default [
+             *       "post_publications"
+             *     ]
+             */
+            sources: components["schemas"]["TimelineSource"][];
+            events?: components["schemas"]["TimelineEventCollection"] | null;
+        };
+        /** Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get */
+        Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get: {
+            /**
+             * Sources
+             * @default [
+             *       "post_publications"
+             *     ]
+             */
+            sources: components["schemas"]["TimelineSource"][];
+            events?: components["schemas"]["TimelineEventCollection"] | null;
+        };
         /** CampaignAggregationCommand */
         CampaignAggregationCommand: {
             /** Campaign Id */
@@ -1214,6 +1336,29 @@ export interface components {
              */
             updated_at: string;
         };
+        /** DraftPostPublicationsByPlatformPayload */
+        DraftPostPublicationsByPlatformPayload: {
+            /** Account Persona Id */
+            account_persona_id: number;
+            /** Platform */
+            platform: components["schemas"]["PlatformKind"][];
+        };
+        /** DraftPostPublicationsByStatusPayload */
+        DraftPostPublicationsByStatusPayload: {
+            /** Account Persona Id */
+            account_persona_id: number;
+            /** Status */
+            status: components["schemas"]["PostStatus"][];
+        };
+        /** DraftPostPublicationsByVariantPayload */
+        DraftPostPublicationsByVariantPayload: {
+            /** Account Persona Id */
+            account_persona_id: number;
+            /** Variant Id */
+            variant_id: number;
+        };
+        /** DraftPostPublicationsList */
+        DraftPostPublicationsList: components["schemas"]["PostPublicationOut"][];
         /** DraftSaveRequest */
         DraftSaveRequest: {
             /** Campaign Id */
@@ -1950,6 +2095,11 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * PostStatus
+         * @enum {string}
+         */
+        PostStatus: "pending" | "scheduled" | "published" | "deleted" | "failed" | "cancelled" | "monitoring";
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**
@@ -2014,6 +2164,73 @@ export interface components {
             /** Flows */
             flows?: string[];
         };
+        /**
+         * TimelineEvent
+         * @description Normalized representation for a single timeline datapoint.
+         */
+        TimelineEvent: {
+            /** Event Id */
+            event_id: string;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Source */
+            source: string;
+            /** Kind */
+            kind: string;
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /** Status */
+            status: string;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Operators */
+            operators?: string[];
+            /** Correlation Keys */
+            correlation_keys?: {
+                [key: string]: string;
+            };
+            /** Origin Flow */
+            origin_flow?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * TimelineEventCollection
+         * @description Container returned by source-specific timeline operators.
+         */
+        TimelineEventCollection: {
+            /** Events */
+            events?: components["schemas"]["TimelineEvent"][];
+        };
+        /**
+         * TimelineOut
+         * @description Flow result that preserves payload info and emits merged events.
+         */
+        TimelineOut: {
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            events?: components["schemas"]["TimelineEventCollection"];
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Total Events */
+            total_events: number;
+        };
+        /**
+         * TimelineSource
+         * @description Enumerates timeline-capable data sources.
+         * @enum {string}
+         */
+        TimelineSource: "post_publications";
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -2551,6 +2768,136 @@ export interface operations {
             };
         };
     };
+    bff_drafts_list_post_publications_by_variant_api_bff_drafts_post_publications_variant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftPostPublicationsByVariantPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftPostPublicationsList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_post_publications_by_platform_api_bff_drafts_post_publications_platform_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftPostPublicationsByPlatformPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftPostPublicationsList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_post_publications_by_status_api_bff_drafts_post_publications_status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftPostPublicationsByStatusPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftPostPublicationsList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftVariantRenderList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_drafts_list_variants_api_bff_drafts__draft_id__variants_get: {
         parameters: {
             query?: never;
@@ -2645,37 +2992,6 @@ export interface operations {
             };
         };
     };
-    bff_drafts_list_variants_by_platform_api_bff_drafts_platform__platform__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                platform: components["schemas"]["PlatformKind"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DraftVariantRenderList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     bff_drafts_list_drafts_api_bff_drafts_get: {
         parameters: {
             query?: {
@@ -2725,6 +3041,82 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    bff_timeline_post_publications_api_bff_timeline_post_publications_get: {
+        parameters: {
+            query: {
+                persona_account_id: number;
+                since?: string | null;
+                until?: string | null;
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_bff_timeline_post_publications_api_bff_timeline_post_publications_get"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_timeline_list_api_bff_timeline_get: {
+        parameters: {
+            query: {
+                persona_account_id: number;
+                since?: string | null;
+                until?: string | null;
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_bff_timeline_list_api_bff_timeline_get"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

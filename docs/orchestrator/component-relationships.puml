@@ -1,0 +1,50 @@
+@startuml Component Relationships
+
+package "Core Components" {
+    [chat_router.py] as router
+    [nlp.py] as nlp
+    [planner.py] as planner
+    [registry.py] as registry
+    [dispatch.py] as dispatch
+    [adapters.py] as adapters
+}
+
+package "Business Logic" {
+    [Flow Definitions] as flows
+    [Operators] as operators
+    [Models] as models
+}
+
+package "External Systems" {
+    [Database] as db
+    [APIs] as apis
+    [Embeddings] as embeddings
+}
+
+router --> planner : uses
+router --> dispatch : uses
+planner --> nlp : uses
+planner --> registry : uses
+dispatch --> registry : uses
+dispatch --> adapters : uses
+
+registry --> flows : manages
+registry --> operators : manages
+flows --> models : uses
+operators --> models : uses
+
+dispatch --> db : executes
+dispatch --> apis : executes
+nlp --> embeddings : uses
+
+note right of adapters
+    Transforms data between
+    different flow types
+end note
+
+note right of registry
+    Central registry for
+    all flows and operators
+end note
+
+@enduml

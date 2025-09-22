@@ -1,0 +1,58 @@
+@startuml Detailed Orchestrator Sequence
+
+title Detailed Orchestrator Execution Flow
+
+actor User
+participant ChatRouter
+participant FlowPlanner
+participant FlowMatcher
+participant NlpEngine
+participant FlowRegistry
+participant Dispatch
+participant OperatorRegistry
+participant Adapters
+participant BusinessLogic
+
+== 1. Message Reception ==
+User -> ChatRouter: POST /chat/query\n{message: "create draft"}
+ChatRouter -> FlowPlanner: plan(message)
+
+== 2. Intent Analysis ==
+FlowPlanner -> NlpEngine: parse(message)
+NlpEngine --> FlowPlanner: IntentResult(intent="drafts.create", slots={...})
+
+== 3. Flow Matching ==
+FlowPlanner -> FlowMatcher: search(message, top_k=5)
+FlowMatcher -> FlowRegistry: get_available_flows()
+FlowRegistry --> FlowMatcher: flow definitions
+FlowMatcher --> FlowPlanner: FlowMatch[]
+
+== 4. Plan Building ==
+FlowPlanner -> FlowPlanner: _build_flow_steps(flow, slots)
+FlowPlanner -> FlowRegistry: get("drafts.create")
+FlowRegistry --> FlowPlanner: FlowDefinition
+FlowPlanner --> ChatRouter: ChatPlan
+
+== 5. Plan Execution ==
+ChatRouter -> Dispatch: orchestrate_flow(flow, payload)
+Dispatch -> Dispatch: topological_order()
+
+loop for each task in topological order
+    Dispatch -> OperatorRegistry: ensure(task.operator_key)
+    OperatorRegistry --> Dispatch: OperatorMeta
+
+    Dispatch -> Dispatch: _invoke_operator(meta, payload, context)
+    Dispatch -> BusinessLogic: execute business logic
+    BusinessLogic --> Dispatch: result
+
+    alt has payload_builder (flow chaining)
+        Dispatch -> Adapters: get adapter for (prev_flow, current_flow)
+        Adapters --> Dispatch: PayloadAdapter
+        Dispatch -> Dispatch: transform payload
+    end
+end
+
+Dispatch --> ChatRouter: final result
+ChatRouter --> User: ChatResponse
+
+@enduml

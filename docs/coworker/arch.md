@@ -6,7 +6,7 @@
 * 30초마다 스캔 → due 항목을 큐에 enqueue.
 * 모든 예약성 작업을 여기로 환원:
 
-  * Default Job: PostPublication은 맨날 봐야함(스케쥴)
+  * Default Job: PostPublication은 맨날 봐야함(스케쥴 `발행` 때문)
   * 발행 / 삭제 (Adapter 태스크 호출)
   * 메트릭 수집(InsightSample)
   * 댓글 모니터링 / 상호작용
