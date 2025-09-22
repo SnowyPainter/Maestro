@@ -22,6 +22,7 @@ class VariantStatus(str, enum.Enum):
 """
 class PostStatus(str, enum.Enum):
     PENDING = "pending" # Pending to publish
+    SCHEDULED = "scheduled" # Scheduled for future publish
     PUBLISHED = "published" # After Published, Monitoring finished/cancel monitoring
     DELETED = "deleted" # Soft Delete
     FAILED = "failed" # Failed to publish
@@ -68,3 +69,7 @@ class InsightSource(str, enum.Enum):
     WEBHOOK = "webhook"
     POLL = "poll"
     MANUAL = "manual"
+
+
+DO_NOT_RECOMPILE_STATUS = {PostStatus.SCHEDULED, PostStatus.PUBLISHED, PostStatus.MONITORING}
+ALREADY_PUBLISHED_STATUS = {PostStatus.PUBLISHED, PostStatus.MONITORING}

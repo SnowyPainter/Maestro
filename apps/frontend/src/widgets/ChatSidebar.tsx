@@ -131,10 +131,6 @@ export function ChatSidebar({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="top" className="w-56">
                         <DropdownMenuItem asChild>
-                            <Link to="/settings/platforms" className="flex items-center">
-                                <Plug className="w-4 h-4 mr-2" />
-                                <span>Platform Connections</span>
-                            </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>

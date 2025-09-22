@@ -1460,6 +1460,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/{draft_id}/variants/{platform}/ready:
+    put:
+      tags:
+      - action
+      - action
+      - drafts
+      - variants
+      - publication
+      - schedule
+      summary: Toggle Ready For Post
+      description: Mark or unmark a draft variant as ready for publishing with scheduling
+      operationId: drafts_toggle_ready_api_orchestrator_drafts__draft_id__variants__platform__ready_put
+      parameters:
+      - name: draft_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+      - name: platform
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/PlatformKind'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftVariantReadyCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPublicationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/insights:
     post:
       tags:
@@ -2337,6 +2382,28 @@ components:
       required:
       - ir
       title: DraftUpdateCommand
+    DraftVariantReadyCommand:
+      properties:
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        ready:
+          type: boolean
+          title: Ready
+        scheduled_at:
+          title: Scheduled At
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+      required:
+      - platform
+      - ready
+      title: DraftVariantReadyCommand
     DraftVariantRender:
       properties:
         variant_id:
@@ -2392,6 +2459,20 @@ components:
           - type: integer
           - type: 'null'
           title: Ir Revision Compiled
+        post_publication_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Post Publication Id
+        post_publication_status:
+          title: Post Publication Status
+          type: string
+          nullable: true
+        post_publication_scheduled_at:
+          title: Post Publication Scheduled At
+          format: date-time
+          type: string
+          nullable: true
       type: object
       required:
       - variant_id
@@ -2455,6 +2536,20 @@ components:
           - type: integer
           - type: 'null'
           title: Ir Revision Compiled
+        post_publication_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Post Publication Id
+        post_publication_status:
+          title: Post Publication Status
+          type: string
+          nullable: true
+        post_publication_scheduled_at:
+          title: Post Publication Scheduled At
+          format: date-time
+          type: string
+          nullable: true
       type: object
       required:
       - variant_id
@@ -3424,6 +3519,99 @@ components:
       - instagram
       - threads
       title: PlatformKind
+    PostPublicationOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        variant_id:
+          type: integer
+          title: Variant Id
+        account_persona_id:
+          type: integer
+          title: Account Persona Id
+        platform:
+          type: string
+          title: Platform
+        external_id:
+          title: External Id
+          type: string
+          nullable: true
+        permalink:
+          title: Permalink
+          type: string
+          nullable: true
+        status:
+          type: string
+          title: Status
+        scheduled_at:
+          title: Scheduled At
+          format: date-time
+          type: string
+          nullable: true
+        published_at:
+          title: Published At
+          format: date-time
+          type: string
+          nullable: true
+        deleted_at:
+          title: Deleted At
+          format: date-time
+          type: string
+          nullable: true
+        monitoring_started_at:
+          title: Monitoring Started At
+          format: date-time
+          type: string
+          nullable: true
+        monitoring_ended_at:
+          title: Monitoring Ended At
+          format: date-time
+          type: string
+          nullable: true
+        last_polled_at:
+          title: Last Polled At
+          format: date-time
+          type: string
+          nullable: true
+        errors:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Errors
+        warnings:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Warnings
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - variant_id
+      - account_persona_id
+      - platform
+      - status
+      - created_at
+      - updated_at
+      title: PostPublicationOut
     RenderedMediaItem:
       properties:
         type:

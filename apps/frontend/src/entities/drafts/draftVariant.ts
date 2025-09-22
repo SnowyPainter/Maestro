@@ -1,4 +1,4 @@
-import { PlatformKind } from "@/lib/api/generated";
+import { PlatformKind, DraftVariantRender as GeneratedDraftVariantRender } from "@/lib/api/generated";
 
 export type RenderedMediaItem = {
   type: "image" | "video";
@@ -14,20 +14,8 @@ export type RenderedVariantBlocks = {
   metrics?: Record<string, unknown>;
 };
 
-export type DraftVariantRender = {
-  variant_id: number;
-  draft_id: number;
-  platform: PlatformKind | string;
-  status: string;
-  compiled_at?: string;
-  rendered_caption?: string | null;
-  rendered_blocks?: RenderedVariantBlocks | null;
-  warnings?: string[] | null;
-  errors?: string[] | null;
-  metrics?: Record<string, unknown> | null;
-  compiler_version: number;
-  ir_revision_compiled?: number | null;
-};
+// Re-export the generated type
+export type DraftVariantRender = GeneratedDraftVariantRender;
 
 export type PlatformPresentation = {
   label: string;
@@ -114,5 +102,4 @@ export function formatOptionValue(value: unknown, maxLength = 100): string {
 
   return String(value);
 }
-
 

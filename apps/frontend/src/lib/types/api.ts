@@ -696,6 +696,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/drafts/{draft_id}/variants/{platform}/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Toggle Ready For Post
+         * @description Mark or unmark a draft variant as ready for publishing with scheduling
+         */
+        put: operations["drafts_toggle_ready_api_orchestrator_drafts__draft_id__variants__platform__ready_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/insights": {
         parameters: {
             query?: never;
@@ -1220,6 +1240,19 @@ export interface components {
             /** Campaign Id */
             campaign_id?: number | null;
         };
+        /** DraftVariantReadyCommand */
+        DraftVariantReadyCommand: {
+            /** Draft Id */
+            draft_id?: number | null;
+            platform: components["schemas"]["PlatformKind"];
+            /** Ready */
+            ready: boolean;
+            /**
+             * Scheduled At
+             * Format: date-time
+             */
+            scheduled_at?: string | null;
+        };
         /** DraftVariantRender */
         DraftVariantRender: {
             /** Variant Id */
@@ -1250,6 +1283,15 @@ export interface components {
             compiler_version: number;
             /** Ir Revision Compiled */
             ir_revision_compiled?: number | null;
+            /** Post Publication Id */
+            post_publication_id?: number | null;
+            /** Post Publication Status */
+            post_publication_status?: string | null;
+            /**
+             * Post Publication Scheduled At
+             * Format: date-time
+             */
+            post_publication_scheduled_at?: string | null;
         };
         /** DraftVariantRenderDetail */
         DraftVariantRenderDetail: {
@@ -1281,6 +1323,15 @@ export interface components {
             compiler_version: number;
             /** Ir Revision Compiled */
             ir_revision_compiled?: number | null;
+            /** Post Publication Id */
+            post_publication_id?: number | null;
+            /** Post Publication Status */
+            post_publication_status?: string | null;
+            /**
+             * Post Publication Scheduled At
+             * Format: date-time
+             */
+            post_publication_scheduled_at?: string | null;
         };
         /** DraftVariantRenderList */
         DraftVariantRenderList: components["schemas"]["DraftVariantRender"][];
@@ -1834,6 +1885,71 @@ export interface components {
          * @enum {string}
          */
         PlatformKind: "instagram" | "threads";
+        /** PostPublicationOut */
+        PostPublicationOut: {
+            /** Id */
+            id: number;
+            /** Variant Id */
+            variant_id: number;
+            /** Account Persona Id */
+            account_persona_id: number;
+            /** Platform */
+            platform: string;
+            /** External Id */
+            external_id?: string | null;
+            /** Permalink */
+            permalink?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Scheduled At
+             * Format: date-time
+             */
+            scheduled_at?: string | null;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at?: string | null;
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at?: string | null;
+            /**
+             * Monitoring Started At
+             * Format: date-time
+             */
+            monitoring_started_at?: string | null;
+            /**
+             * Monitoring Ended At
+             * Format: date-time
+             */
+            monitoring_ended_at?: string | null;
+            /**
+             * Last Polled At
+             * Format: date-time
+             */
+            last_polled_at?: string | null;
+            /** Errors */
+            errors?: string[] | null;
+            /** Warnings */
+            warnings?: string[] | null;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**
@@ -3204,6 +3320,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    drafts_toggle_ready_api_orchestrator_drafts__draft_id__variants__platform__ready_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number | null;
+                platform: components["schemas"]["PlatformKind"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftVariantReadyCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostPublicationOut"];
                 };
             };
             /** @description Validation Error */

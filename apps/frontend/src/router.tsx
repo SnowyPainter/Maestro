@@ -7,7 +7,6 @@ import { SignupPage } from '@/pages/Auth/SignupPage';
 import { ChatPage } from '@/pages/ChatPage/ChatPage';
 
 import { SettingsPage } from "./pages/SettingsPage/SettingsPage";
-import { ControlTowerPage } from "./pages/ControlTowerPage/ControlTowerPage";
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { DataDeletionPolicyPage } from './pages/DataDeletionPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
@@ -54,10 +53,6 @@ const router = createBrowserRouter([
           {
             path: 'settings',
             element: <SettingsPage />,
-          },
-          {
-            path: 'control-tower',
-            element: <ControlTowerPage />,
           },
         ]
       }

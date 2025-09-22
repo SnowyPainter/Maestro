@@ -285,6 +285,16 @@ export interface DraftUpdateCommand {
   campaign_id?: DraftUpdateCommandCampaignId;
 }
 
+export type DraftVariantReadyCommandDraftId = number | null;
+
+export interface DraftVariantReadyCommand {
+  draft_id?: DraftVariantReadyCommandDraftId;
+  platform: PlatformKind;
+  ready: boolean;
+  /** @nullable */
+  scheduled_at?: string | null;
+}
+
 export type DraftVariantRenderRenderedBlocks = RenderedVariantBlocks | null;
 
 export type DraftVariantRenderWarnings = string[] | null;
@@ -296,6 +306,8 @@ export type DraftVariantRenderMetricsAnyOf = { [key: string]: unknown };
 export type DraftVariantRenderMetrics = DraftVariantRenderMetricsAnyOf | null;
 
 export type DraftVariantRenderIrRevisionCompiled = number | null;
+
+export type DraftVariantRenderPostPublicationId = number | null;
 
 export interface DraftVariantRender {
   variant_id: number;
@@ -312,6 +324,11 @@ export interface DraftVariantRender {
   metrics?: DraftVariantRenderMetrics;
   compiler_version: number;
   ir_revision_compiled?: DraftVariantRenderIrRevisionCompiled;
+  post_publication_id?: DraftVariantRenderPostPublicationId;
+  /** @nullable */
+  post_publication_status?: string | null;
+  /** @nullable */
+  post_publication_scheduled_at?: string | null;
 }
 
 export type DraftVariantRenderDetailRenderedBlocks = RenderedVariantBlocks | null;
@@ -325,6 +342,8 @@ export type DraftVariantRenderDetailMetricsAnyOf = { [key: string]: unknown };
 export type DraftVariantRenderDetailMetrics = DraftVariantRenderDetailMetricsAnyOf | null;
 
 export type DraftVariantRenderDetailIrRevisionCompiled = number | null;
+
+export type DraftVariantRenderDetailPostPublicationId = number | null;
 
 export interface DraftVariantRenderDetail {
   variant_id: number;
@@ -341,6 +360,11 @@ export interface DraftVariantRenderDetail {
   metrics?: DraftVariantRenderDetailMetrics;
   compiler_version: number;
   ir_revision_compiled?: DraftVariantRenderDetailIrRevisionCompiled;
+  post_publication_id?: DraftVariantRenderDetailPostPublicationId;
+  /** @nullable */
+  post_publication_status?: string | null;
+  /** @nullable */
+  post_publication_scheduled_at?: string | null;
 }
 
 export type DraftVariantRenderList = DraftVariantRender[];
@@ -871,6 +895,43 @@ export const PlatformKind = {
   instagram: 'instagram',
   threads: 'threads',
 } as const;
+
+export type PostPublicationOutErrors = string[] | null;
+
+export type PostPublicationOutWarnings = string[] | null;
+
+export type PostPublicationOutMetaAnyOf = { [key: string]: unknown };
+
+export type PostPublicationOutMeta = PostPublicationOutMetaAnyOf | null;
+
+export interface PostPublicationOut {
+  id: number;
+  variant_id: number;
+  account_persona_id: number;
+  platform: string;
+  /** @nullable */
+  external_id?: string | null;
+  /** @nullable */
+  permalink?: string | null;
+  status: string;
+  /** @nullable */
+  scheduled_at?: string | null;
+  /** @nullable */
+  published_at?: string | null;
+  /** @nullable */
+  deleted_at?: string | null;
+  /** @nullable */
+  monitoring_started_at?: string | null;
+  /** @nullable */
+  monitoring_ended_at?: string | null;
+  /** @nullable */
+  last_polled_at?: string | null;
+  errors?: PostPublicationOutErrors;
+  warnings?: PostPublicationOutWarnings;
+  meta?: PostPublicationOutMeta;
+  created_at: string;
+  updated_at: string;
+}
 
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
 
@@ -4064,6 +4125,73 @@ export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPV
       > => {
 
       const mutationOptions = getDraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Mark or unmark a draft variant as ready for publishing with scheduling
+ * @summary Toggle Ready For Post
+ */
+export const draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut = (
+    draftId: number | null,
+    platform: PlatformKind,
+    draftVariantReadyCommand: DraftVariantReadyCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<PostPublicationOut>(
+      {url: `/api/orchestrator/drafts/${draftId}/variants/${platform}/ready`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: draftVariantReadyCommand
+    },
+      options);
+    }
+  
+
+
+export const getDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, TError,{draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, TError,{draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}, TContext> => {
+
+const mutationKey = ['draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, {draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}> = (props) => {
+          const {draftId,platform,data} = props ?? {};
+
+          return  draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut(draftId,platform,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationResult = NonNullable<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>>
+    export type DraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationBody = DraftVariantReadyCommand
+    export type DraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationError = HTTPValidationError
+
+    /**
+ * @summary Toggle Ready For Post
+ */
+export const useDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, TError,{draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>,
+        TError,
+        {draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

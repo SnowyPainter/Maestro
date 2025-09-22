@@ -1,16 +1,24 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Iterable, List
+from datetime import datetime, timezone
+from typing import Iterable, List, Optional
 
-from apps.backend.src.core.context import get_persona_account_id
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from apps.backend.src.modules.adapters.core.types import CompileResult
 from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
-from apps.backend.src.modules.common.enums import DraftState, PlatformKind, VariantStatus
-from apps.backend.src.modules.drafts.models import Draft, DraftVariant
+from apps.backend.src.modules.common.enums import (
+    ALREADY_PUBLISHED_STATUS,
+    DO_NOT_RECOMPILE_STATUS,
+    DraftState,
+    PlatformKind,
+    PostStatus,
+    VariantStatus,
+)
+from apps.backend.src.modules.accounts.models import PersonaAccount
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
 from apps.backend.src.workers.Adapter.tasks import enqueue_variant_compile
 
@@ -26,6 +34,13 @@ def _supported_compile_platforms() -> set[PlatformKind]:
 def _now() -> datetime:
     return datetime.utcnow()
 
+
+def _normalize_schedule(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.replace(second=0, microsecond=0)
 
 async def create_draft(
     db: AsyncSession,
@@ -93,6 +108,9 @@ async def update_draft_ir(
 
 
 def apply_compile_result_to_variant(variant: DraftVariant, result: CompileResult) -> None:
+    locked_statuses = DO_NOT_RECOMPILE_STATUS
+    if any((pub.status in locked_statuses) for pub in variant.publications or []):
+        return
     variant.rendered_caption = result.rendered_caption
     variant.rendered_blocks = result.rendered_blocks
     variant.metrics = result.metrics
@@ -141,9 +159,17 @@ async def _ensure_variants_for_platforms(
 
 async def _mark_variants_stale(db: AsyncSession, *, draft_id: int, current_ir_revision: int) -> None:
     rows: List[DraftVariant] = (
-        await db.execute(select(DraftVariant).where(DraftVariant.draft_id == draft_id))
+        await db.execute(
+            select(DraftVariant)
+            .where(DraftVariant.draft_id == draft_id)
+            .options(selectinload(DraftVariant.publications))
+        )
     ).scalars().all()
+    # deleted, cancelled 를 따로 해제할 수 없으므로 lock하지 않음
+    locked_statuses = DO_NOT_RECOMPILE_STATUS
     for dv in rows:
+        if any((pub.status in locked_statuses) for pub in dv.publications or []):
+            continue
         # IR revision이 현재 revision보다 작거나 None인 경우에만 stale로 처리
         if dv.ir_revision_compiled is None or dv.ir_revision_compiled < current_ir_revision:
             dv.status = VariantStatus.PENDING
@@ -168,14 +194,20 @@ async def _compile_supported_variants(db: AsyncSession, draft: Draft) -> None:
 
     rows: List[DraftVariant] = (
         await db.execute(
-            select(DraftVariant).where(
+            select(DraftVariant)
+            .where(
                 DraftVariant.draft_id == draft.id,
                 DraftVariant.platform.in_(list(supported)),
             )
+            .options(selectinload(DraftVariant.publications))
         )
     ).scalars().all()
-    
+
+    locked_statuses = DO_NOT_RECOMPILE_STATUS
+
     for dv in rows:
+        if any((pub.status in locked_statuses) for pub in dv.publications or []):
+            continue
         enqueue_variant_compile(draft_id=draft.id, variant_id=dv.id)
 
     if rows:
@@ -214,6 +246,7 @@ async def list_draft_variants(
     stmt = (
         select(DraftVariant)
         .where(DraftVariant.draft_id == owning_draft.id)
+        .options(selectinload(DraftVariant.publications))
         .order_by(DraftVariant.platform.asc())
     )
     return (await db.execute(stmt)).scalars().all()
@@ -228,6 +261,7 @@ async def list_draft_variants_by_platform(
         select(DraftVariant)
         .join(Draft, DraftVariant.draft_id == Draft.id)
         .where(DraftVariant.platform == platform, Draft.user_id == user_id)
+        .options(selectinload(DraftVariant.publications))
     )
     return (await db.execute(stmt)).scalars().all()
 
@@ -250,5 +284,103 @@ async def get_draft_variant(
     stmt = select(DraftVariant).where(
         DraftVariant.draft_id == owning_draft.id,
         DraftVariant.platform == platform,
-    )
+    ).options(selectinload(DraftVariant.publications))
     return (await db.execute(stmt)).scalars().first()
+
+
+async def _load_persona_account_for_user(
+    db: AsyncSession,
+    *,
+    persona_account_id: int,
+    owner_user_id: int,
+) -> PersonaAccount:
+    stmt = (
+        select(PersonaAccount)
+        .where(PersonaAccount.id == persona_account_id)
+        .options(selectinload(PersonaAccount.persona))
+    )
+    persona_account = (await db.execute(stmt)).scalar_one_or_none()
+    if (
+        not persona_account
+        or not persona_account.persona
+        or persona_account.persona.owner_user_id != owner_user_id
+    ):
+        raise PermissionError("persona account mismatch")
+    return persona_account
+
+
+async def upsert_post_publication_schedule(
+    db: AsyncSession,
+    *,
+    variant: DraftVariant,
+    persona_account_id: int,
+    scheduled_at: datetime,
+    owner_user_id: int,
+) -> PostPublication:
+    await _load_persona_account_for_user(
+        db,
+        persona_account_id=persona_account_id,
+        owner_user_id=owner_user_id,
+    )
+
+    stmt = select(PostPublication).where(
+        PostPublication.variant_id == variant.id,
+        PostPublication.account_persona_id == persona_account_id,
+    )
+    publication = (await db.execute(stmt)).scalar_one_or_none()
+    if publication is None:
+        publication = PostPublication(
+            variant_id=variant.id,
+            account_persona_id=persona_account_id,
+            platform=variant.platform,
+        )
+        db.add(publication)
+        await db.flush()
+
+    if publication.status in ALREADY_PUBLISHED_STATUS:
+        raise ValueError("cannot reschedule a published post")
+
+    publication.status = PostStatus.SCHEDULED
+    publication.scheduled_at = _normalize_schedule(scheduled_at)
+    publication.updated_at = _now()
+    db.add(publication)
+    await db.flush()
+    return publication
+
+
+async def cancel_post_publication(
+    db: AsyncSession,
+    *,
+    variant: DraftVariant,
+    persona_account_id: int,
+    owner_user_id: int,
+) -> PostPublication:
+    await _load_persona_account_for_user(
+        db,
+        persona_account_id=persona_account_id,
+        owner_user_id=owner_user_id,
+    )
+
+    stmt = select(PostPublication).where(
+        PostPublication.variant_id == variant.id,
+        PostPublication.account_persona_id == persona_account_id,
+    )
+    publication = (await db.execute(stmt)).scalar_one_or_none()
+    if publication is None:
+        publication = PostPublication(
+            variant_id=variant.id,
+            account_persona_id=persona_account_id,
+            platform=variant.platform,
+        )
+        db.add(publication)
+        await db.flush()
+
+    if publication.status in ALREADY_PUBLISHED_STATUS:
+        raise ValueError("cannot cancel a monitoring or published post")
+
+    publication.status = PostStatus.CANCELLED
+    publication.scheduled_at = None
+    publication.updated_at = _now()
+    db.add(publication)
+    await db.flush()
+    return publication

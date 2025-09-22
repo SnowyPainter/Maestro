@@ -58,6 +58,19 @@ class DraftList(RootModel[list[DraftOut]]):
     pass
 
 
+def _parse_persona_account_id(ctx: TaskContext) -> Optional[int]:
+    raw = ctx.optional(str, name="persona_account_id")
+    if raw is None:
+        return None
+    try:
+        value = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="Invalid persona account context") from exc
+    if value <= 0:
+        raise HTTPException(status_code=400, detail="Invalid persona account context")
+    return value
+
+
 class DraftVariantRender(BaseModel):
     variant_id: int
     draft_id: int
@@ -71,9 +84,23 @@ class DraftVariantRender(BaseModel):
     metrics: Optional[RenderedMetrics] = None
     compiler_version: int
     ir_revision_compiled: Optional[int] = None
+    post_publication_id: Optional[int] = None
+    post_publication_status: Optional[str] = None
+    post_publication_scheduled_at: Optional[datetime] = None
 
     @classmethod
-    def from_model(cls, variant: DraftVariant) -> "DraftVariantRender":
+    def from_model(
+        cls,
+        variant: DraftVariant,
+        *,
+        persona_account_id: Optional[int] = None,
+    ) -> "DraftVariantRender":
+        publication = None
+        if persona_account_id is not None:
+            for candidate in variant.publications or []:
+                if candidate.account_persona_id == persona_account_id:
+                    publication = candidate
+                    break
         return cls(
             variant_id=variant.id,
             draft_id=variant.draft_id,
@@ -87,6 +114,9 @@ class DraftVariantRender(BaseModel):
             metrics=variant.metrics or None,
             compiler_version=variant.compiler_version,
             ir_revision_compiled=variant.ir_revision_compiled,
+            post_publication_id=publication.id if publication else None,
+            post_publication_status=publication.status.value if publication else None,
+            post_publication_scheduled_at=publication.scheduled_at if publication else None,
         )
 
 
@@ -145,6 +175,7 @@ async def op_list_draft_variants(
     payload: DraftVariantsPayload,
     ctx: TaskContext,
 ) -> DraftVariantRenderList:
+    persona_account_id = _parse_persona_account_id(ctx)
     db: AsyncSession = ctx.require(AsyncSession)
     user: User = ctx.require(User)
     try:
@@ -165,7 +196,10 @@ async def op_list_draft_variants(
         user_id=user.id,
         draft=draft,
     )
-    items = [DraftVariantRender.from_model(variant) for variant in variants]
+    items = [
+        DraftVariantRender.from_model(variant, persona_account_id=persona_account_id)
+        for variant in variants
+    ]
     return DraftVariantRenderList(root=items)
 
 @operator(
@@ -177,6 +211,8 @@ async def op_list_draft_variants_by_platform(
     payload: DraftVariantsByPlatformPayload,
     ctx: TaskContext,
 ) -> DraftVariantRenderList:
+    persona_account_id = _parse_persona_account_id(ctx)
+    
     db: AsyncSession = ctx.require(AsyncSession)
     user: User = ctx.require(User)
     variants = await list_draft_variants_by_platform(
@@ -184,7 +220,12 @@ async def op_list_draft_variants_by_platform(
         user_id=user.id,
         platform=payload.platform,
     )
-    return DraftVariantRenderList(root=[DraftVariantRender.from_model(variant) for variant in variants])
+    return DraftVariantRenderList(
+        root=[
+            DraftVariantRender.from_model(variant, persona_account_id=persona_account_id)
+            for variant in variants
+        ]
+    )
 
 @operator(
     key="bff.drafts.read_variant",
@@ -195,6 +236,7 @@ async def op_read_draft_variant(
     payload: DraftVariantDetailPayload,
     ctx: TaskContext,
 ) -> DraftVariantRenderDetail:
+    persona_account_id = _parse_persona_account_id(ctx)
     db: AsyncSession = ctx.require(AsyncSession)
     user: User = ctx.require(User)
 
@@ -220,7 +262,10 @@ async def op_read_draft_variant(
     if not variant:
         raise HTTPException(status_code=404, detail="Variant not found")
 
-    return DraftVariantRenderDetail.from_model(variant)
+    return DraftVariantRenderDetail.from_model(
+        variant,
+        persona_account_id=persona_account_id,
+    )
 
 
 @FLOWS.flow(

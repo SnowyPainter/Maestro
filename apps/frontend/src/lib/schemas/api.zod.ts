@@ -396,7 +396,10 @@ export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponseItem = z
   "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "compiler_version": zod.number(),
-  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional()
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_status": zod.string().nullish(),
+  "post_publication_scheduled_at": zod.iso.datetime({}).nullish()
 })
 export const bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponse = zod.array(bffDraftsListVariantsApiBffDraftsDraftIdVariantsGetResponseItem)
 
@@ -432,7 +435,10 @@ export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGetResponse 
   "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "compiler_version": zod.number(),
-  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional()
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_status": zod.string().nullish(),
+  "post_publication_scheduled_at": zod.iso.datetime({}).nullish()
 })
 
 
@@ -505,7 +511,10 @@ export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetRespo
   "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
   "metrics": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "compiler_version": zod.number(),
-  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional()
+  "ir_revision_compiled": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_status": zod.string().nullish(),
+  "post_publication_scheduled_at": zod.iso.datetime({}).nullish()
 })
 export const bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponse = zod.array(bffDraftsListVariantsByPlatformApiBffDraftsPlatformPlatformGetResponseItem)
 
@@ -1174,6 +1183,44 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteParams = zod.object({
 
 export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object({
   "message": zod.string()
+})
+
+
+/**
+ * Mark or unmark a draft variant as ready for publishing with scheduling
+ * @summary Toggle Ready For Post
+ */
+export const draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutParams = zod.object({
+  "draft_id": zod.union([zod.number(),zod.null()]),
+  "platform": zod.enum(['instagram', 'threads'])
+})
+
+export const draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutBody = zod.object({
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "ready": zod.boolean(),
+  "scheduled_at": zod.iso.datetime({}).nullish()
+})
+
+export const draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutResponse = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
 })
 
 
