@@ -165,10 +165,18 @@ def _trends_events(trends_data, account_persona_id: int, country: str) -> List[T
 
     # Create events for each trend item
     for row in trends_data.get("rows", []):
-        timestamp = row.get("date") or _utcnow()
+        pub_date_str = row.get("pub_date")
+        if pub_date_str:
+            try:
+                timestamp = datetime.fromisoformat(pub_date_str.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                timestamp = _utcnow()
+        else:
+            timestamp = _utcnow()
+        title = row.get('title', 'unknown').replace(" ", "_")[:10]
         event = TimelineEvent(
-            event_id=f"trend:{country}:{row.get('keyword', 'unknown')}:{timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)}",
-            timestamp=timestamp if isinstance(timestamp, datetime) else _utcnow(),
+            event_id=f"trend:{country}:{title}:{timestamp.isoformat() if hasattr(timestamp, 'isoformat') else str(timestamp)}",
+            timestamp=timestamp,
             status="queried",
             **base_kwargs,
         )
@@ -242,6 +250,7 @@ async def op_timeline_trends(
     since_date = safe_datetime_to_date(payload.since)
     until_date = safe_datetime_to_date(payload.until)
 
+    logger.info(f"Search for trends from {to_aware_utc(since_date)} to {to_aware_utc(until_date)}")
     trends_data = await query_trends(
         db,
         country="US",  # Default country, could be from payload
@@ -251,10 +260,16 @@ async def op_timeline_trends(
         since=to_aware_utc(since_date),
         until=to_aware_utc(until_date),
     )
-
+    logger.info(f"Trends data: {len(trends_data['rows'])}, {trends_data['rows'][-1]['pub_date']}")
+    logger.info("--------------------------------")
     events = _trends_events(trends_data, payload.persona_account_id, "US")
 
+    logger.info(f"Events: {len(events)}")
+    logger.info("--------------------------------")
     filtered = _filter_by_range(events, since=payload.since, until=payload.until)
+    logger.info(f"Filtered: {len(filtered)}")
+    logger.info("--------------------------------")
+
     combined = compose_timeline_collections([
         payload.events,
         TimelineEventCollection(source="trends", events=filtered),

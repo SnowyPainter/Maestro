@@ -119,8 +119,32 @@ async def _execute_plan(message: str, plan: ChatPlan, runtime: ExecutionRuntime)
                 assert step.flow is not None
                 flow = step.flow
             payload_data: Any = dict(step.payload)
+            """
+            페이로드 빌더가 none이 아니면 이걸 거치고 나면 since 등 슬롯이 공중분해됨. 스텝 거치지 않아도 없어짐. 고로 in-out구조상 유실은 아님. 페이로드빌더가 누락시키는거같음.
+            """
+            logger.info(f"Step: {step_label}")
+            logger.info("--------------------------------")
+            logger.info(f"Before payload_builder")
+            if isinstance(payload_data, dict):
+                logger.info(f"payload_data is dict")
+                if 'since' in payload_data:
+                    logger.info(f"payload_data: {payload_data['since']}")
+            else:
+                logger.info(f"payload_data is not dict")
+
             if step.payload_builder is not None:
                 payload_data = step.payload_builder(results_by_step)
+            
+            logger.info("--------------------------------")
+            logger.info(f"After payload_builder")
+            if isinstance(payload_data, dict):
+                logger.info(f"payload_data is dict")
+                if 'since' in payload_data:
+                    logger.info(f"payload_data: {payload_data['since']}")
+            else:
+                logger.info(f"payload_data is not dict")
+            
+            logger.info("--------------------------------")
             if isinstance(payload_data, BaseModel):
                 payload_data = payload_data.model_dump()
             payload_model = flow.input_model(**payload_data)
