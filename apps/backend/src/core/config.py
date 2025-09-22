@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     # ----- App -----
     APP_NAME: str = "Maestro Backend"
     ENV: str = "dev"
+    LOG_LEVEL: str = "INFO"
 
     # ----- JWT -----
     JWT_SECRET: str = "change-me-in-env"

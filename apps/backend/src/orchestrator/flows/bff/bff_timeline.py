@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional
+from apps.backend.src.core.logging import setup_logging
+setup_logging()
+import logging
 
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field, ConfigDict, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -6,12 +6,18 @@ from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, ValidationError
+from apps.backend.src.core.logging import setup_logging
+setup_logging()
 
 from .cards import card_type_for_model, serialize_payload
 from .dispatch import ExecutionRuntime, orchestrate_flow, runtime_dependency
 from .nlp import IntentCandidate, IntentResult
 from .planner import ChatPlan, FlowMatch, flow_planner
 from .registry import FLOWS
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/chat", tags=["chat"])

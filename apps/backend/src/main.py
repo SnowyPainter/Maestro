@@ -6,6 +6,7 @@ from apps.backend.src.orchestrator.bff_router import router as orchestrator_bff_
 from apps.backend.src.orchestrator.chat_router import router as orchestrator_chat_router
 from apps.backend.src.orchestrator.action_router import router as orchestrator_action_router
 from apps.backend.src.orchestrator.helper_router import router as orchestrator_helper_router
+from apps.backend.src.core.logging import setup_logging
 
 from apps.backend.src.core.config import settings
 from apps.backend.src.core.db import engine, Base
@@ -121,6 +122,8 @@ app.openapi = custom_openapi
 
 @app.on_event("startup")
 async def dump_openapi():
+    setup_logging(level=settings.LOG_LEVEL.upper())
+
     import yaml
 
     contracts_dir = Path(PRJ_RT) / "contracts"

@@ -12,6 +12,9 @@ from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequen
 
 from pydantic import BaseModel, ValidationError
 
+from apps.backend.src.core.logging import setup_logging
+setup_logging()
+
 from apps.backend.src.services.embeddings import embed_texts
 from .cards import card_type_for_model
 from .nlp import nlp_engine
@@ -19,6 +22,10 @@ from .persona_context import persona_context_defaults
 from .registry import FLOWS, FlowDefinition
 
 from typing import Any, Dict, Optional, get_origin, get_args
+import logging
+
+logger = logging.getLogger(__name__)
+
 from datetime import datetime, date, time, timezone
 try:
     # Pydantic v2
@@ -434,7 +441,7 @@ class FlowPlanner:
     ) -> List[PlanExecutionStep]:
         payload = self._build_payload(flow.input_model, slots, message)
         card_hint = card_type_for_model(flow.output_model)
-
+        logger.info(f"payload: {payload}")
         if payload is not None:
             return [
                 PlanExecutionStep(
@@ -492,6 +499,10 @@ class FlowPlanner:
         fields = self._model_fields(model_cls)  # pydantic FieldInfo 사전이라고 가정
         data: Dict[str, Any] = {}
 
+        logger.info(f"model_cls: {model_cls}")
+        logger.info(f"slots: {slots}")
+        logger.info(f"message: {message}")
+
         for name, field in fields.items():
             if name in slots:
                 v = slots[name]
@@ -517,17 +528,20 @@ class FlowPlanner:
             if name == "ir":
                 data[name] = self._default_draft_ir(message)
                 continue
-            # 나머지 optional은 모델 기본값에 맡김
+                    
 
         # persona 컨텍스트 기본값 주입(이미 있는 키는 건드리지 않음)
         context_defaults = self._persona_context_defaults(fields)
         for key, value in context_defaults.items():
             data.setdefault(key, value)
 
+        logger.info(f"data: {data}")
+        
         # 최종 모델 검증(여기서 한 번 더 안전망)
         try:
             model_cls(**data)
         except ValidationError:
+            logger.info(f"ValidationError: {data}")
             return None
         return data
 
