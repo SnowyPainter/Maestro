@@ -1,4 +1,4 @@
-# apps/backend/src/modules/adapters/base.py
+# apps/backend/src/modules/adapters/core/types.py
 from __future__ import annotations
 from typing import Protocol, Optional, Dict, Any, List, Literal, TypedDict, Mapping
 from dataclasses import dataclass
@@ -48,6 +48,14 @@ class CompileResult:
 class PublishResult:
     ok: bool
     external_id: Optional[str]  # 플랫폼 포스트 ID/URL
+    errors: List[str]
+    warnings: List[str]
+
+
+@dataclass
+class CommentCreateResult:
+    ok: bool
+    external_id: Optional[str]
     errors: List[str]
     warnings: List[str]
 
@@ -138,3 +146,16 @@ class Adapter(Protocol):
 
     # 외부 → 내부 메트릭 동기화
     async def sync_metrics(self, external_id: str, *, credentials: dict) -> MetricsResult: ...
+
+    # 댓글 작성
+    async def create_comment(
+        self,
+        parent_external_id: str,
+        *,
+        credentials: dict,
+        text: str,
+        options: dict | None = None,
+    ) -> CommentCreateResult: ...
+
+    # 댓글 삭제
+    async def delete_comment(self, comment_external_id: str, *, credentials: dict) -> DeleteResult: ...

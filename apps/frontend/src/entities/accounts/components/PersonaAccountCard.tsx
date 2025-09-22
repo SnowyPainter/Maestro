@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link2, X } from "lucide-react";
+import { Link2, X, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { useCallback } from "react";
@@ -101,14 +101,21 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
         </div>
         <div className="flex items-center gap-2">
           {isActive && <Badge variant="secondary">Active</Badge>}
-          <Button
-            variant={isActive ? "default" : "outline"}
-            size="sm"
+          <button
             onClick={handleInject}
             disabled={isActive}
+            className={`p-2 rounded-md transition-colors ${
+              isActive
+                ? 'bg-primary text-primary-foreground cursor-not-allowed opacity-75'
+                : 'hover:bg-muted/50 cursor-pointer'
+            }`}
           >
-            {isActive ? "Injected" : "Inject"}
-          </Button>
+            <Zap className={`h-4 w-4 ${
+              isActive
+                ? 'text-primary-foreground'
+                : 'bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent'
+            }`} />
+          </button>
         </div>
       </CardFooter>
       <AlertDialog>

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Optional
 
-from apps.backend.src.modules.adapters.schemas import Adapter, CompileResult
+from apps.backend.src.modules.adapters.core.types import Adapter, CompileResult
 from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
 from apps.backend.src.modules.common.enums import PlatformKind
 from apps.backend.src.modules.injectors.base import (

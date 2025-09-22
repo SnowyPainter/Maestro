@@ -7,7 +7,7 @@ from apps.backend.src.core.context import get_persona_account_id
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.src.modules.adapters.schemas import CompileResult
+from apps.backend.src.modules.adapters.core.types import CompileResult
 from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
 from apps.backend.src.modules.common.enums import DraftState, PlatformKind, VariantStatus
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant

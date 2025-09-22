@@ -9,7 +9,7 @@ from typing import Dict, Type
 
 from apps.backend.src.modules.common.enums import PlatformKind
 
-from .schemas import Adapter
+from .core.types import Adapter
 
 
 class AdapterRegistry:

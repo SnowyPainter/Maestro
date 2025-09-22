@@ -16,7 +16,7 @@ from apps.backend.src.modules.adapters.platforms import (
     _mk_compile_result,
     _truncate,
 )
-from apps.backend.src.modules.adapters.schemas import CompileResult, RenderedVariantBlocks
+from apps.backend.src.modules.adapters.core.types import CompileResult, RenderedVariantBlocks
 from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus
 from apps.backend.src.modules.injectors.base import InjectedContent
 from apps.backend.src.modules.injectors.platform_policy import ComposePolicy, PLATFORM_POLICIES

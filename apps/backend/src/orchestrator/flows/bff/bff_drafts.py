@@ -10,7 +10,7 @@ from pydantic import BaseModel, RootModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.src.modules.adapters.schemas import (
+from apps.backend.src.modules.adapters.core.types import (
     RenderedMetrics,
     RenderedVariantBlocks,
 )

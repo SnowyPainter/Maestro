@@ -2,39 +2,39 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
+from dataclasses import dataclass
+from datetime import datetime, timezone
 
-from apps.backend.src.modules.adapters.engine import compile_with_spec, get_compile_spec
-from apps.backend.src.modules.adapters.schemas import (
-    Adapter,
-    CompileResult,
-    DeleteResult,
-    MetricsResult,
-    PublishResult,
-)
-from apps.backend.src.modules.common.enums import (
-    ContentKind,
-    MetricsScope,
-    PlatformKind,
-)
-from apps.backend.src.modules.injectors.base import InjectedContent
+from apps.backend.src.modules.adapters.core.capabilities import MetricsCapability, PublishingCapability
+from apps.backend.src.modules.adapters.core.compiler import SpecCompiler
+from apps.backend.src.modules.adapters.core.adapter import CapabilityAdapter
+from apps.backend.src.modules.adapters.core.types import MetricsResult, PublishResult, RenderedVariantBlocks
+from apps.backend.src.modules.common.enums import ContentKind, MetricsScope, PlatformKind
 
-def _utcnow():
-    from datetime import datetime, timezone
 
+def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class InstagramAdapter(Adapter):
+class InstagramAdapter(CapabilityAdapter[SpecCompiler]):
     platform = PlatformKind.INSTAGRAM
-    compiler_version = 1
 
-    async def compile(self, payload: InjectedContent, *, locale: Optional[str] = None) -> CompileResult:
-        return await compile_with_spec(payload, SPEC)
+    def __init__(self) -> None:
+        compiler = SpecCompiler(platform=self.platform, version=1)
+        publisher = InstagramPublishingCapability()
+        metrics = InstagramMetricsCapability()
+        super().__init__(
+            platform=self.platform,
+            compiler=compiler,
+            publisher=publisher,
+            metrics=metrics,
+        )
 
+
+class InstagramPublishingCapability(PublishingCapability):
     async def publish(
         self,
-        rendered_blocks: dict | None,
+        rendered_blocks: RenderedVariantBlocks | None,
         caption: str | None,
         *,
         credentials: dict,
@@ -43,13 +43,21 @@ class InstagramAdapter(Adapter):
         external_id = f"ig:{uuid.uuid4()}"
         return PublishResult(ok=True, external_id=external_id, errors=[], warnings=[])
 
-    async def delete(self, external_id: str, *, credentials: dict) -> DeleteResult:
-        return DeleteResult(ok=True, errors=[])
 
-    async def sync_metrics(self, external_id: str, *, credentials: dict) -> MetricsResult:
+@dataclass
+class _PlaceholderMetrics:
+    impressions: float = 0.0
+    likes: float = 0.0
+    comments: float = 0.0
+    saves: float = 0.0
+
+
+class InstagramMetricsCapability(MetricsCapability):
+    async def fetch_metrics(self, external_id: str, *, credentials: dict) -> MetricsResult:
+        metrics = _PlaceholderMetrics().__dict__
         return MetricsResult(
             ok=True,
-            metrics={"impressions": 0.0, "likes": 0.0, "comments": 0.0, "saves": 0.0},
+            metrics=metrics,
             scope=MetricsScope.SINCE_PUBLISH,
             content_kind=ContentKind.POST,
             mapping_version=1,
@@ -58,6 +66,3 @@ class InstagramAdapter(Adapter):
             warnings=[],
             errors=[],
         )
-
-
-SPEC = get_compile_spec(PlatformKind.INSTAGRAM, InstagramAdapter.compiler_version)

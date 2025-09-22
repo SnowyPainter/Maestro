@@ -34,11 +34,8 @@ from apps.backend.src.modules.users.schemas import (
     UserResponse,
 )
 from apps.backend.src.modules.users.service import authenticate, create_user, get_user_by_id
-from apps.backend.src.services.oauth_threads import (
-    OAuthAccessToken,
-    OAuthProfile,
-    ThreadsOAuthProvider,
-)
+from apps.backend.src.services.oauth.base import OAuthAccessToken, OAuthProfile
+from apps.backend.src.services.oauth_threads import ThreadsOAuthProvider
 from pydantic import BaseModel
 
 

@@ -2,7 +2,7 @@ from typing import Literal, Union, List, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, conlist, ConfigDict
 
-from apps.backend.src.modules.adapters.schemas import (
+from apps.backend.src.modules.adapters.core.types import (
     RenderedMetrics,
     RenderedVariantBlocks,
 )

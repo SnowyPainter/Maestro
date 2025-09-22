@@ -1,18 +1,30 @@
 # apps/backend/src/modules/adapters/impls/Threads.py
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Dict, Iterable, List, MutableMapping, Optional
+from urllib.parse import urlparse
 
 import httpx
 
-from apps.backend.src.modules.adapters.engine import (
-    CompileState,
-    compile_with_spec,
-    get_compile_spec,
+from apps.backend.src.modules.adapters.core.capabilities import (
+    CommentCreateCapability,
+    CommentDeleteCapability,
+    DeletionCapability,
+    MetricsCapability,
+    PublishingCapability,
 )
-from apps.backend.src.modules.adapters.schemas import (
-    Adapter,
-    CompileResult,
+from apps.backend.src.modules.adapters.core.compiler import SpecCompiler
+from apps.backend.src.modules.adapters.engine import CompileState
+from apps.backend.src.modules.adapters.http.graph import (
+    GraphAPIError,
+    GraphAPIJSONClient,
+    GraphAPITransport,
+)
+from apps.backend.src.modules.adapters.core.adapter import CapabilityAdapter
+from apps.backend.src.modules.adapters.core.types import (
+    CommentCreateResult,
     DeleteResult,
     MetricsResult,
     PublishResult,
@@ -20,22 +32,20 @@ from apps.backend.src.modules.adapters.schemas import (
     ThreadsCredentials,
 )
 from apps.backend.src.modules.common.enums import (
+    KPIKey,
     ContentKind,
     MetricsScope,
     PlatformKind,
 )
-from apps.backend.src.modules.injectors.base import InjectedContent
 from apps.backend.src.services.http_clients import ASYNC_FETCH
 
-def _utcnow():
-    from datetime import datetime, timezone
 
+def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class ThreadsAdapter(Adapter):
+class ThreadsAdapter(CapabilityAdapter[SpecCompiler]):
     platform = PlatformKind.THREADS
-    compiler_version = 1
 
     def __init__(
         self,
@@ -43,12 +53,105 @@ class ThreadsAdapter(Adapter):
         http_client: httpx.AsyncClient | None = None,
         base_url: str = "https://graph.threads.net/v1.0",
     ) -> None:
-        self._http = http_client or ASYNC_FETCH
-        self._base_url = base_url.rstrip("/")
+        http = http_client or ASYNC_FETCH
+        context = ThreadsContext(http=http, base_url=base_url)
+        credentials = ThreadsCredentialResolver()
+        compiler = SpecCompiler(
+            platform=self.platform,
+            version=1,
+            hooks=(
+                _threads_metric_hook,
+            ),
+        )
+        publisher = ThreadsPublishingCapability(context=context, credentials=credentials)
+        deleter = ThreadsDeletionCapability(context=context, credentials=credentials)
+        metrics = ThreadsMetricsCapability(context=context, credentials=credentials)
+        comment_creator = ThreadsCommentCreateCapability(context=context, credentials=credentials)
+        comment_deleter = ThreadsCommentDeleteCapability(context=context, credentials=credentials)
+        super().__init__(
+            platform=self.platform,
+            compiler=compiler,
+            publisher=publisher,
+            deleter=deleter,
+            metrics=metrics,
+            comment_creator=comment_creator,
+            comment_deleter=comment_deleter,
+        )
 
-    async def compile(self, payload: InjectedContent, *, locale: Optional[str] = None) -> CompileResult:
-        return await compile_with_spec(payload, SPEC)
 
+# Compile ----------------------------------------------------------------------------------------
+def _threads_metric_hook(state: CompileState) -> None:
+    caption = state.caption or ""
+    if caption:
+        state.metrics["thread_length"] = caption.count("\n\n") + 1
+    else:
+        state.metrics["thread_length"] = 0
+
+
+# Context & credentials -------------------------------------------------------------------------
+@dataclass
+class ThreadsContext:
+    http: httpx.AsyncClient
+    base_url: str
+
+    def graph_client(self, *, access_token: str) -> "ThreadsAPI":
+        return ThreadsAPI(
+            transport=GraphAPITransport(
+                http=self.http,
+                base_url=self.base_url,
+                default_params={"access_token": access_token},
+            )
+        )
+
+
+class ThreadsCredentialResolver:
+    def resolve(
+        self,
+        credentials: ThreadsCredentials | Dict[str, Any] | None,
+        *,
+        require_user_id: bool = True,
+    ) -> tuple[Optional[ThreadsCredentials], List[str]]:
+        if isinstance(credentials, ThreadsCredentials):
+            missing: List[str] = []
+            if not credentials.access_token:
+                missing.append("access_token")
+            if require_user_id and not credentials.user_id:
+                missing.append("threads user id")
+            if missing:
+                return None, missing
+            return credentials, []
+
+        resolved, missing = ThreadsCredentials.from_mapping(
+            credentials,
+            require_user_id=require_user_id,
+        )
+        return resolved, missing
+
+
+class ThreadsCapabilityBase:
+    def __init__(
+        self,
+        *,
+        context: ThreadsContext,
+        credentials: ThreadsCredentialResolver,
+    ) -> None:
+        self._context = context
+        self._credentials = credentials
+
+    def _client(self, *, access_token: str) -> "ThreadsAPI":
+        return self._context.graph_client(access_token=access_token)
+
+    def _resolve_credentials(
+        self,
+        credentials: ThreadsCredentials | Dict[str, Any] | None,
+        *,
+        require_user_id: bool = True,
+    ) -> tuple[Optional[ThreadsCredentials], List[str]]:
+        return self._credentials.resolve(credentials, require_user_id=require_user_id)
+
+
+# Publish ---------------------------------------------------------------------------------------
+class ThreadsPublishingCapability(ThreadsCapabilityBase, PublishingCapability):
     async def publish(
         self,
         rendered_blocks: RenderedVariantBlocks | None,
@@ -57,23 +160,21 @@ class ThreadsAdapter(Adapter):
         credentials: dict,
         options: dict | None = None,
     ) -> PublishResult:
-        warnings: list[str] = []
+        warnings: List[str] = []
         resolved_credentials, missing_fields = self._resolve_credentials(credentials)
         if missing_fields or not resolved_credentials:
             return PublishResult(
                 ok=False,
                 external_id=None,
                 errors=[
-                    "missing credentials: " + ", ".join(missing_fields or ["access_token", "threads user id"]),
+                    "missing credentials: "
+                    + ", ".join(missing_fields or ["access_token", "threads user id"]),
                 ],
                 warnings=[],
             )
 
-        access_token = resolved_credentials.access_token
-        user_id = resolved_credentials.user_id or ""
-
         blocks_media = (rendered_blocks or {}).get("media") or []
-        media_payload, media_warnings = self._prepare_media_payload(blocks_media)
+        media_payload, media_warnings = prepare_media_payload(blocks_media)
         warnings.extend(media_warnings)
 
         text = (caption or "").strip()
@@ -90,16 +191,12 @@ class ThreadsAdapter(Adapter):
             payload["text"] = text
         if media_payload:
             payload.update(media_payload)
-        payload.update(self._extract_publish_options(options))
+        payload.update(extract_publish_options(options))
 
-        client = ThreadsGraphClient(
-            access_token=access_token,
-            http=self._http,
-            base_url=self._base_url,
-        )
+        client = self._client(access_token=resolved_credentials.access_token)
 
         try:
-            creation = await client.post_json(f"{user_id}/threads", data=payload)
+            creation = await client.create_thread(resolved_credentials.user_id or "", payload)
         except ThreadsAPIError as exc:
             return PublishResult(
                 ok=False,
@@ -108,7 +205,7 @@ class ThreadsAdapter(Adapter):
                 warnings=warnings,
             )
 
-        creation_id = _resolve_creation_id(creation)
+        creation_id = resolve_creation_id(creation)
         if not creation_id:
             return PublishResult(
                 ok=False,
@@ -118,10 +215,7 @@ class ThreadsAdapter(Adapter):
             )
 
         try:
-            published = await client.post_json(
-                f"{user_id}/threads_publish",
-                data={"creation_id": creation_id},
-            )
+            published = await client.publish_thread(resolved_credentials.user_id or "", creation_id)
         except ThreadsAPIError as exc:
             return PublishResult(
                 ok=False,
@@ -130,17 +224,13 @@ class ThreadsAdapter(Adapter):
                 warnings=warnings,
             )
 
-        published_id = _resolve_creation_id(published)
-        if not published_id:
-            published_id = creation_id
+        published_id = resolve_creation_id(published) or creation_id
+        if published_id == creation_id:
             warnings.append("threads publish response missing post id; using creation id")
 
         external_id: Optional[str] = published_id
         try:
-            details = await client.get_json(
-                str(published_id),
-                params={"fields": "id,permalink"},
-            )
+            details = await client.fetch_thread(published_id)
         except ThreadsAPIError as exc:
             warnings.append(f"failed to fetch thread permalink: {exc.as_message()}")
         else:
@@ -150,6 +240,9 @@ class ThreadsAdapter(Adapter):
 
         return PublishResult(ok=True, external_id=external_id, errors=[], warnings=warnings)
 
+
+# Delete ----------------------------------------------------------------------------------------
+class ThreadsDeletionCapability(ThreadsCapabilityBase, DeletionCapability):
     async def delete(self, external_id: str, *, credentials: dict) -> DeleteResult:
         resolved_credentials, missing_fields = self._resolve_credentials(
             credentials,
@@ -161,19 +254,24 @@ class ThreadsAdapter(Adapter):
                 errors=["missing credentials: access_token"],
             )
 
-        client = ThreadsGraphClient(
-            access_token=resolved_credentials.access_token,
-            http=self._http,
-            base_url=self._base_url,
-        )
+        target_id = normalize_thread_id(external_id)
+        if not target_id:
+            return DeleteResult(
+                ok=False,
+                errors=["threads delete requires valid external id"],
+            )
 
+        client = self._client(access_token=resolved_credentials.access_token)
         try:
-            await client.delete(str(external_id))
+            await client.delete_content(target_id)
         except ThreadsAPIError as exc:
             return DeleteResult(ok=False, errors=[exc.as_message()])
         return DeleteResult(ok=True, errors=[])
 
-    async def sync_metrics(self, external_id: str, *, credentials: dict) -> MetricsResult:
+
+# Metrics ---------------------------------------------------------------------------------------
+class ThreadsMetricsCapability(ThreadsCapabilityBase, MetricsCapability):
+    async def fetch_metrics(self, external_id: str, *, credentials: dict) -> MetricsResult:
         resolved_credentials, missing_fields = self._resolve_credentials(
             credentials,
             require_user_id=False,
@@ -184,256 +282,338 @@ class ThreadsAdapter(Adapter):
                 metrics={},
                 scope=MetricsScope.SINCE_PUBLISH,
                 content_kind=ContentKind.POST,
-                mapping_version=1,
+                mapping_version=2,
                 collected_at=_utcnow(),
                 raw={},
                 warnings=[],
                 errors=["missing credentials: access_token"],
             )
 
-        client = ThreadsGraphClient(
-            access_token=resolved_credentials.access_token,
-            http=self._http,
-            base_url=self._base_url,
-        )
-
-        try:
-            insights = await client.get_json(
-                f"{external_id}/insights",
-                params={"metric": "likes,replies,reposts,quotes"},
+        target_id = normalize_thread_id(external_id)
+        if not target_id:
+            return MetricsResult(
+                ok=False,
+                metrics={},
+                scope=MetricsScope.SINCE_PUBLISH,
+                content_kind=ContentKind.POST,
+                mapping_version=2,
+                collected_at=_utcnow(),
+                raw={},
+                warnings=[],
+                errors=["threads metrics requires valid external id"],
             )
+
+        client = self._client(access_token=resolved_credentials.access_token)
+        try:
+            insights = await client.fetch_metrics(target_id)
         except ThreadsAPIError as exc:
             return MetricsResult(
                 ok=False,
                 metrics={},
                 scope=MetricsScope.SINCE_PUBLISH,
                 content_kind=ContentKind.POST,
-                mapping_version=1,
+                mapping_version=2,
                 collected_at=_utcnow(),
                 raw={},
                 warnings=[],
                 errors=[exc.as_message()],
             )
 
-        metrics = _parse_metrics(insights)
+        metrics = parse_metrics(insights)
         return MetricsResult(
             ok=True,
             metrics=metrics,
             scope=MetricsScope.SINCE_PUBLISH,
             content_kind=ContentKind.POST,
-            mapping_version=1,
+            mapping_version=2,
             collected_at=_utcnow(),
             raw=insights or {},
             warnings=[],
             errors=[],
         )
 
-    @staticmethod
-    def _resolve_credentials(
-        credentials: ThreadsCredentials | Dict[str, Any] | None,
+
+# Comment ---------------------------------------------------------------------------------------
+class ThreadsCommentCreateCapability(ThreadsCapabilityBase, CommentCreateCapability):
+    async def create_comment(
+        self,
+        parent_external_id: str,
         *,
-        require_user_id: bool = True,
-    ) -> tuple[Optional[ThreadsCredentials], list[str]]:
-        if isinstance(credentials, ThreadsCredentials):
-            missing: list[str] = []
-            if not credentials.access_token:
-                missing.append("access_token")
-            if require_user_id and not credentials.user_id:
-                missing.append("threads user id")
-            if missing:
-                return None, missing
-            return credentials, []
-
-        resolved, missing = ThreadsCredentials.from_mapping(
-            credentials,
-            require_user_id=require_user_id,
-        )
-        return resolved, missing
-
-    @staticmethod
-    def _extract_publish_options(options: dict | None) -> Dict[str, Any]:
-        if not isinstance(options, dict):
-            return {}
-        # allow both top-level options and nested threads-specific options
-        raw = dict(options)
-        if isinstance(options.get("threads"), dict):
-            raw.update(options.get("threads"))
-
-        allowed_keys = {
-            "reply_to_id": "reply_to_id",
-            "quote_post_id": "quote_post_id",
-            "scheduled_publish_time": "scheduled_publish_time",
-            "url_sharing_enabled": "url_sharing_enabled",
-        }
-
-        extracted: Dict[str, Any] = {}
-        for source_key, target_key in allowed_keys.items():
-            value = raw.get(source_key)
-            if value is None:
-                continue
-            if isinstance(value, bool):
-                extracted[target_key] = str(value).lower()
-            else:
-                extracted[target_key] = str(value)
-        return extracted
-
-    @staticmethod
-    def _prepare_media_payload(
-        media_items: list[Dict[str, Any]],
-    ) -> tuple[Dict[str, Any], list[str]]:
-        if not media_items:
-            return {}, []
-
-        warnings: list[str] = []
-        image_items: list[Dict[str, Any]] = []
-        invalid_count = 0
-        video_count = 0
-
-        for item in media_items:
-            if not isinstance(item, dict):
-                invalid_count += 1
-                continue
-
-            kind = item.get("type")
-            if kind == "image":
-                url = item.get("url")
-                if isinstance(url, str) and url.strip():
-                    image_items.append(item)
-                else:
-                    invalid_count += 1
-            elif kind == "video":
-                video_count += 1
-            else:
-                invalid_count += 1
-
-        if video_count:
-            warnings.append(
-                f"threads adapter dropped {video_count} video media item(s); video media is not yet supported",
-            )
-        if invalid_count:
-            warnings.append(
-                f"threads adapter dropped {invalid_count} unsupported media item(s)",
+        credentials: dict,
+        text: str,
+        options: dict | None = None,
+    ) -> CommentCreateResult:
+        warnings: List[str] = []
+        resolved_credentials, missing_fields = self._resolve_credentials(credentials)
+        if missing_fields or not resolved_credentials:
+            return CommentCreateResult(
+                ok=False,
+                external_id=None,
+                errors=[
+                    "missing credentials: "
+                    + ", ".join(missing_fields or ["access_token", "threads user id"]),
+                ],
+                warnings=[],
             )
 
-        if not image_items:
-            return {}, warnings
-
-        if len(image_items) > 1:
-            warnings.append(
-                f"threads adapter only supports the first image; dropped {len(image_items) - 1} additional image(s)",
+        user_id = resolved_credentials.user_id
+        if not user_id:
+            return CommentCreateResult(
+                ok=False,
+                external_id=None,
+                errors=["threads comment requires threads user id"],
+                warnings=[],
             )
 
-        image = image_items[0]
-        url = image.get("url")
-        if not isinstance(url, str):
-            warnings.append("threads adapter image missing url; dropped selected image")
-            return {}, warnings
+        parent_id = normalize_thread_id(parent_external_id)
+        if not parent_id:
+            return CommentCreateResult(
+                ok=False,
+                external_id=None,
+                errors=["threads comment requires valid parent id"],
+                warnings=[],
+            )
 
-        payload: Dict[str, Any] = {
-            "media_type": "IMAGE",
-            "image_url": url.strip(),
-        }
+        body = (text or "").strip()
+        if not body:
+            return CommentCreateResult(
+                ok=False,
+                external_id=None,
+                errors=["threads comment requires text"],
+                warnings=[],
+            )
 
-        alt_text_raw = image.get("alt") or image.get("caption")
-        if isinstance(alt_text_raw, str):
-            alt_text = alt_text_raw.strip()
-            if alt_text:
-                payload["image_alt_text"] = alt_text
+        payload: Dict[str, Any] = {"text": body, "reply_to_id": parent_id}
+        if isinstance(options, dict):
+            extra = extract_comment_options(options)
+            if extra:
+                payload.update(extra)
 
-        return payload, warnings
-
-
-def _threads_metric_hook(state: CompileState) -> None:
-    caption = state.caption or ""
-    if caption:
-        state.metrics["thread_length"] = caption.count("\n\n") + 1
-    else:
-        state.metrics["thread_length"] = 0
-
-
-SPEC = get_compile_spec(
-    PlatformKind.THREADS,
-    ThreadsAdapter.compiler_version,
-    hooks=(
-        _threads_metric_hook,
-    ),
-)
-
-
-class ThreadsAPIError(Exception):
-    """Raised when the Threads Graph API returns an error."""
-
-    def __init__(
-        self,
-        message: str,
-        *,
-        status_code: Optional[int] = None,
-        payload: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        super().__init__(message)
-        self.status_code = status_code
-        self.payload = payload or {}
-
-    def as_message(self) -> str:
-        return str(self)
-
-
-class ThreadsGraphClient:
-    """Thin wrapper over httpx.AsyncClient for Threads Graph API calls."""
-
-    def __init__(
-        self,
-        *,
-        access_token: str,
-        http: httpx.AsyncClient,
-        base_url: str,
-    ) -> None:
-        self._access_token = access_token
-        self._http = http
-        self._base_url = base_url.rstrip("/")
-
-    async def post_json(self, path: str, *, data: Dict[str, Any] | None = None) -> Dict[str, Any]:
-        response = await self._request("POST", path, data=data)
-        return _ensure_json(response)
-
-    async def get_json(
-        self,
-        path: str,
-        *,
-        params: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
-        response = await self._request("GET", path, params=params)
-        return _ensure_json(response)
-
-    async def delete(self, path: str) -> None:
-        await self._request("DELETE", path)
-
-    async def _request(
-        self,
-        method: str,
-        path: str,
-        *,
-        params: Dict[str, Any] | None = None,
-        data: Dict[str, Any] | None = None,
-    ) -> httpx.Response:
-        url = f"{self._base_url}/{path.lstrip('/')}"
-        query: Dict[str, Any] = {"access_token": self._access_token}
-        if params:
-            query.update({k: v for k, v in params.items() if v is not None})
+        client = self._client(access_token=resolved_credentials.access_token)
 
         try:
-            response = await self._http.request(method, url, params=query, data=data)
-            response.raise_for_status()
-        except httpx.HTTPStatusError as exc:
-            payload = _safe_json(exc.response)
-            message = _format_graph_error(exc.response, fallback=str(exc))
-            raise ThreadsAPIError(message, status_code=exc.response.status_code, payload=payload) from exc
-        except httpx.HTTPError as exc:
-            raise ThreadsAPIError(f"threads api request failed: {exc}") from exc
-        return response
+            creation = await client.create_thread(user_id, payload)
+        except ThreadsAPIError as exc:
+            return CommentCreateResult(
+                ok=False,
+                external_id=None,
+                errors=[exc.as_message()],
+                warnings=[],
+            )
+
+        creation_id = resolve_creation_id(creation)
+        if not creation_id:
+            return CommentCreateResult(
+                ok=False,
+                external_id=None,
+                errors=["threads API response missing comment creation id"],
+                warnings=[],
+            )
+
+        try:
+            published = await client.publish_thread(user_id, creation_id)
+        except ThreadsAPIError as exc:
+            return CommentCreateResult(
+                ok=False,
+                external_id=None,
+                errors=[exc.as_message()],
+                warnings=[],
+            )
+
+        comment_id = resolve_creation_id(published) or creation_id
+        external_id: Optional[str] = comment_id
+        try:
+            details = await client.fetch_thread(comment_id)
+        except ThreadsAPIError as exc:
+            warnings.append(f"failed to fetch comment permalink: {exc.as_message()}")
+        else:
+            permalink = (details or {}).get("permalink")
+            if permalink:
+                external_id = permalink
+
+        return CommentCreateResult(
+            ok=True,
+            external_id=external_id,
+            errors=[],
+            warnings=warnings,
+        )
 
 
-def _resolve_creation_id(payload: Dict[str, Any] | None) -> Optional[str]:
+class ThreadsCommentDeleteCapability(ThreadsCapabilityBase, CommentDeleteCapability):
+    async def delete_comment(self, comment_external_id: str, *, credentials: dict) -> DeleteResult:
+        resolved_credentials, missing_fields = self._resolve_credentials(
+            credentials,
+            require_user_id=False,
+        )
+        if missing_fields or not resolved_credentials:
+            return DeleteResult(
+                ok=False,
+                errors=["missing credentials: access_token"],
+            )
+
+        comment_id = normalize_thread_id(comment_external_id)
+        if not comment_id:
+            return DeleteResult(
+                ok=False,
+                errors=["threads comment delete requires valid comment id"],
+            )
+
+        client = self._client(access_token=resolved_credentials.access_token)
+        try:
+            await client.delete_content(comment_id)
+        except ThreadsAPIError as exc:
+            return DeleteResult(ok=False, errors=[exc.as_message()])
+        return DeleteResult(ok=True, errors=[])
+
+
+# API wrapper -----------------------------------------------------------------------------------
+class ThreadsAPI:
+    def __init__(self, *, transport: GraphAPITransport) -> None:
+        self._client = GraphAPIJSONClient(transport)
+
+    async def create_thread(self, user_id: str, payload: MutableMapping[str, Any]) -> Dict[str, Any]:
+        try:
+            return await self._client.post_json(f"{user_id}/threads", data=payload)
+        except GraphAPIError as exc:
+            raise ThreadsAPIError.from_graph_error(exc) from exc
+
+    async def publish_thread(self, user_id: str, creation_id: str) -> Dict[str, Any]:
+        try:
+            return await self._client.post_json(
+                f"{user_id}/threads_publish",
+                data={"creation_id": creation_id},
+            )
+        except GraphAPIError as exc:
+            raise ThreadsAPIError.from_graph_error(exc) from exc
+
+    async def fetch_thread(self, thread_id: str) -> Dict[str, Any]:
+        try:
+            return await self._client.get_json(
+                str(thread_id),
+                params={"fields": "id,permalink"},
+            )
+        except GraphAPIError as exc:
+            raise ThreadsAPIError.from_graph_error(exc) from exc
+
+    async def delete_content(self, external_id: str) -> None:
+        try:
+            await self._client.delete(str(external_id))
+        except GraphAPIError as exc:
+            raise ThreadsAPIError.from_graph_error(exc) from exc
+
+    async def fetch_metrics(self, external_id: str) -> Dict[str, Any]:
+        try:
+            return await self._client.get_json(
+                f"{external_id}/insights",
+                params={"metric": "likes,replies,reposts,quotes"},
+            )
+        except GraphAPIError as exc:
+            raise ThreadsAPIError.from_graph_error(exc) from exc
+
+
+class ThreadsAPIError(GraphAPIError):
+    @classmethod
+    def from_graph_error(cls, exc: GraphAPIError) -> "ThreadsAPIError":
+        return cls(exc.message, status_code=exc.status_code, payload=exc.payload)
+
+    def as_message(self) -> str:
+        return self.message
+
+
+# Helpers ---------------------------------------------------------------------------------------
+def extract_publish_options(options: dict | None) -> Dict[str, Any]:
+    if not isinstance(options, dict):
+        return {}
+    raw = dict(options)
+    if isinstance(options.get("threads"), dict):
+        raw.update(options.get("threads"))
+
+    allowed_keys = {
+        "reply_to_id": "reply_to_id",
+        "quote_post_id": "quote_post_id",
+        "scheduled_publish_time": "scheduled_publish_time",
+        "url_sharing_enabled": "url_sharing_enabled",
+    }
+
+    extracted: Dict[str, Any] = {}
+    for source_key, target_key in allowed_keys.items():
+        value = raw.get(source_key)
+        if value is None:
+            continue
+        if isinstance(value, bool):
+            extracted[target_key] = str(value).lower()
+        else:
+            extracted[target_key] = str(value)
+    return extracted
+
+
+def prepare_media_payload(
+    media_items: Iterable[Dict[str, Any]],
+) -> tuple[Dict[str, Any], List[str]]:
+    media_list = list(media_items)
+    if not media_list:
+        return {}, []
+
+    warnings: List[str] = []
+    image_items: List[Dict[str, Any]] = []
+    invalid_count = 0
+    video_count = 0
+
+    for item in media_list:
+        if not isinstance(item, dict):
+            invalid_count += 1
+            continue
+
+        kind = item.get("type")
+        if kind == "image":
+            url = item.get("url")
+            if isinstance(url, str) and url.strip():
+                image_items.append(item)
+            else:
+                invalid_count += 1
+        elif kind == "video":
+            video_count += 1
+        else:
+            invalid_count += 1
+
+    if video_count:
+        warnings.append(
+            f"threads adapter dropped {video_count} video media item(s); video media is not yet supported",
+        )
+    if invalid_count:
+        warnings.append(
+            f"threads adapter dropped {invalid_count} unsupported media item(s)",
+        )
+
+    if not image_items:
+        return {}, warnings
+
+    if len(image_items) > 1:
+        warnings.append(
+            f"threads adapter only supports the first image; dropped {len(image_items) - 1} additional image(s)",
+        )
+
+    image = image_items[0]
+    url = image.get("url")
+    if not isinstance(url, str):
+        warnings.append("threads adapter image missing url; dropped selected image")
+        return {}, warnings
+
+    payload: Dict[str, Any] = {
+        "media_type": "IMAGE",
+        "image_url": url.strip(),
+    }
+
+    alt_text_raw = image.get("alt") or image.get("caption")
+    if isinstance(alt_text_raw, str):
+        alt_text = alt_text_raw.strip()
+        if alt_text:
+            payload["image_alt_text"] = alt_text
+
+    return payload, warnings
+
+
+def resolve_creation_id(payload: Dict[str, Any] | None) -> Optional[str]:
     if not isinstance(payload, dict):
         return None
     for key in ("id", "post_id", "creation_id"):
@@ -443,61 +623,18 @@ def _resolve_creation_id(payload: Dict[str, Any] | None) -> Optional[str]:
     return None
 
 
-def _ensure_json(response: httpx.Response) -> Dict[str, Any]:
-    try:
-        data = response.json()
-    except ValueError as exc:
-        raise ThreadsAPIError(
-            "threads api returned invalid json",
-            status_code=response.status_code,
-        ) from exc
-    if isinstance(data, dict):
-        return data
-    raise ThreadsAPIError("threads api response must be a json object", status_code=response.status_code)
-
-
-def _safe_json(response: httpx.Response) -> Dict[str, Any]:
-    try:
-        data = response.json()
-        if isinstance(data, dict):
-            return data
-    except ValueError:
-        pass
-    return {"text": response.text[:500]}
-
-
-def _format_graph_error(response: httpx.Response, *, fallback: str) -> str:
-    payload = _safe_json(response)
-    error = payload.get("error")
-    if isinstance(error, dict):
-        message = error.get("message") or "threads api request failed"
-        details = []
-        if error.get("type"):
-            details.append(f"type={error['type']}")
-        if error.get("code") is not None:
-            details.append(f"code={error['code']}")
-        if error.get("error_subcode") is not None:
-            details.append(f"subcode={error['error_subcode']}")
-        if error.get("fbtrace_id"):
-            details.append(f"trace={error['fbtrace_id']}")
-        if details:
-            return f"{message} ({', '.join(details)})"
-        return message
-    snippet = payload.get("text") or ""
-    snippet = snippet.replace("\n", " ").strip()
-    if snippet:
-        snippet = snippet[:160]
-        return f"threads api request failed with status {response.status_code}: {snippet}"
-    return fallback
-
-
-def _parse_metrics(payload: Dict[str, Any] | None) -> Dict[str, float]:
+def parse_metrics(payload: Dict[str, Any] | None) -> Dict[str, float]:
     if not isinstance(payload, dict):
         return {}
     data = payload.get("data")
     if not isinstance(data, list):
         return {}
     metrics: Dict[str, float] = {}
+    metric_name_map = {
+        "likes": KPIKey.LIKES.value,
+        "replies": KPIKey.COMMENTS.value,
+        "reposts": KPIKey.SHARES.value,
+    }
     for item in data:
         if not isinstance(item, dict):
             continue
@@ -509,5 +646,46 @@ def _parse_metrics(payload: Dict[str, Any] | None) -> Dict[str, float]:
         if isinstance(first, dict):
             value = first.get("value")
             if isinstance(value, (int, float)):
-                metrics[name] = float(value)
+                mapped = metric_name_map.get(name)
+                if mapped:
+                    metrics[mapped] = float(value)
     return metrics
+
+
+def extract_comment_options(options: dict | None) -> Dict[str, Any]:
+    if not isinstance(options, dict):
+        return {}
+    allowed_keys = {
+        "quote_post_id": "quote_post_id",
+        "url_sharing_enabled": "url_sharing_enabled",
+    }
+    extracted: Dict[str, Any] = {}
+    for source_key, target_key in allowed_keys.items():
+        value = options.get(source_key)
+        if value is None:
+            continue
+        if isinstance(value, bool):
+            extracted[target_key] = str(value).lower()
+        else:
+            extracted[target_key] = str(value)
+    return extracted
+
+
+def normalize_thread_id(external_id: str | None) -> str:
+    if not external_id:
+        return ""
+    candidate = external_id.strip()
+    if not candidate:
+        return ""
+    if candidate.startswith("http://") or candidate.startswith("https://"):
+        parsed = urlparse(candidate)
+        path = (parsed.path or "").rstrip("/")
+        if path:
+            candidate = path.split("/")[-1]
+        else:
+            candidate = ""
+    if not candidate:
+        return ""
+    if "?" in candidate:
+        candidate = candidate.split("?", 1)[0]
+    return candidate

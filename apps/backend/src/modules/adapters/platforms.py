@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from apps.backend.src.modules.common.enums import VariantStatus
-from apps.backend.src.modules.adapters.schemas import (
+from apps.backend.src.modules.adapters.core.types import (
     CompileResult,
     RenderedMediaItem,
     RenderedVariantBlocks,
