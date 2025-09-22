@@ -7,6 +7,7 @@ from typing import Generic, Optional, TypeVar
 from .capabilities import (
     CommentCreateCapability,
     CommentDeleteCapability,
+    CommentReadCapability,
     CompileCapability,
     DeletionCapability,
     MetricsCapability,
@@ -15,6 +16,7 @@ from .capabilities import (
 from .types import (
     CompileResult,
     CommentCreateResult,
+    CommentListResult,
     DeleteResult,
     MetricsResult,
     PublishResult,
@@ -33,6 +35,7 @@ class CapabilitySupport:
     metrics: bool
     comment_create: bool
     comment_delete: bool
+    comment_read: bool
 
 
 CompileCapabilityT = TypeVar("CompileCapabilityT", bound=CompileCapability)
@@ -53,6 +56,7 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
         metrics: MetricsCapability | None = None,
         comment_creator: CommentCreateCapability | None = None,
         comment_deleter: CommentDeleteCapability | None = None,
+        comment_reader: CommentReadCapability | None = None,
     ) -> None:
         self.platform = platform
         self._compiler = compiler
@@ -61,6 +65,7 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
         self._metrics = metrics
         self._comment_creator = comment_creator
         self._comment_deleter = comment_deleter
+        self._comment_reader = comment_reader
 
     # Adapter protocol compat -----------------------------------------------------------------
     @property
@@ -128,6 +133,7 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
             metrics=self._metrics is not None,
             comment_create=self._comment_creator is not None,
             comment_delete=self._comment_deleter is not None,
+            comment_read=self._comment_reader is not None,
         )
 
     async def create_comment(
@@ -159,3 +165,24 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
                 errors=[f"{self.platform.value} comment delete not supported"],
             )
         return await self._comment_deleter.delete_comment(comment_external_id, credentials=credentials)
+
+    async def list_comments(
+        self,
+        parent_external_id: str,
+        *,
+        credentials: dict,
+        options: dict | None = None,
+    ) -> CommentListResult:
+        if not self._comment_reader:
+            return CommentListResult(
+                ok=False,
+                comments=[],
+                next_cursor=None,
+                errors=[f"{self.platform.value} comment read not supported"],
+                warnings=[],
+            )
+        return await self._comment_reader.list_comments(
+            parent_external_id,
+            credentials=credentials,
+            options=options,
+        )

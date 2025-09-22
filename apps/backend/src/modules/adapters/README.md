@@ -7,7 +7,7 @@ This package contains everything that turns Maestro IR into platform-specific AP
 ```
 core/
   adapter.py        # CapabilityAdapter façade + support reporting
-  capabilities.py   # Protocols for compile/publish/delete/metrics/comments
+  capabilities.py   # Protocols for compile/publish/delete/metrics/comment CRUD
   compiler.py       # SpecCompiler wrapper around compile engine specs
   types.py          # Shared dataclasses, TypedDicts, adapter Protocol
 engine.py           # IR → rendered blocks helpers built on compile specs
@@ -26,7 +26,7 @@ OAuth providers live next door under `apps/backend/src/services/oauth/` (see bel
 ## How adapters execute
 
 1. **Injection & compile** – `compile_variant` builds an `InjectedContent` via injectors, then calls `CapabilityAdapter.compile`.  Most adapters use `SpecCompiler`, which wraps `get_compile_spec`/`compile_with_spec` and is parameterised with per-platform hooks.
-2. **Capability composition** – `CapabilityAdapter` delegates to capability objects for publish/delete/metrics/comment operations.  Platforms only implement the interfaces they actually support (e.g. Instagram lacks delete/comment support so the base class returns “not supported”).
+2. **Capability composition** – `CapabilityAdapter` delegates to capability objects for publish/delete/metrics/comment operations (create/delete/list).  Platforms only implement the interfaces they actually support (e.g. Instagram lacks comment support so the base class returns “not supported”).
 3. **Transport helpers** – shared HTTP logic (signing, error parsing, JSON validation) lives in `http/graph.py`.  Adapters build thin API clients on top of this transport so credentials and error handling stay consistent.
 4. **Metrics normalisation** – capabilities should emit KPI-aligned keys defined in `modules/insights/schemas.py` (`KPIKey`).  Threads, for example, maps Graph metrics like `likes`, `replies`, `reposts` to `KPIKey.LIKES`, `KPIKey.COMMENTS`, `KPIKey.SHARES` and sets an explicit `mapping_version`.
 5. **Registry and discovery** – every adapter class exposes a `platform` attribute (`PlatformKind`).  `registry.py` autodiscovers modules under `impls/` and registers them with `ADAPTER_REGISTRY`, making them available to application flows without manual wiring.

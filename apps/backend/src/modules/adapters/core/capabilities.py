@@ -6,6 +6,7 @@ from apps.backend.src.modules.adapters.core.types import (
     CompileResult,
     DeleteResult,
     CommentCreateResult,
+    CommentListResult,
     MetricsResult,
     PublishResult,
     RenderedVariantBlocks,
@@ -68,3 +69,15 @@ class CommentDeleteCapability(Protocol):
     """Capability for removing comments from a platform."""
 
     async def delete_comment(self, comment_external_id: str, *, credentials: dict) -> DeleteResult: ...
+
+
+class CommentReadCapability(Protocol):
+    """Capability for listing comments on a platform."""
+
+    async def list_comments(
+        self,
+        parent_external_id: str,
+        *,
+        credentials: dict,
+        options: dict | None = None,
+    ) -> CommentListResult: ...

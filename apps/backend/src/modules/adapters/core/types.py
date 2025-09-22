@@ -59,6 +59,28 @@ class CommentCreateResult:
     errors: List[str]
     warnings: List[str]
 
+
+@dataclass
+class Comment:
+    external_id: str
+    parent_external_id: Optional[str]
+    author_id: Optional[str]
+    author_username: Optional[str]
+    text: Optional[str]
+    created_at: Optional[datetime]
+    permalink: Optional[str]
+    raw: Dict[str, Any]
+
+
+@dataclass
+class CommentListResult:
+    ok: bool
+    comments: List[Comment]
+    next_cursor: Optional[str]
+    errors: List[str]
+    warnings: List[str]
+
+
 @dataclass
 class DeleteResult:
     ok: bool
@@ -159,3 +181,12 @@ class Adapter(Protocol):
 
     # 댓글 삭제
     async def delete_comment(self, comment_external_id: str, *, credentials: dict) -> DeleteResult: ...
+
+    # 댓글 조회
+    async def list_comments(
+        self,
+        parent_external_id: str,
+        *,
+        credentials: dict,
+        options: dict | None = None,
+    ) -> CommentListResult: ...

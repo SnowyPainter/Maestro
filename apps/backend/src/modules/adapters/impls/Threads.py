@@ -11,6 +11,7 @@ import httpx
 from apps.backend.src.modules.adapters.core.capabilities import (
     CommentCreateCapability,
     CommentDeleteCapability,
+    CommentReadCapability,
     DeletionCapability,
     MetricsCapability,
     PublishingCapability,
@@ -25,6 +26,8 @@ from apps.backend.src.modules.adapters.http.graph import (
 from apps.backend.src.modules.adapters.core.adapter import CapabilityAdapter
 from apps.backend.src.modules.adapters.core.types import (
     CommentCreateResult,
+    CommentListResult,
+    Comment,
     DeleteResult,
     MetricsResult,
     PublishResult,
@@ -68,6 +71,7 @@ class ThreadsAdapter(CapabilityAdapter[SpecCompiler]):
         metrics = ThreadsMetricsCapability(context=context, credentials=credentials)
         comment_creator = ThreadsCommentCreateCapability(context=context, credentials=credentials)
         comment_deleter = ThreadsCommentDeleteCapability(context=context, credentials=credentials)
+        comment_reader = ThreadsCommentReadCapability(context=context, credentials=credentials)
         super().__init__(
             platform=self.platform,
             compiler=compiler,
@@ -76,6 +80,7 @@ class ThreadsAdapter(CapabilityAdapter[SpecCompiler]):
             metrics=metrics,
             comment_creator=comment_creator,
             comment_deleter=comment_deleter,
+            comment_reader=comment_reader,
         )
 
 
@@ -466,6 +471,66 @@ class ThreadsCommentDeleteCapability(ThreadsCapabilityBase, CommentDeleteCapabil
         return DeleteResult(ok=True, errors=[])
 
 
+class ThreadsCommentReadCapability(ThreadsCapabilityBase, CommentReadCapability):
+    async def list_comments(
+        self,
+        parent_external_id: str,
+        *,
+        credentials: dict,
+        options: dict | None = None,
+    ) -> CommentListResult:
+        warnings: List[str] = []
+        resolved_credentials, missing_fields = self._resolve_credentials(
+            credentials,
+            require_user_id=False,
+        )
+        if missing_fields or not resolved_credentials:
+            return CommentListResult(
+                ok=False,
+                comments=[],
+                next_cursor=None,
+                errors=["missing credentials: access_token"],
+                warnings=[],
+            )
+
+        parent_id = normalize_thread_id(parent_external_id)
+        if not parent_id:
+            return CommentListResult(
+                ok=False,
+                comments=[],
+                next_cursor=None,
+                errors=["threads comment list requires valid parent id"],
+                warnings=[],
+            )
+
+        limit, cursor, option_warnings = extract_comment_list_options(options)
+        warnings.extend(option_warnings)
+
+        client = self._client(access_token=resolved_credentials.access_token)
+        try:
+            payload = await client.list_comments(parent_id, limit=limit, cursor=cursor)
+        except ThreadsAPIError as exc:
+            return CommentListResult(
+                ok=False,
+                comments=[],
+                next_cursor=None,
+                errors=[exc.as_message()],
+                warnings=warnings,
+            )
+
+        comments, parse_warnings = parse_comment_nodes(payload, default_parent_id=parent_id)
+        warnings.extend(parse_warnings)
+        next_cursor = extract_next_cursor(payload)
+
+        return CommentListResult(
+            ok=True,
+            comments=comments,
+            next_cursor=next_cursor,
+            errors=[],
+            warnings=warnings,
+        )
+
+
 # API wrapper -----------------------------------------------------------------------------------
 class ThreadsAPI:
     def __init__(self, *, transport: GraphAPITransport) -> None:
@@ -506,6 +571,28 @@ class ThreadsAPI:
             return await self._client.get_json(
                 f"{external_id}/insights",
                 params={"metric": "likes,replies,reposts,quotes"},
+            )
+        except GraphAPIError as exc:
+            raise ThreadsAPIError.from_graph_error(exc) from exc
+
+    async def list_comments(
+        self,
+        thread_id: str,
+        *,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        params: Dict[str, Any] = {
+            "fields": "id,parent_id,text,created_time,permalink,from{id,username}",
+        }
+        if limit is not None:
+            params["limit"] = str(limit)
+        if cursor:
+            params["after"] = cursor
+        try:
+            return await self._client.get_json(
+                f"{thread_id}/replies",
+                params=params,
             )
         except GraphAPIError as exc:
             raise ThreadsAPIError.from_graph_error(exc) from exc
@@ -671,6 +758,31 @@ def extract_comment_options(options: dict | None) -> Dict[str, Any]:
     return extracted
 
 
+def extract_comment_list_options(options: dict | None) -> tuple[Optional[int], Optional[str], List[str]]:
+    if not isinstance(options, dict):
+        return None, None, []
+
+    warnings: List[str] = []
+    limit: Optional[int] = None
+    cursor: Optional[str] = None
+
+    raw_limit = options.get("limit")
+    if raw_limit is not None:
+        try:
+            limit = int(raw_limit)
+            if limit <= 0:
+                raise ValueError
+        except (TypeError, ValueError):
+            warnings.append("threads comment list ignored invalid limit option")
+            limit = None
+
+    raw_cursor = options.get("after") or options.get("cursor")
+    if isinstance(raw_cursor, str) and raw_cursor.strip():
+        cursor = raw_cursor.strip()
+
+    return limit, cursor, warnings
+
+
 def normalize_thread_id(external_id: str | None) -> str:
     if not external_id:
         return ""
@@ -689,3 +801,97 @@ def normalize_thread_id(external_id: str | None) -> str:
     if "?" in candidate:
         candidate = candidate.split("?", 1)[0]
     return candidate
+
+
+def parse_comment_nodes(
+    payload: Dict[str, Any] | None,
+    *,
+    default_parent_id: str,
+) -> tuple[List[Comment], List[str]]:
+    comments: List[Comment] = []
+    warnings: List[str] = []
+    if not isinstance(payload, dict):
+        return comments, warnings
+
+    data = payload.get("data")
+    if not isinstance(data, list):
+        return comments, warnings
+
+    for node in data:
+        comment, item_warnings = parse_comment_node(node, default_parent_id=default_parent_id)
+        warnings.extend(item_warnings)
+        if comment:
+            comments.append(comment)
+    return comments, warnings
+
+
+def parse_comment_node(
+    node: Any,
+    *,
+    default_parent_id: str,
+) -> tuple[Optional[Comment], List[str]]:
+    warnings: List[str] = []
+    if not isinstance(node, dict):
+        warnings.append("threads comment response contained non-object item")
+        return None, warnings
+
+    comment_id_raw = node.get("id")
+    if not isinstance(comment_id_raw, str) or not comment_id_raw:
+        warnings.append("threads comment item missing id; skipped")
+        return None, warnings
+    comment_id = normalize_thread_id(comment_id_raw) or comment_id_raw
+
+    parent_id_raw = node.get("parent_id")
+    parent_id = normalize_thread_id(parent_id_raw) if isinstance(parent_id_raw, str) else ""
+    if not parent_id:
+        parent_id = default_parent_id
+
+    author = node.get("from") if isinstance(node.get("from"), dict) else {}
+    author_id = author.get("id") if isinstance(author.get("id"), str) else None
+    author_username = author.get("username") if isinstance(author.get("username"), str) else None
+
+    text = node.get("text") if isinstance(node.get("text"), str) else None
+    created_at = parse_iso_datetime(node.get("created_time"))
+    permalink = node.get("permalink") if isinstance(node.get("permalink"), str) else None
+
+    comment = Comment(
+        external_id=comment_id,
+        parent_external_id=parent_id,
+        author_id=author_id,
+        author_username=author_username,
+        text=text,
+        created_at=created_at,
+        permalink=permalink,
+        raw=node,
+    )
+
+    return comment, warnings
+
+
+def extract_next_cursor(payload: Dict[str, Any] | None) -> Optional[str]:
+    if not isinstance(payload, dict):
+        return None
+    paging = payload.get("paging")
+    if not isinstance(paging, dict):
+        return None
+    cursors = paging.get("cursors")
+    if not isinstance(cursors, dict):
+        return None
+    after = cursors.get("after")
+    if isinstance(after, str) and after.strip():
+        return after.strip()
+    return None
+
+
+def parse_iso_datetime(value: Any) -> Optional[datetime]:
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
