@@ -7,6 +7,7 @@ import { Logo } from "@/components/Logo";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 const initialTools = [
     { id: 'new-chat', title: 'New Chat', icon: <MessageSquare className="w-5 h-5 text-primary" /> },
@@ -97,7 +98,11 @@ export function ChatSidebar({
     
     const getClickHandler = (id: string) => {
         switch(id) {
-            case 'new-chat': return onNewChatClick;
+            case 'new-chat': 
+                return () => {
+                    useContextRegistryStore.setState({ byKey: {} });
+                    onNewChatClick();
+                };
             case 'query-trends': return onQueryTrendsClick;
             default: return () => onToolClick(id);
         }

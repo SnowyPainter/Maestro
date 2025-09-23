@@ -1,9 +1,11 @@
 
+import { useEffect } from "react";
 import { useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet } from "@/lib/api/generated";
 import { PlatformAccountOut } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, WifiOff, Ban } from "lucide-react";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 interface AccountListProps {
   onSelectAccount?: (accountId: number) => void;
@@ -11,6 +13,32 @@ interface AccountListProps {
 
 export function AccountList({ onSelectAccount }: AccountListProps) {
   const { data: accounts, isLoading, isError, error } = useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet();
+  const registerEmission = useContextRegistryStore((state) => state.registerEmission);
+
+  // Register accounts and platforms in context registry
+  useEffect(() => {
+    if (accounts) {
+      const platforms = new Set<string>();
+      accounts.forEach((account) => {
+        // Register account_id
+        registerEmission('account_id', {
+          value: account.id.toString(),
+          label: `@${account.handle}`,
+        });
+
+        // Collect unique platforms
+        platforms.add(account.platform);
+      });
+
+      // Register platforms
+      platforms.forEach((platform) => {
+        registerEmission('platform', {
+          value: platform,
+          label: platform.charAt(0).toUpperCase() + platform.slice(1),
+        });
+      });
+    }
+  }, [accounts, registerEmission]);
 
   if (isLoading) {
     return (

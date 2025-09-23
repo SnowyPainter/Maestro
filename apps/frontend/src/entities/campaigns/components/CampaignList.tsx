@@ -1,15 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBffCampaignsListCampaignsApiBffCampaignsGet } from "@/lib/api/generated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, Calendar, Zap } from "lucide-react";
 import { usePersonaContextStore } from "@/store/persona-context";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 export function CampaignList({ onSelectCampaign }: { onSelectCampaign: (campaignId: number) => void }) {
   const { data: campaigns, isLoading, isError } = useBffCampaignsListCampaignsApiBffCampaignsGet();
   const [isExpanded, setIsExpanded] = useState(false);
   const setCampaignContext = usePersonaContextStore((state) => state.setCampaignContext);
+  const registerEmission = useContextRegistryStore((state) => state.registerEmission);
+
+  // Register campaigns in context registry
+  useEffect(() => {
+    if (campaigns) {
+      campaigns.forEach((campaign) => {
+        registerEmission('campaign_id', {
+          value: campaign.id.toString(),
+          label: campaign.name,
+        });
+      });
+    }
+  }, [campaigns, registerEmission]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;

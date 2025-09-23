@@ -1,15 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBffDraftsListDraftsApiBffDraftsGet } from "@/lib/api/generated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, Target, Clock, Zap } from "lucide-react";
 import { usePersonaContextStore } from "@/store/persona-context";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 export function DraftList({ onSelectDraft }: { onSelectDraft: (draftId: number) => void }) {
   const { data: drafts, isLoading, isError } = useBffDraftsListDraftsApiBffDraftsGet();
   const [isExpanded, setIsExpanded] = useState(false);
   const setDraftContext = usePersonaContextStore((state) => state.setDraftContext);
+  const registerEmission = useContextRegistryStore((state) => state.registerEmission);
+
+  // Register drafts in context registry
+  useEffect(() => {
+    if (drafts) {
+      drafts.forEach((draft) => {
+        registerEmission('draft_id', {
+          value: draft.id.toString(),
+          label: draft.title || `Draft #${draft.id}`,
+        });
+      });
+    }
+  }, [drafts, registerEmission]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {

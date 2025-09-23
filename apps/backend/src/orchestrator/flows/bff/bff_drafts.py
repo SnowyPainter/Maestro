@@ -478,13 +478,13 @@ def _flow_bff_read_draft_variant_by_id(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.drafts.read_draft",
-    title="Get Draft Content",
+    title="Show Draft Content",
     description="Show the draft content",
     input_model=DraftReadPayload,
     output_model=DraftOut,
     method="get",
     path="/drafts/{draft_id}",
-    tags=("bff", "drafts", "content", "read", "get", "one"),
+    tags=("bff", "drafts", "content", "read", "show", "one"),
 )
 def _flow_bff_read_draft(builder: FlowBuilder):
     task = builder.task("read_draft", "bff.drafts.read_draft")

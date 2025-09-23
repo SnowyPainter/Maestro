@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { useBffAccountsListPersonasApiBffAccountsPersonasGet, PersonaOut } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, WifiOff } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 interface PersonaListProps {
   onSelectPersona: (personaId: number) => void;
@@ -10,6 +12,19 @@ interface PersonaListProps {
 
 export function PersonaList({ onSelectPersona }: PersonaListProps) {
   const { data: personas, isLoading, isError } = useBffAccountsListPersonasApiBffAccountsPersonasGet();
+  const registerEmission = useContextRegistryStore((state) => state.registerEmission);
+
+  // Register personas in context registry
+  useEffect(() => {
+    if (personas) {
+      personas.forEach((persona) => {
+        registerEmission('persona_id', {
+          value: persona.id.toString(),
+          label: persona.name,
+        });
+      });
+    }
+  }, [personas, registerEmission]);
 
   if (isLoading) {
     return (

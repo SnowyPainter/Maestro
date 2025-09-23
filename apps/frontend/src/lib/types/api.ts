@@ -432,7 +432,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Draft Content
+         * Show Draft Content
          * @description Show the draft content
          */
         get: operations["bff_drafts_read_draft_api_bff_drafts__draft_id__get"];

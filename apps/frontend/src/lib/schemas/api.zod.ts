@@ -641,7 +641,7 @@ export const bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGetResponse = 
 
 /**
  * Show the draft content
- * @summary Get Draft Content
+ * @summary Show Draft Content
  */
 export const bffDraftsReadDraftApiBffDraftsDraftIdGetParams = zod.object({
   "draft_id": zod.number()

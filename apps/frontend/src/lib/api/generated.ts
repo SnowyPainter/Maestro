@@ -3182,7 +3182,7 @@ export function useBffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet<TDat
 
 /**
  * Show the draft content
- * @summary Get Draft Content
+ * @summary Show Draft Content
  */
 export const bffDraftsReadDraftApiBffDraftsDraftIdGet = (
     draftId: number,
@@ -3249,7 +3249,7 @@ export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<Retu
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get Draft Content
+ * @summary Show Draft Content
  */
 
 export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<ReturnType<typeof bffDraftsReadDraftApiBffDraftsDraftIdGet>>, TError = HTTPValidationError>(
