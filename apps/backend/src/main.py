@@ -20,6 +20,7 @@ from apps.backend.src.modules.campaigns.models import Campaign, CampaignKPIDef, 
 from apps.backend.src.modules.accounts.models import PlatformAccount, Persona, PersonaAccount
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.insights.models import InsightSample
+from apps.backend.src.orchestrator.slot_mentions import generate_slot_mentions_yaml
 
 PRJ_RT = Path(__file__).parent.parent
 
@@ -123,7 +124,7 @@ app.openapi = custom_openapi
 @app.on_event("startup")
 async def dump_openapi():
     setup_logging(level=settings.LOG_LEVEL.upper())
-
+    generate_slot_mentions_yaml()
     import yaml
 
     contracts_dir = Path(PRJ_RT) / "contracts"

@@ -1,66 +1,387 @@
 slots:
-  - name: campaign_id
-    label: Campaign
-    description: "Target a specific campaign (e.g. @campaign_id:123)."
-    value_type: integer
-    synonyms: [campaign]
-    flows:
-      - bff.campaigns.read_campaign
-      - bff.campaigns.list_kpi_defs
-      - bff.campaigns.list_kpi_results
-      - bff.drafts.list_drafts
-  - name: campaign_ids
-    label: Campaigns
-    description: "Filter by multiple campaigns using commas (e.g. @campaign_ids:101,202)."
-    value_type: integer_list
-    synonyms: [campaigns]
-    flows:
-      - campaigns.aggregate_kpis
-      - campaigns.record_kpi_result
-  - name: draft_id
-    label: Draft
-    description: "Select a draft by id (e.g. @draft_id:42)."
-    value_type: integer
-    flows:
-      - bff.drafts.read_draft
-      - bff.drafts.list_variants
-      - bff.drafts.read_variant
-  - name: platform
-    label: Platform
-    description: "Filter by platform slug (e.g. @platform:instagram)."
-    value_type: enum
-    choices: [instagram, threads, x]
-    flows:
-      - bff.drafts.list_variants_by_platform
-      - bff.drafts.read_variant
-  - name: limit
-    label: Limit
-    description: "Limit the number of results (e.g. @limit:10)."
-    value_type: integer
-    flows:
-      - bff.campaigns.list_campaigns
-      - bff.drafts.list_drafts
-      - bff.trends.list_trends
-  - name: q
-    label: Search Term
-    description: "Set a keyword search term (e.g. @q:holiday)."
-    value_type: string
-    flows:
-      - bff.campaigns.list_campaigns
-      - bff.trends.list_trends
-  - name: since
-    label: Since
-    description: "Set a since date (e.g. @since:2025-01-01)."
-    value_type: date
-    flows:
-      - bff.timeline.trends
-      - bff.timeline.post_publications
-      - bff.timeline.campaigns
-  - name: until
-    label: Until
-    description: "Set a until date (e.g. @until:2025-01-01)."
-    value_type: date
-    flows:
-      - bff.timeline.trends
-      - bff.timeline.post_publications
-      - bff.timeline.campaigns
+- name: account
+  label: Account
+  description: Filter by account
+  value_type: string
+  flows:
+  - accounts.platform.create
+- name: account_id
+  label: Account Id
+  description: Target a specific account id
+  value_type: integer
+  flows:
+  - accounts.link.delete
+  - accounts.platform.delete
+  - accounts.platform.update
+  - bff.accounts.is_valid_platform_account
+  - bff.accounts.list_personas_for_account
+  - bff.accounts.read_platform_account
+- name: account_persona_id
+  label: Account Persona Id
+  description: Target a specific account persona id
+  value_type: integer
+  flows:
+  - bff.drafts.list_post_publications_by_platform
+  - bff.drafts.list_post_publications_by_status
+  - bff.drafts.list_post_publications_by_variant
+  - insights.ingest
+- name: as_of
+  label: As Of
+  description: Filter by as of
+  value_type: string
+  flows:
+  - campaigns.aggregate_kpis
+  - campaigns.record_kpi_result
+- name: campaign_id
+  label: Campaign Id
+  description: Target a specific campaign id
+  value_type: integer
+  flows:
+  - bff.campaigns.list_kpi_defs
+  - bff.campaigns.list_kpi_results
+  - bff.campaigns.read_campaign
+  - bff.drafts.list_drafts
+  - campaigns.aggregate_kpis
+  - campaigns.delete_campaign
+  - campaigns.record_kpi_result
+  - campaigns.update_campaign
+  - campaigns.upsert_kpi_defs
+  - drafts.create
+  - drafts.update_ir
+- name: content_kind
+  label: Content Kind
+  description: Filter by content kind
+  value_type: enum
+  choices:
+  - post
+  - video
+  - story
+  - carousel
+  - live
+  - unknown
+  flows:
+  - insights.ingest
+- name: country
+  label: Country
+  description: Filter by country
+  value_type: string
+  flows:
+  - bff.trends.list_trends
+- name: data
+  label: Data
+  description: Filter by data
+  value_type: string
+  flows:
+  - accounts.persona.update
+  - accounts.platform.update
+- name: defs
+  label: Defs
+  description: Filter by defs
+  value_type: string_list
+  flows:
+  - campaigns.upsert_kpi_defs
+- name: description
+  label: Description
+  description: Filter by description
+  value_type: string
+  flows:
+  - campaigns.create_campaign
+  - campaigns.update_campaign
+- name: draft_id
+  label: Draft Id
+  description: Target a specific draft id
+  value_type: integer
+  flows:
+  - bff.drafts.list_variants
+  - bff.drafts.read_draft
+  - bff.drafts.read_variant
+  - drafts.delete
+  - drafts.toggle_ready
+  - drafts.update_ir
+- name: end
+  label: End
+  description: Filter by end
+  value_type: string
+  flows:
+  - bff.campaigns.list_kpi_results
+- name: end_at
+  label: End At
+  description: Filter by end at
+  value_type: string
+  flows:
+  - campaigns.create_campaign
+  - campaigns.update_campaign
+- name: events
+  label: Events
+  description: Filter by events
+  value_type: string
+  flows:
+  - bff.timeline.campaigns
+  - bff.timeline.post_publications
+  - bff.timeline.trends
+- name: goal
+  label: Goal
+  description: Filter by goal
+  value_type: string
+  flows:
+  - drafts.create
+  - drafts.update_ir
+- name: handle
+  label: Handle
+  description: Filter by handle
+  value_type: string
+  flows:
+  - bff.accounts.list_platform_accounts
+- name: ingest_key
+  label: Ingest Key
+  description: Filter by ingest key
+  value_type: string
+  flows:
+  - insights.ingest
+- name: ir
+  label: Ir
+  description: Filter by ir
+  value_type: string
+  flows:
+  - drafts.create
+  - drafts.update_ir
+- name: limit
+  label: Limit
+  description: Limit the number of results
+  value_type: integer
+  flows:
+  - bff.accounts.list_personas
+  - bff.accounts.list_platform_accounts
+  - bff.campaigns.list_campaigns
+  - bff.campaigns.list_kpi_results
+  - bff.drafts.list_drafts
+  - bff.timeline.campaigns
+  - bff.timeline.post_publications
+  - bff.timeline.trends
+  - bff.trends.list_trends
+- name: link
+  label: Link
+  description: Filter by link
+  value_type: string
+  flows:
+  - accounts.link.create
+- name: mapping_version
+  label: Mapping Version
+  description: Filter by mapping version
+  value_type: integer
+  flows:
+  - insights.ingest
+- name: metrics
+  label: Metrics
+  description: Filter by metrics
+  value_type: string
+  flows:
+  - insights.ingest
+- name: name
+  label: Name
+  description: Filter by name
+  value_type: string
+  flows:
+  - bff.accounts.list_personas
+  - campaigns.create_campaign
+  - campaigns.update_campaign
+- name: offset
+  label: Offset
+  description: Filter by offset
+  value_type: integer
+  flows:
+  - bff.accounts.list_personas
+  - bff.accounts.list_platform_accounts
+  - bff.campaigns.list_campaigns
+  - bff.drafts.list_drafts
+- name: on_date
+  label: On Date
+  description: Filter by on date
+  value_type: string
+  flows:
+  - bff.trends.list_trends
+- name: owner_user_id
+  label: Owner User Id
+  description: Target a specific owner user id
+  value_type: integer
+  flows:
+  - insights.ingest
+- name: persona
+  label: Persona
+  description: Filter by persona
+  value_type: string
+  flows:
+  - accounts.persona.create
+- name: persona_account_id
+  label: Persona Account Id
+  description: Target a specific persona account id
+  value_type: integer
+  flows:
+  - bff.contexts.current_persona
+  - bff.contexts.current_persona_account
+  - bff.timeline.campaigns
+  - bff.timeline.post_publications
+  - bff.timeline.trends
+- name: persona_id
+  label: Persona Id
+  description: Target a specific persona id
+  value_type: integer
+  flows:
+  - accounts.link.delete
+  - accounts.persona.delete
+  - accounts.persona.update
+  - bff.accounts.list_accounts_for_persona
+  - bff.accounts.read_persona
+- name: platform
+  label: Platform
+  description: Filter by platform slug
+  value_type: enum
+  choices:
+  - instagram
+  - threads
+  flows:
+  - bff.accounts.list_platform_accounts
+  - bff.drafts.list_post_publications_by_platform
+  - bff.drafts.list_variants_by_platform
+  - bff.drafts.read_variant
+  - drafts.toggle_ready
+  - insights.ingest
+- name: platform_post_id
+  label: Platform Post Id
+  description: Target a specific platform post id
+  value_type: integer
+  flows:
+  - insights.ingest
+- name: post_publication_id
+  label: Post Publication Id
+  description: Target a specific post publication id
+  value_type: integer
+  flows:
+  - insights.ingest
+- name: q
+  label: Q
+  description: Set a keyword search term
+  value_type: string
+  flows:
+  - bff.campaigns.list_campaigns
+  - bff.trends.list_trends
+- name: raw
+  label: Raw
+  description: Filter by raw
+  value_type: string
+  flows:
+  - insights.ingest
+- name: ready
+  label: Ready
+  description: Filter by ready
+  value_type: boolean
+  flows:
+  - drafts.toggle_ready
+- name: scheduled_at
+  label: Scheduled At
+  description: Filter by scheduled at
+  value_type: string
+  flows:
+  - drafts.toggle_ready
+- name: scope
+  label: Scope
+  description: Filter by scope
+  value_type: enum
+  choices:
+  - lifetime
+  - since_publish
+  - interval
+  flows:
+  - insights.ingest
+- name: since
+  label: Since
+  description: Set a since date
+  value_type: date
+  flows:
+  - bff.timeline.campaigns
+  - bff.timeline.post_publications
+  - bff.timeline.trends
+  - bff.trends.list_trends
+- name: soft
+  label: Soft
+  description: Filter by soft
+  value_type: boolean
+  flows:
+  - accounts.platform.delete
+- name: source
+  label: Source
+  description: Filter by source
+  value_type: enum
+  choices:
+  - webhook
+  - poll
+  - manual
+  flows:
+  - insights.ingest
+- name: start
+  label: Start
+  description: Filter by start
+  value_type: string
+  flows:
+  - bff.campaigns.list_kpi_results
+- name: start_at
+  label: Start At
+  description: Filter by start at
+  value_type: string
+  flows:
+  - campaigns.create_campaign
+  - campaigns.update_campaign
+- name: status
+  label: Status
+  description: Filter by status
+  value_type: string_list
+  flows:
+  - bff.drafts.list_post_publications_by_status
+- name: tags
+  label: Tags
+  description: Filter by tags
+  value_type: string_list
+  flows:
+  - drafts.create
+  - drafts.update_ir
+- name: title
+  label: Title
+  description: Filter by title
+  value_type: string
+  flows:
+  - drafts.create
+  - drafts.update_ir
+- name: ts
+  label: Ts
+  description: Filter by ts
+  value_type: string
+  flows:
+  - insights.ingest
+- name: until
+  label: Until
+  description: Set a until date
+  value_type: date
+  flows:
+  - bff.timeline.campaigns
+  - bff.timeline.post_publications
+  - bff.timeline.trends
+  - bff.trends.list_trends
+- name: values
+  label: Values
+  description: Filter by values
+  value_type: string
+  flows:
+  - campaigns.record_kpi_result
+- name: variant_id
+  label: Variant Id
+  description: Target a specific variant id
+  value_type: integer
+  flows:
+  - bff.drafts.list_post_publications_by_variant
+  - bff.drafts.read_variant_by_id
+- name: warnings
+  label: Warnings
+  description: Filter by warnings
+  value_type: string_list
+  flows:
+  - insights.ingest

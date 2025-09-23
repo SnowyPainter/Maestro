@@ -299,13 +299,17 @@ async def list_persona_accounts_for_user(
             PersonaAccount.persona_id,
             Persona.name.label("persona_name"),
             Persona.avatar_url.label("persona_avatar_url"),
+            Persona.bio.label("persona_description"),
             PersonaAccount.account_id,
             PlatformAccount.handle.label("account_handle"),
             PlatformAccount.platform.label("account_platform"),
             PlatformAccount.avatar_url.label("account_avatar_url"),
+            PlatformAccount.bio.label("account_bio"),
+            PlatformAccount.is_active.label("is_active"),
             PersonaAccount.can_permissions,
             PersonaAccount.is_verified_link,
             PersonaAccount.created_at,
+            PlatformAccount.updated_at.label("last_updated_at"),
         )
         .join(Persona, PersonaAccount.persona_id == Persona.id)
         .join(PlatformAccount, PersonaAccount.account_id == PlatformAccount.id)
@@ -325,13 +329,17 @@ async def list_persona_accounts_for_user(
             persona_id=row.persona_id,
             persona_name=row.persona_name,
             persona_avatar_url=row.persona_avatar_url,
+            persona_description=row.persona_description,
             account_id=row.account_id,
             account_handle=row.account_handle,
             account_platform=row.account_platform,
             account_avatar_url=row.account_avatar_url,
+            account_bio=row.account_bio,
+            is_active=row.is_active,
             can_permissions=row.can_permissions,
             is_verified_link=row.is_verified_link,
             created_at=row.created_at,
+            last_updated_at=row.last_updated_at,
         ))
 
     return result

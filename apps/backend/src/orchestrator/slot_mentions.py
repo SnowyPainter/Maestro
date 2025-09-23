@@ -6,9 +6,11 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 import re
-from typing import Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Type, Union, get_args, get_origin
 
 import yaml
+
+from .registry import FLOWS
 
 
 CONFIG_PATH = Path(__file__).resolve().parent / "config" / "slot_mentions.yaml"
@@ -202,6 +204,214 @@ def _extract_token(segment: str, *, allow_spaces: bool = False) -> Optional[str]
     return cleaned.strip(" \t\n\r,;:") or None
 
 
+def _get_pydantic_fields(model_cls: Type[Any]) -> Dict[str, Any]:
+    """Extract fields from a Pydantic model, supporting both v1 and v2."""
+    # Try Pydantic v2 first
+    fields = getattr(model_cls, "model_fields", None)
+    if fields:
+        return fields
+
+    # Fall back to Pydantic v1
+    fields = getattr(model_cls, "__fields__", None)
+    if fields:
+        return fields
+
+    return {}
+
+
+def _infer_value_type(field_info: Any) -> str:
+    """Infer value_type from Pydantic field info."""
+    # Try to get annotation/type info
+    annotation = getattr(field_info, "annotation", None)
+    if annotation is None:
+        annotation = getattr(field_info, "outer_type_", None)
+    if annotation is None:
+        annotation = getattr(field_info, "type_", str)
+
+    # Handle Union types (Optional, etc.)
+    origin = get_origin(annotation)
+    if origin is Union:
+        args = get_args(annotation)
+        # Remove None from Optional types
+        non_none_args = [arg for arg in args if arg is not type(None)]
+        if len(non_none_args) == 1:
+            annotation = non_none_args[0]
+            origin = get_origin(annotation)
+
+    # Handle List types
+    if origin in (list, List):
+        args = get_args(annotation)
+        if args:
+            element_type = args[0]
+            if element_type in (int, "int"):
+                return "integer_list"
+            elif element_type in (str, "str"):
+                return "string_list"
+        return "string_list"
+
+    # Handle basic types
+    if annotation in (int, "int"):
+        return "integer"
+    elif annotation in (str, "str"):
+        return "string"
+    elif annotation in (bool, "bool"):
+        return "boolean"
+    elif annotation in (float, "float"):
+        return "float"
+
+    # Handle enum types by checking if it's a subclass of Enum
+    try:
+        if hasattr(annotation, "__bases__"):
+            for base in annotation.__bases__:
+                if base.__name__ == "Enum":
+                    return "enum"
+    except:
+        pass
+
+    # Default to string
+    return "string"
+
+
+def _extract_field_choices(field_info: Any) -> List[str]:
+    """Extract choices from Pydantic field if available."""
+    choices = []
+
+    # Check for literal types
+    annotation = getattr(field_info, "annotation", None)
+    if annotation is None:
+        annotation = getattr(field_info, "outer_type_", None)
+    if annotation is None:
+        annotation = getattr(field_info, "type_", None)
+
+    # Handle Literal types
+    origin = get_origin(annotation)
+    if origin is not None and hasattr(origin, "__name__") and origin.__name__ == "Literal":
+        args = get_args(annotation)
+        choices.extend(str(arg) for arg in args)
+
+    # Check for enum values
+    try:
+        if hasattr(annotation, "__members__"):
+            choices.extend(str(member.value) for member in annotation.__members__.values())
+    except:
+        pass
+
+    return choices
+
+
+def _generate_slot_hints_from_flows() -> List[SlotHint]:
+    """Generate slot hints automatically from all registered flows."""
+    try:
+        from pydantic import BaseModel
+    except ImportError:
+        return []  # Pydantic not available, cannot generate hints
+
+    hints_map: Dict[str, SlotHint] = {}
+
+    # Get all flow definitions
+    flows = FLOWS.all()
+
+    for flow in flows:
+        if not hasattr(flow, 'input_model') or not issubclass(flow.input_model, BaseModel):
+            continue
+
+        fields = _get_pydantic_fields(flow.input_model)
+
+        for field_name, field_info in fields.items():
+            value_type = _infer_value_type(field_info)
+            choices = _extract_field_choices(field_info)
+
+            # Get or create hint
+            if field_name in hints_map:
+                hint = hints_map[field_name]
+                # Merge flows
+                existing_flows = set(hint.flows)
+                existing_flows.add(flow.key)
+                merged_hint = SlotHint(
+                    name=hint.name,
+                    label=hint.label,
+                    description=hint.description,
+                    value_type=hint.value_type,
+                    choices=hint.choices,
+                    synonyms=hint.synonyms,
+                    flows=tuple(sorted(existing_flows))
+                )
+                hints_map[field_name] = merged_hint
+            else:
+                # Create new hint
+                label = field_name.replace('_', ' ').title()
+                description = f"Filter by {label.lower()}"
+
+                # Special handling for common patterns
+                if field_name.endswith('_id'):
+                    if value_type == "integer_list":
+                        value_type = "integer_list"
+                        description = f"Filter by multiple {label.lower()}s using commas"
+                    else:
+                        value_type = "integer"
+                        description = f"Target a specific {label.lower()}"
+                elif field_name in ('limit',):
+                    value_type = "integer"
+                    description = f"Limit the number of results"
+                elif field_name in ('q', 'query', 'search'):
+                    value_type = "string"
+                    description = f"Set a keyword search term"
+                elif field_name in ('since', 'until'):
+                    value_type = "date"
+                    description = f"Set a {field_name} date"
+                elif field_name == 'platform':
+                    value_type = "enum"
+                    description = f"Filter by platform slug"
+
+                hint = SlotHint(
+                    name=field_name,
+                    label=label,
+                    description=description,
+                    value_type=value_type,
+                    choices=tuple(choices) if choices else (),
+                    flows=(flow.key,)
+                )
+                hints_map[field_name] = hint
+
+    return list(hints_map.values())
+
+
+def generate_slot_mentions_yaml(output_path: Optional[Path] = None) -> None:
+    """Generate slot_mentions.yaml file automatically from registered flows."""
+    if output_path is None:
+        output_path = CONFIG_PATH
+
+    hints = _generate_slot_hints_from_flows()
+
+    # Convert to YAML format
+    slots_data = []
+    for hint in sorted(hints, key=lambda h: h.name):
+        slot_dict = {
+            "name": hint.name,
+            "label": hint.label,
+            "description": hint.description,
+            "value_type": hint.value_type,
+        }
+
+        if hint.choices:
+            slot_dict["choices"] = list(hint.choices)
+        if hint.synonyms:
+            slot_dict["synonyms"] = list(hint.synonyms)
+        if hint.flows:
+            slot_dict["flows"] = list(hint.flows)
+
+        slots_data.append(slot_dict)
+
+    yaml_data = {"slots": slots_data}
+
+    # Ensure config directory exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write YAML file
+    with output_path.open("w", encoding="utf-8") as f:
+        yaml.dump(yaml_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+
 __all__ = [
     "SlotHint",
     "load_slot_hints",
@@ -209,4 +419,5 @@ __all__ = [
     "filter_slot_hints",
     "iter_hint_aliases",
     "parse_slot_mentions",
+    "generate_slot_mentions_yaml",
 ]

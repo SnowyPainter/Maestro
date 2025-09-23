@@ -123,10 +123,14 @@ class RichPersonaAccountOut(BaseModel):
     persona_id: int
     persona_name: str
     persona_avatar_url: Optional[str] = None
+    persona_description: Optional[str] = None
     account_id: int
     account_handle: str
     account_platform: PlatformKind
     account_avatar_url: Optional[str] = None
+    account_bio: Optional[str] = None
+    is_active: bool = True
     can_permissions: list[Permission]
     is_verified_link: bool
     created_at: datetime
+    last_updated_at: Optional[datetime] = None

@@ -2182,6 +2182,8 @@ export interface components {
             persona_name: string;
             /** Persona Avatar Url */
             persona_avatar_url?: string | null;
+            /** Persona Description */
+            persona_description?: string | null;
             /** Account Id */
             account_id: number;
             /** Account Handle */
@@ -2189,6 +2191,13 @@ export interface components {
             account_platform: components["schemas"]["PlatformKind"];
             /** Account Avatar Url */
             account_avatar_url?: string | null;
+            /** Account Bio */
+            account_bio?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
             /** Can Permissions */
             can_permissions: components["schemas"]["Permission"][];
             /** Is Verified Link */
@@ -2198,6 +2207,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Last Updated At
+             * Format: date-time
+             */
+            last_updated_at?: string | null;
         };
         /** SignupRequest */
         SignupRequest: {

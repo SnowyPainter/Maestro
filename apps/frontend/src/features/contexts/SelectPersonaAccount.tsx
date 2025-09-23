@@ -1,65 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ContextCard } from "./ContextCard";
+import { DisplayPersonaAccountCard } from "./DisplayPersonaAccountCard";
 import { useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, User, Zap, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Platform-specific colors for gradients
-const PLATFORM_COLORS = {
-    instagram: {
-        from: "from-pink-500",
-        to: "to-purple-500",
-        accent: "border-pink-200",
-    },
-    threads: {
-        from: "from-gray-800",
-        to: "to-black",
-        accent: "border-gray-600",
-    },
-    linkedin: {
-        from: "from-blue-600",
-        to: "to-blue-800",
-        accent: "border-blue-300",
-    },
-    twitter: {
-        from: "from-blue-400",
-        to: "to-blue-600",
-        accent: "border-blue-200",
-    },
-    x: {
-        from: "from-gray-900",
-        to: "to-black",
-        accent: "border-gray-500",
-    },
-    facebook: {
-        from: "from-blue-500",
-        to: "to-blue-700",
-        accent: "border-blue-300",
-    },
-    youtube: {
-        from: "from-red-500",
-        to: "to-red-700",
-        accent: "border-red-300",
-    },
-    tiktok: {
-        from: "from-pink-400",
-        to: "to-purple-600",
-        accent: "border-pink-200",
-    },
-} as const;
 
 interface SelectPersonaAccountProps {
     onSelect?: () => void;
     className?: string;
 }
-
-// Helper function to get platform colors
-const getPlatformColors = (platform: string) => {
-    const platformKey = platform.toLowerCase() as keyof typeof PLATFORM_COLORS;
-    return PLATFORM_COLORS[platformKey] || PLATFORM_COLORS.x; // Default to X colors
-};
 
 export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccountProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -191,10 +141,10 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
             {/* Header */}
             <div className="text-center mb-6">
                 <h2 className="text-lg font-semibold text-foreground mb-2">
-                    Select Persona Account
+                    Choose Account
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                    Choose a persona account to start your conversation
+                    Select a persona account to continue
                 </p>
             </div>
 
@@ -217,69 +167,35 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
                     }}
                 >
                     {richPersonaAccounts.map((personaAccount, index) => {
-                        const platformColors = getPlatformColors(personaAccount.account_platform);
                         const isInjecting = injectingAccount === String(personaAccount.id);
+
+                        // Convert RichPersonaAccountOut to DisplayPersonaAccountCard format
+                        const displayPersonaAccount = {
+                            id: personaAccount.id,
+                            persona_name: personaAccount.persona_name,
+                            persona_avatar_url: personaAccount.persona_avatar_url || undefined,
+                            persona_description: personaAccount.persona_description || undefined,
+                            account_handle: personaAccount.account_handle,
+                            account_platform: personaAccount.account_platform,
+                            account_avatar_url: personaAccount.account_avatar_url || undefined,
+                            account_bio: personaAccount.account_bio || undefined,
+                            is_active: personaAccount.is_active,
+                            can_permissions: personaAccount.can_permissions,
+                            is_verified_link: personaAccount.is_verified_link,
+                            last_updated_at: personaAccount.last_updated_at || undefined,
+                        };
 
                         return (
                             <div
                                 key={personaAccount.id}
                                 className="w-full flex-shrink-0 px-2"
                             >
-                                <div className="relative group">
-                                    <ContextCard
-                                        icon={User}
-                                        label={personaAccount.persona_name}
-                                        value={`${personaAccount.account_handle} · ${personaAccount.account_platform}`}
-                                        enabled={true}
-                                        toggleDisabled={true}
-                                        variant="persona"
-                                        personaAvatarUrl={personaAccount.persona_avatar_url || undefined}
-                                        accountHandle={personaAccount.account_handle}
-                                        accountPlatform={personaAccount.account_platform}
-                                        accountAvatarUrl={personaAccount.account_avatar_url || undefined}
-                                        helper={`Select ${personaAccount.persona_name} to continue`}
-                                        platformGradient={`bg-gradient-to-br ${platformColors.from} ${platformColors.to} border-2 ${platformColors.accent}`}
-                                        className={!prefersReducedMotion ? "transition-transform duration-200 hover:scale-[0.98]" : ""}
-                                    />
-                                    {/* Injection Animation Overlay */}
-                                    {isInjecting && (
-                                        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                                            <div className="flex items-center gap-3 bg-background/90 rounded-full px-4 py-2 shadow-lg">
-                                                <Zap className="h-5 w-5 text-primary animate-pulse" />
-                                                <span className="text-sm font-medium">Injecting...</span>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Action Button */}
-                                    <div className="mt-4 flex justify-center">
-                                        <Button
-                                            size="lg"
-                                            disabled={isInjecting}
-                                            className={cn(
-                                                "h-12 px-6 rounded-xl font-medium relative overflow-hidden",
-                                                !prefersReducedMotion && "transition-all duration-200",
-                                                "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary",
-                                                !prefersReducedMotion && "shadow-lg hover:shadow-xl transform hover:scale-95",
-                                                "focus-visible:ring-2 focus-visible:ring-primary/50",
-                                                "disabled:opacity-50 disabled:cursor-not-allowed"
-                                            )}
-                                            onClick={() => handleSelectPersonaAccount(personaAccount)}
-                                        >
-                                            {isInjecting ? (
-                                                <>
-                                                    <Zap className="h-4 w-4 mr-2 animate-pulse" />
-                                                    <span className="animate-pulse">Injecting...</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Zap className="h-4 w-4 mr-2" />
-                                                    <span>Select Account</span>
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                                <DisplayPersonaAccountCard
+                                    personaAccount={displayPersonaAccount}
+                                    onSelect={handleSelectPersonaAccount}
+                                    isSelecting={isInjecting}
+                                    prefersReducedMotion={prefersReducedMotion}
+                                />
                             </div>
                         );
                     })}

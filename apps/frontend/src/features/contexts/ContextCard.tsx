@@ -54,60 +54,69 @@ export function ContextCard({
         return (
             <div
                 className={cn(
-                    "rounded-2xl border shadow-md p-4 transition-colors relative overflow-hidden",
+                    "rounded-2xl border shadow-md p-4 transition-colors relative overflow-hidden min-h-[140px]",
                     platformGradient ? "text-white" : "text-card-foreground",
                     platformGradient || "bg-card border-primary/70 shadow-lg",
                     className
                 )}
             >
-                <div className="flex items-start gap-3">
-                    <Avatar className={cn(
-                        "h-10 w-10 shadow-sm",
-                        platformGradient ? "bg-white/20 border-2 border-white/30" : "bg-background",
-                        !platformGradient && (isValid ? "border-2 border-emerald-500" : "border border-border")
-                    )}>
-                        <AvatarImage src={personaAvatarUrl || ''} alt={value || ''} />
-                        <AvatarFallback className={cn(
-                            "text-sm font-semibold",
-                            platformGradient ? "text-white" : "text-foreground"
+                {/* 2x2 Grid Layout */}
+                <div className="grid grid-cols-2 gap-2 h-full">
+                    {/* Top Left: Avatar */}
+                    <div className="flex items-center justify-start">
+                        <Avatar className={cn(
+                            "h-8 w-8 shadow-sm",
+                            platformGradient ? "bg-white/20 border-2 border-white/30" : "bg-background",
+                            !platformGradient && (isValid ? "border-2 border-emerald-500" : "border border-border")
                         )}>
-                            {value?.charAt(0) || "P"}
-                        </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 space-y-1">
-                                <p className={cn(
-                                    "text-sm font-semibold",
-                                    platformGradient ? "text-white" : "text-foreground"
-                                )}>{label}</p>
-                                <p className={cn(
-                                    "text-xs break-words",
-                                    platformGradient ? "text-white/80" : "text-muted-foreground"
-                                )}>{value}</p>
-                                {accountHandle && accountPlatform && (
-                                    <p className={cn(
-                                        "text-xs capitalize",
-                                        platformGradient ? "text-white/70" : "text-muted-foreground"
-                                    )}>
-                                        @{accountHandle} · {accountPlatform}
-                                    </p>
-                                )}
-                            </div>
+                            <AvatarImage src={personaAvatarUrl || ''} alt={value || ''} />
+                            <AvatarFallback className={cn(
+                                "text-[10px] font-semibold",
+                                platformGradient ? "text-white" : "text-foreground"
+                            )}>
+                                {value?.charAt(0) || "P"}
+                            </AvatarFallback>
+                        </Avatar>
+                    </div>
+
+                    {/* Top Right: Account Handle */}
+                    <div className="flex items-center justify-end">
+                        {accountHandle && accountPlatform && (
+                            <p className={cn(
+                                "text-xs font-medium truncate",
+                                platformGradient ? "text-white/90" : "text-foreground"
+                            )}>
+                                @{accountHandle}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Bottom Left + Right (merged): Name, Status, Actions */}
+                    <div className="col-span-2 space-y-1">
+                        {/* Persona Name + Status Dot */}
+                        <div className="flex items-center justify-between gap-2">
+                            <p className={cn(
+                                "text-sm font-semibold truncate flex-1",
+                                platformGradient ? "text-white" : "text-foreground"
+                            )}>
+                                {value}
+                            </p>
                             <div className={cn(
-                                "h-2 w-2 rounded-full",
+                                "h-2 w-2 rounded-full flex-shrink-0",
                                 enabled ? "bg-emerald-400" : "bg-red-400"
                             )} />
                         </div>
+
+                        {/* Status and Actions */}
                         <div className="flex items-center justify-between gap-2 text-xs">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
                                 {isValid === false && (
                                     <div className={cn(
                                         "flex items-center gap-1",
                                         platformGradient ? "text-white/90" : "text-destructive"
                                     )}>
-                                        <AlertTriangle className="h-3 w-3" />
-                                        <span>Not Authenticated</span>
+                                        <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                                        <span className="truncate">Not Authenticated</span>
                                     </div>
                                 )}
                                 {isValid && (
@@ -115,11 +124,11 @@ export function ContextCard({
                                         "flex items-center gap-1",
                                         platformGradient ? "text-white/90" : "text-emerald-600"
                                     )}>
-                                        <span>Authenticated</span>
+                                        <span className="truncate">Authenticated</span>
                                     </div>
                                 )}
                             </div>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 flex-shrink-0">
                                 {isValid === false && onReconnect && (
                                     <Button
                                         variant="destructive"
@@ -129,7 +138,7 @@ export function ContextCard({
                                         disabled={isReconnecting}
                                     >
                                         <RefreshCw className={cn("h-3 w-3", isReconnecting && "animate-spin")} />
-                                        {isReconnecting ? "..." : "Fix"}
+                                        <span className="hidden sm:inline">{isReconnecting ? "..." : "Fix"}</span>
                                     </Button>
                                 )}
                                 {onClear && (
@@ -145,11 +154,15 @@ export function ContextCard({
                                 )}
                             </div>
                         </div>
+
+                        {/* Helper Text */}
                         {helper && (
                             <p className={cn(
-                                "text-[11px]",
+                                "text-[11px] break-words",
                                 platformGradient ? "text-white/70" : "text-muted-foreground"
-                            )}>{helper}</p>
+                            )}>
+                                {helper}
+                            </p>
                         )}
                     </div>
                 </div>

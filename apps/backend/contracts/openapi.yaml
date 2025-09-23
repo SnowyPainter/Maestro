@@ -4086,6 +4086,10 @@ components:
           title: Persona Avatar Url
           type: string
           nullable: true
+        persona_description:
+          title: Persona Description
+          type: string
+          nullable: true
         account_id:
           type: integer
           title: Account Id
@@ -4098,6 +4102,14 @@ components:
           title: Account Avatar Url
           type: string
           nullable: true
+        account_bio:
+          title: Account Bio
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+          title: Is Active
+          default: true
         can_permissions:
           items:
             $ref: '#/components/schemas/Permission'
@@ -4110,6 +4122,11 @@ components:
           type: string
           format: date-time
           title: Created At
+        last_updated_at:
+          title: Last Updated At
+          format: date-time
+          type: string
+          nullable: true
       type: object
       required:
       - id

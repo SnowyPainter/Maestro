@@ -1005,14 +1005,21 @@ export interface RichPersonaAccountOut {
   persona_name: string;
   /** @nullable */
   persona_avatar_url?: string | null;
+  /** @nullable */
+  persona_description?: string | null;
   account_id: number;
   account_handle: string;
   account_platform: PlatformKind;
   /** @nullable */
   account_avatar_url?: string | null;
+  /** @nullable */
+  account_bio?: string | null;
+  is_active?: boolean;
   can_permissions: Permission[];
   is_verified_link: boolean;
   created_at: string;
+  /** @nullable */
+  last_updated_at?: string | null;
 }
 
 export interface SignupRequest {
