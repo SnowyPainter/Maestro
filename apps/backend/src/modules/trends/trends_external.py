@@ -2,12 +2,14 @@
 import re
 import html
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from typing import List, Optional
 
 from apps.backend.src.modules.trends.schemas import TrendItem, TrendsResponse
 from apps.backend.src.services.http_clients import SYNC_FETCH
+from apps.backend.src.services.http_clients import REDDIT_SYNC_FETCH
+import httpx
 
 # 헬퍼 함수들
 def _now_iso() -> str:
@@ -91,32 +93,53 @@ def get_hn_frontpage(max_items: int = 20) -> TrendsResponse:
 # ---------------------------
 # 2) Reddit (RSS)
 # ---------------------------
+
 def get_reddit(subreddit: str = "all", max_items: int = 20) -> TrendsResponse:
     """
-    Reddit 서브레딧의 RSS에서 트렌드 데이터를 가져옵니다.
-    RSS: https://www.reddit.com/r/<subreddit>/.rss
+    차단 회피를 위해 old.reddit.com 우선, 실패 시 www.reddit.com 폴백.
     """
-    url = f"https://www.reddit.com/r/{subreddit}/.rss"
-    r = SYNC_FETCH.get(url, headers={"User-Agent": "MaestroSniffer/1.0"}, timeout=15.0)
-    r.raise_for_status()
+    domains = [
+        f"https://old.reddit.com/r/{subreddit}/.rss",
+        f"https://www.reddit.com/r/{subreddit}/.rss",
+    ]
 
-    root = ET.fromstring(r.content)
+    last_exc = None
+    content = None
+    for idx, url in enumerate(domains):
+        try:
+            r = REDDIT_SYNC_FETCH.get(url, timeout=15.0)
+            # 429/403이면 바로 다음 도메인 시도
+            if r.status_code in (401, 403, 429):
+                last_exc = httpx.HTTPStatusError(f"status={r.status_code}", request=r.request, response=r)
+                continue
+            r.raise_for_status()
+            content = r.content
+            break
+        except httpx.HTTPError as e:
+            last_exc = e
+            continue
+
+    if content is None:
+        raise last_exc or RuntimeError("reddit rss fetch failed")
+
+    root = ET.fromstring(content)
     channel = root.find("channel")
     items = [] if channel is None else channel.findall("item")
 
     trends: List[TrendItem] = []
+    now_iso = _now_iso()
     for rank, it in enumerate(items[:max_items], start=1):
         title = it.findtext("title") or ""
         link = it.findtext("link") or None
         pub_raw = it.findtext("pubDate")
-        pub_iso = _parse_rfc822_to_iso(pub_raw) or _now_iso()
+        pub_iso = _parse_rfc822_to_iso(pub_raw) or now_iso
         desc = _clean_html(it.findtext("description"))
 
         trends.append(TrendItem(
             rank=rank,
-            retrieved=_now_iso(),
+            retrieved=now_iso,
             title=title,
-            approx_traffic=None,  # upvotes 노출 없음 → None
+            approx_traffic=None,
             link=link,
             pub_date=pub_iso,
             picture=None,
@@ -126,9 +149,9 @@ def get_reddit(subreddit: str = "all", max_items: int = 20) -> TrendsResponse:
         ))
 
     return TrendsResponse(
-        country="global",  # Reddit은 글로벌 플랫폼
+        country="global",
         max_items=max_items,
-        retrieved_at=_now_iso(),
+        retrieved_at=now_iso,
         trends=trends,
         total_count=len(trends),
     )

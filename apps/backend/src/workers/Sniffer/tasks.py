@@ -3,6 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 
 from celery import shared_task
+import httpx
+import logging
+logger = logging.getLogger(__name__)
+
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
@@ -116,7 +120,19 @@ def sniff_reddit_trends(self, subreddit: str = "all", max_items: int | None = No
     target = (subreddit or "all").strip() or "all"
     try:
         resp = trends_external.get_reddit(subreddit=target, max_items=max_items or settings.TRENDS_MAX_ITEMS)
+    except httpx.HTTPStatusError as e:
+        status = e.response.status_code if e.response is not None else None
+        if status in (429,):
+            countdown = min(30 * (self.request.retries + 1), 300)
+            raise self.retry(exc=e, countdown=countdown)
+        if status in (401, 403):
+            if self.request.retries < 1:
+                raise self.retry(exc=e, countdown=60)
+            return {"ok": False, "reason": f"blocked status {status}"}
+        raise self.retry(exc=e, countdown=min(15 * (self.request.retries + 1), 120))
+    except (httpx.HTTPError, ConnectionError) as e:
+        raise self.retry(exc=e, countdown=min(15 * (self.request.retries + 1), 120))
     except Exception as e:
-        raise self.retry(exc=e, countdown=min(30 * (self.request.retries + 1), 120))
+        return {"ok": False, "reason": "unexpected_error"}
 
     return _process_trends_response(resp, source=f"reddit:{target}")
