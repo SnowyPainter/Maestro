@@ -12,5 +12,10 @@
     "schedule": "排程",
     "delete": "删除",
     "edit": "编辑"
+  },
+  "languages": {
+    "en": "英语",
+    "zh": "中文",
+    "ko": "韩语"
   }
 }

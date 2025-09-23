@@ -12,6 +12,7 @@ from apps.backend.src.modules.accounts.schemas import (
     PersonaAccountOut,
     PersonaOut,
     PlatformAccountOut,
+    RichPersonaAccountOut,
 )
 from apps.backend.src.modules.accounts.service import (
     get_persona,
@@ -21,6 +22,7 @@ from apps.backend.src.modules.accounts.service import (
     list_personas,
     list_personas_for_account,
     list_platform_accounts,
+    list_persona_accounts_for_user,
 )
 from apps.backend.src.modules.common.enums import PlatformKind
 from apps.backend.src.modules.users.models import User
@@ -32,6 +34,8 @@ from apps.backend.src.orchestrator.dispatch import (
 )
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
+class EmptyPayload(BaseModel):
+    pass
 
 class PlatformAccountReadPayload(BaseModel):
     account_id: int
@@ -71,6 +75,9 @@ class PersonaList(RootModel[list[PersonaOut]]):
 
 
 class PersonaAccountList(RootModel[list[PersonaAccountOut]]):
+    pass
+
+class RichPersonaAccountList(RootModel[list[RichPersonaAccountOut]]):
     pass
 
 class IsValidOut(BaseModel):
@@ -200,6 +207,20 @@ async def op_list_personas_for_account(
     items = [PersonaAccountOut.model_validate(link) for link in links]
     return PersonaAccountList(root=items)
 
+@operator(
+    key="bff.accounts.list_rich_persona_accounts_for_user",
+    title="List rich persona accounts for user",
+    side_effect="read",
+)
+async def op_list_rich_persona_accounts_for_user(
+    payload: EmptyPayload,
+    ctx: TaskContext,
+) -> RichPersonaAccountList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    rich_persona_accounts = await list_persona_accounts_for_user(db, owner_user_id=user.id)
+    return RichPersonaAccountList(root=list(rich_persona_accounts))
+
 @FLOWS.flow(
     key="bff.accounts.is_valid_platform_account",
     title="Check if platform account is valid",
@@ -300,6 +321,20 @@ def _flow_bff_list_accounts_for_persona(builder: FlowBuilder):
 )
 def _flow_bff_list_personas_for_account(builder: FlowBuilder):
     task = builder.task("list_personas_for_account", "bff.accounts.list_personas_for_account")
+    builder.expect_terminal(task)
+
+@FLOWS.flow(
+    key="bff.accounts.list_rich_persona_accounts_for_user",
+    title="Get All Rich Persona Accounts for User",
+    description="List all persona accounts for the current user with rich details for UI carousel display",
+    input_model=EmptyPayload,
+    output_model=RichPersonaAccountList,
+    method="get",
+    path="/accounts/persona-accounts/rich",
+    tags=("bff", "accounts", "persona", "platform", "list", "ui", "frontend", "carousel", "rich"),
+)
+def _flow_bff_list_rich_persona_accounts_for_user(builder: FlowBuilder):
+    task = builder.task("list_rich_persona_accounts_for_user", "bff.accounts.list_rich_persona_accounts_for_user")
     builder.expect_terminal(task)
 
 

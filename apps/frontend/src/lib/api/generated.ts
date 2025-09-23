@@ -994,6 +994,27 @@ export interface RenderedVariantBlocks {
   metrics?: RenderedVariantBlocksMetrics;
 }
 
+export type RichPersonaAccountList = RichPersonaAccountOut[];
+
+/**
+ * Rich persona account with embedded persona and account details for UI display
+ */
+export interface RichPersonaAccountOut {
+  id: number;
+  persona_id: number;
+  persona_name: string;
+  /** @nullable */
+  persona_avatar_url?: string | null;
+  account_id: number;
+  account_handle: string;
+  account_platform: PlatformKind;
+  /** @nullable */
+  account_avatar_url?: string | null;
+  can_permissions: Permission[];
+  is_verified_link: boolean;
+  created_at: string;
+}
+
 export interface SignupRequest {
   email: string;
   /**
@@ -1946,6 +1967,95 @@ export function useBffAccountsListPersonasForAccountApiBffAccountsPlatformAccoun
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPersonasGetQueryOptions(accountId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * List all persona accounts for the current user with rich details for UI carousel display
+ * @summary Get All Rich Persona Accounts for User
+ */
+export const bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet = (
+    
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<RichPersonaAccountList>(
+      {url: `/api/bff/accounts/persona-accounts/rich`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetQueryKey = () => {
+    return [`/api/bff/accounts/persona-accounts/rich`] as const;
+    }
+
+    
+export const getBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetQueryOptions = <TData = Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>> = ({ signal }) => bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>>
+export type BffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetQueryError = unknown
+
+
+export function useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet<TData = Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet<TData = Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet<TData = Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get All Rich Persona Accounts for User
+ */
+
+export function useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet<TData = Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetQueryOptions(options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

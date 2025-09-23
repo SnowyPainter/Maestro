@@ -8,6 +8,7 @@ import { useSessionStore } from '@/store/session';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -53,6 +54,10 @@ export function SettingsPage() {
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold border-b pb-2">User Information</h2>
               {userInfo}
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold border-b pb-2">Language</h2>
+              <LanguageSwitcher />
             </div>
             <div className="text-center">
               <Button variant="destructive" size="lg" onClick={handleLogout}>

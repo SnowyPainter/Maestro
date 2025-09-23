@@ -144,6 +144,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/accounts/persona-accounts/rich": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Rich Persona Accounts for User
+         * @description List all persona accounts for the current user with rich details for UI carousel display
+         */
+        get: operations["bff_accounts_list_rich_persona_accounts_for_user_api_bff_accounts_persona_accounts_rich_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/campaigns/{campaign_id}": {
         parameters: {
             query?: never;
@@ -2147,6 +2167,38 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** RichPersonaAccountList */
+        RichPersonaAccountList: components["schemas"]["RichPersonaAccountOut"][];
+        /**
+         * RichPersonaAccountOut
+         * @description Rich persona account with embedded persona and account details for UI display
+         */
+        RichPersonaAccountOut: {
+            /** Id */
+            id: number;
+            /** Persona Id */
+            persona_id: number;
+            /** Persona Name */
+            persona_name: string;
+            /** Persona Avatar Url */
+            persona_avatar_url?: string | null;
+            /** Account Id */
+            account_id: number;
+            /** Account Handle */
+            account_handle: string;
+            account_platform: components["schemas"]["PlatformKind"];
+            /** Account Avatar Url */
+            account_avatar_url?: string | null;
+            /** Can Permissions */
+            can_permissions: components["schemas"]["Permission"][];
+            /** Is Verified Link */
+            is_verified_link: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** SignupRequest */
         SignupRequest: {
             /**
@@ -2582,6 +2634,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_accounts_list_rich_persona_accounts_for_user_api_bff_accounts_persona_accounts_rich_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RichPersonaAccountList"];
                 };
             };
         };

@@ -115,3 +115,18 @@ class PersonaAccountOut(BaseModel):
     is_verified_link: bool
     default_templates: Optional[dict[str, Any]] = None
     created_at: datetime
+
+class RichPersonaAccountOut(BaseModel):
+    """Rich persona account with embedded persona and account details for UI display"""
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    persona_id: int
+    persona_name: str
+    persona_avatar_url: Optional[str] = None
+    account_id: int
+    account_handle: str
+    account_platform: PlatformKind
+    account_avatar_url: Optional[str] = None
+    can_permissions: list[Permission]
+    is_verified_link: bool
+    created_at: datetime

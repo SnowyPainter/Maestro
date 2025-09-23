@@ -12,5 +12,10 @@
     "schedule": "Schedule",
     "delete": "Delete",
     "edit": "Edit"
+  },
+  "languages": {
+    "en": "English",
+    "zh": "Chinese",
+    "ko": "Korean"
   }
 }

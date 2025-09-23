@@ -213,6 +213,26 @@ export const bffAccountsListPersonasForAccountApiBffAccountsPlatformAccountIdPer
 
 
 /**
+ * List all persona accounts for the current user with rich details for UI carousel display
+ * @summary Get All Rich Persona Accounts for User
+ */
+export const bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetResponseItem = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "persona_name": zod.string(),
+  "persona_avatar_url": zod.string().nullish(),
+  "account_id": zod.number(),
+  "account_handle": zod.string(),
+  "account_platform": zod.enum(['instagram', 'threads']),
+  "account_avatar_url": zod.string().nullish(),
+  "can_permissions": zod.array(zod.enum(['read', 'write', 'publish'])),
+  "is_verified_link": zod.boolean(),
+  "created_at": zod.iso.datetime({})
+}).describe('Rich persona account with embedded persona and account details for UI display')
+export const bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetResponse = zod.array(bffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGetResponseItem)
+
+
+/**
  * Retrieve complete campaign information for campaign management dashboard
  * @summary Get Campaign Details
  */

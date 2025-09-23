@@ -13,7 +13,7 @@ from apps.backend.src.modules.accounts.models import (
 from apps.backend.src.modules.accounts.schemas import (
     PlatformAccountCreate, PlatformAccountUpdate,
     PersonaCreate, PersonaUpdate,
-    PersonaAccountLinkCreate
+    PersonaAccountLinkCreate, RichPersonaAccountOut
 )
 from apps.backend.src.modules.common.enums import PlatformKind, Permission
 
@@ -288,3 +288,50 @@ async def get_persona_account(
     q = select(PersonaAccount).where(PersonaAccount.id == persona_account_id)
     res = await db.execute(q)
     return res.scalar_one_or_none()
+
+async def list_persona_accounts_for_user(
+    db: AsyncSession, *, owner_user_id: int
+) -> Sequence[RichPersonaAccountOut]:
+    """Get all persona accounts for a user with rich details for UI display"""
+    q = (
+        select(
+            PersonaAccount.id,
+            PersonaAccount.persona_id,
+            Persona.name.label("persona_name"),
+            Persona.avatar_url.label("persona_avatar_url"),
+            PersonaAccount.account_id,
+            PlatformAccount.handle.label("account_handle"),
+            PlatformAccount.platform.label("account_platform"),
+            PlatformAccount.avatar_url.label("account_avatar_url"),
+            PersonaAccount.can_permissions,
+            PersonaAccount.is_verified_link,
+            PersonaAccount.created_at,
+        )
+        .join(Persona, PersonaAccount.persona_id == Persona.id)
+        .join(PlatformAccount, PersonaAccount.account_id == PlatformAccount.id)
+        .where(Persona.owner_user_id == owner_user_id)
+        .where(PlatformAccount.owner_user_id == owner_user_id)
+        .order_by(PersonaAccount.id.desc())
+    )
+
+    res = await db.execute(q)
+    rows = res.all()
+
+    # Convert to RichPersonaAccountOut
+    result = []
+    for row in rows:
+        result.append(RichPersonaAccountOut(
+            id=row.id,
+            persona_id=row.persona_id,
+            persona_name=row.persona_name,
+            persona_avatar_url=row.persona_avatar_url,
+            account_id=row.account_id,
+            account_handle=row.account_handle,
+            account_platform=row.account_platform,
+            account_avatar_url=row.account_avatar_url,
+            can_permissions=row.can_permissions,
+            is_verified_link=row.is_verified_link,
+            created_at=row.created_at,
+        ))
+
+    return result

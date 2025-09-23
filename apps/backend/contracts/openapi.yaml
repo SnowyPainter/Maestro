@@ -289,6 +289,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/accounts/persona-accounts/rich:
+    get:
+      tags:
+      - bff
+      - bff
+      - accounts
+      - persona
+      - platform
+      - list
+      - ui
+      - frontend
+      - carousel
+      - rich
+      summary: Get All Rich Persona Accounts for User
+      description: List all persona accounts for the current user with rich details
+        for UI carousel display
+      operationId: bff_accounts_list_rich_persona_accounts_for_user_api_bff_accounts_persona_accounts_rich_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RichPersonaAccountList'
   /api/bff/campaigns/{campaign_id}:
     get:
       tags:
@@ -4042,6 +4066,64 @@ components:
           title: Metrics
       type: object
       title: RenderedVariantBlocks
+    RichPersonaAccountList:
+      items:
+        $ref: '#/components/schemas/RichPersonaAccountOut'
+      type: array
+      title: RichPersonaAccountList
+    RichPersonaAccountOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        persona_id:
+          type: integer
+          title: Persona Id
+        persona_name:
+          type: string
+          title: Persona Name
+        persona_avatar_url:
+          title: Persona Avatar Url
+          type: string
+          nullable: true
+        account_id:
+          type: integer
+          title: Account Id
+        account_handle:
+          type: string
+          title: Account Handle
+        account_platform:
+          $ref: '#/components/schemas/PlatformKind'
+        account_avatar_url:
+          title: Account Avatar Url
+          type: string
+          nullable: true
+        can_permissions:
+          items:
+            $ref: '#/components/schemas/Permission'
+          type: array
+          title: Can Permissions
+        is_verified_link:
+          type: boolean
+          title: Is Verified Link
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - persona_id
+      - persona_name
+      - account_id
+      - account_handle
+      - account_platform
+      - can_permissions
+      - is_verified_link
+      - created_at
+      title: RichPersonaAccountOut
+      description: Rich persona account with embedded persona and account details
+        for UI display
     SignupRequest:
       properties:
         email:

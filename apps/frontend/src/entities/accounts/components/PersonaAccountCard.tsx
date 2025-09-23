@@ -106,14 +106,14 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
             disabled={isActive}
             className={`p-2 rounded-md transition-colors ${
               isActive
-                ? 'bg-primary text-primary-foreground cursor-not-allowed opacity-75'
+                ? 'bg-emerald-500 text-white cursor-not-allowed opacity-75'
                 : 'hover:bg-muted/50 cursor-pointer'
             }`}
           >
             <Zap className={`h-4 w-4 ${
               isActive
-                ? 'text-primary-foreground'
-                : 'bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent'
+                ? 'text-white'
+                : 'text-emerald-500'
             }`} />
           </button>
         </div>
