@@ -32,8 +32,9 @@ import { PersonaAccountList } from "@/entities/accounts/components/PersonaAccoun
 import { PlatformAccountOut } from "@/lib/api/generated";
 import { DraftVariantList } from "@/entities/drafts/components/DraftVariantList";
 import { DraftVariantDetail } from "@/entities/drafts/components/DraftVariantDetail";
+import { useTranslation } from 'react-i18next';
 
-const DEFAULT_ERROR_MESSAGE = '죄송합니다. 채팅 처리 중 오류가 발생했습니다.';
+const DEFAULT_ERROR_MESSAGE = '채팅 처리 중 오류가 발생했습니다.';
 
 const isMessageOfComponent = (content: Message["content"], component: React.ComponentType<any>): boolean => (
   React.isValidElement(content) && content.type === component
@@ -54,6 +55,7 @@ export function useChatPageEvents() {
   const { appendMessage, updateMessages, removeMessage, clearMessages } = useChatMessagesContext();
   const chatMutation = useChatQueryApiOrchestratorChatQueryPost();
   const messageIdRef = useRef<number>(Date.now());
+  const { t } = useTranslation();
 
   const getNextMessageId = useCallback(() => {
     messageIdRef.current += 1;
@@ -235,7 +237,8 @@ export function useChatPageEvents() {
   const handlePersonaCreateSuccess = useCallback<EntitySuccessHandler>((personaId, sourceMessageId) => {
     if (sourceMessageId) {
       removeMessage(sourceMessageId);
-    } else {
+    }
+    else {
       removeMessagesByComponent(CreatePersonaForm);
     }
     addCardMessage(messageId => (
@@ -291,7 +294,8 @@ export function useChatPageEvents() {
   const handleAccountCreateSuccess = useCallback<EntitySuccessHandler>((accountId, sourceMessageId) => {
     if (sourceMessageId) {
       removeMessage(sourceMessageId);
-    } else {
+    }
+    else {
       removeMessagesByComponent(CreateAccountForm);
     }
     addCardMessage(messageId => (
@@ -457,9 +461,9 @@ export function useChatPageEvents() {
       });
     } catch (error) {
       console.error('Chat error:', error);
-      addTextMessage(DEFAULT_ERROR_MESSAGE, 'bot');
+      addTextMessage(t('chat.error_message'), 'bot');
     }
-  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleDraftVariantSelect]);
+  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleDraftVariantSelect, t]);
 
   return {
     handleChatSend,

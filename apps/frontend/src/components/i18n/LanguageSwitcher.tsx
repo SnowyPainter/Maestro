@@ -23,7 +23,6 @@ export function LanguageSwitcher() {
       <SelectContent>
         <SelectItem value="en">{t("languages.en")}</SelectItem>
         <SelectItem value="zh">{t("languages.zh")}</SelectItem>
-        <SelectItem value="ko">{t("languages.ko")}</SelectItem>
       </SelectContent>
     </Select>
   );

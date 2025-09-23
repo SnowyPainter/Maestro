@@ -1,10 +1,10 @@
-
 import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChatBubble } from './ChatBubble';
 import { AnimatedCard } from './AnimatedCard';
 import { Button } from '@/components/ui/button';
 import { Bot, MessageSquareText, CheckCircle2, LayoutDashboard, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function InteractiveWorkflow() {
   const ref = useRef<HTMLDivElement>(null);
@@ -13,6 +13,7 @@ export function InteractiveWorkflow() {
     offset: ['start end', 'end start'],
   });
 
+  const { t } = useTranslation();
   const [isApproved, setIsApproved] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
 
@@ -44,56 +45,56 @@ export function InteractiveWorkflow() {
     <div ref={ref} className="relative py-20 sm:py-28 overflow-hidden">
       <div className="container">
         <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-16">
-          See Maestro in Action
+          {t('interactive_workflow.title')}
         </h2>
 
         {/* Section 1: Chat with AI */}
         <motion.div style={{ opacity: chatOpacity, y: chatY }} className="mb-24">
-          <h3 className="text-2xl font-semibold text-center mb-8">1. Chat with Maestro</h3>
+          <h3 className="text-2xl font-semibold text-center mb-8">{t('interactive_workflow.chat_section.title')}</h3>
           <div className="max-w-2xl mx-auto space-y-4">
-            <ChatBubble from="user" message="Generate a social media campaign for our new eco-friendly product line." />
-            <ChatBubble from="bot" message="Understood! I'll draft content for Twitter, Instagram, and LinkedIn, focusing on sustainability and innovation. Any specific hashtags or tones?" />
-            <ChatBubble from="user" message="Let's go with a positive, engaging tone. Use #EcoInnovate and #SustainableFuture." />
-            <ChatBubble from="bot" message="Got it. Generating drafts now..." />
+            <ChatBubble from="user" message={t('interactive_workflow.chat_section.user_message_1')} />
+            <ChatBubble from="bot" message={t('interactive_workflow.chat_section.bot_message_1')} />
+            <ChatBubble from="user" message={t('interactive_workflow.chat_section.user_message_2')} />
+            <ChatBubble from="bot" message={t('interactive_workflow.chat_section.bot_message_2')} />
           </div>
         </motion.div>
 
         {/* Section 2: Orchestration - Tasks & Drafts */}
         <motion.div style={{ opacity: orchestrationOpacity, y: orchestrationY }} className="mb-24">
-          <h3 className="text-2xl font-semibold text-center mb-8">2. Maestro Orchestrates Tasks</h3>
+          <h3 className="text-2xl font-semibold text-center mb-8">{t('interactive_workflow.orchestration_section.title')}</h3>
           <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-6">
             <AnimatedCard className="p-6 text-center">
               <MessageSquareText className="h-8 w-8 text-secondary mb-3 mx-auto" />
-              <h4 className="font-semibold">Draft Social Posts</h4>
-              <p className="text-sm text-muted-foreground">AI generates content for all platforms.</p>
+              <h4 className="font-semibold">{t('interactive_workflow.orchestration_section.card_1_title')}</h4>
+              <p className="text-sm text-muted-foreground">{t('interactive_workflow.orchestration_section.card_1_description')}</p>
             </AnimatedCard>
             <AnimatedCard className="p-6 text-center">
               <CheckCircle2 className="h-8 w-8 text-success mb-3 mx-auto" />
-              <h4 className="font-semibold">Review & Approve</h4>
-              <p className="text-sm text-muted-foreground">You maintain full control over outputs.</p>
+              <h4 className="font-semibold">{t('interactive_workflow.orchestration_section.card_2_title')}</h4>
+              <p className="text-sm text-muted-foreground">{t('interactive_workflow.orchestration_section.card_2_description')}</p>
             </AnimatedCard>
             <AnimatedCard className="p-6 text-center">
               <LayoutDashboard className="h-8 w-8 text-warning mb-3 mx-auto" />
-              <h4 className="font-semibold">Schedule & Publish</h4>
-              <p className="text-sm text-muted-foreground">Automate deployment across channels.</p>
+              <h4 className="font-semibold">{t('interactive_workflow.orchestration_section.card_3_title')}</h4>
+              <p className="text-sm text-muted-foreground">{t('interactive_workflow.orchestration_section.card_3_description')}</p>
             </AnimatedCard>
           </div>
         </motion.div>
 
         {/* Section 3: Result - Generated Content */}
         <motion.div style={{ opacity: resultOpacity, y: resultY }} className="mb-24">
-          <h3 className="text-2xl font-semibold text-center mb-8">3. Review AI Generated Content</h3>
+          <h3 className="text-2xl font-semibold text-center mb-8">{t('interactive_workflow.result_section.title')}</h3>
           <div className="max-w-2xl mx-auto">
             <AnimatedCard className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="font-semibold text-lg">AI Generated Draft: Twitter Post</h4>
-                <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">Draft</span>
+                <h4 className="font-semibold text-lg">{t('interactive_workflow.result_section.draft_title')}</h4>
+                <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">{t('interactive_workflow.result_section.draft_badge')}</span>
               </div>
               <p className="text-muted-foreground text-sm mb-4">
-                "🌱 Excited to unveil our new eco-friendly product line! Join us in building a #SustainableFuture with #EcoInnovate. Discover more: [Link]"
+                {t('interactive_workflow.result_section.draft_content')}
               </p>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm">Edit Draft</Button>
+                <Button variant="outline" size="sm">{t('interactive_workflow.result_section.edit_draft_button')}</Button>
                 <motion.div
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -137,7 +138,7 @@ export function InteractiveWorkflow() {
                         }}
                         transition={{ duration: 0.2 }}
                       >
-                        {isApproved ? 'Approved' : 'Approve'}
+                        {isApproved ? t('interactive_workflow.result_section.approved_button') : t('interactive_workflow.result_section.approve_button')}
                       </motion.span>
                     </motion.div>
 
@@ -168,12 +169,12 @@ export function InteractiveWorkflow() {
 
         {/* Section 4: Collaboration - Co-worker AI (Pipeline) */}
         <motion.div style={{ opacity: collaborationOpacity, y: collaborationY }} className="mb-24">
-          <h3 className="text-2xl font-semibold text-center mb-8">4. Automated Collaboration Pipeline</h3>
+          <h3 className="text-2xl font-semibold text-center mb-8">{t('interactive_workflow.collaboration_section.title')}</h3>
           <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-center gap-8">
             <AnimatedCard className="p-6 text-center flex-1">
               <Users className="h-8 w-8 text-secondary mb-3 mx-auto" />
-              <h4 className="font-semibold">Comment Analysis</h4>
-              <p className="text-sm text-muted-foreground">AI analyzes user comments and feedback.</p>
+              <h4 className="font-semibold">{t('interactive_workflow.collaboration_section.card_1_title')}</h4>
+              <p className="text-sm text-muted-foreground">{t('interactive_workflow.collaboration_section.card_1_description')}</p>
             </AnimatedCard>
             <motion.div
               initial={{ scaleX: 0 }}
@@ -291,8 +292,8 @@ export function InteractiveWorkflow() {
             </motion.div>
             <AnimatedCard className="p-6 text-center flex-1">
               <Bot className="h-8 w-8 text-primary mb-3 mx-auto" />
-              <h4 className="font-semibold">Automatic Commenting</h4>
-              <p className="text-sm text-muted-foreground">Maestro drafts and posts relevant replies.</p>
+              <h4 className="font-semibold">{t('interactive_workflow.collaboration_section.card_2_title')}</h4>
+              <p className="text-sm text-muted-foreground">{t('interactive_workflow.collaboration_section.card_2_description')}</p>
             </AnimatedCard>
           </div>
         </motion.div>

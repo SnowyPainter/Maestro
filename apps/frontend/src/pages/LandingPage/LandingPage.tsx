@@ -5,6 +5,8 @@ import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { InteractiveWorkflow } from './components/InteractiveWorkflow';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 const typingPhrases = [
   "a marketing campaign for the new product launch...",
@@ -14,6 +16,7 @@ const typingPhrases = [
 ];
 
 export function LandingPage() {
+  const { t } = useTranslation();
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
 
@@ -56,11 +59,12 @@ export function LandingPage() {
           </div>
           <div className="flex flex-1 items-center justify-end space-x-2">
             <nav className="flex items-center space-x-2">
+              <LanguageSwitcher />
               <Button asChild variant="ghost">
-                <Link to="/login">Log In</Link>
+                <Link to="/login">{t('landing.login')}</Link>
               </Button>
               <Button asChild>
-                <Link to="/signup">Get Started</Link>
+                <Link to="/signup">{t('landing.get_started')}</Link>
               </Button>
             </nav>
           </div>
@@ -76,10 +80,10 @@ export function LandingPage() {
         >
           <motion.div variants={itemVariants} className="max-w-3xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
-              Your Own Orchestra for Content Propagation
+              {t('landing.hero_title')}
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-muted-foreground">
-              Maestro helps you create, manage, and deploy domain-adapted content with a seamless chat-first workflow.
+              {t('landing.hero_description')}
             </p>
             <div className="mt-10 h-12 text-lg sm:text-xl text-muted-foreground typing-cursor">
               <span>{typedText}</span>
@@ -97,13 +101,13 @@ export function LandingPage() {
           variants={itemVariants}
         >
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready to Get Started?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">{t('landing.ready_to_get_started_title')}</h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Transform your content workflow today.
+              {t('landing.ready_to_get_started_description')}
             </p>
             <div className="mt-8">
               <Button asChild size="lg">
-                <Link to="/signup">Start for Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                <Link to="/signup">{t('landing.start_for_free')} <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
             </div>
           </div>
@@ -113,14 +117,14 @@ export function LandingPage() {
       <footer className="bg-muted/50">
         <div className="container py-8 text-center text-sm text-muted-foreground">
           <div className="mb-4">
-            <p>Contact: Minwoo Yu (snowypainter@gmail.com)</p>
+            <p>{t('landing.contact_info', { email: 'snowypainter@gmail.com' })}</p>
           </div>
           <div className="flex justify-center gap-x-6">
-            <Link to="/terms-of-service" className="hover:text-foreground">Terms of Service</Link>
-            <Link to="/privacy-policy" className="hover:text-foreground">Privacy Policy</Link>
-            <Link to="/data-deletion-policy" className="hover:text-foreground">Data Deletion Policy</Link>
+            <Link to="/terms-of-service" className="hover:text-foreground">{t('terms_of_service.title')}</Link>
+            <Link to="/privacy-policy" className="hover:text-foreground">{t('privacy_policy.title')}</Link>
+            <Link to="/data-deletion-policy" className="hover:text-foreground">{t('data_deletion_policy.title')}</Link>
           </div>
-          <p className="mt-4">&copy; {new Date().getFullYear()} Maestro. All Rights Reserved.</p>
+          <p className="mt-4">{t('landing.copyright', { year: new Date().getFullYear() })}</p>
         </div>
       </footer>
     </div>

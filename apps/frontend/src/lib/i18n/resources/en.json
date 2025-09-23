@@ -11,11 +11,140 @@
     "publish": "Publish",
     "schedule": "Schedule",
     "delete": "Delete",
-    "edit": "Edit"
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "view": "View",
+    "close": "Close",
+    "confirm": "Confirm"
   },
   "languages": {
     "en": "English",
-    "zh": "Chinese",
-    "ko": "Korean"
-  }
+    "zh": "Chinese"
+  },
+  "common": {
+    "title": "Title",
+    "description": "Description",
+    "name": "Name",
+    "status": "Status",
+    "date": "Date",
+    "time": "Time",
+    "type": "Type",
+    "category": "Category",
+    "message": "Message",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "placeholder": {
+    "search": "Search...",
+    "select": "Select...",
+    "enter_text": "Enter text..."
+  },
+  "terms_of_service": {
+    "title": "Terms of Service",
+    "description": "This is a placeholder for the Terms of Service page."
+  },
+  "privacy_policy": {
+    "title": "Privacy Policy",
+    "description": "This is a placeholder for the Privacy Policy page."
+  },
+  "data_deletion_policy": {
+    "title": "Data Deletion Policy",
+    "description": "This is a placeholder for the Data Deletion Policy page."
+  },
+  "settings": {
+    "logout_success": "Logged out successfully.",
+    "load_user_info_failed": "Failed to load user information.",
+    "email": "Email",
+    "username": "Username",
+    "not_set": "Not set",
+    "title": "Settings",
+    "user_information": "User Information",
+    "language": "Language",
+    "log_out": "Log Out"
+  },
+  "landing": {
+    "login": "Log In",
+    "get_started": "Get Started",
+    "hero_title": "Your Own Orchestra for Content Propagation",
+    "hero_description": "Maestro helps you create, manage, and deploy domain-adapted content with a seamless chat-first workflow.",
+    "ready_to_get_started_title": "Ready to Get Started?",
+    "ready_to_get_started_description": "Transform your content workflow today.",
+    "start_for_free": "Start for Free",
+    "contact_info": "Contact: {{email}}",
+    "copyright": "© {{year}} Maestro. All Rights Reserved."
+  },
+  "login": {
+    "success_message": "Login successful!",
+    "welcome_back": "Welcome back!",
+    "error_title": "Login Failed",
+    "error_description": "Please check your credentials and try again.",
+    "title": "Log In",
+    "description": "Enter your credentials to access your account.",
+    "email_label": "Email",
+    "password_label": "Password",
+    "logging_in_button": "Logging in...",
+    "login_button": "Log In",
+    "no_account_text": "Don't have an account?",
+    "signup_link": "Sign up"
+  },
+  "signup": {
+    "success_message": "Account created!",
+    "success_description": "You can now log in with your new credentials.",
+    "error_title": "Something went wrong",
+    "error_description": "Could not create your account. Please try again.",
+    "title": "Create an Account",
+    "description": "Enter your details to get started.",
+    "username_label": "Username",
+    "email_label": "Email",
+    "password_label": "Password",
+    "creating_account_button": "Creating Account...",
+    "create_account_button": "Create Account",
+    "has_account_text": "Already have an account?",
+    "login_link": "Log in"
+  },
+  "interactive_workflow": {
+    "title": "See Maestro in Action",
+    "chat_section": {
+      "title": "1. Chat with Maestro",
+      "user_message_1": "Generate a social media campaign for our new eco-friendly product line.",
+      "bot_message_1": "Understood! I'll draft content for Twitter, Instagram, and LinkedIn, focusing on sustainability and innovation. Any specific hashtags or tones?",
+      "user_message_2": "Let's go with a positive, engaging tone. Use #EcoInnovate and #SustainableFuture.",
+      "bot_message_2": "Got it. Generating drafts now..."
+    },
+    "orchestration_section": {
+      "title": "2. Maestro Orchestrates Tasks",
+      "card_1_title": "Draft Social Posts",
+      "card_1_description": "AI generates content for all platforms.",
+      "card_2_title": "Review & Approve",
+      "card_2_description": "You maintain full control over outputs.",
+      "card_3_title": "Schedule & Publish",
+      "card_3_description": "Automate deployment across channels."
+    },
+    "result_section": {
+      "title": "3. Review AI Generated Content",
+      "draft_title": "AI Generated Draft: Twitter Post",
+      "draft_badge": "Draft",
+      "draft_content": "🌱 Excited to unveil our new eco-friendly product line! Join us in building a #SustainableFuture with #EcoInnovate. Discover more: [Link]",
+      "edit_draft_button": "Edit Draft",
+      "approved_button": "Approved",
+      "approve_button": "Approve"
+    },
+    "collaboration_section": {
+      "title": "4. Automated Collaboration Pipeline",
+      "card_1_title": "Comment Analysis",
+      "card_1_description": "AI analyzes user comments and feedback.",
+      "card_2_title": "Automatic Commenting",
+      "card_2_description": "Maestro drafts and posts relevant replies."
+    }
+  },
+  "chat": {
+    "error_message": "Sorry, an error occurred while processing the chat."
+  },
+  "app_name": "Maestro"
 }

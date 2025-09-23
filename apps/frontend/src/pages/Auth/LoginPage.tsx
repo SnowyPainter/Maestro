@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ type LoginFormValues = z.infer<typeof loginApiOrchestratorAuthLoginPostBody>;
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const setToken = useSessionStore((state) => state.setToken);
   const loginMutation = useLoginApiOrchestratorAuthLoginPost();
 
@@ -32,14 +34,14 @@ export function LoginPage() {
     loginMutation.mutate({ data: values }, {
       onSuccess: (data) => {
         setToken(data.access_token);
-        toast.success('Login successful!', {
-          description: 'Welcome back!',
+        toast.success(t('login.success_message'), {
+          description: t('login.welcome_back'),
         });
         navigate('/chat');
       },
       onError: (error) => {
-        toast.error('Login Failed', {
-          description: error.detail?.[0]?.msg || 'Please check your credentials and try again.',
+        toast.error(t('login.error_title'), {
+          description: error.detail?.[0]?.msg || t('login.error_description'),
         });
       }
     });
@@ -53,28 +55,28 @@ export function LoginPage() {
         </div>
         <Card className="shadow-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Log In</CardTitle>
-            <CardDescription>Enter your credentials to access your account.</CardDescription>
+            <CardTitle className="text-2xl">{t('login.title')}</CardTitle>
+            <CardDescription>{t('login.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">{t('login.email_label')}</label>
                 <Input id="email" type="email" placeholder="m@example.com" {...form.register('email')} />
                 {form.formState.errors.email && <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>}
               </div>
               <div className="space-y-2">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">{t('login.password_label')}</label>
                 <Input id="password" type="password" {...form.register('password')} />
                 {form.formState.errors.password && <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? 'Logging in...' : 'Log In'}
+                {loginMutation.isPending ? t('login.logging_in_button') : t('login.login_button')}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center text-sm">
-            <p>Don't have an account? <Link to="/signup" className="font-semibold text-primary hover:underline">Sign up</Link></p>
+            <p>{t('login.no_account_text')} <Link to="/signup" className="font-semibold text-primary hover:underline">{t('login.signup_link')}</Link></p>
           </CardFooter>
         </Card>
       </div>

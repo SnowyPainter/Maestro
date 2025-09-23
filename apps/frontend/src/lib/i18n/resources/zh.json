@@ -11,11 +11,140 @@
     "publish": "发布",
     "schedule": "排程",
     "delete": "删除",
-    "edit": "编辑"
+    "edit": "编辑",
+    "save": "保存",
+    "cancel": "取消",
+    "create": "创建",
+    "update": "更新",
+    "search": "搜索",
+    "view": "查看",
+    "close": "关闭",
+    "confirm": "确认"
   },
   "languages": {
     "en": "英语",
-    "zh": "中文",
-    "ko": "韩语"
-  }
+    "zh": "中文"
+  },
+  "common": {
+    "title": "标题",
+    "description": "描述",
+    "name": "名称",
+    "status": "状态",
+    "date": "日期",
+    "time": "时间",
+    "type": "类型",
+    "category": "类别",
+    "message": "消息",
+    "error": "错误",
+    "success": "成功",
+    "warning": "警告",
+    "info": "信息"
+  },
+  "placeholder": {
+    "search": "搜索...",
+    "select": "请选择...",
+    "enter_text": "请输入文本..."
+  },
+  "terms_of_service": {
+    "title": "服务条款",
+    "description": "这是服务条款页面的占位符。"
+  },
+  "privacy_policy": {
+    "title": "隐私政策",
+    "description": "这是隐私政策页面的占位符。"
+  },
+  "data_deletion_policy": {
+    "title": "数据删除政策",
+    "description": "这是数据删除政策页面的占位符。"
+  },
+  "settings": {
+    "logout_success": "成功退出。",
+    "load_user_info_failed": "加载用户信息失败。",
+    "email": "电子邮件",
+    "username": "用户名",
+    "not_set": "未设置",
+    "title": "设置",
+    "user_information": "用户信息",
+    "language": "语言",
+    "log_out": "退出"
+  },
+  "landing": {
+    "login": "登录",
+    "get_started": "开始使用",
+    "hero_title": "您自己的内容传播管弦乐队",
+    "hero_description": "Maestro 帮助您通过无缝的聊天优先工作流程创建、管理和部署领域适应性内容。",
+    "ready_to_get_started_title": "准备好开始了吗？",
+    "ready_to_get_started_description": "立即改变您的内容工作流程。",
+    "start_for_free": "免费开始",
+    "contact_info": "联系方式：{{email}}",
+    "copyright": "© {{year}} Maestro. 保留所有权利。"
+  },
+  "login": {
+    "success_message": "登录成功！",
+    "welcome_back": "欢迎回来！",
+    "error_title": "登录失败",
+    "error_description": "请检查您的凭据，然后重试。",
+    "title": "登录",
+    "description": "输入您的凭据以访问您的帐户。",
+    "email_label": "电子邮件",
+    "password_label": "密码",
+    "logging_in_button": "正在登录...",
+    "login_button": "登录",
+    "no_account_text": "还没有帐户？",
+    "signup_link": "注册"
+  },
+  "signup": {
+    "success_message": "帐户创建成功！",
+    "success_description": "您现在可以使用新凭据登录。",
+    "error_title": "出错了",
+    "error_description": "无法创建您的帐户。请重试。",
+    "title": "创建帐户",
+    "description": "输入您的详细信息以开始使用。",
+    "username_label": "用户名",
+    "email_label": "电子邮件",
+    "password_label": "密码",
+    "creating_account_button": "正在创建帐户...",
+    "create_account_button": "创建帐户",
+    "has_account_text": "已有帐户？",
+    "login_link": "登录"
+  },
+  "interactive_workflow": {
+    "title": "查看 Maestro 的实际操作",
+    "chat_section": {
+      "title": "1. 与 Maestro 聊天",
+      "user_message_1": "为我们的新环保产品线生成社交媒体活动。",
+      "bot_message_1": "明白了！我将为 Twitter、Instagram 和 LinkedIn 起草内容，重点关注可持续性和创新。有什么特定的标签或语气吗？",
+      "user_message_2": "让我们采用积极、引人入胜的语气。使用 #EcoInnovate 和 #SustainableFuture。",
+      "bot_message_2": "知道了。正在生成草稿..."
+    },
+    "orchestration_section": {
+      "title": "2. Maestro 编排任务",
+      "card_1_title": "起草社交帖子",
+      "card_1_description": "AI 为所有平台生成内容。",
+      "card_2_title": "审查和批准",
+      "card_2_description": "您对输出拥有完全控制权。",
+      "card_3_title": "安排和发布",
+      "card_3_description": "自动化跨渠道部署。"
+    },
+    "result_section": {
+      "title": "3. 审查 AI 生成的内容",
+      "draft_title": "AI 生成的草稿：Twitter 帖子",
+      "draft_badge": "草稿",
+      "draft_content": "🌱 很高兴推出我们的新环保产品线！加入我们，通过 #EcoInnovate 建设 #SustainableFuture。了解更多：[链接]",
+      "edit_draft_button": "编辑草稿",
+      "approved_button": "已批准",
+      "approve_button": "批准"
+    },
+    "collaboration_section": {
+      "title": "4. 自动化协作流程",
+      "card_1_title": "评论分析",
+      "card_1_description": "AI 分析用户评论和反馈。",
+      "card_2_title": "自动评论",
+      "card_2_description": "Maestro 起草并发布相关回复。"
+    }
+  },
+  "chat": {
+    "error_message": "抱歉，处理聊天时发生错误。"
+  },
+  "app_name": "Maestro"
 }
