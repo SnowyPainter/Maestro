@@ -15,6 +15,17 @@ interface ChatInputProps {
     placeholder?: string;
 }
 
+/*
+
+원칙:
+Chip 으로 생성되었으면 바로 backspace로 다 삭제가능해야한다.
+Chip을 만들어가는 과정에서 키 입력과 backspace 입력이 가능해야한다. 
+value는 꼭 suggest에서 고를 필요 없이 raw로 입력이 가능해야한다.
+"@"로 key suggest를 연다. key suggest에서 선택하면 곧이어 value suggest가 열린다.
+value suggest에서는 그냥 사용자 입력이 가능해야하며, 따로 선택을 하면 바로 적용한다. value 입력 과정에서 띄어쓰기가 된다면 그대로 Chip을 완성시켜 버린다. 
+이후 suggest는 닫는다. 사용자는 이후 계속해서 입력을 할 수 있다.
+
+*/
 
 type SuggestionMode = 'key' | 'value';
 
