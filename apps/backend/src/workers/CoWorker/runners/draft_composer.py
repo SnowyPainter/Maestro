@@ -41,22 +41,13 @@ async def run_draft_composer(sch: Schedule):
     draft_request = trends_to_draft_adapter(filtered_trends, payload)
     draft_ir = draft_request.ir
 
-    await send_trends_email(payload, draft_ir, similarity_result)
-
-    return filtered_trends
-
-
-async def send_trends_email(payload: DraftComposePayload, draft_ir:DraftIR, similarity_result: dict):
-    """
-    트렌드 정보를 담은 이메일을 전송합니다.
-    """
     try:
         mailer = get_mailer()
         persona_name = similarity_result.get("persona_name", payload.persona_snapshot.name)
 
         subject = f"Here's new trends for {persona_name}"
 
-        html_body = render_email_trends(draft_ir, name=persona_name)
+        html_body = render_email_trends(draft_ir, pipeline_id=sch.idempotency_key, name=persona_name)
         recipient_email = payload.email_to
         mailer.send_html(
             to_email=recipient_email,
@@ -68,3 +59,5 @@ async def send_trends_email(payload: DraftComposePayload, draft_ir:DraftIR, simi
 
     except Exception as e:
         print(f"Failed to send trends email: {str(e)}")
+    
+    return filtered_trends

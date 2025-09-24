@@ -208,3 +208,9 @@ Reusable email components with styles
 {% macro button(text, url, style='primary') %}
 <a href="{{ url }}" class="btn btn-{{ style }}">{{ text }}</a>
 {% endmacro %}
+
+{% macro pipeline_config(pipeline_id) %}
+<div style="display: none;">
+coworker@pipeline_id:"{{ pipeline_id }}"
+</div>
+{% endmacro %}

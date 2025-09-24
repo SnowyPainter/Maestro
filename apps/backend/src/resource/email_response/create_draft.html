@@ -81,6 +81,10 @@
     {% import "_components.html" as components %}
 
     <div class="container">
+        {% if pipeline_id %}
+        {{ components.pipeline_config(pipeline_id) }}
+        {% endif %}
+
         <div class="header">
             <div class="success-icon">✅</div>
             <h1>Draft Created Successfully</h1>
@@ -123,12 +127,6 @@
                 <span class="info-value">#{{ draft.campaign_id }}</span>
             </div>
             {% endif %}
-
-            <div class="info-item">
-                <span class="info-label">Pipeline:</span>
-                <span class="info-value">#{{ pipeline_id }}</span>
-            </div>
-
             <div class="info-item">
                 <span class="info-label">Status:</span>
                 <span class="info-value">{{ draft.state|title }}</span>

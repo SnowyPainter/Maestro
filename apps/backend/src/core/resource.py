@@ -33,7 +33,7 @@ def render_email_draft_created(draft, pipeline_id: str) -> str:
     )
 
 
-def render_email_trends(draft_ir, name: str = None) -> str:
+def render_email_trends(draft_ir,  pipeline_id: str, name: str = None) -> str:
     """Render the trends email template with DraftIR content.
 
     Args:
@@ -43,5 +43,6 @@ def render_email_trends(draft_ir, name: str = None) -> str:
     return render_template(
         "email_response/trend_list.html",
         draft_ir=draft_ir,
-        name=name
+        name=name,
+        pipeline_id=pipeline_id
     )

@@ -134,6 +134,10 @@
         {{ components.persona_card(name) }}
         {% endif %}
 
+        {% if pipeline_id %}
+        {{ components.pipeline_config(pipeline_id) }}
+        {% endif %}
+
         <div class="content">
             {% for block in draft_ir.blocks %}
             {{ components.content_block(block) }}
