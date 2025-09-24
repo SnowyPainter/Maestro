@@ -1,15 +1,34 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Message } from "@/entities/messages/context/ChatMessagesContext";
+import { parseClauses } from "@/lib/chat/parse";
+import { ChipComponent } from "@/components/Chat/Chip";
+import { SlotHintItem } from "@/lib/api/generated";
+import { useListSlotHintsApiOrchestratorHelpersSlotHintsGet } from "@/lib/api/generated";
 
 const MAX_MESSAGE_LENGTH = 500;
 
 interface MessageBubbleProps {
   message: Message;
+  hintMap?: Record<string, SlotHintItem>;
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, hintMap }: MessageBubbleProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
+  // Get hint map if not provided
+  const { data: hintMapData } = useListSlotHintsApiOrchestratorHelpersSlotHintsGet({
+    query: undefined,
+    limit: 100
+  }, {
+    query: {
+      enabled: !hintMap
+    }
+  });
+  const actualHintMap = hintMap || hintMapData?.reduce((acc, hint) => {
+    acc[hint.name] = hint;
+    return acc;
+  }, {} as Record<string, SlotHintItem>) || {};
+
   const formatContent = (content: any): string => {
     if (typeof content === 'string') {
       return content;
@@ -26,6 +45,57 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     }
     return String(content);
   };
+
+  const renderContent = (content: string) => {
+    const clauses = parseClauses(content);
+    if (clauses.length === 0) {
+      return content;
+    }
+
+    const parts: React.ReactElement[] = [];
+    let lastIndex = 0;
+
+    clauses.forEach((clause, index) => {
+      // Add text before the chip
+      if (clause.span[0] > lastIndex) {
+        const textPart = content.slice(lastIndex, clause.span[0]);
+        if (textPart) {
+          parts.push(
+            <span key={`text-${index}`}>{textPart}</span>
+          );
+        }
+      }
+
+      // Add the chip
+      const chip = {
+        id: `chip-${clause.slot}-${clause.value}-${index}`,
+        slot: clause.slot,
+        value: clause.value
+      };
+      parts.push(
+        <ChipComponent
+          key={`chip-${clause.slot}-${clause.value}-${index}`}
+          chip={chip}
+          hintMap={actualHintMap}
+          variant="message"
+        />
+      );
+
+      lastIndex = clause.span[1];
+    });
+
+    // Add remaining text after the last chip
+    if (lastIndex < content.length) {
+      const textPart = content.slice(lastIndex);
+      if (textPart) {
+        parts.push(
+          <span key={`text-end`}>{textPart}</span>
+        );
+      }
+    }
+
+    return parts;
+  };
   
   if (typeof message.content === 'object' && message.content !== null && '$$typeof' in message.content) {
     return (
@@ -37,9 +107,14 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
   const content = formatContent(message.content);
   const shouldTruncate = content.length > MAX_MESSAGE_LENGTH;
-  const displayContent = shouldTruncate && !isExpanded
+  const truncatedContent = shouldTruncate && !isExpanded
     ? content.slice(0, MAX_MESSAGE_LENGTH) + '...'
     : content;
+
+  // Render content with chips if it's a string, otherwise use formatted content
+  const contentToRender = typeof message.content === 'string'
+    ? renderContent(truncatedContent)
+    : truncatedContent;
 
   const handleToggle = () => {
     if (shouldTruncate) {
@@ -67,7 +142,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           overflowWrap: 'break-word'
         }}
       >
-        {displayContent}
+        {contentToRender}
         {shouldTruncate && (
           <div className="mt-2 pt-2 border-t border-current border-opacity-20">
             <button

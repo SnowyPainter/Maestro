@@ -101,14 +101,22 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
       return part.text;
   }, [hintMap]);
 
-  const getCursorPosInEditor = (): number => {
+  const getCursorPosInEditor = (): { start: number, end: number } => {
     const selection = window.getSelection();
-    if (!selection?.rangeCount || !editorRef.current) return 0;
+    if (!selection?.rangeCount || !editorRef.current) return { start: 0, end: 0 };
+    
     const range = selection.getRangeAt(0);
-    const preCaretRange = range.cloneRange();
-    preCaretRange.selectNodeContents(editorRef.current);
-    preCaretRange.setEnd(range.startContainer, range.startOffset);
-    return preCaretRange.toString().length;
+    const editor = editorRef.current;
+
+    const preSelectionRange = range.cloneRange();
+    preSelectionRange.selectNodeContents(editor);
+    preSelectionRange.setEnd(range.startContainer, range.startOffset);
+    const start = preSelectionRange.toString().length;
+
+    preSelectionRange.setEnd(range.endContainer, range.endOffset);
+    const end = preSelectionRange.toString().length;
+
+    return { start, end };
   };
 
   useEffect(() => {
@@ -265,113 +273,168 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
     const handleBeforeInput = (e: InputEvent) => {
       if (isComposing) return;
+      e.preventDefault();
       
       const { data, inputType } = e;
-      const currentPos = getCursorPosInEditor();
-      const target = findPartAtCursor(currentPos);
+      const { start: startPos, end: endPos } = getCursorPosInEditor();
+      const isSelection = endPos - startPos > 0;
 
-      if (!target) {
-        e.preventDefault();
-        return;
-      }
-
-      const { part, index, offset } = target;
-
-      // Prevent editing chips
-      if (part.type === 'chip') {
-        const partLength = getPartDisplayText(part).length;
-        if (inputType === 'deleteContentBackward' && offset === partLength) {
-            const newParts = [...parts];
-            newParts.splice(index, 1);
-            const merged = mergeTextParts(newParts);
-            if (merged.length === 0) {
-                setParts([{ type: 'text', id: `text_${Date.now()}`, text: '' }]);
-            } else {
-                setParts(merged);
-            }
-            setCursorPos(currentPos - partLength);
-        } else if (inputType === 'deleteContentForward' && offset === 0) {
-            const newParts = [...parts];
-            newParts.splice(index, 1);
-            const merged = mergeTextParts(newParts);
-            if (merged.length === 0) {
-                setParts([{ type: 'text', id: `text_${Date.now()}`, text: '' }]);
-            } else {
-                setParts(merged);
-            }
-            setCursorPos(currentPos);
-        }
-        e.preventDefault();
-        return;
-      }
-
-      e.preventDefault();
       let newParts = [...parts];
 
-      switch (inputType) {
-        case 'insertText': {
-          if (data === '@' && !activeComposerPart) {
-            const newComposer: ComposerPart = { type: 'composer', id: `composer_${Date.now()}`, state: { mode: 'key', query: '' } };
-            if (part.type === 'text') {
-              const before = { ...part, text: part.text.slice(0, offset) };
-              const after = { ...part, id: `text_${Date.now()}`, text: part.text.slice(offset) };
-              newParts.splice(index, 1, before, newComposer, after);
-            }
-            setCursorPos(currentPos + 1);
-          } else if (data === ' ' && activeComposerPart?.state.mode === 'value') {
-            commitChip(activeComposerPart, activeComposerPart.state.slot!, activeComposerPart.state.query);
-            return; // commitChip handles state update
-          } else if (part.type === 'composer') {
-            const composerText = getPartDisplayText(part);
-            const prefixLength = composerText.length - part.state.query.length;
-            const queryOffset = offset - prefixLength;
-            if (queryOffset >= 0) {
-                const newQuery = part.state.query.slice(0, queryOffset) + data + part.state.query.slice(queryOffset);
-                newParts[index] = { ...part, state: { ...part.state, query: newQuery } };
-                setCursorPos(currentPos + (data?.length ?? 0));
-            }
-          } else if (part.type === 'text') {
-            const newText = part.text.slice(0, offset) + data + part.text.slice(offset);
-            newParts[index] = { ...part, text: newText };
-            setCursorPos(currentPos + (data?.length ?? 0));
-          }
-          break;
-        }
+      // --- Selection-based Deletion ---
+      if (isSelection && inputType.startsWith('delete')) {
+        const startTarget = findPartAtCursor(startPos);
+        const endTarget = findPartAtCursor(endPos);
+        if (!startTarget || !endTarget) return;
 
-        case 'deleteContentBackward': {
-            if (currentPos === 0) break;
-            const effectiveTarget = findPartAtCursor(currentPos);
-            if (!effectiveTarget) break;
+        const { part: startPart, index: startIndex, offset: startOffsetInPart } = startTarget;
+        const { part: endPart, index: endIndex, offset: endOffsetInPart } = endTarget;
 
-            let { part, index, offset } = effectiveTarget;
-            if (offset === 0 && index > 0) {
-                part = newParts[index - 1];
-                index -= 1;
-                offset = getPartDisplayText(part).length;
-            }
-
-            if (part.type === 'text') {
-                const newText = part.text.slice(0, offset - 1) + part.text.slice(offset);
-                newParts[index] = { ...part, text: newText };
-            } else if (part.type === 'chip') {
-                newParts.splice(index, 1);
-            } else if (part.type === 'composer') {
-                const composerText = getPartDisplayText(part);
-                const prefixLength = composerText.length - part.state.query.length;
-                const queryOffset = offset - prefixLength;
-
-                if (queryOffset > 0) {
-                    const newQuery = part.state.query.slice(0, queryOffset - 1) + part.state.query.slice(queryOffset);
-                    newParts[index] = { ...part, state: { ...part.state, query: newQuery } };
-                } else if (part.state.mode === 'value') {
-                    const newSlot = part.state.slot!;
-                    newParts[index] = { ...part, state: { ...part.state, mode: 'key', query: newSlot, slot: undefined } };
-                } else {
-                    newParts.splice(index, 1);
+        if (startPart.type === 'chip' || endPart.type === 'chip') {
+            // Simplification: if selection touches a chip, just delete the whole chip(s).
+            // A more refined implementation would check if the chip is fully selected.
+            const firstChipIndex = parts.findIndex((p, i) => i >= startIndex && i <= endIndex && p.type === 'chip');
+            let lastChipIndex = -1;
+            for (let i = endIndex; i >= startIndex; i--) {
+                if (parts[i].type === 'chip') {
+                    lastChipIndex = i;
+                    break;
                 }
             }
-            setCursorPos(currentPos - 1);
-            break;
+            if (firstChipIndex > -1 && lastChipIndex > -1) {
+                newParts.splice(firstChipIndex, lastChipIndex - firstChipIndex + 1);
+            }
+        } else {
+            const firstPartContent = getPartDisplayText(startPart).slice(0, startOffsetInPart);
+            const lastPartContent = getPartDisplayText(endPart).slice(endOffsetInPart);
+            const combinedText = firstPartContent + lastPartContent;
+            const newTextPart = { type: 'text' as const, id: `text_${Date.now()}`, text: combinedText };
+            newParts.splice(startIndex, endIndex - startIndex + 1, newTextPart);
+        }
+
+        setCursorPos(startPos);
+      } 
+      // --- Single-character input and Paste ---
+      else {
+        const target = findPartAtCursor(startPos);
+        if (!target) return;
+        const { part, index, offset } = target;
+
+        if (part.type === 'chip') {
+            if (inputType === 'deleteContentBackward' || inputType === 'deleteContentForward') {
+                 newParts.splice(index, 1);
+                 setCursorPos(startPos - (inputType === 'deleteContentBackward' ? 1 : 0));
+            } // Other edits on chips are disallowed
+        } else {
+            switch (inputType) {
+                case 'insertText':
+                    if (data === '@' && !activeComposerPart) {
+                        const newComposer: ComposerPart = { type: 'composer', id: `composer_${Date.now()}`, state: { mode: 'key', query: '' } };
+                        if (part.type === 'text') {
+                            const before = { ...part, text: part.text.slice(0, offset) };
+                            const after = { ...part, id: `text_${Date.now()}`, text: part.text.slice(offset) };
+                            newParts.splice(index, 1, before, newComposer, after);
+                        }
+                        setCursorPos(startPos + 1);
+                    } else if (data === ' ' && activeComposerPart?.state.mode === 'value') {
+                        commitChip(activeComposerPart, activeComposerPart.state.slot!, activeComposerPart.state.query);
+                        return; // commitChip handles state update
+                    } else if (part.type === 'composer') {
+                        const composerText = getPartDisplayText(part);
+                        const prefixLength = composerText.length - part.state.query.length;
+                        const queryOffset = offset - prefixLength;
+                        if (queryOffset >= 0) {
+                            const newQuery = part.state.query.slice(0, queryOffset) + data + part.state.query.slice(queryOffset);
+                            newParts[index] = { ...part, state: { ...part.state, query: newQuery } };
+                            setCursorPos(startPos + (data?.length ?? 0));
+                        }
+                    } else if (part.type === 'text') {
+                        const newText = part.text.slice(0, offset) + data + part.text.slice(offset);
+                        newParts[index] = { ...part, text: newText };
+                        setCursorPos(startPos + (data?.length ?? 0));
+                    }
+                    break;
+                case 'insertFromPaste': {
+                    const pastedText = (e as any).dataTransfer?.getData('text/plain') || '';
+                    if (!pastedText || (part.type !== 'composer' && part.type !== 'text')) break;
+                    if (part.type === 'text') {
+                        const newText = part.text.slice(0, offset) + pastedText + part.text.slice(offset);
+                        newParts[index] = { ...part, text: newText };
+                        setCursorPos(startPos + pastedText.length);
+                    } else if (part.type === 'composer') {
+                        const composerText = getPartDisplayText(part);
+                        const prefixLength = composerText.length - part.state.query.length;
+                        const queryOffset = offset - prefixLength;
+                        if (queryOffset >= 0) {
+                            const newQuery = part.state.query.slice(0, queryOffset) + pastedText + part.state.query.slice(queryOffset);
+                            newParts[index] = { ...part, state: { ...part.state, query: newQuery } };
+                            setCursorPos(startPos + pastedText.length);
+                        }
+                    }
+                    break;
+                }
+                case 'deleteContentBackward': {
+                    if (startPos === 0) break;
+                    const effectiveTarget = findPartAtCursor(startPos);
+                    if (!effectiveTarget) break;
+                    let { part, index, offset } = effectiveTarget;
+                    if (offset === 0 && index > 0) {
+                        part = newParts[index - 1];
+                        index -= 1;
+                        offset = getPartDisplayText(part).length;
+                    }
+                    if (part.type === 'text') {
+                        const newText = part.text.slice(0, offset - 1) + part.text.slice(offset);
+                        newParts[index] = { ...part, text: newText };
+                    } else if (part.type === 'chip') {
+                        newParts.splice(index, 1);
+                    } else if (part.type === 'composer') {
+                        const composerText = getPartDisplayText(part);
+                        const prefixLength = composerText.length - part.state.query.length;
+                        const queryOffset = offset - prefixLength;
+                        if (queryOffset > 0) {
+                            const newQuery = part.state.query.slice(0, queryOffset - 1) + part.state.query.slice(queryOffset);
+                            newParts[index] = { ...part, state: { ...part.state, query: newQuery } };
+                        } else if (part.state.mode === 'value') {
+                            const newSlot = part.state.slot!;
+                            newParts[index] = { ...part, state: { ...part.state, mode: 'key', query: newSlot, slot: undefined } };
+                        } else {
+                            newParts.splice(index, 1);
+                        }
+                    }
+                    setCursorPos(startPos - 1);
+                    break;
+                }
+                case 'deleteContentForward': {
+                    const fullLength = parts.map(getPartDisplayText).join('').length;
+                    if (startPos === fullLength) break;
+                    const effectiveTarget = findPartAtCursor(startPos);
+                    if (!effectiveTarget) break;
+                    let { part, index, offset } = effectiveTarget;
+                    const partLength = getPartDisplayText(part).length;
+                    if (offset === partLength && index < parts.length - 1) {
+                        index += 1;
+                        part = newParts[index];
+                        offset = 0;
+                    }
+                    if (part.type === 'text') {
+                        const newText = part.text.slice(0, offset) + part.text.slice(offset + 1);
+                        newParts[index] = { ...part, text: newText };
+                    } else if (part.type === 'chip') {
+                        newParts.splice(index, 1);
+                    } else if (part.type === 'composer') {
+                        const composerText = getPartDisplayText(part);
+                        const prefixLength = composerText.length - part.state.query.length;
+                        const queryOffset = offset - prefixLength;
+                        if (queryOffset >= 0 && queryOffset < part.state.query.length) {
+                            const newQuery = part.state.query.slice(0, queryOffset) + part.state.query.slice(queryOffset + 1);
+                            newParts[index] = { ...part, state: { ...part.state, query: newQuery } };
+                        }
+                    }
+                    setCursorPos(startPos);
+                    break;
+                }
+            }
         }
       }
       
@@ -380,6 +443,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
       
       if (merged.length === 0) {
         setParts([{ type: 'text', id: `text_${Date.now()}`, text: '' }]);
+        setCursorPos(0);
       } else {
         setParts(merged);
       }

@@ -29,13 +29,31 @@ export const getChipDisplayText = (chip: Chip, hintMap: HintMap): string => {
  * It does NOT use contentEditable=false, relying on parent logic to prevent editing.
  * Its textContent is guaranteed to match getChipDisplayText().
  */
-export const ChipComponent = React.memo(({ chip, hintMap }: { chip: Chip, hintMap: HintMap }) => {
+export const ChipComponent = React.memo(({
+  chip,
+  hintMap,
+  variant = 'default'
+}: {
+  chip: Chip,
+  hintMap: HintMap,
+  variant?: 'default' | 'message'
+}) => {
   const disp = resolveChipDisplay(chip.slot, chip.value, hintMap);
+
+  const getVariantClasses = () => {
+    switch (variant) {
+      case 'message':
+        return "inline-flex items-center gap-1 rounded-full bg-gray-400 bg-opacity-70 backdrop-blur-sm text-white px-2 py-0.5 text-xs align-baseline border border-gray-500 border-opacity-40";
+      default:
+        return "inline-flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-xs align-baseline";
+    }
+  };
+
   return (
     <span
       data-chip-id={chip.id}
       data-part-type="chip"
-      className="inline-flex items-center gap-1 rounded-full border bg-muted px-2 py-0.5 text-xs align-baseline"
+      className={getVariantClasses()}
     >
       {disp.icon && <DynamicIcon name={disp.icon} />}
       <span className="opacity-70">@</span>

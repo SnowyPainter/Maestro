@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SlotHintItem } from "@/lib/api/generated";
 import { ContextValueItem } from "@/store/chat-context-registry";
 
@@ -12,6 +12,17 @@ interface SuggestProps {
 
 export const Suggest: React.FC<SuggestProps> = ({ suggestions, highlightIndex, onSelect, suggestionRefs, style }) => {
   const hasContent = suggestions.length > 0;
+
+  // Auto-scroll to highlighted item
+  useEffect(() => {
+    const highlightedElement = suggestionRefs.current[highlightIndex];
+    if (highlightedElement) {
+      highlightedElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [highlightIndex, suggestionRefs]);
 
   return (
     <div 
