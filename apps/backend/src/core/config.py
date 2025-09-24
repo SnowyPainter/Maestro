@@ -49,6 +49,15 @@ class Settings(BaseSettings):
     TRENDS_INTERVAL_MINUTES: int = 60
     TRENDS_MAX_ITEMS: int = 20
 
+    # ----- Mailer -----
+    MAIL_HOST: str = "localhost"
+    MAIL_PORT: int = 587
+    MAIL_USER: str = "localhost"
+    MAIL_PASSWORD: str = "localhost"
+    MAIL_SENDER_NAME: str = "localhost"
+    MAIL_SENDER_EMAIL: str = "localhost"
+    INBOUND_EMAIL_SECRET: str = "s1cr3tzkqjz"
+
     # ----- SNS -----
     TEST_DOMAIN: str = ""
     PRD_DOMAIN: Optional[str] = None

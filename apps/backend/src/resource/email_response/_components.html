@@ -1,0 +1,210 @@
+<!--
+Reusable email components with styles
+-->
+<style>
+.persona-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+}
+.persona-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 20px;
+}
+.persona-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+}
+.persona-info p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.action-section {
+    margin-top: 40px;
+    padding: 25px;
+    border-radius: 8px;
+    border: 2px solid;
+    text-align: center;
+}
+.action-primary {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+}
+.action-primary .action-title {
+    color: #1976d2;
+}
+.action-secondary {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+.action-secondary .action-title {
+    color: #495057;
+}
+.action-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.action-text {
+    font-size: 16px;
+    color: #424242;
+    margin: 0;
+}
+
+.block {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #007bff;
+}
+.block-text {
+    margin: 0;
+    line-height: 1.7;
+}
+.block-image {
+    text-align: center;
+    margin: 15px 0;
+}
+.block-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.block-video {
+    text-align: center;
+    margin: 15px 0;
+    padding: 20px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+}
+.video-placeholder {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+.video-url {
+    color: #007bff;
+    word-break: break-all;
+    font-size: 14px;
+}
+
+.info-card {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
+}
+.info-card-title {
+    margin-top: 0;
+    color: #495057;
+    font-size: 18px;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 10px;
+}
+.info-item {
+    margin: 10px 0;
+}
+.info-label {
+    font-weight: bold;
+    color: #6c757d;
+}
+.info-value {
+    color: #495057;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    text-align: center;
+}
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+</style>
+
+{% macro persona_card(name, avatar='👤', description='Personalized content recommendations') %}
+<div class="persona-card">
+    <div class="persona-avatar">{{ avatar }}</div>
+    <div class="persona-info">
+        <h3>{{ name }}</h3>
+        <p>{{ description }}</p>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro action_message(title, message, style_class='action-primary') %}
+<div class="action-section {{ style_class }}">
+    <div class="action-title">{{ title }}</div>
+    <p class="action-text">{{ message }}</p>
+</div>
+{% endmacro %}
+
+{% macro content_block(block) %}
+<div class="block">
+    {% if block.type == "text" %}
+        <div class="block-text">
+            {{ block.props.markdown | safe }}
+        </div>
+    {% elif block.type == "image" %}
+        <div class="block-image">
+            {% if block.props.url %}
+            <img src="{{ block.props.url }}" alt="{{ block.props.alt or 'Image' }}">
+            {% else %}
+            <div style="padding: 40px; background-color: #e9ecef; border-radius: 6px;">
+                📷 Image placeholder
+            </div>
+            {% endif %}
+        </div>
+    {% elif block.type == "video" %}
+        <div class="block-video">
+            <div class="video-placeholder">🎥</div>
+            {% if block.props.url %}
+            <div class="video-url">{{ block.props.url }}</div>
+            {% else %}
+            <div>Video content</div>
+            {% endif %}
+            {% if block.props.alt %}
+            <div style="margin-top: 10px; font-size: 14px; color: #6c757d;">{{ block.props.alt }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro info_card(title, items) %}
+<div class="info-card">
+    <h3 class="info-card-title">{{ title }}</h3>
+    {% for item in items %}
+    <div class="info-item">
+        <span class="info-label">{{ item.label }}:</span>
+        <span class="info-value">{{ item.value }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro button(text, url, style='primary') %}
+<a href="{{ url }}" class="btn btn-{{ style }}">{{ text }}</a>
+{% endmacro %}

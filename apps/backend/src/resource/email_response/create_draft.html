@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draft Created Successfully</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #28a745;
+            margin: 0;
+            font-size: 24px;
+        }
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .draft-info {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .draft-info h2 {
+            margin-top: 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        .info-item {
+            margin: 10px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .info-value {
+            color: #495057;
+        }
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    {% import "_components.html" as components %}
+
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>Draft Created Successfully</h1>
+        </div>
+
+        <div class="draft-info">
+            <h2>Draft Details</h2>
+
+            <div class="info-item">
+                <span class="info-label">Draft ID:</span>
+                <span class="info-value">#{{ draft.id }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Title:</span>
+                <span class="info-value">{{ draft.title or "Untitled" }}</span>
+            </div>
+
+            {% if draft.goal %}
+            <div class="info-item">
+                <span class="info-label">Goal:</span>
+                <span class="info-value">{{ draft.goal }}</span>
+            </div>
+            {% endif %}
+
+            {% if draft.tags %}
+            <div class="info-item">
+                <span class="info-label">Tags:</span>
+                <div class="tags">
+                    {% for tag in draft.tags %}
+                    <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if draft.campaign_id %}
+            <div class="info-item">
+                <span class="info-label">Campaign ID:</span>
+                <span class="info-value">#{{ draft.campaign_id }}</span>
+            </div>
+            {% endif %}
+
+            <div class="info-item">
+                <span class="info-label">Pipeline:</span>
+                <span class="info-value">#{{ pipeline_id }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value">{{ draft.state|title }}</span>
+            </div>
+
+            <div class="info-item">
+                <span class="info-label">Created:</span>
+                <span class="info-value">{{ draft.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+            </div>
+
+            {% if draft.ir.blocks %}
+            <div class="info-item">
+                <span class="info-label">Content Blocks:</span>
+                <span class="info-value">{{ draft.ir.blocks|length }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {{ components.action_message("Content Ready", "Your draft has been successfully created and is ready for publishing. The content has been processed and compiled for all configured platforms.", "action-secondary") }}
+
+        <div class="footer">
+            <p>This is an automated message from your content creation pipeline.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from apps.backend.src.core.config import settings
 from apps.backend.src.modules.trends.models import Trend  # type: ignore
+from apps.backend.src.modules.accounts.models import Persona
 from apps.backend.src.services.embeddings import embed_texts_sync
 REDIS_URL = os.getenv("REDIS_URL", settings.CELERY_BROKER_URL)
 rds = redis.Redis.from_url(REDIS_URL, decode_responses=True)
@@ -93,3 +94,58 @@ def enqueue_trend_title_embedding(self, trend_id: int):
         tr.title_embedding = emb
         session.commit()
         return {"ok": True} 
+
+@shared_task(name="apps.backend.src.workers.Synchro.tasks.find_similar_trends_for_persona",
+             queue="synchro", bind=True, max_retries=3, acks_late=True)
+def find_similar_trends_for_persona(self, persona_snapshot: Persona, country: str = "US", limit: int = 20) -> dict:
+    """
+    Persona와 유사한 최신 trends를 찾아서 필터링하여 반환합니다.
+
+    Args:
+        persona_snapshot: Persona 스냅샷
+        country: 트렌드 국가 (기본값: "US")
+        limit: 최대 반환 개수 (기본값: 20)
+
+    Returns:
+        TrendsListResponse 형태의 데이터
+    """
+    from apps.backend.src.services.embeddings import embed_texts_sync
+    from apps.backend.src.modules.trends.repository import vector_search_trends
+    from apps.backend.src.core.db import get_db
+    import asyncio
+
+    async def find_similar_trends():
+        async with get_db() as db:
+            persona = persona_snapshot
+            # Persona의 이름과 설명을 결합해서 embedding 생성
+            persona_text = f"{persona.name} {persona.bio or ''}"
+            persona_embedding = embed_texts_sync([persona_text])[0]
+
+            if persona_embedding is None:
+                return {"rows": [], "total": 0, "error": "Failed to embed persona"}
+
+            # 벡터 검색으로 유사한 트렌드 찾기
+            similar_trends = await vector_search_trends(
+                db,
+                country=country,
+                vec=persona_embedding,
+                limit=limit * 2  # 여유있게 더 많이 가져와서 필터링
+            )
+            filtered_trends = similar_trends[:limit]
+
+            return {
+                "rows": filtered_trends,
+                "total": len(filtered_trends),
+                "persona_name": persona_snapshot.name,
+                "country": country
+            }
+
+    try:
+        return asyncio.run(find_similar_trends())
+
+    except Exception as exc:
+        # 실패 시 재시도
+        if self.request.retries < self.max_retries:
+            raise self.retry(countdown=60 * (2 ** self.request.retries), exc=exc)
+
+        return {"rows": [], "total": 0, "error": str(exc)}

@@ -6,6 +6,7 @@ from apps.backend.src.orchestrator.bff_router import router as orchestrator_bff_
 from apps.backend.src.orchestrator.chat_router import router as orchestrator_chat_router
 from apps.backend.src.orchestrator.action_router import router as orchestrator_action_router
 from apps.backend.src.orchestrator.helper_router import router as orchestrator_helper_router
+from apps.backend.src.orchestrator.webhooks.mail import router as orchestrator_mail_router
 from apps.backend.src.core.logging import setup_logging
 
 from apps.backend.src.core.config import settings
@@ -46,6 +47,8 @@ api.include_router(orchestrator_action_router, prefix="/orchestrator")
 api.include_router(orchestrator_auth_router, prefix="/orchestrator")
 api.include_router(orchestrator_chat_router, prefix="/orchestrator")
 api.include_router(orchestrator_helper_router, prefix="/orchestrator")
+
+api.include_router(orchestrator_mail_router, prefix="/webhooks")
 
 # 헬스체크도 api 아래로
 @api.get("/health")
