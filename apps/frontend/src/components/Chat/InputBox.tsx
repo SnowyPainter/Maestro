@@ -4,14 +4,9 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useMe
 import { useListSlotHintsApiOrchestratorHelpersSlotHintsGet, SlotHintItem } from "@/lib/api/generated";
 import { useContextRegistryStore, ContextValueItem } from "@/store/chat-context-registry";
 import { Suggest } from "@/components/Chat/Suggest";
+import { Chip, ChipComponent, getChipDisplayText } from "@/components/Chat/Chip";
 
 // --- Types ---
-interface Chip {
-  id: string;
-  slot: string;
-  value: string;
-}
-
 type SuggestionMode = 'key' | 'value';
 
 interface ComposerState {
@@ -46,7 +41,8 @@ interface InputBoxProps {
   placeholder?: string;
 }
 
-const getPartText = (part: ContentPart): string => {
+// Returns the text for sending to the backend (raw value)
+const getPartValueText = (part: ContentPart): string => {
     if (part.type === 'text') return part.text;
     if (part.type === 'chip') return `@${part.chip.slot}:${part.chip.value}`;
     if (part.type === 'composer') return `@${part.state.slot || ''}${part.state.mode === 'value' ? ':' : ''}${part.state.query}`;
@@ -80,6 +76,12 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
   const suggestionRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [suggestionStyle, setSuggestionStyle] = useState<React.CSSProperties>({ display: 'none' });
 
+  const { data: hintMapData } = useListSlotHintsApiOrchestratorHelpersSlotHintsGet({ query: undefined, limit: 100 });
+  const hintMap = useMemo(() => hintMapData?.reduce((acc, hint) => {
+    acc[hint.name] = hint;
+    return acc;
+  }, {} as Record<string, SlotHintItem>) || {}, [hintMapData]);
+
   const activeComposerPart = useMemo(() => parts.find((p): p is ComposerPart => p.type === 'composer'), [parts]);
   const activeComposer = activeComposerPart?.state;
 
@@ -87,6 +89,17 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
     query: activeComposer?.mode === 'key' ? activeComposer.query : undefined,
     limit: 8,
   }, { query: { enabled: !!activeComposer && activeComposer.mode === 'key' } });
+
+  // Returns the text for display in the editor (label)
+  const getPartDisplayText = useCallback((part: ContentPart): string => {
+      if (part.type === 'chip') {
+          return getChipDisplayText(part.chip, hintMap);
+      }
+      if (part.type === 'composer') {
+        return `@${part.state.slot || ''}${part.state.mode === 'value' ? ':' : ''}${part.state.query}`;
+      }
+      return part.text;
+  }, [hintMap]);
 
   const getCursorPosInEditor = (): number => {
     const selection = window.getSelection();
@@ -135,7 +148,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
     });
   }, []);
 
-  const commitChip = (composerPart: ComposerPart, slot: string, value: string) => {
+  const commitChip = useCallback((composerPart: ComposerPart, slot: string, value: string) => {
     const newChip: Chip = { id: `chip_${Date.now()}`, slot, value };
     const newChipPart: ChipPart = { type: 'chip', id: newChip.id, chip: newChip };
 
@@ -151,7 +164,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
         const chipIndexInMerged = merged.findIndex(p => p.id === newChipPart.id);
         let pos = 0;
         for (let i = 0; i <= chipIndexInMerged; i++) {
-            pos += getPartText(merged[i]).length;
+            pos += getPartDisplayText(merged[i]).length;
         }
         const nextPart = merged[chipIndexInMerged + 1];
         if (nextPart?.type === 'text' && nextPart.text.startsWith(' ')) {
@@ -161,9 +174,9 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
         return merged.length > 0 ? merged : [{ type: 'text', id: `text_${Date.now()}`, text: '' }];
     });
-  };
+  }, [getPartDisplayText]);
 
-  const handleSelectSuggestion = (suggestion: SlotHintItem | ContextValueItem) => {
+  const handleSelectSuggestion = useCallback((suggestion: SlotHintItem | ContextValueItem) => {
     if (!activeComposerPart) return;
     const { state: composer, id } = activeComposerPart;
 
@@ -175,10 +188,10 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
       let precedingLength = 0;
       for (let i = 0; i < composerIndex; i++) {
-          precedingLength += getPartText(parts[i]).length;
+          precedingLength += getPartDisplayText(parts[i]).length;
       }
 
-      const newComposerPartText = getPartText({ type: 'composer', id, state: newComposerState });
+      const newComposerPartText = getPartDisplayText({ type: 'composer', id, state: newComposerState });
       const newCursorPos = precedingLength + newComposerPartText.length;
 
       setCursorPos(newCursorPos);
@@ -186,10 +199,10 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
     } else if (composer.mode === 'value' && composer.slot && 'value' in suggestion) {
       commitChip(activeComposerPart, composer.slot, suggestion.value);
     }
-  };
+  }, [activeComposerPart, parts, getPartDisplayText, commitChip]);
 
   const sendCurrentMessage = useCallback(async () => {
-    const fullText = parts.map(getPartText).join('');
+    const fullText = parts.map(getPartValueText).join('');
 
     if (!fullText.trim()) return;
     if (fullText.trim() === "/clear") {
@@ -236,7 +249,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
         let accumulatedLength = 0;
         for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
-            const partLength = getPartText(part).length;
+            const partLength = getPartDisplayText(part).length;
             if (cursorPos <= accumulatedLength + partLength) {
                 return { part, index: i, offset: cursorPos - accumulatedLength };
             }
@@ -244,7 +257,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
         }
         const lastPart = parts[parts.length - 1];
         if (lastPart) {
-            const lastPartLength = getPartText(lastPart).length;
+            const lastPartLength = getPartDisplayText(lastPart).length;
             return { part: lastPart, index: parts.length - 1, offset: lastPartLength };
         }
         return null;
@@ -266,16 +279,26 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
       // Prevent editing chips
       if (part.type === 'chip') {
-        // Allow deleting the chip with backspace if cursor is at the end of it
-        if (inputType === 'deleteContentBackward' && offset === getPartText(part).length) {
+        const partLength = getPartDisplayText(part).length;
+        if (inputType === 'deleteContentBackward' && offset === partLength) {
             const newParts = [...parts];
             newParts.splice(index, 1);
-            setParts(mergeTextParts(newParts));
-            setCursorPos(currentPos - getPartText(part).length);
+            const merged = mergeTextParts(newParts);
+            if (merged.length === 0) {
+                setParts([{ type: 'text', id: `text_${Date.now()}`, text: '' }]);
+            } else {
+                setParts(merged);
+            }
+            setCursorPos(currentPos - partLength);
         } else if (inputType === 'deleteContentForward' && offset === 0) {
             const newParts = [...parts];
             newParts.splice(index, 1);
-            setParts(mergeTextParts(newParts));
+            const merged = mergeTextParts(newParts);
+            if (merged.length === 0) {
+                setParts([{ type: 'text', id: `text_${Date.now()}`, text: '' }]);
+            } else {
+                setParts(merged);
+            }
             setCursorPos(currentPos);
         }
         e.preventDefault();
@@ -299,7 +322,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
             commitChip(activeComposerPart, activeComposerPart.state.slot!, activeComposerPart.state.query);
             return; // commitChip handles state update
           } else if (part.type === 'composer') {
-            const composerText = getPartText(part);
+            const composerText = getPartDisplayText(part);
             const prefixLength = composerText.length - part.state.query.length;
             const queryOffset = offset - prefixLength;
             if (queryOffset >= 0) {
@@ -324,7 +347,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
             if (offset === 0 && index > 0) {
                 part = newParts[index - 1];
                 index -= 1;
-                offset = getPartText(part).length;
+                offset = getPartDisplayText(part).length;
             }
 
             if (part.type === 'text') {
@@ -333,7 +356,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
             } else if (part.type === 'chip') {
                 newParts.splice(index, 1);
             } else if (part.type === 'composer') {
-                const composerText = getPartText(part);
+                const composerText = getPartDisplayText(part);
                 const prefixLength = composerText.length - part.state.query.length;
                 const queryOffset = offset - prefixLength;
 
@@ -364,7 +387,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
     editor.addEventListener('beforeinput', handleBeforeInput);
     return () => editor.removeEventListener('beforeinput', handleBeforeInput);
-  }, [parts, isComposing]);
+  }, [parts, isComposing, getPartDisplayText, commitChip]);
 
   useLayoutEffect(() => {
     const editor = editorRef.current;
@@ -433,16 +456,12 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
                     return <span key={part.id} data-part-type="text">{part.text}</span>;
                 }
                 if (part.type === 'chip') {
-                    return (
-                        <span key={part.id} data-part-type="chip" className="bg-muted text-muted-foreground rounded-md px-1.5 py-0.5 mx-0.5 inline-block">
-                            {getPartText(part)}
-                        </span>
-                    );
+                    return <ChipComponent key={part.id} chip={part.chip} hintMap={hintMap} />;
                 }
                 if (part.type === 'composer') {
                     return (
                         <span key={part.id} data-part-type="composer" className="text-blue-500">
-                            {getPartText(part)}
+                            {getPartDisplayText(part)}
                         </span>
                     );
                 }
