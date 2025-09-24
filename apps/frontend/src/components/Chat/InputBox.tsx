@@ -169,6 +169,19 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
     if (composer.mode === 'key' && 'name' in suggestion) {
       const newComposerState = { ...composer, mode: 'value' as SuggestionMode, slot: suggestion.name, query: '' };
+      
+      const composerIndex = parts.findIndex(p => p.id === id);
+      if (composerIndex === -1) return;
+
+      let precedingLength = 0;
+      for (let i = 0; i < composerIndex; i++) {
+          precedingLength += getPartText(parts[i]).length;
+      }
+
+      const newComposerPartText = getPartText({ type: 'composer', id, state: newComposerState });
+      const newCursorPos = precedingLength + newComposerPartText.length;
+
+      setCursorPos(newCursorPos);
       setParts(parts => parts.map(p => p.id === id ? { ...p, state: newComposerState } : p));
     } else if (composer.mode === 'value' && composer.slot && 'value' in suggestion) {
       commitChip(activeComposerPart, composer.slot, suggestion.value);
