@@ -1890,6 +1890,144 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/templates:
+    get:
+      tags:
+      - action
+      - action
+      - schedule
+      - templates
+      summary: List Available Schedule Templates
+      description: Return metadata about available schedule templates
+      operationId: action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListScheduleTemplatesResult'
+  /api/orchestrator/actions/schedules/compile:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - dag
+      - compile
+      summary: Compile Schedule DAG
+      description: Generate a schedule DAG specification from higher level template
+        parameters
+      operationId: action_schedule_compile_template_api_orchestrator_actions_schedules_compile_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleCompileRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleCompileResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/create:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - create
+      - batch
+      summary: Schedule Template Instances
+      description: Create one or multiple schedules from a template and timing options
+      operationId: action_schedule_create_from_template_api_orchestrator_actions_schedules_create_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleCreateResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/start_my_coworker:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - start
+      - coworker
+      summary: Start My CoWorker
+      description: Start the CoWorker worker
+      operationId: action_schedule_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_EmptyPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_EmptyPayload'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/stop_my_coworker:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - stop
+      - coworker
+      summary: Stop My CoWorker
+      description: Stop the CoWorker worker
+      operationId: action_schedule_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_EmptyPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_EmptyPayload'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/auth/signup:
     post:
       tags:
@@ -3247,6 +3385,17 @@ components:
       - ctr
       - engagement_rate
       title: KPIKey
+    ListScheduleTemplatesResult:
+      properties:
+        templates:
+          items:
+            $ref: '#/components/schemas/ScheduleTemplateSummary'
+          type: array
+          title: Templates
+      type: object
+      required:
+      - templates
+      title: ListScheduleTemplatesResult
     LoginRequest:
       properties:
         email:
@@ -3261,6 +3410,40 @@ components:
       - email
       - password
       title: LoginRequest
+    MailScheduleTemplateParams:
+      properties:
+        persona_id:
+          type: integer
+          title: Persona Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        email_to:
+          type: string
+          title: Email To
+        country:
+          type: string
+          title: Country
+          default: US
+        limit:
+          type: integer
+          title: Limit
+          default: 20
+        wait_timeout_s:
+          type: integer
+          title: Wait Timeout S
+          default: 604800
+        pipeline_id:
+          title: Pipeline Id
+          type: string
+          nullable: true
+      type: object
+      required:
+      - persona_id
+      - persona_account_id
+      - email_to
+      title: MailScheduleTemplateParams
+      description: Parameters for the mail trends + reply template.
     MessageOut:
       properties:
         message:
@@ -4141,6 +4324,151 @@ components:
       title: RichPersonaAccountOut
       description: Rich persona account with embedded persona and account details
         for UI display
+    ScheduleCompileRequest:
+      properties:
+        template:
+          $ref: '#/components/schemas/ScheduleTemplateKey'
+        mail:
+          anyOf:
+          - $ref: '#/components/schemas/MailScheduleTemplateParams'
+          - type: 'null'
+      type: object
+      required:
+      - template
+      title: ScheduleCompileRequest
+    ScheduleCompileResult:
+      properties:
+        dag_spec:
+          $ref: '#/components/schemas/ScheduleDagSpec'
+      type: object
+      required:
+      - dag_spec
+      title: ScheduleCompileResult
+    ScheduleCreateRequest:
+      properties:
+        template:
+          $ref: '#/components/schemas/ScheduleTemplateKey'
+          description: Template to use
+        params:
+          $ref: '#/components/schemas/MailScheduleTemplateParams'
+        run_at:
+          type: string
+          format: date-time
+          title: Run At
+        repeats:
+          type: integer
+          title: Repeats
+          default: 1
+        repeat_interval_minutes:
+          type: integer
+          title: Repeat Interval Minutes
+          default: 0
+        queue:
+          title: Queue
+          type: string
+          nullable: true
+      type: object
+      required:
+      - template
+      - params
+      title: ScheduleCreateRequest
+      description: Request to create one or more schedules from a template.
+    ScheduleCreateResult:
+      properties:
+        schedule_ids:
+          items:
+            type: integer
+          type: array
+          title: Schedule Ids
+      type: object
+      required:
+      - schedule_ids
+      title: ScheduleCreateResult
+    ScheduleDagEdge:
+      properties:
+        source:
+          type: string
+          title: Source
+        target:
+          type: string
+          title: Target
+      type: object
+      required:
+      - source
+      - target
+      title: ScheduleDagEdge
+      description: Directed connection between nodes.
+    ScheduleDagGraph:
+      properties:
+        nodes:
+          items:
+            $ref: '#/components/schemas/ScheduleDagNode'
+          type: array
+          title: Nodes
+        edges:
+          items:
+            $ref: '#/components/schemas/ScheduleDagEdge'
+          type: array
+          title: Edges
+      type: object
+      required:
+      - nodes
+      title: ScheduleDagGraph
+    ScheduleDagNode:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Unique identifier within the DAG
+        flow:
+          type: string
+          title: Flow
+          description: Orchestrator flow key to execute
+        in:
+          additionalProperties: true
+          type: object
+          title: In
+      type: object
+      required:
+      - id
+      - flow
+      title: ScheduleDagNode
+      description: Single node within a schedule DAG.
+    ScheduleDagSpec:
+      properties:
+        dag:
+          $ref: '#/components/schemas/ScheduleDagGraph'
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+      type: object
+      required:
+      - dag
+      title: ScheduleDagSpec
+      description: Full DAG specification including optional schedule payload.
+    ScheduleTemplateKey:
+      type: string
+      enum:
+      - mail.trends_with_reply
+      title: ScheduleTemplateKey
+      description: Pre-defined template identifiers.
+    ScheduleTemplateSummary:
+      properties:
+        key:
+          $ref: '#/components/schemas/ScheduleTemplateKey'
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+      type: object
+      required:
+      - key
+      - title
+      - description
+      title: ScheduleTemplateSummary
     SignupRequest:
       properties:
         email:
@@ -4430,6 +4758,11 @@ components:
       - msg
       - type
       title: ValidationError
+    _EmptyPayload:
+      properties: {}
+      type: object
+      title: _EmptyPayload
+      description: Placeholder model for GET endpoints.
   securitySchemes:
     HTTPBearer:
       type: http

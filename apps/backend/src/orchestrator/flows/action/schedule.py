@@ -70,7 +70,10 @@ _TEMPLATE_DEFINITIONS = {
     title="List Schedule Templates",
     side_effect="read",
 )
-async def op_list_schedule_templates(ctx: TaskContext) -> ListScheduleTemplatesResult:
+async def op_list_schedule_templates(
+    payload: _EmptyPayload,
+    ctx: TaskContext,
+) -> ListScheduleTemplatesResult:
     return ListScheduleTemplatesResult(templates=list(_TEMPLATE_DEFINITIONS.values()))
 
 

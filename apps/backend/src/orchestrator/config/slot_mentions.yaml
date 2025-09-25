@@ -165,6 +165,12 @@ slots:
   value_type: string
   flows:
   - accounts.link.create
+- name: mail
+  label: Mail
+  description: Filter by mail
+  value_type: string
+  flows:
+  - action.schedule.compile_template
 - name: mapping_version
   label: Mapping Version
   description: Filter by mapping version
@@ -206,6 +212,12 @@ slots:
   value_type: integer
   flows:
   - insights.ingest
+- name: params
+  label: Params
+  description: Filter by params
+  value_type: string
+  flows:
+  - action.schedule.create_from_template
 - name: persona
   label: Persona
   description: Filter by persona
@@ -265,6 +277,12 @@ slots:
   flows:
   - bff.campaigns.list_campaigns
   - bff.trends.list_trends
+- name: queue
+  label: Queue
+  description: Filter by queue
+  value_type: string
+  flows:
+  - action.schedule.create_from_template
 - name: raw
   label: Raw
   description: Filter by raw
@@ -277,6 +295,24 @@ slots:
   value_type: boolean
   flows:
   - drafts.toggle_ready
+- name: repeat_interval_minutes
+  label: Repeat Interval Minutes
+  description: Filter by repeat interval minutes
+  value_type: integer
+  flows:
+  - action.schedule.create_from_template
+- name: repeats
+  label: Repeats
+  description: Filter by repeats
+  value_type: integer
+  flows:
+  - action.schedule.create_from_template
+- name: run_at
+  label: Run At
+  description: Filter by run at
+  value_type: string
+  flows:
+  - action.schedule.create_from_template
 - name: scheduled_at
   label: Scheduled At
   description: Filter by scheduled at
@@ -344,6 +380,15 @@ slots:
   flows:
   - drafts.create
   - drafts.update_ir
+- name: template
+  label: Template
+  description: Filter by template
+  value_type: enum
+  choices:
+  - mail.trends_with_reply
+  flows:
+  - action.schedule.compile_template
+  - action.schedule.create_from_template
 - name: title
   label: Title
   description: Filter by title

@@ -1570,6 +1570,110 @@ export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
 
 
 /**
+ * Return metadata about available schedule templates
+ * @summary List Available Schedule Templates
+ */
+export const actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetResponse = zod.object({
+  "templates": zod.array(zod.object({
+  "key": zod.enum(['mail.trends_with_reply']).describe('Pre-defined template identifiers.'),
+  "title": zod.string(),
+  "description": zod.string()
+}))
+})
+
+
+/**
+ * Generate a schedule DAG specification from higher level template parameters
+ * @summary Compile Schedule DAG
+ */
+export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailCountryDefault = "US";export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailLimitDefault = 20;export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailWaitTimeoutSDefault = 604800;
+
+export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBody = zod.object({
+  "template": zod.enum(['mail.trends_with_reply']).describe('Pre-defined template identifiers.'),
+  "mail": zod.union([zod.object({
+  "persona_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "email_to": zod.string(),
+  "country": zod.string().default(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailCountryDefault),
+  "limit": zod.number().default(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailLimitDefault),
+  "wait_timeout_s": zod.number().default(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailWaitTimeoutSDefault),
+  "pipeline_id": zod.string().nullish()
+}).describe('Parameters for the mail trends + reply template.'),zod.null()]).optional()
+})
+
+export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostResponse = zod.object({
+  "dag_spec": zod.object({
+  "dag": zod.object({
+  "nodes": zod.array(zod.object({
+  "id": zod.string().describe('Unique identifier within the DAG'),
+  "flow": zod.string().describe('Orchestrator flow key to execute'),
+  "in": zod.record(zod.string(), zod.any()).optional()
+}).describe('Single node within a schedule DAG.')),
+  "edges": zod.array(zod.object({
+  "source": zod.string(),
+  "target": zod.string()
+}).describe('Directed connection between nodes.')).optional()
+}),
+  "payload": zod.record(zod.string(), zod.any()).optional()
+}).describe('Full DAG specification including optional schedule payload.')
+})
+
+
+/**
+ * Create one or multiple schedules from a template and timing options
+ * @summary Schedule Template Instances
+ */
+export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsCountryDefault = "US";export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsLimitDefault = 20;export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsWaitTimeoutSDefault = 604800;export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyRepeatsDefault = 1;export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyRepeatIntervalMinutesDefault = 0;
+
+export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBody = zod.object({
+  "template": zod.enum(['mail.trends_with_reply']).describe('Pre-defined template identifiers.'),
+  "params": zod.object({
+  "persona_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "email_to": zod.string(),
+  "country": zod.string().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsCountryDefault),
+  "limit": zod.number().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsLimitDefault),
+  "wait_timeout_s": zod.number().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsWaitTimeoutSDefault),
+  "pipeline_id": zod.string().nullish()
+}).describe('Parameters for the mail trends + reply template.'),
+  "run_at": zod.iso.datetime({}).optional(),
+  "repeats": zod.number().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyRepeatsDefault),
+  "repeat_interval_minutes": zod.number().optional(),
+  "queue": zod.string().nullish()
+}).describe('Request to create one or more schedules from a template.')
+
+export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostResponse = zod.object({
+  "schedule_ids": zod.array(zod.number())
+})
+
+
+/**
+ * Start the CoWorker worker
+ * @summary Start My CoWorker
+ */
+export const actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostBody = zod.object({
+
+}).describe('Placeholder model for GET endpoints.')
+
+export const actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostResponse = zod.object({
+
+}).describe('Placeholder model for GET endpoints.')
+
+
+/**
+ * Stop the CoWorker worker
+ * @summary Stop My CoWorker
+ */
+export const actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostBody = zod.object({
+
+}).describe('Placeholder model for GET endpoints.')
+
+export const actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostResponse = zod.object({
+
+}).describe('Placeholder model for GET endpoints.')
+
+
+/**
  * @summary Signup
  */
 export const signupApiOrchestratorAuthSignupPostBodyPasswordMin = 8;

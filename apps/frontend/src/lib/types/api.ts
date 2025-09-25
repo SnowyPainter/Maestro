@@ -896,6 +896,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/actions/schedules/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Available Schedule Templates
+         * @description Return metadata about available schedule templates
+         */
+        get: operations["action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/compile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Compile Schedule DAG
+         * @description Generate a schedule DAG specification from higher level template parameters
+         */
+        post: operations["action_schedule_compile_template_api_orchestrator_actions_schedules_compile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Schedule Template Instances
+         * @description Create one or multiple schedules from a template and timing options
+         */
+        post: operations["action_schedule_create_from_template_api_orchestrator_actions_schedules_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/start_my_coworker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start My CoWorker
+         * @description Start the CoWorker worker
+         */
+        post: operations["action_schedule_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/stop_my_coworker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop My CoWorker
+         * @description Stop the CoWorker worker
+         */
+        post: operations["action_schedule_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/auth/signup": {
         parameters: {
             query?: never;
@@ -1688,6 +1788,11 @@ export interface components {
          * @enum {string}
          */
         KPIKey: "reach" | "impressions" | "likes" | "comments" | "shares" | "saves" | "follows" | "link_clicks" | "profile_visits" | "ctr" | "engagement_rate";
+        /** ListScheduleTemplatesResult */
+        ListScheduleTemplatesResult: {
+            /** Templates */
+            templates: components["schemas"]["ScheduleTemplateSummary"][];
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -1697,6 +1802,35 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /**
+         * MailScheduleTemplateParams
+         * @description Parameters for the mail trends + reply template.
+         */
+        MailScheduleTemplateParams: {
+            /** Persona Id */
+            persona_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Email To */
+            email_to: string;
+            /**
+             * Country
+             * @default US
+             */
+            country: string;
+            /**
+             * Limit
+             * @default 20
+             */
+            limit: number;
+            /**
+             * Wait Timeout S
+             * @default 604800
+             */
+            wait_timeout_s: number;
+            /** Pipeline Id */
+            pipeline_id?: string | null;
         };
         /** MessageOut */
         MessageOut: {
@@ -2213,6 +2347,108 @@ export interface components {
              */
             last_updated_at?: string | null;
         };
+        /** ScheduleCompileRequest */
+        ScheduleCompileRequest: {
+            template: components["schemas"]["ScheduleTemplateKey"];
+            mail?: components["schemas"]["MailScheduleTemplateParams"] | null;
+        };
+        /** ScheduleCompileResult */
+        ScheduleCompileResult: {
+            dag_spec: components["schemas"]["ScheduleDagSpec"];
+        };
+        /**
+         * ScheduleCreateRequest
+         * @description Request to create one or more schedules from a template.
+         */
+        ScheduleCreateRequest: {
+            /** @description Template to use */
+            template: components["schemas"]["ScheduleTemplateKey"];
+            params: components["schemas"]["MailScheduleTemplateParams"];
+            /**
+             * Run At
+             * Format: date-time
+             */
+            run_at?: string;
+            /**
+             * Repeats
+             * @default 1
+             */
+            repeats: number;
+            /**
+             * Repeat Interval Minutes
+             * @default 0
+             */
+            repeat_interval_minutes: number;
+            /** Queue */
+            queue?: string | null;
+        };
+        /** ScheduleCreateResult */
+        ScheduleCreateResult: {
+            /** Schedule Ids */
+            schedule_ids: number[];
+        };
+        /**
+         * ScheduleDagEdge
+         * @description Directed connection between nodes.
+         */
+        ScheduleDagEdge: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+        };
+        /** ScheduleDagGraph */
+        ScheduleDagGraph: {
+            /** Nodes */
+            nodes: components["schemas"]["ScheduleDagNode"][];
+            /** Edges */
+            edges?: components["schemas"]["ScheduleDagEdge"][];
+        };
+        /**
+         * ScheduleDagNode
+         * @description Single node within a schedule DAG.
+         */
+        ScheduleDagNode: {
+            /**
+             * Id
+             * @description Unique identifier within the DAG
+             */
+            id: string;
+            /**
+             * Flow
+             * @description Orchestrator flow key to execute
+             */
+            flow: string;
+            /** In */
+            in?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ScheduleDagSpec
+         * @description Full DAG specification including optional schedule payload.
+         */
+        ScheduleDagSpec: {
+            dag: components["schemas"]["ScheduleDagGraph"];
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ScheduleTemplateKey
+         * @description Pre-defined template identifiers.
+         * @enum {string}
+         */
+        ScheduleTemplateKey: "mail.trends_with_reply";
+        /** ScheduleTemplateSummary */
+        ScheduleTemplateSummary: {
+            key: components["schemas"]["ScheduleTemplateKey"];
+            /** Title */
+            title: string;
+            /** Description */
+            description: string;
+        };
         /** SignupRequest */
         SignupRequest: {
             /**
@@ -2421,6 +2657,11 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * _EmptyPayload
+         * @description Placeholder model for GET endpoints.
+         */
+        _EmptyPayload: Record<string, never>;
     };
     responses: never;
     parameters: never;
@@ -3946,6 +4187,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InsightOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListScheduleTemplatesResult"];
+                };
+            };
+        };
+    };
+    action_schedule_compile_template_api_orchestrator_actions_schedules_compile_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleCompileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleCompileResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_create_from_template_api_orchestrator_actions_schedules_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleCreateResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["_EmptyPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["_EmptyPayload"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["_EmptyPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["_EmptyPayload"];
                 };
             };
             /** @description Validation Error */
