@@ -5,16 +5,13 @@ import { toast } from "sonner";
 
 import {
   useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet,
-  useDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut,
   RenderedVariantBlocks,
   PlatformKind,
-  DraftVariantReadyCommand,
   PostPublicationOut,
 } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -40,8 +37,6 @@ const STATUS_BADGES: Record<string, string> = {
   invalid: "bg-rose-100 text-rose-900",
 };
 
-const READY_LOCKED_STATUSES = new Set(["published", "monitoring"]);
-const READY_ACTIVE_STATUSES = new Set(["scheduled", "published", "monitoring"]);
 
 function toLocalInputValue(value?: string | null): string {
   if (!value) return "";
@@ -199,10 +194,9 @@ export function DraftVariantList({
   const [scheduleInputs, setScheduleInputs] = useState<Record<number, string>>({});
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [selectedVariantForSchedule, setSelectedVariantForSchedule] = useState<DraftVariantRender | null>(null);
-  const toggleReadyMutation = useDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut();
 
   const hasDraftContext = typeof draftId === "number" && !Number.isNaN(draftId);
-  const isMutating = toggleReadyMutation.isPending;
+  const isMutating = false;
 
   useEffect(() => {
     setScheduleInputs((prev) => {
@@ -270,94 +264,16 @@ export function DraftVariantList({
       return;
     }
 
-    const platformKind = (ensurePlatformKind(selectedVariantForSchedule.platform) ?? selectedVariantForSchedule.platform) as PlatformKind;
-    const scheduledISO = fromLocalInputValue(scheduleLocal);
-    const payload: DraftVariantReadyCommand = {
-      draft_id: draftId ?? null,
-      platform: platformKind,
-      ready: true,
-      scheduled_at: scheduledISO,
-    };
+    // TODO: Implement scheduling API call
+    toast.error("Scheduling feature is temporarily disabled.");
+    closeScheduleDialog();
+  }, [selectedVariantForSchedule, getScheduleInputValue, closeScheduleDialog]);
 
-    try {
-      const result = await toggleReadyMutation.mutateAsync({
-        draftId: draftId ?? null,
-        platform: platformKind,
-        data: payload,
-      });
-      const scheduled = (result as PostPublicationOut | null)?.scheduled_at ?? scheduledISO;
-      setScheduleInputValue(selectedVariantForSchedule.variant_id, toLocalInputValue(scheduled));
-      toast.success("Post scheduled successfully.");
-      await invalidateVariantQueries(selectedVariantForSchedule.platform);
-      closeScheduleDialog();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }, [selectedVariantForSchedule, getScheduleInputValue, draftId, toggleReadyMutation, setScheduleInputValue, invalidateVariantQueries, closeScheduleDialog]);
-
-  const handleToggleChange = useCallback(
-    async (variant: DraftVariantRender, nextChecked: boolean) => {
-      if (!hasDraftContext) {
-        toast.error("Draft context is required to schedule publishing.");
-        return;
-      }
-      if (toggleReadyMutation.isPending) {
-        return;
-      }
-
-      const platformKind = (ensurePlatformKind(variant.platform) ?? variant.platform) as PlatformKind;
-      const payload: DraftVariantReadyCommand = {
-        draft_id: draftId ?? null,
-        platform: platformKind,
-        ready: nextChecked,
-        scheduled_at: null,
-      };
-
-      if (nextChecked) {
-        let scheduleLocal = getScheduleInputValue(variant);
-        if (!scheduleLocal) {
-          scheduleLocal = defaultScheduleLocal();
-          setScheduleInputValue(variant.variant_id, scheduleLocal);
-        }
-        payload.scheduled_at = fromLocalInputValue(scheduleLocal);
-      }
-
-      try {
-        const result = await toggleReadyMutation.mutateAsync({
-          draftId: draftId ?? null,
-          platform: platformKind,
-          data: payload,
-        });
-
-        if (nextChecked) {
-          const scheduled = (result as PostPublicationOut | null)?.scheduled_at ?? payload.scheduled_at ?? null;
-          setScheduleInputValue(variant.variant_id, toLocalInputValue(scheduled));
-          toast.success("Variant marked ready for post.");
-        } else {
-          toast.success("Variant marked as not ready for post.");
-        }
-
-        await invalidateVariantQueries(variant.platform);
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [draftId, getScheduleInputValue, hasDraftContext, invalidateVariantQueries, setScheduleInputValue, toggleReadyMutation],
-  );
 
   const handleScheduleSave = useCallback(
     async (variant: DraftVariantRender) => {
       if (!hasDraftContext) {
         toast.error("Draft context is required to schedule publishing.");
-        return;
-      }
-      if (toggleReadyMutation.isPending) {
-        return;
-      }
-
-      const publicationStatus = variant.post_publication_status?.toLowerCase() ?? "";
-      if (!READY_ACTIVE_STATUSES.has(publicationStatus)) {
-        toast.error("Enable ready for post before scheduling.");
         return;
       }
 
@@ -367,30 +283,10 @@ export function DraftVariantList({
         return;
       }
 
-      const platformKind = (ensurePlatformKind(variant.platform) ?? variant.platform) as PlatformKind;
-      const scheduledISO = fromLocalInputValue(scheduleLocal);
-      const payload: DraftVariantReadyCommand = {
-        draft_id: draftId ?? null,
-        platform: platformKind,
-        ready: true,
-        scheduled_at: scheduledISO,
-      };
-
-      try {
-        const result = await toggleReadyMutation.mutateAsync({
-          draftId: draftId ?? null,
-          platform: platformKind,
-          data: payload,
-        });
-        const scheduled = (result as PostPublicationOut | null)?.scheduled_at ?? scheduledISO;
-        setScheduleInputValue(variant.variant_id, toLocalInputValue(scheduled));
-        toast.success("Schedule updated.");
-        await invalidateVariantQueries(variant.platform);
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
+      // TODO: Implement scheduling API call
+      toast.error("Scheduling feature is temporarily disabled.");
     },
-    [draftId, getScheduleInputValue, hasDraftContext, invalidateVariantQueries, setScheduleInputValue, toggleReadyMutation],
+    [getScheduleInputValue, hasDraftContext],
   );
 
   // 컴파일 중인 variants가 있으면 자동 갱신
@@ -460,8 +356,8 @@ export function DraftVariantList({
             const errorCount = countListItems(variant.errors);
             const hasIssues = warningCount > 0 || errorCount > 0;
             const publicationStatus = variant.post_publication_status?.toLowerCase() ?? "";
-            const isLocked = READY_LOCKED_STATUSES.has(publicationStatus);
-            const isActiveReady = READY_ACTIVE_STATUSES.has(publicationStatus);
+            const isLocked = ["published", "monitoring"].includes(publicationStatus);
+            const isActiveReady = ["scheduled", "published", "monitoring"].includes(publicationStatus);
             return (
               <div
                 key={variant.variant_id}
@@ -500,36 +396,20 @@ export function DraftVariantList({
                 {hasDraftContext && (
                   <div className="flex items-center justify-between mt-3 pt-2 border-t">
                     <div className="flex items-center gap-2">
-                      {isActiveReady ? (
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id={`ready-${variant.variant_id}-compact`}
-                            checked={true}
-                            disabled={!hasDraftContext || isLocked || isMutating}
-                            onClick={(event) => event.stopPropagation()}
-                            onCheckedChange={(value) => {
-                              if (value === 'indeterminate') return;
-                              void handleToggleChange(variant, value === true);
-                            }}
-                          />
-                          <span className="text-xs font-medium text-green-600">Ready for post</span>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={!hasDraftContext || isLocked || isMutating}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (!isLocked && !isMutating) {
-                              openScheduleDialog(variant);
-                            }
-                          }}
-                          className="text-xs h-7"
-                        >
-                          Schedule Post
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!hasDraftContext || isLocked || isMutating}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (!isLocked && !isMutating) {
+                            openScheduleDialog(variant);
+                          }
+                        }}
+                        className="text-xs h-7"
+                      >
+                        {isActiveReady ? "Reschedule Post" : "Schedule Post"}
+                      </Button>
                     </div>
                     {isActiveReady && (
                       <button
@@ -560,8 +440,8 @@ export function DraftVariantList({
             const errorCount = countListItems(variant.errors);
             const hasIssues = warningCount > 0 || errorCount > 0;
             const publicationStatus = variant.post_publication_status?.toLowerCase() ?? "";
-            const isLocked = READY_LOCKED_STATUSES.has(publicationStatus);
-            const isActiveReady = READY_ACTIVE_STATUSES.has(publicationStatus);
+            const isLocked = ["published", "monitoring"].includes(publicationStatus);
+            const isActiveReady = ["scheduled", "published", "monitoring"].includes(publicationStatus);
             return (
           <div
             key={variant.variant_id}
@@ -642,39 +522,23 @@ export function DraftVariantList({
               <div className="border-t pt-3 mt-2 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    {isActiveReady ? (
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id={`ready-${variant.variant_id}`}
-                          checked={true}
-                          disabled={!hasDraftContext || isLocked || isMutating}
-                          onClick={(event) => event.stopPropagation()}
-                          onCheckedChange={(value) => {
-                            if (value === 'indeterminate') return;
-                            void handleToggleChange(variant, value === true);
-                          }}
-                        />
-                        <span className="text-sm font-medium text-green-600">Ready for post</span>
-                        {publicationStatus && (
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {publicationStatus}
-                          </Badge>
-                        )}
-                      </div>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={!hasDraftContext || isLocked || isMutating}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (!isLocked && !isMutating) {
-                            openScheduleDialog(variant);
-                          }
-                        }}
-                      >
-                        Schedule Post
-                      </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!hasDraftContext || isLocked || isMutating}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (!isLocked && !isMutating) {
+                          openScheduleDialog(variant);
+                        }
+                      }}
+                    >
+                      {isActiveReady ? "Reschedule Post" : "Schedule Post"}
+                    </Button>
+                    {isActiveReady && publicationStatus && (
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {publicationStatus}
+                      </Badge>
                     )}
                   </div>
                   {isActiveReady && (

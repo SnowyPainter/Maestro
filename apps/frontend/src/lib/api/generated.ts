@@ -302,16 +302,6 @@ export interface DraftUpdateCommand {
   campaign_id?: DraftUpdateCommandCampaignId;
 }
 
-export type DraftVariantReadyCommandDraftId = number | null;
-
-export interface DraftVariantReadyCommand {
-  draft_id?: DraftVariantReadyCommandDraftId;
-  platform: PlatformKind;
-  ready: boolean;
-  /** @nullable */
-  scheduled_at?: string | null;
-}
-
 export type DraftVariantRenderRenderedBlocks = RenderedVariantBlocks | null;
 
 export type DraftVariantRenderWarnings = string[] | null;
@@ -968,6 +958,17 @@ export interface PostPublicationOut {
   updated_at: string;
 }
 
+/**
+ * Parameters for publishing a compiled draft variant.
+ */
+export interface PostPublishTemplateParams {
+  post_publication_id: number;
+  persona_account_id: number;
+  variant_id: number;
+  draft_id: number;
+  platform: PlatformKind;
+}
+
 export type PostStatus = typeof PostStatus[keyof typeof PostStatus];
 
 
@@ -1042,14 +1043,24 @@ export interface RichPersonaAccountOut {
 
 export type ScheduleCompileRequestMail = MailScheduleTemplateParams | null;
 
+export type ScheduleCompileRequestPostPublish = PostPublishTemplateParams | null;
+
 export interface ScheduleCompileRequest {
   template: ScheduleTemplateKey;
   mail?: ScheduleCompileRequestMail;
+  post_publish?: ScheduleCompileRequestPostPublish;
 }
 
 export interface ScheduleCompileResult {
   dag_spec: ScheduleDagSpec;
 }
+
+export type ScheduleCreateRequestMetaAnyOf = { [key: string]: unknown };
+
+/**
+ * Optional metadata attached to the resulting schedules
+ */
+export type ScheduleCreateRequestMeta = ScheduleCreateRequestMetaAnyOf | null;
 
 /**
  * Request to create one or more schedules from a template.
@@ -1063,6 +1074,8 @@ export interface ScheduleCreateRequest {
   repeat_interval_minutes?: number;
   /** @nullable */
   queue?: string | null;
+  /** Optional metadata attached to the resulting schedules */
+  meta?: ScheduleCreateRequestMeta;
 }
 
 export interface ScheduleCreateResult {
@@ -1097,29 +1110,31 @@ export interface ScheduleDagNode {
 
 export type ScheduleDagSpecPayload = { [key: string]: unknown };
 
+export type ScheduleDagSpecMeta = { [key: string]: unknown };
+
 /**
- * Full DAG specification including optional schedule payload.
+ * Full DAG specification including optional schedule payload and metadata.
  */
 export interface ScheduleDagSpec {
   dag: ScheduleDagGraph;
   payload?: ScheduleDagSpecPayload;
+  meta?: ScheduleDagSpecMeta;
 }
 
-/**
- * Pre-defined template identifiers.
- */
 export type ScheduleTemplateKey = typeof ScheduleTemplateKey[keyof typeof ScheduleTemplateKey];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ScheduleTemplateKey = {
   mailtrends_with_reply: 'mail.trends_with_reply',
+  postpublish: 'post.publish',
 } as const;
 
 export interface ScheduleTemplateSummary {
   key: ScheduleTemplateKey;
   title: string;
   description: string;
+  visibility: TemplateVisibility;
 }
 
 export interface SignupRequest {
@@ -1142,6 +1157,16 @@ export interface SlotHintItem {
   synonyms?: string[];
   flows?: string[];
 }
+
+export type TemplateVisibility = typeof TemplateVisibility[keyof typeof TemplateVisibility];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const TemplateVisibility = {
+  public: 'public',
+  advanced: 'advanced',
+  system: 'system',
+} as const;
 
 export type TimelineEventPayload = { [key: string]: unknown };
 
@@ -5045,73 +5070,6 @@ export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPV
       > => {
 
       const mutationOptions = getDraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Mark or unmark a draft variant as ready for publishing with scheduling
- * @summary Toggle Ready For Post
- */
-export const draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut = (
-    draftId: number | null,
-    platform: PlatformKind,
-    draftVariantReadyCommand: DraftVariantReadyCommand,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<PostPublicationOut>(
-      {url: `/api/orchestrator/drafts/${draftId}/variants/${platform}/ready`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: draftVariantReadyCommand
-    },
-      options);
-    }
-  
-
-
-export const getDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, TError,{draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, TError,{draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}, TContext> => {
-
-const mutationKey = ['draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, {draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}> = (props) => {
-          const {draftId,platform,data} = props ?? {};
-
-          return  draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut(draftId,platform,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationResult = NonNullable<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>>
-    export type DraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationBody = DraftVariantReadyCommand
-    export type DraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationError = HTTPValidationError
-
-    /**
- * @summary Toggle Ready For Post
- */
-export const useDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>, TError,{draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPut>>,
-        TError,
-        {draftId: number | null;platform: PlatformKind;data: DraftVariantReadyCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getDraftsToggleReadyApiOrchestratorDraftsDraftIdVariantsPlatformReadyPutMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

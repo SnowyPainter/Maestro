@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 from apps.backend.src.orchestrator.registry import FLOWS, FlowDefinition
@@ -27,6 +27,7 @@ class DagSpec:
     predecessors: Dict[str, List[str]]
     entry_nodes: List[str]
     topological_order: List[str]
+    meta: Dict[str, Any] = field(default_factory=dict)
 
 
 def parse_dag_spec(spec: Dict[str, Any]) -> DagSpec:
@@ -93,12 +94,17 @@ def parse_dag_spec(spec: Dict[str, Any]) -> DagSpec:
 
     order = _topological_sort(nodes.keys(), adjacency, predecessors)
 
+    meta = spec.get("meta") if isinstance(spec, dict) else None
+    if not isinstance(meta, dict):
+        meta = {}
+
     return DagSpec(
         nodes=nodes,
         adjacency=adjacency,
         predecessors=predecessors,
         entry_nodes=entry_nodes,
         topological_order=order,
+        meta=meta,
     )
 
 

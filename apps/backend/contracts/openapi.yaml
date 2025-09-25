@@ -1812,51 +1812,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/drafts/{draft_id}/variants/{platform}/ready:
-    put:
-      tags:
-      - action
-      - action
-      - drafts
-      - variants
-      - publication
-      - schedule
-      summary: Toggle Ready For Post
-      description: Mark or unmark a draft variant as ready for publishing with scheduling
-      operationId: drafts_toggle_ready_api_orchestrator_drafts__draft_id__variants__platform__ready_put
-      parameters:
-      - name: draft_id
-        in: path
-        required: true
-        schema:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Draft Id
-      - name: platform
-        in: path
-        required: true
-        schema:
-          $ref: '#/components/schemas/PlatformKind'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DraftVariantReadyCommand'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostPublicationOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/insights:
     post:
       tags:
@@ -2920,28 +2875,6 @@ components:
       required:
       - ir
       title: DraftUpdateCommand
-    DraftVariantReadyCommand:
-      properties:
-        draft_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Draft Id
-        platform:
-          $ref: '#/components/schemas/PlatformKind'
-        ready:
-          type: boolean
-          title: Ready
-        scheduled_at:
-          title: Scheduled At
-          format: date-time
-          type: string
-          nullable: true
-      type: object
-      required:
-      - platform
-      - ready
-      title: DraftVariantReadyCommand
     DraftVariantRender:
       properties:
         variant_id:
@@ -4195,6 +4128,31 @@ components:
       - created_at
       - updated_at
       title: PostPublicationOut
+    PostPublishTemplateParams:
+      properties:
+        post_publication_id:
+          type: integer
+          title: Post Publication Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        variant_id:
+          type: integer
+          title: Variant Id
+        draft_id:
+          type: integer
+          title: Draft Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+      type: object
+      required:
+      - post_publication_id
+      - persona_account_id
+      - variant_id
+      - draft_id
+      - platform
+      title: PostPublishTemplateParams
+      description: Parameters for publishing a compiled draft variant.
     PostStatus:
       type: string
       enum:
@@ -4331,6 +4289,10 @@ components:
           anyOf:
           - $ref: '#/components/schemas/MailScheduleTemplateParams'
           - type: 'null'
+        post_publish:
+          anyOf:
+          - $ref: '#/components/schemas/PostPublishTemplateParams'
+          - type: 'null'
       type: object
       required:
       - template
@@ -4366,6 +4328,13 @@ components:
           title: Queue
           type: string
           nullable: true
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+          description: Optional metadata attached to the resulting schedules
       type: object
       required:
       - template
@@ -4441,17 +4410,22 @@ components:
           additionalProperties: true
           type: object
           title: Payload
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
       type: object
       required:
       - dag
       title: ScheduleDagSpec
-      description: Full DAG specification including optional schedule payload.
+      description: Full DAG specification including optional schedule payload and
+        metadata.
     ScheduleTemplateKey:
       type: string
       enum:
       - mail.trends_with_reply
+      - post.publish
       title: ScheduleTemplateKey
-      description: Pre-defined template identifiers.
     ScheduleTemplateSummary:
       properties:
         key:
@@ -4462,11 +4436,14 @@ components:
         description:
           type: string
           title: Description
+        visibility:
+          $ref: '#/components/schemas/TemplateVisibility'
       type: object
       required:
       - key
       - title
       - description
+      - visibility
       title: ScheduleTemplateSummary
     SignupRequest:
       properties:
@@ -4524,6 +4501,13 @@ components:
       - name
       - label
       title: SlotHintItem
+    TemplateVisibility:
+      type: string
+      enum:
+      - public
+      - advanced
+      - system
+      title: TemplateVisibility
     TimelineEvent:
       properties:
         event_id:

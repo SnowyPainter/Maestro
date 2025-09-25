@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import List
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -13,14 +13,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.scheduler import repository as scheduler_repo
 from apps.backend.src.modules.scheduler.models import Schedule, ScheduleStatus
+from apps.backend.src.modules.scheduler.registry import (
+    ScheduleTemplateDefinition,
+    ScheduleTemplateKey,
+    TemplateVisibility,
+    compile_schedule_template,
+    list_schedule_templates,
+)
 from apps.backend.src.modules.scheduler.schemas import (
     MailScheduleTemplateParams,
     ScheduleCompileRequest,
     ScheduleCompileResult,
     ScheduleDagSpec,
-    ScheduleTemplateKey,
 )
-from apps.backend.src.orchestrator.adapters.schedule import compile_schedule_template
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 from apps.backend.src.modules.users.models import User
@@ -31,6 +36,7 @@ class ScheduleTemplateSummary(BaseModel):
     key: ScheduleTemplateKey
     title: str
     description: str
+    visibility: TemplateVisibility
 
 
 class ListScheduleTemplatesResult(BaseModel):
@@ -46,6 +52,10 @@ class ScheduleCreateRequest(BaseModel):
     repeats: int = 1
     repeat_interval_minutes: int = 0
     queue: str | None = None
+    meta: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional metadata attached to the resulting schedules",
+    )
 
 
 class ScheduleCreateResult(BaseModel):
@@ -56,17 +66,6 @@ class _EmptyPayload(BaseModel):
     """Placeholder model for GET endpoints."""
 
 
-_TEMPLATE_DEFINITIONS = {
-    ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY: ScheduleTemplateSummary(
-        key=ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY,
-        title="Persona Trends Mail with Reply Await",
-        description="Send persona-adapted trends email and await reply to ingest draft",
-    )
-}
-
-"""
-컴파일은 나중에 쓸 듯
-"""
 @operator(
     key="action.schedule.compile_template",
     title="Compile Schedule Template",
@@ -103,7 +102,17 @@ async def op_list_schedule_templates(
     payload: _EmptyPayload,
     ctx: TaskContext,
 ) -> ListScheduleTemplatesResult:
-    return ListScheduleTemplatesResult(templates=list(_TEMPLATE_DEFINITIONS.values()))
+    definitions: List[ScheduleTemplateDefinition] = list_schedule_templates()
+    summaries = [
+        ScheduleTemplateSummary(
+            key=definition.key,
+            title=definition.title,
+            description=definition.description,
+            visibility=definition.visibility,
+        )
+        for definition in definitions
+    ]
+    return ListScheduleTemplatesResult(templates=summaries)
 
 
 @FLOWS.flow(
@@ -140,6 +149,11 @@ async def op_create_schedule_from_template(
     run_at = payload.run_at
     interval = timedelta(minutes=max(payload.repeat_interval_minutes, 0))
     total_runs = max(payload.repeats, 1)
+
+    dag_meta = dict(dag_spec.meta or {})
+    if payload.meta:
+        dag_meta.update(payload.meta)
+    dag_spec = dag_spec.model_copy(update={"meta": dag_meta})
 
     dag_json = dag_spec.model_dump(by_alias=True, exclude_none=True)
     dag_payload = dag_spec.payload

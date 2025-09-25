@@ -856,26 +856,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/drafts/{draft_id}/variants/{platform}/ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Toggle Ready For Post
-         * @description Mark or unmark a draft variant as ready for publishing with scheduling
-         */
-        put: operations["drafts_toggle_ready_api_orchestrator_drafts__draft_id__variants__platform__ready_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/insights": {
         parameters: {
             query?: never;
@@ -1522,19 +1502,6 @@ export interface components {
             goal?: string | null;
             /** Campaign Id */
             campaign_id?: number | null;
-        };
-        /** DraftVariantReadyCommand */
-        DraftVariantReadyCommand: {
-            /** Draft Id */
-            draft_id?: number | null;
-            platform: components["schemas"]["PlatformKind"];
-            /** Ready */
-            ready: boolean;
-            /**
-             * Scheduled At
-             * Format: date-time
-             */
-            scheduled_at?: string | null;
         };
         /** DraftVariantRender */
         DraftVariantRender: {
@@ -2268,6 +2235,21 @@ export interface components {
             updated_at: string;
         };
         /**
+         * PostPublishTemplateParams
+         * @description Parameters for publishing a compiled draft variant.
+         */
+        PostPublishTemplateParams: {
+            /** Post Publication Id */
+            post_publication_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Variant Id */
+            variant_id: number;
+            /** Draft Id */
+            draft_id: number;
+            platform: components["schemas"]["PlatformKind"];
+        };
+        /**
          * PostStatus
          * @enum {string}
          */
@@ -2351,6 +2333,7 @@ export interface components {
         ScheduleCompileRequest: {
             template: components["schemas"]["ScheduleTemplateKey"];
             mail?: components["schemas"]["MailScheduleTemplateParams"] | null;
+            post_publish?: components["schemas"]["PostPublishTemplateParams"] | null;
         };
         /** ScheduleCompileResult */
         ScheduleCompileResult: {
@@ -2381,6 +2364,13 @@ export interface components {
             repeat_interval_minutes: number;
             /** Queue */
             queue?: string | null;
+            /**
+             * Meta
+             * @description Optional metadata attached to the resulting schedules
+             */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** ScheduleCreateResult */
         ScheduleCreateResult: {
@@ -2426,7 +2416,7 @@ export interface components {
         };
         /**
          * ScheduleDagSpec
-         * @description Full DAG specification including optional schedule payload.
+         * @description Full DAG specification including optional schedule payload and metadata.
          */
         ScheduleDagSpec: {
             dag: components["schemas"]["ScheduleDagGraph"];
@@ -2434,13 +2424,16 @@ export interface components {
             payload?: {
                 [key: string]: unknown;
             };
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
         };
         /**
          * ScheduleTemplateKey
-         * @description Pre-defined template identifiers.
          * @enum {string}
          */
-        ScheduleTemplateKey: "mail.trends_with_reply";
+        ScheduleTemplateKey: "mail.trends_with_reply" | "post.publish";
         /** ScheduleTemplateSummary */
         ScheduleTemplateSummary: {
             key: components["schemas"]["ScheduleTemplateKey"];
@@ -2448,6 +2441,7 @@ export interface components {
             title: string;
             /** Description */
             description: string;
+            visibility: components["schemas"]["TemplateVisibility"];
         };
         /** SignupRequest */
         SignupRequest: {
@@ -2484,6 +2478,11 @@ export interface components {
             /** Flows */
             flows?: string[];
         };
+        /**
+         * TemplateVisibility
+         * @enum {string}
+         */
+        TemplateVisibility: "public" | "advanced" | "system";
         /**
          * TimelineEvent
          * @description Normalized representation for a single timeline datapoint.
@@ -4118,42 +4117,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    drafts_toggle_ready_api_orchestrator_drafts__draft_id__variants__platform__ready_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                draft_id: number | null;
-                platform: components["schemas"]["PlatformKind"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftVariantReadyCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PostPublicationOut"];
                 };
             };
             /** @description Validation Error */

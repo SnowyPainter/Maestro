@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,9 +18,16 @@ from apps.backend.src.modules.common.enums import (
     VariantStatus,
 )
 from apps.backend.src.modules.accounts.models import PersonaAccount
-from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication, PostPublication
-from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest, PostPublicationOut
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
+from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
 from apps.backend.src.workers.Adapter.tasks import enqueue_variant_compile
+from apps.backend.src.modules.scheduler.models import Schedule, ScheduleStatus
+from apps.backend.src.modules.scheduler.registry import compile_schedule_template
+from apps.backend.src.modules.scheduler.schemas import (
+    PostPublishTemplateParams,
+    ScheduleCompileRequest,
+    ScheduleTemplateKey,
+)
 
 
 def _all_platforms() -> tuple[PlatformKind, ...]:
@@ -384,6 +391,92 @@ async def cancel_post_publication(
     db.add(publication)
     await db.flush()
     return publication
+
+async def ensure_publication_schedule(
+    db: AsyncSession,
+    *,
+    publication: PostPublication,
+    variant: DraftVariant,
+    persona_account_id: int,
+    scheduled_at: datetime,
+) -> Schedule:
+    compile_request = ScheduleCompileRequest(
+        template=ScheduleTemplateKey.POST_PUBLISH,
+        post_publish=PostPublishTemplateParams(
+            post_publication_id=publication.id,
+            persona_account_id=persona_account_id,
+            variant_id=variant.id,
+            draft_id=variant.draft_id,
+            platform=variant.platform,
+        ),
+    )
+    dag_spec = compile_schedule_template(compile_request).dag_spec
+    dag_dict: Dict[str, Any] = dag_spec.model_dump(by_alias=True, exclude_none=True)
+    due_at = _normalize_schedule(scheduled_at)
+
+    meta = dict(publication.meta or {})
+    schedule_id = meta.get("schedule_id")
+    schedule: Schedule | None = None
+
+    if schedule_id is not None:
+        schedule = await db.get(Schedule, int(schedule_id))
+
+    if schedule is None:
+        schedule = Schedule(
+            persona_account_id=persona_account_id,
+            dag_spec=dag_dict,
+            payload=dag_spec.payload,
+            context={},
+            status=ScheduleStatus.PENDING.value,
+            due_at=due_at,
+            queue="coworker",
+            idempotency_key=f"post:{publication.id}:{persona_account_id}",
+        )
+        db.add(schedule)
+        await db.flush()
+    else:
+        schedule.persona_account_id = persona_account_id
+        schedule.dag_spec = dag_dict
+        schedule.payload = dag_spec.payload
+        schedule.status = ScheduleStatus.PENDING.value
+        schedule.due_at = due_at
+        schedule.queue = schedule.queue or "coworker"
+        schedule.updated_at = _now()
+        db.add(schedule)
+
+    meta.update(
+        {
+            "schedule_id": schedule.id,
+            "scheduled_at": due_at.isoformat(),
+            "schedule_label": dag_spec.meta.get("label", ScheduleTemplateKey.POST_PUBLISH.value),
+        }
+    )
+    publication.meta = meta
+    publication.updated_at = _now()
+    db.add(publication)
+    await db.flush()
+    return schedule
+
+
+async def remove_publication_schedule(
+    db: AsyncSession,
+    *,
+    publication: PostPublication,
+) -> None:
+    meta = dict(publication.meta or {})
+    schedule_id = meta.pop("schedule_id", None)
+    meta.pop("scheduled_at", None)
+    meta.pop("schedule_label", None)
+    publication.meta = meta or None
+    publication.updated_at = _now()
+    db.add(publication)
+
+    if schedule_id is not None:
+        schedule = await db.get(Schedule, int(schedule_id))
+        if schedule is not None:
+            await db.delete(schedule)
+
+    await db.flush()
 
 async def list_post_publications_by_variant(
     db: AsyncSession,

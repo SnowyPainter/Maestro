@@ -153,6 +153,19 @@ spec = builder.build()
 
 생성된 `spec`을 `POST /actions/schedules/create` API로 제출하면 즉시 실행 가능한 Schedule이 만들어진다.
 
+### 5.4 스케줄 템플릿 레지스트리
+
+실제 환경에서는 모든 스케줄 DAG을 `apps/backend/src/modules/scheduler/registry.py`에서 관리한다. 레지스트리는 아래 요소로 구성된다.
+
+- **`ScheduleTemplateKey`**: 템플릿 종류를 구분하는 열거형. 현재는 메일 시나리오(`mail.trends_with_reply`)와 게시 시나리오(`post.publish`)가 등록되어 있다.
+- **`TemplateVisibility`**: 템플릿 노출 수준을 표현한다.
+  - `public`: 사용자에게 노출되는 일반 템플릿.
+  - `advanced`: 고급 사용자를 위한 템플릿(향후 확장용).
+  - `system`: 내부 오케스트레이션에서만 사용하는 템플릿. API 응답에는 포함되지만 UI에서는 숨길 수 있다.
+- **`ScheduleTemplateDefinition`**: 키, 설명, 빌더, visibility를 묶은 구조체. 모든 템플릿은 이 정의를 통해 등록된다.
+
+`GET /actions/schedules/templates` 호출 시 모든 템플릿과 함께 `visibility` 정보가 반환된다. 사용자는 `visibility`가 `public`인 템플릿만 선택적으로 노출하거나, `system` 템플릿을 참조해 내부 자동화(Draft publish 토글 등)에 활용할 수 있다. 또한 `ScheduleTemplateKey`와 파라미터를 직접 지정하면 API를 통해 동일한 DAG를 생성할 수 있으므로, 향후 "사용자가 직접 DAG를 작성"하는 시나리오와도 호환된다.
+
 ## 6. DagExecutor와 실행 흐름
 
 1. **DagSpec 파싱**: `parse_dag_spec()`가 JSON을 검증하고 `DagNode` 객체를 만든다.

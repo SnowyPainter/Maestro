@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+from apps.backend.src.modules.common.enums import PlatformKind
+from apps.backend.src.modules.scheduler.registry import ScheduleTemplateKey
 
 
 class ScheduleDagNode(BaseModel):
@@ -44,16 +46,11 @@ class ScheduleDagGraph(BaseModel):
 
 
 class ScheduleDagSpec(BaseModel):
-    """Full DAG specification including optional schedule payload."""
+    """Full DAG specification including optional schedule payload and metadata."""
 
     dag: ScheduleDagGraph
     payload: Dict[str, Any] = Field(default_factory=dict)
-
-
-class ScheduleTemplateKey(str, Enum):
-    """Pre-defined template identifiers."""
-
-    MAIL_TRENDS_WITH_REPLY = "mail.trends_with_reply"
+    meta: Dict[str, Any] = Field(default_factory=dict)
 
 
 class MailScheduleTemplateParams(BaseModel):
@@ -68,22 +65,40 @@ class MailScheduleTemplateParams(BaseModel):
     pipeline_id: Optional[str] = None
 
 
+class PostPublishTemplateParams(BaseModel):
+    """Parameters for publishing a compiled draft variant."""
+
+    post_publication_id: int
+    persona_account_id: int
+    variant_id: int
+    draft_id: int
+    platform: PlatformKind
+
+
 class ScheduleCompileRequest(BaseModel):
     template: ScheduleTemplateKey
     mail: Optional[MailScheduleTemplateParams] = None
+    post_publish: Optional[PostPublishTemplateParams] = None
 
     @model_validator(mode="after")
     def _ensure_params(self) -> "ScheduleCompileRequest":
         if self.template == ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
             if self.mail is None:
                 raise ValueError("mail parameters are required for the selected template")
+        elif self.template == ScheduleTemplateKey.POST_PUBLISH:
+            if self.post_publish is None:
+                raise ValueError("post_publish parameters are required for the selected template")
         return self
 
-    def extract_params(self) -> MailScheduleTemplateParams:
-        if self.template == ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
-            assert self.mail is not None
-            return self.mail
-        raise ValueError(f"Unsupported template '{self.template}'")
+    def require_mail_params(self) -> MailScheduleTemplateParams:
+        if self.mail is None:
+            raise ValueError("mail parameters not provided")
+        return self.mail
+
+    def require_post_publish_params(self) -> PostPublishTemplateParams:
+        if self.post_publish is None:
+            raise ValueError("post_publish parameters not provided")
+        return self.post_publish
 
 
 class ScheduleCompileResult(BaseModel):
@@ -114,6 +129,7 @@ class ScheduleDagBuilder:
         self._edges: List[ScheduleDagEdge] = []
         self._payload: Dict[str, Any] = {}
         self._counter = 0
+        self._meta: Dict[str, Any] = {}
 
     def add_node(self, flow: str, node_id: Optional[str] = None, **inputs: Any) -> str:
         node_id = node_id or self._generate_node_id(flow)
@@ -129,9 +145,14 @@ class ScheduleDagBuilder:
             if value is not None:
                 self._payload[key] = value
 
+    def meta(self, **values: Any) -> None:
+        for key, value in values.items():
+            if value is not None:
+                self._meta[key] = value
+
     def build_model(self) -> ScheduleDagSpec:
         graph = ScheduleDagGraph(nodes=self._nodes, edges=self._edges)
-        return ScheduleDagSpec(dag=graph, payload=self._payload)
+        return ScheduleDagSpec(dag=graph, payload=self._payload, meta=self._meta)
 
     def build(self) -> Dict[str, Any]:
         return self.build_model().model_dump(by_alias=True, exclude_none=True)
@@ -153,6 +174,7 @@ __all__ = [
     "ScheduleDagSpec",
     "ScheduleTemplateKey",
     "MailScheduleTemplateParams",
+    "PostPublishTemplateParams",
     "ScheduleCompileRequest",
     "ScheduleCompileResult",
     "ScheduleDagBuilder",

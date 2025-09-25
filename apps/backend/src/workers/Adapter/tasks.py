@@ -10,11 +10,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from apps.backend.src.core.config import settings
-from apps.backend.src.modules.common.enums import VariantStatus
+from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant
 from apps.backend.src.modules.adapters.service import compile_variant
 from apps.backend.src.core.context import get_persona_account_id
+from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
+from apps.backend.src.modules.adapters.core.types import PublishResult, RenderedVariantBlocks
 
 _ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=_ENGINE, autocommit=False, autoflush=False)
@@ -115,3 +117,33 @@ def compile_draft_variant(
             "variant_id": variant_id,
             "status": variant.status.value,
         }
+
+
+async def publish_variant_with_adapter(
+    *,
+    platform: PlatformKind,
+    rendered_blocks: RenderedVariantBlocks | None,
+    caption: Optional[str],
+    credentials: dict,
+    options: Optional[dict] = None,
+) -> PublishResult:
+    """Publish a rendered variant using the registered adapter.
+
+    This helper wraps the adapter registry so other modules (e.g. orchestrator
+    operators) do not need to instantiate adapters directly.
+    """
+
+    adapter = ADAPTER_REGISTRY.create_instance(platform)
+    return await adapter.publish(
+        rendered_blocks,
+        caption,
+        credentials=credentials,
+        options=options,
+    )
+
+
+__all__ = [
+    "enqueue_variant_compile",
+    "compile_draft_variant",
+    "publish_variant_with_adapter",
+]
