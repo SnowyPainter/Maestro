@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+import asyncio
 
 from celery import shared_task
 import httpx
 import logging
 logger = logging.getLogger(__name__)
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -18,6 +19,8 @@ _engine = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=_engine, autocommit=False, autoflush=False)
 
 from apps.backend.src.modules.trends.models import Trend, NewsItem  # type: ignore
+from apps.backend.src.modules.mail.service import poll_mailbox
+from apps.backend.src.modules.scheduler.models import Schedule, ScheduleStatus
 
 # Pydantic 스키마 & 수집 함수
 from apps.backend.src.modules.trends.schemas import TrendItem
@@ -136,3 +139,53 @@ def sniff_reddit_trends(self, subreddit: str = "all", max_items: int | None = No
         return {"ok": False, "reason": "unexpected_error"}
 
     return _process_trends_response(resp, source=f"reddit:{target}")
+
+@shared_task(name="apps.backend.src.workers.Sniffer.tasks.sniff_mailbox", queue="sniffer", bind=True, max_retries=3)
+def sniff_mailbox(self):
+    """Mailbox 수집"""
+    try:
+        messages = asyncio.run(poll_mailbox())
+    except Exception as exc:
+        logger.exception("Mailbox poll failed")
+        raise self.retry(exc=exc, countdown=min(60 * (self.request.retries + 1), 600))
+
+    if not messages:
+        return {"ok": True, "processed": 0}
+
+    processed = 0
+    with SessionLocal() as session:
+        for item in messages:
+            pipeline_id = item.get("pipeline_id")
+            event_payload = item.get("event")
+            if not pipeline_id or not event_payload:
+                continue
+
+            schedule: Schedule | None = (
+                session.execute(
+                    select(Schedule).where(Schedule.context["pipeline_id"].astext == pipeline_id)
+                ).scalars().first()
+            )
+            if not schedule:
+                logger.debug("No schedule awaiting pipeline %s", pipeline_id)
+                continue
+
+            context = schedule.context or {}
+            resume_bucket = context.get("_resume") or {}
+            resume_bucket["event"] = event_payload
+            context["_resume"] = resume_bucket
+            context["pipeline_id"] = pipeline_id
+            context["reply_received"] = True
+            if item.get("metadata"):
+                context["reply_metadata"] = item["metadata"]
+
+            schedule.context = context
+            schedule.status = ScheduleStatus.RUNNING.value
+            schedule.due_at = datetime.utcnow()
+            schedule.last_error = None
+            schedule.errors = None
+            session.add(schedule)
+            processed += 1
+
+        session.commit()
+
+    return {"ok": True, "processed": processed}

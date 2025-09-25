@@ -6,7 +6,7 @@ from apps.backend.src.orchestrator.bff_router import router as orchestrator_bff_
 from apps.backend.src.orchestrator.chat_router import router as orchestrator_chat_router
 from apps.backend.src.orchestrator.action_router import router as orchestrator_action_router
 from apps.backend.src.orchestrator.helper_router import router as orchestrator_helper_router
-from apps.backend.src.orchestrator.webhooks.mail import router as orchestrator_mail_router
+from apps.backend.src.orchestrator.internal_router import router as orchestrator_internal_router
 from apps.backend.src.core.logging import setup_logging
 
 from apps.backend.src.core.config import settings
@@ -41,14 +41,15 @@ app.add_middleware(ContextMiddleware)
 
 # BFF 라우터(오케스트레이터 기반) 등록
 api.include_router(orchestrator_bff_router, prefix="/bff")
+# Action 라우터(오케스트레이터 기반) 등록
 api.include_router(orchestrator_action_router, prefix="/orchestrator")
+# Internal 라우터(오케스트레이터 기반) 등록 (절대로 하지마라잉!)
+# api.include_router(orchestrator_internal_router, prefix="/orchestrator")
 
 # Orchestrator 라우터 등록
 api.include_router(orchestrator_auth_router, prefix="/orchestrator")
 api.include_router(orchestrator_chat_router, prefix="/orchestrator")
 api.include_router(orchestrator_helper_router, prefix="/orchestrator")
-
-api.include_router(orchestrator_mail_router, prefix="/webhooks")
 
 # 헬스체크도 api 아래로
 @api.get("/health")

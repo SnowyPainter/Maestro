@@ -1,0 +1,41 @@
+@startuml
+actor Recipient
+participant Scheduler as "Scheduler DB"
+participant CoWorker as "CoWorker Worker"
+participant Orchestrator
+participant ComposeFlow as "internal.mail.compose_trends_email"
+participant Mailer
+participant Mailbox as "IMAP Mailbox"
+participant Sniffer as "Sniffer Worker"
+participant IngestFlow as "internal.event.mail.ingest_draft_mail"
+participant Drafts as "drafts.create"
+
+== Compose & Suspend ==
+CoWorker -> Scheduler : pick due schedule (dag_spec)
+CoWorker -> Orchestrator : run node compose
+Orchestrator -> ComposeFlow : orchestrate
+ComposeFlow -> Mailer : send trends email (pipeline_id)
+Mailer -> Recipient : deliver message
+ComposeFlow --> Orchestrator : result (pipeline_id)
+Orchestrator --> CoWorker : node outcome
+CoWorker -> Orchestrator : run node await_reply
+Orchestrator -> CoWorker : ScheduleReschedule(wait)
+CoWorker -> Scheduler : context ← {pipeline_id, wait_state}
+
+== Polling Reply ==
+Sniffer -> Mailbox : poll unseen mail via IMAP
+Mailbox --> Sniffer : reply with pipeline_id
+Sniffer -> Scheduler : context._resume.event ← reply
+Sniffer -> Scheduler : set status RUNNING, due_at ← now
+
+== Resume DAG ==
+CoWorker -> Scheduler : pick resumed schedule
+CoWorker -> Orchestrator : run node ingest_reply
+Orchestrator -> IngestFlow : orchestrate
+IngestFlow -> Drafts : orchestrate draft creation
+Drafts --> IngestFlow : draft created
+IngestFlow -> Mailer : send confirmation
+IngestFlow --> Orchestrator : ingest result
+Orchestrator --> CoWorker : node outcome
+CoWorker -> Scheduler : mark DONE, persist results
+@enduml

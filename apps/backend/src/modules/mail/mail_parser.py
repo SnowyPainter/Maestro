@@ -1,7 +1,7 @@
-#apps.backend.src.modules.scheduler.mail_parser.py
+#apps.backend.src.modules.mail.mail_parser.py
 from ast import Tuple
 from apps.backend.src.modules.drafts.schemas import DraftIR, BlockText, BlockImage, BlockVideo
-from apps.backend.src.modules.scheduler.schemas import EmailMetadata
+from apps.backend.src.modules.mail.schemas import EmailMetadata
 
 def extract_pipeline_id(subject: str) -> str | None:
     """
