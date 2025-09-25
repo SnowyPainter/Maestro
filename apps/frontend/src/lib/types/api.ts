@@ -453,7 +453,7 @@ export interface paths {
         };
         /**
          * List All Drafts
-         * @description List all drafts, Show my drafts
+         * @description List all drafts, Show my draft list
          */
         get: operations["bff_drafts_list_drafts_api_bff_drafts_get"];
         put?: never;
