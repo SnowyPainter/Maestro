@@ -3101,7 +3101,7 @@ export function useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet<TData = A
 
 
 /**
- * Retrieve rendered payload for a specific platform variant
+ * Get compiled draft of a specific platform variant
  * @summary Get Draft Variant Detail
  */
 export const bffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet = (
@@ -3197,7 +3197,7 @@ export function useBffDraftsReadVariantApiBffDraftsDraftIdVariantsPlatformGet<TD
 
 
 /**
- * Retrieve rendered payload for a variant by its ID
+ * Get compiled draft of a variant by its ID
  * @summary Get Draft Variant by ID
  */
 export const bffDraftsReadVariantByIdApiBffDraftsVariantsVariantIdGet = (
@@ -3375,7 +3375,7 @@ export function useBffDraftsReadDraftApiBffDraftsDraftIdGet<TData = Awaited<Retu
 
 
 /**
- * Get paginated list of all content drafts for content management dashboard
+ * List all drafts, Show my draft list
  * @summary List All Drafts
  */
 export const bffDraftsListDraftsApiBffDraftsGet = (

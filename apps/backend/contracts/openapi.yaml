@@ -734,7 +734,7 @@ paths:
       - ui
       - frontend
       summary: Get Draft Variant Detail
-      description: Retrieve rendered payload for a specific platform variant
+      description: Get compiled draft of a specific platform variant
       operationId: bff_drafts_read_variant_api_bff_drafts__draft_id__variants__platform__get
       parameters:
       - name: draft_id
@@ -773,7 +773,7 @@ paths:
       - ui
       - frontend
       summary: Get Draft Variant by ID
-      description: Retrieve rendered payload for a variant by its ID
+      description: Get compiled draft of a variant by its ID
       operationId: bff_drafts_read_variant_by_id_api_bff_drafts_variants__variant_id__get
       parameters:
       - name: variant_id
@@ -841,8 +841,7 @@ paths:
       - dashboard
       - pagination
       summary: List All Drafts
-      description: Get paginated list of all content drafts for content management
-        dashboard
+      description: List all drafts, Show my draft list
       operationId: bff_drafts_list_drafts_api_bff_drafts_get
       parameters:
       - name: campaign_id

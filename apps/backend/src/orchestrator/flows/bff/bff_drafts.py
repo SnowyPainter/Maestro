@@ -451,7 +451,7 @@ def _flow_bff_list_draft_variants(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.drafts.read_variant",
     title="Get Draft Variant Detail",
-    description="Retrieve rendered payload for a specific platform variant",
+    description="Get compiled draft of a specific platform variant",
     input_model=DraftVariantDetailPayload,
     output_model=DraftVariantRenderDetail,
     method="get",
@@ -465,7 +465,7 @@ def _flow_bff_read_draft_variant(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.drafts.read_variant_by_id",
     title="Get Draft Variant by ID",
-    description="Retrieve rendered payload for a variant by its ID",
+    description="Get compiled draft of a variant by its ID",
     input_model=DraftVariantByIdPayload,
     output_model=DraftVariantRenderDetail,
     method="get",
@@ -493,7 +493,7 @@ def _flow_bff_read_draft(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.drafts.list_drafts",
     title="List All Drafts",
-    description="Get paginated list of all content drafts for content management dashboard",
+    description="List all drafts, Show my draft list",
     input_model=DraftListPayload,
     output_model=DraftList,
     method="get",

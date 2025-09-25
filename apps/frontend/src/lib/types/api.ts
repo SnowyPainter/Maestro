@@ -393,7 +393,7 @@ export interface paths {
         };
         /**
          * Get Draft Variant Detail
-         * @description Retrieve rendered payload for a specific platform variant
+         * @description Get compiled draft of a specific platform variant
          */
         get: operations["bff_drafts_read_variant_api_bff_drafts__draft_id__variants__platform__get"];
         put?: never;
@@ -413,7 +413,7 @@ export interface paths {
         };
         /**
          * Get Draft Variant by ID
-         * @description Retrieve rendered payload for a variant by its ID
+         * @description Get compiled draft of a variant by its ID
          */
         get: operations["bff_drafts_read_variant_by_id_api_bff_drafts_variants__variant_id__get"];
         put?: never;
@@ -453,7 +453,7 @@ export interface paths {
         };
         /**
          * List All Drafts
-         * @description Get paginated list of all content drafts for content management dashboard
+         * @description List all drafts, Show my drafts
          */
         get: operations["bff_drafts_list_drafts_api_bff_drafts_get"];
         put?: never;

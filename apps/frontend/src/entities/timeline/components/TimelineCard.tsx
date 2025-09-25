@@ -14,7 +14,7 @@ interface TimelineCardProps {
 }
 
 export const TimelineCard: React.FC<TimelineCardProps> = ({ events, title = "Timeline" }) => {
-  const [scale, setScale] = useState<TimelineScale>('3h');
+  const [scale, setScale] = useState<TimelineScale>('1d');
 
   const allSources = useMemo(() => {
     const sources = new Set(events.map(e => e.source));
