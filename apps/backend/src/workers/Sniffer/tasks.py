@@ -8,7 +8,7 @@ import httpx
 import logging
 logger = logging.getLogger(__name__)
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import String, cast, create_engine, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -160,9 +160,10 @@ def sniff_mailbox(self):
             if not pipeline_id or not event_payload:
                 continue
 
+            pipeline_match = cast(Schedule.context["pipeline_id"], String)
             schedule: Schedule | None = (
                 session.execute(
-                    select(Schedule).where(Schedule.context["pipeline_id"].astext == pipeline_id)
+                    select(Schedule).where(pipeline_match == pipeline_id)
                 ).scalars().first()
             )
             if not schedule:
