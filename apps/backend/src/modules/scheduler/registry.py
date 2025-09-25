@@ -154,7 +154,7 @@ def _build_post_publish_template(request: "ScheduleCompileRequest") -> "Schedule
         platform=params.platform.value,
     )
     builder.add_node(
-        "internal.posts.publish_variant",
+        "drafts.publish_variant",
         node_id="publish",
         post_publication_id=payload_ref("post_publication_id"),
         persona_account_id=payload_ref("persona_account_id"),
@@ -168,6 +168,7 @@ register_template(
         title="Persona Trends Mail with Reply",
         description="Send persona-adapted trends email and await reply to ingest draft",
         builder=_build_mail_trends_with_reply,
+        visibility=TemplateVisibility.PUBLIC,
     )
 )
 
@@ -177,7 +178,7 @@ register_template(
         title="Publish Draft Variant",
         description="Publish a compiled draft variant via platform adapter",
         builder=_build_post_publish_template,
-        visibility=TemplateVisibility.SYSTEM,
+        visibility=TemplateVisibility.ADVANCED,
     )
 )
 

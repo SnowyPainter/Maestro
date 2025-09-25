@@ -1812,6 +1812,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/variants/ready:
+    put:
+      tags:
+      - action
+      - action
+      - drafts
+      - variants
+      - publication
+      - schedule
+      summary: Toggle Ready For Post
+      description: Mark or unmark a draft variant as ready for publishing with scheduling
+      operationId: drafts_toggle_ready_api_orchestrator_drafts_variants_ready_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftVariantReadyCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPublicationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/drafts/variants/publish:
+    post:
+      tags:
+      - action
+      - action
+      - drafts
+      - variants
+      - publication
+      - schedule
+      summary: Publish Scheduled Variant
+      description: Execute a scheduled publish for a draft variant
+      operationId: drafts_publish_variant_api_orchestrator_drafts_variants_publish_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishVariantPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPublicationOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/insights:
     post:
       tags:
@@ -2875,6 +2937,28 @@ components:
       required:
       - ir
       title: DraftUpdateCommand
+    DraftVariantReadyCommand:
+      properties:
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        ready:
+          type: boolean
+          title: Ready
+        scheduled_at:
+          title: Scheduled At
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+      required:
+      - platform
+      - ready
+      title: DraftVariantReadyCommand
     DraftVariantRender:
       properties:
         variant_id:
@@ -4164,6 +4248,19 @@ components:
       - cancelled
       - monitoring
       title: PostStatus
+    PublishVariantPayload:
+      properties:
+        post_publication_id:
+          type: integer
+          title: Post Publication Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+      type: object
+      required:
+      - post_publication_id
+      - persona_account_id
+      title: PublishVariantPayload
     RenderedMediaItem:
       properties:
         type:

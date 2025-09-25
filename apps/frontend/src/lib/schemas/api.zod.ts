@@ -1487,6 +1487,70 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
 
 
 /**
+ * Mark or unmark a draft variant as ready for publishing with scheduling
+ * @summary Toggle Ready For Post
+ */
+export const draftsToggleReadyApiOrchestratorDraftsVariantsReadyPutBody = zod.object({
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "ready": zod.boolean(),
+  "scheduled_at": zod.iso.datetime({}).nullish()
+})
+
+export const draftsToggleReadyApiOrchestratorDraftsVariantsReadyPutResponse = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * Execute a scheduled publish for a draft variant
+ * @summary Publish Scheduled Variant
+ */
+export const draftsPublishVariantApiOrchestratorDraftsVariantsPublishPostBody = zod.object({
+  "post_publication_id": zod.number(),
+  "persona_account_id": zod.number()
+})
+
+export const draftsPublishVariantApiOrchestratorDraftsVariantsPublishPostResponse = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
  * Ingest new insight data for analysis and trend detection
  * @summary Process and Store Insight Data
  */

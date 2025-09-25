@@ -96,6 +96,7 @@ slots:
   - bff.drafts.read_draft
   - bff.drafts.read_variant
   - drafts.delete
+  - drafts.toggle_ready
   - drafts.update_ir
 - name: end
   label: End
@@ -239,6 +240,7 @@ slots:
   - bff.timeline.campaigns
   - bff.timeline.post_publications
   - bff.timeline.trends
+  - drafts.publish_variant
 - name: persona_id
   label: Persona Id
   description: Target a specific persona id
@@ -261,6 +263,7 @@ slots:
   - bff.drafts.list_post_publications_by_platform
   - bff.drafts.list_variants_by_platform
   - bff.drafts.read_variant
+  - drafts.toggle_ready
   - insights.ingest
 - name: platform_post_id
   label: Platform Post Id
@@ -273,6 +276,7 @@ slots:
   description: Target a specific post publication id
   value_type: integer
   flows:
+  - drafts.publish_variant
   - insights.ingest
 - name: post_publish
   label: Post Publish
@@ -299,6 +303,12 @@ slots:
   value_type: string
   flows:
   - insights.ingest
+- name: ready
+  label: Ready
+  description: Filter by ready
+  value_type: boolean
+  flows:
+  - drafts.toggle_ready
 - name: repeat_interval_minutes
   label: Repeat Interval Minutes
   description: Filter by repeat interval minutes
@@ -317,6 +327,12 @@ slots:
   value_type: string
   flows:
   - action.schedule.create_from_template
+- name: scheduled_at
+  label: Scheduled At
+  description: Filter by scheduled at
+  value_type: string
+  flows:
+  - drafts.toggle_ready
 - name: scope
   label: Scope
   description: Filter by scope

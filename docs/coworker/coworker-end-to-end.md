@@ -161,10 +161,10 @@ spec = builder.build()
 - **`TemplateVisibility`**: 템플릿 노출 수준을 표현한다.
   - `public`: 사용자에게 노출되는 일반 템플릿.
   - `advanced`: 고급 사용자를 위한 템플릿(향후 확장용).
-  - `system`: 내부 오케스트레이션에서만 사용하는 템플릿. API 응답에는 포함되지만 UI에서는 숨길 수 있다.
+  - `system`: 내부 오케스트레이션에서만 사용하는 템플릿.
 - **`ScheduleTemplateDefinition`**: 키, 설명, 빌더, visibility를 묶은 구조체. 모든 템플릿은 이 정의를 통해 등록된다.
 
-`GET /actions/schedules/templates` 호출 시 모든 템플릿과 함께 `visibility` 정보가 반환된다. 사용자는 `visibility`가 `public`인 템플릿만 선택적으로 노출하거나, `system` 템플릿을 참조해 내부 자동화(Draft publish 토글 등)에 활용할 수 있다. 또한 `ScheduleTemplateKey`와 파라미터를 직접 지정하면 API를 통해 동일한 DAG를 생성할 수 있으므로, 향후 "사용자가 직접 DAG를 작성"하는 시나리오와도 호환된다.
+`GET /actions/schedules/templates` 호출 시 모든 템플릿과 함께 `visibility` 정보가 반환된다. 사용자는 `visibility`가 `public`인 템플릿만 선택적으로 노출하고, `advanced` 템플릿(예: `post.publish`)은 전문가/자동화 용도로 숨긴 채 사용하거나, 필요 시 노출 여부를 선택할 수 있다. 또한 `ScheduleTemplateKey`와 파라미터를 직접 지정하면 API를 통해 동일한 DAG를 생성할 수 있으므로, 향후 "사용자가 직접 DAG를 작성"하는 시나리오와도 호환된다.
 
 ## 6. DagExecutor와 실행 흐름
 

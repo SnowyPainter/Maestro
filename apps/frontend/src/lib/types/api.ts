@@ -856,6 +856,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/drafts/variants/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Toggle Ready For Post
+         * @description Mark or unmark a draft variant as ready for publishing with scheduling
+         */
+        put: operations["drafts_toggle_ready_api_orchestrator_drafts_variants_ready_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/drafts/variants/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publish Scheduled Variant
+         * @description Execute a scheduled publish for a draft variant
+         */
+        post: operations["drafts_publish_variant_api_orchestrator_drafts_variants_publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/insights": {
         parameters: {
             query?: never;
@@ -1502,6 +1542,19 @@ export interface components {
             goal?: string | null;
             /** Campaign Id */
             campaign_id?: number | null;
+        };
+        /** DraftVariantReadyCommand */
+        DraftVariantReadyCommand: {
+            /** Draft Id */
+            draft_id?: number | null;
+            platform: components["schemas"]["PlatformKind"];
+            /** Ready */
+            ready: boolean;
+            /**
+             * Scheduled At
+             * Format: date-time
+             */
+            scheduled_at?: string | null;
         };
         /** DraftVariantRender */
         DraftVariantRender: {
@@ -2254,6 +2307,13 @@ export interface components {
          * @enum {string}
          */
         PostStatus: "pending" | "scheduled" | "published" | "deleted" | "failed" | "cancelled" | "monitoring";
+        /** PublishVariantPayload */
+        PublishVariantPayload: {
+            /** Post Publication Id */
+            post_publication_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+        };
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**
@@ -4117,6 +4177,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    drafts_toggle_ready_api_orchestrator_drafts_variants_ready_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftVariantReadyCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostPublicationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    drafts_publish_variant_api_orchestrator_drafts_variants_publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishVariantPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostPublicationOut"];
                 };
             };
             /** @description Validation Error */

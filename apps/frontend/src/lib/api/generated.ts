@@ -302,6 +302,16 @@ export interface DraftUpdateCommand {
   campaign_id?: DraftUpdateCommandCampaignId;
 }
 
+export type DraftVariantReadyCommandDraftId = number | null;
+
+export interface DraftVariantReadyCommand {
+  draft_id?: DraftVariantReadyCommandDraftId;
+  platform: PlatformKind;
+  ready: boolean;
+  /** @nullable */
+  scheduled_at?: string | null;
+}
+
 export type DraftVariantRenderRenderedBlocks = RenderedVariantBlocks | null;
 
 export type DraftVariantRenderWarnings = string[] | null;
@@ -982,6 +992,11 @@ export const PostStatus = {
   cancelled: 'cancelled',
   monitoring: 'monitoring',
 } as const;
+
+export interface PublishVariantPayload {
+  post_publication_id: number;
+  persona_account_id: number;
+}
 
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
 
@@ -5070,6 +5085,137 @@ export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPV
       > => {
 
       const mutationOptions = getDraftsDeleteApiOrchestratorDraftsDraftIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Mark or unmark a draft variant as ready for publishing with scheduling
+ * @summary Toggle Ready For Post
+ */
+export const draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut = (
+    draftVariantReadyCommand: DraftVariantReadyCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<PostPublicationOut>(
+      {url: `/api/orchestrator/drafts/variants/ready`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: draftVariantReadyCommand
+    },
+      options);
+    }
+  
+
+
+export const getDraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, TError,{data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, TError,{data: DraftVariantReadyCommand}, TContext> => {
+
+const mutationKey = ['draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, {data: DraftVariantReadyCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationResult = NonNullable<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>>
+    export type DraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationBody = DraftVariantReadyCommand
+    export type DraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationError = HTTPValidationError
+
+    /**
+ * @summary Toggle Ready For Post
+ */
+export const useDraftsToggleReadyApiOrchestratorDraftsVariantsReadyPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, TError,{data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>,
+        TError,
+        {data: DraftVariantReadyCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getDraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Execute a scheduled publish for a draft variant
+ * @summary Publish Scheduled Variant
+ */
+export const draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost = (
+    publishVariantPayload: PublishVariantPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PostPublicationOut>(
+      {url: `/api/orchestrator/drafts/variants/publish`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: publishVariantPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getDraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, TError,{data: PublishVariantPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, TError,{data: PublishVariantPayload}, TContext> => {
+
+const mutationKey = ['draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, {data: PublishVariantPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationResult = NonNullable<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>>
+    export type DraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationBody = PublishVariantPayload
+    export type DraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Publish Scheduled Variant
+ */
+export const useDraftsPublishVariantApiOrchestratorDraftsVariantsPublishPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, TError,{data: PublishVariantPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>,
+        TError,
+        {data: PublishVariantPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getDraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
