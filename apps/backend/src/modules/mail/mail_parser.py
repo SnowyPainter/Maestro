@@ -1,5 +1,5 @@
 #apps.backend.src.modules.mail.mail_parser.py
-from ast import Tuple
+from typing import Tuple
 from apps.backend.src.modules.drafts.schemas import DraftIR, BlockText, BlockImage, BlockVideo
 from apps.backend.src.modules.mail.schemas import EmailMetadata
 
@@ -9,14 +9,16 @@ def extract_pipeline_id(subject: str) -> str | None:
     [PIPELINE #pipeline_id] 패턴을 찾습니다.
     """
     import re
-    match = re.search(r'\[PIPELINE\s*#(\d+)\]', subject)
+    # 영문자, 숫자, 특수문자를 모두 포함하는 패턴으로 변경
+    match = re.search(r'\[PIPELINE\s*#([a-zA-Z0-9]+[a-zA-Z0-9]*)\]', subject)
     return match.group(1) if match else None
 
 def parse_email_metadata(text: str) -> EmailMetadata:
     import re
 
     metadata = {"settings": {}}
-    content = text.strip()
+    raw_text = text
+    content = raw_text.strip()
 
     # 설정세팅 파싱 (coworker@key:"value" 형식)
     settings_pattern = r'coworker@(\w+):"([^"]*)"'
@@ -27,12 +29,12 @@ def parse_email_metadata(text: str) -> EmailMetadata:
         content = re.sub(rf'coworker@{key}:"{re.escape(value)}"', '', content)
 
     # settings에서 우선적으로 메타데이터 추출
-    metadata["title"] = metadata["settings"].get("title", metadata.get("title"))
+    metadata["title"] = metadata["settings"].get("title", "Untitled Email")
     metadata["tags"] = metadata["settings"].get("tags",
-        [tag.strip() for tag in metadata["settings"].get("tags", "").split(",") if tag.strip()] if metadata["settings"].get("tags") else metadata.get("tags", []))
-    
-    pipeline_id = extract_pipeline_id(content) or metadata["settings"].get("pipeline_id")
-    metadata["pipeline_id"] = pipeline_id
+        [tag.strip() for tag in metadata["settings"].get("tags", "").split(",") if tag.strip()] if metadata["settings"].get("tags") else [])
+
+    pipeline_id = extract_pipeline_id(raw_text) or metadata["settings"].get("pipeline_id")
+    metadata["pipeline_id"] = pipeline_id or "default"
 
     return EmailMetadata(**metadata)
 

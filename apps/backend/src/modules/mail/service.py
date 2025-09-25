@@ -134,19 +134,18 @@ def _poll_mailbox_sync(limit: int) -> list[Dict[str, Any]]:
         with imaplib.IMAP4_SSL(host, settings.MAIL_IMAP_PORT) as imap:
             imap.login(user, password)
             imap.select(folder)
-
+    
             status, data = imap.search(None, "UNSEEN")
             if status != "OK" or not data:
                 return []
 
             message_ids = data[0].split()
-            for msg_id in message_ids[:limit]:
+            for msg_id in reversed(message_ids[-limit:]):
                 status, msg_data = imap.fetch(msg_id, "(RFC822)")
                 if status != "OK" or not msg_data:
                     continue
                 raw_email = msg_data[0][1]
                 message = email.message_from_bytes(raw_email)
-
                 subject = _decode_header(message.get("Subject", ""))
                 from_email = parseaddr(message.get("From", ""))[1]
                 if not from_email:
@@ -161,11 +160,10 @@ def _poll_mailbox_sync(limit: int) -> list[Dict[str, Any]]:
                 try:
                     _, metadata = parse_mail_body(body_text)
                     pipeline_id = metadata.pipeline_id
-                except Exception:
+                except Exception as e:
                     logger.debug("Failed to parse pipeline metadata from mail", exc_info=True)
 
                 if not pipeline_id:
-                    # Skip messages that are not associated with any pipeline
                     imap.store(msg_id, "+FLAGS", "\\Seen")
                     continue
 
