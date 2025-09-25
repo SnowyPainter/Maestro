@@ -5183,6 +5183,72 @@ export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValida
     }
     
 /**
+ * Generate a schedule DAG specification from higher level template parameters
+ * @summary Compile Schedule DAG
+ */
+export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost = (
+    scheduleCompileRequest: ScheduleCompileRequest,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ScheduleCompileResult>(
+      {url: `/api/orchestrator/actions/schedules/compile`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: scheduleCompileRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, TError,{data: ScheduleCompileRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, TError,{data: ScheduleCompileRequest}, TContext> => {
+
+const mutationKey = ['actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, {data: ScheduleCompileRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>>
+    export type ActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationBody = ScheduleCompileRequest
+    export type ActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Compile Schedule DAG
+ */
+export const useActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, TError,{data: ScheduleCompileRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>,
+        TError,
+        {data: ScheduleCompileRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * Return metadata about available schedule templates
  * @summary List Available Schedule Templates
  */
@@ -5271,72 +5337,6 @@ export function useActionScheduleListTemplatesApiOrchestratorActionsSchedulesTem
 
 
 
-/**
- * Generate a schedule DAG specification from higher level template parameters
- * @summary Compile Schedule DAG
- */
-export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost = (
-    scheduleCompileRequest: ScheduleCompileRequest,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<ScheduleCompileResult>(
-      {url: `/api/orchestrator/actions/schedules/compile`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: scheduleCompileRequest, signal
-    },
-      options);
-    }
-  
-
-
-export const getActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, TError,{data: ScheduleCompileRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, TError,{data: ScheduleCompileRequest}, TContext> => {
-
-const mutationKey = ['actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, {data: ScheduleCompileRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>>
-    export type ActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationBody = ScheduleCompileRequest
-    export type ActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationError = HTTPValidationError
-
-    /**
- * @summary Compile Schedule DAG
- */
-export const useActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>, TError,{data: ScheduleCompileRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePost>>,
-        TError,
-        {data: ScheduleCompileRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getActionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
 /**
  * Create one or multiple schedules from a template and timing options
  * @summary Schedule Template Instances

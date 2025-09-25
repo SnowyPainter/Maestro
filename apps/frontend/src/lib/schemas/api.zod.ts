@@ -1570,19 +1570,6 @@ export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
 
 
 /**
- * Return metadata about available schedule templates
- * @summary List Available Schedule Templates
- */
-export const actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetResponse = zod.object({
-  "templates": zod.array(zod.object({
-  "key": zod.enum(['mail.trends_with_reply']).describe('Pre-defined template identifiers.'),
-  "title": zod.string(),
-  "description": zod.string()
-}))
-})
-
-
-/**
  * Generate a schedule DAG specification from higher level template parameters
  * @summary Compile Schedule DAG
  */
@@ -1616,6 +1603,19 @@ export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompile
 }),
   "payload": zod.record(zod.string(), zod.any()).optional()
 }).describe('Full DAG specification including optional schedule payload.')
+})
+
+
+/**
+ * Return metadata about available schedule templates
+ * @summary List Available Schedule Templates
+ */
+export const actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetResponse = zod.object({
+  "templates": zod.array(zod.object({
+  "key": zod.enum(['mail.trends_with_reply']).describe('Pre-defined template identifiers.'),
+  "title": zod.string(),
+  "description": zod.string()
+}))
 })
 
 

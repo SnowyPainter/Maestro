@@ -64,34 +64,9 @@ _TEMPLATE_DEFINITIONS = {
     )
 }
 
-
-@operator(
-    key="action.schedule.list_templates",
-    title="List Schedule Templates",
-    side_effect="read",
-)
-async def op_list_schedule_templates(
-    payload: _EmptyPayload,
-    ctx: TaskContext,
-) -> ListScheduleTemplatesResult:
-    return ListScheduleTemplatesResult(templates=list(_TEMPLATE_DEFINITIONS.values()))
-
-
-@FLOWS.flow(
-    key="action.schedule.list_templates",
-    title="List Available Schedule Templates",
-    description="Return metadata about available schedule templates",
-    input_model=_EmptyPayload,
-    output_model=ListScheduleTemplatesResult,
-    method="get",
-    path="/actions/schedules/templates",
-    tags=("action", "schedule", "templates"),
-)
-def _flow_list_templates(builder: FlowBuilder):
-    task = builder.task("list_templates", "action.schedule.list_templates")
-    builder.expect_terminal(task)
-
-
+"""
+컴파일은 나중에 쓸 듯
+"""
 @operator(
     key="action.schedule.compile_template",
     title="Compile Schedule Template",
@@ -118,6 +93,32 @@ def _flow_compile_schedule(builder: FlowBuilder):
     task = builder.task("compile_template", "action.schedule.compile_template")
     builder.expect_terminal(task)
 
+
+@operator(
+    key="action.schedule.list_templates",
+    title="List Schedule Templates",
+    side_effect="read",
+)
+async def op_list_schedule_templates(
+    payload: _EmptyPayload,
+    ctx: TaskContext,
+) -> ListScheduleTemplatesResult:
+    return ListScheduleTemplatesResult(templates=list(_TEMPLATE_DEFINITIONS.values()))
+
+
+@FLOWS.flow(
+    key="action.schedule.list_templates",
+    title="List Available Schedule Templates",
+    description="Return metadata about available schedule templates",
+    input_model=_EmptyPayload,
+    output_model=ListScheduleTemplatesResult,
+    method="get",
+    path="/actions/schedules/templates",
+    tags=("action", "schedule", "templates"),
+)
+def _flow_list_templates(builder: FlowBuilder):
+    task = builder.task("list_templates", "action.schedule.list_templates")
+    builder.expect_terminal(task)
 
 @operator(
     key="action.schedule.create_from_template",

@@ -896,26 +896,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/actions/schedules/templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Available Schedule Templates
-         * @description Return metadata about available schedule templates
-         */
-        get: operations["action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/actions/schedules/compile": {
         parameters: {
             query?: never;
@@ -930,6 +910,26 @@ export interface paths {
          * @description Generate a schedule DAG specification from higher level template parameters
          */
         post: operations["action_schedule_compile_template_api_orchestrator_actions_schedules_compile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Available Schedule Templates
+         * @description Return metadata about available schedule templates
+         */
+        get: operations["action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4200,26 +4200,6 @@ export interface operations {
             };
         };
     };
-    action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListScheduleTemplatesResult"];
-                };
-            };
-        };
-    };
     action_schedule_compile_template_api_orchestrator_actions_schedules_compile_post: {
         parameters: {
             query?: never;
@@ -4249,6 +4229,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListScheduleTemplatesResult"];
                 };
             };
         };

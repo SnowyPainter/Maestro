@@ -1889,23 +1889,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/actions/schedules/templates:
-    get:
-      tags:
-      - action
-      - action
-      - schedule
-      - templates
-      summary: List Available Schedule Templates
-      description: Return metadata about available schedule templates
-      operationId: action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListScheduleTemplatesResult'
   /api/orchestrator/actions/schedules/compile:
     post:
       tags:
@@ -1937,6 +1920,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/templates:
+    get:
+      tags:
+      - action
+      - action
+      - schedule
+      - templates
+      summary: List Available Schedule Templates
+      description: Return metadata about available schedule templates
+      operationId: action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListScheduleTemplatesResult'
   /api/orchestrator/actions/schedules/create:
     post:
       tags:

@@ -18,6 +18,14 @@ class ScheduleStatus(str, Enum):
     CANCELLED = "cancelled"
 
 class Schedule(Base):
+    """Stateful automation entry executed by CoWorker via DagExecutor.
+
+    A schedule records *when* and *how* to run an automated interaction. The
+    DAG definition (`dag_spec`) describes the flows to execute, while runtime
+    context captures progress (e.g. `_dag.results`, `_resume`). Downstream
+    artefacts such as `PostPublication` reference the actual published content
+    and do not overlap with this scheduling layer.
+    """
     __tablename__ = "schedules"
     id = Column(Integer, primary_key=True)
     # 필수 사용자가 입력
@@ -48,6 +56,36 @@ class Schedule(Base):
     def context_data(self) -> dict[str, Any]:
         """Return context as dict, guarding against None."""
         return self.context or {}
+
+    @property
+    def timeline_label(self) -> str | None:
+        """Human-friendly identifier derived from dag_spec metadata.
+
+        Timeline views can call this helper to obtain a descriptive tag
+        without hard-coding schedule IDs. To populate it, include a
+        top-level ``meta`` block or ``dag.meta`` block in dag_spec, e.g.
+
+        {"meta": {"label": "mail.compose"}, "dag": {...}}
+        """
+
+        if not isinstance(self.dag_spec, dict):
+            return None
+
+        meta = self.dag_spec.get("meta")
+        if isinstance(meta, dict):
+            label = meta.get("label") or meta.get("kind")
+            if isinstance(label, str):
+                return label
+
+        dag = self.dag_spec.get("dag") if isinstance(self.dag_spec, dict) else None
+        if isinstance(dag, dict):
+            dag_meta = dag.get("meta")
+            if isinstance(dag_meta, dict):
+                label = dag_meta.get("label") or dag_meta.get("kind")
+                if isinstance(label, str):
+                    return label
+
+        return None
 
 
 class CoWorkerLease(Base):
