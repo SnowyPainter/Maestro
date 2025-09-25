@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -29,6 +30,21 @@ from apps.backend.src.modules.scheduler.schemas import (
     ScheduleTemplateKey,
 )
 
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+async def _load_owned_draft(
+    db: AsyncSession,
+    *,
+    variant_id: int,
+    owner_user_id: int,
+) -> DraftVariant:
+    variant: DraftVariant | None = await db.get(DraftVariant, variant_id)
+    if variant is None:
+        raise HTTPException(status_code=404, detail="Variant not found")
+    if variant.draft_owner_id != owner_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return variant
 
 def _all_platforms() -> tuple[PlatformKind, ...]:
     return tuple(PlatformKind)
@@ -36,11 +52,6 @@ def _all_platforms() -> tuple[PlatformKind, ...]:
 
 def _supported_compile_platforms() -> set[PlatformKind]:
     return set(ADAPTER_REGISTRY.get_all().keys())
-
-
-def _now() -> datetime:
-    return datetime.utcnow()
-
 
 def _normalize_schedule(dt: datetime) -> datetime:
     if dt.tzinfo is None:

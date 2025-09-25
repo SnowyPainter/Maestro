@@ -2,20 +2,11 @@
 from datetime import datetime
 from typing import Any
 
-from enum import Enum
-
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import relationship
 
 from apps.backend.src.core.db import Base
-
-class ScheduleStatus(str, Enum):
-    PENDING = "pending"
-    ENQUEUED = "enqueued"
-    RUNNING = "running"
-    DONE = "done"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
+from apps.backend.src.modules.common.enums import ScheduleStatus
 
 class Schedule(Base):
     """Stateful automation entry executed by CoWorker via DagExecutor.

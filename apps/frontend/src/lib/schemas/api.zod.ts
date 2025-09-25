@@ -1487,70 +1487,6 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
 
 
 /**
- * Mark or unmark a draft variant as ready for publishing with scheduling
- * @summary Toggle Ready For Post
- */
-export const draftsToggleReadyApiOrchestratorDraftsVariantsReadyPutBody = zod.object({
-  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads']),
-  "ready": zod.boolean(),
-  "scheduled_at": zod.iso.datetime({}).nullish()
-})
-
-export const draftsToggleReadyApiOrchestratorDraftsVariantsReadyPutResponse = zod.object({
-  "id": zod.number(),
-  "variant_id": zod.number(),
-  "account_persona_id": zod.number(),
-  "platform": zod.string(),
-  "external_id": zod.string().nullish(),
-  "permalink": zod.string().nullish(),
-  "status": zod.string(),
-  "scheduled_at": zod.iso.datetime({}).nullish(),
-  "published_at": zod.iso.datetime({}).nullish(),
-  "deleted_at": zod.iso.datetime({}).nullish(),
-  "monitoring_started_at": zod.iso.datetime({}).nullish(),
-  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
-  "last_polled_at": zod.iso.datetime({}).nullish(),
-  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
-  "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
-})
-
-
-/**
- * Execute a scheduled publish for a draft variant
- * @summary Publish Scheduled Variant
- */
-export const draftsPublishVariantApiOrchestratorDraftsVariantsPublishPostBody = zod.object({
-  "post_publication_id": zod.number(),
-  "persona_account_id": zod.number()
-})
-
-export const draftsPublishVariantApiOrchestratorDraftsVariantsPublishPostResponse = zod.object({
-  "id": zod.number(),
-  "variant_id": zod.number(),
-  "account_persona_id": zod.number(),
-  "platform": zod.string(),
-  "external_id": zod.string().nullish(),
-  "permalink": zod.string().nullish(),
-  "status": zod.string(),
-  "scheduled_at": zod.iso.datetime({}).nullish(),
-  "published_at": zod.iso.datetime({}).nullish(),
-  "deleted_at": zod.iso.datetime({}).nullish(),
-  "monitoring_started_at": zod.iso.datetime({}).nullish(),
-  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
-  "last_polled_at": zod.iso.datetime({}).nullish(),
-  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
-  "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
-})
-
-
-/**
  * Ingest new insight data for analysis and trend detection
  * @summary Process and Store Insight Data
  */
@@ -1655,31 +1591,87 @@ export const actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplates
 
 
 /**
- * Create one or multiple schedules from a template and timing options
- * @summary Schedule Template Instances
+ * Persist one or multiple schedules using a provided DAG specification
+ * @summary Create Schedule(s) From DAG
  */
-export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsCountryDefault = "US";export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsLimitDefault = 20;export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsWaitTimeoutSDefault = 604800;export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyRepeatsDefault = 1;export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyRepeatIntervalMinutesDefault = 0;
+export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatsDefault = 1;export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatIntervalMinutesDefault = 0;
+export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatIntervalMinutesMin = 0;
 
-export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBody = zod.object({
-  "template": zod.enum(['mail.trends_with_reply', 'post.publish']),
-  "params": zod.object({
-  "persona_id": zod.number(),
-  "persona_account_id": zod.number(),
-  "email_to": zod.string(),
-  "country": zod.string().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsCountryDefault),
-  "limit": zod.number().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsLimitDefault),
-  "wait_timeout_s": zod.number().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyParamsWaitTimeoutSDefault),
-  "pipeline_id": zod.string().nullish()
-}).describe('Parameters for the mail trends + reply template.'),
-  "run_at": zod.iso.datetime({}).optional(),
-  "repeats": zod.number().default(actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostBodyRepeatsDefault),
-  "repeat_interval_minutes": zod.number().optional(),
-  "queue": zod.string().nullish(),
-  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional().describe('Optional metadata attached to the resulting schedules')
-}).describe('Request to create one or more schedules from a template.')
 
-export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostResponse = zod.object({
+export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBody = zod.object({
+  "persona_account_id": zod.number().describe('Persona account owning the schedule'),
+  "dag_spec": zod.object({
+  "dag": zod.object({
+  "nodes": zod.array(zod.object({
+  "id": zod.string().describe('Unique identifier within the DAG'),
+  "flow": zod.string().describe('Orchestrator flow key to execute'),
+  "in": zod.record(zod.string(), zod.any()).optional()
+}).describe('Single node within a schedule DAG.')),
+  "edges": zod.array(zod.object({
+  "source": zod.string(),
+  "target": zod.string()
+}).describe('Directed connection between nodes.')).optional()
+}),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+}).describe('Full DAG specification including optional schedule payload and metadata.'),
+  "run_at": zod.iso.datetime({}).optional().describe('Initial execution time for the first schedule'),
+  "repeats": zod.number().min(1).default(actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatsDefault).describe('Number of schedules to create in sequence'),
+  "repeat_interval_minutes": zod.number().min(actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatIntervalMinutesMin).optional().describe('Minutes between successive schedule runs'),
+  "queue": zod.string().nullish().describe('Optional queue override'),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional().describe('Metadata to merge into the DAG spec before persisting')
+}).describe('Request to create schedule rows from a fully specified DAG.')
+
+export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostResponse = zod.object({
   "schedule_ids": zod.array(zod.number())
+})
+
+
+/**
+ * Create or update a post publication schedule for the given draft variant
+ * @summary Create Post Schedule
+ */
+export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostBody = zod.object({
+  "post_publication_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.enum(['instagram', 'threads'])
+}).describe('Parameters for publishing a compiled draft variant.')
+
+export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostResponse = zod.object({
+  "schedule_ids": zod.array(zod.number())
+})
+
+
+/**
+ * Cancel a post publication schedule for the given draft variant
+ * @summary Cancel Post Schedule
+ */
+export const actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostBody = zod.object({
+  "variant_id": zod.number(),
+  "persona_account_id": zod.number()
+})
+
+export const actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * Cancel a list of schedules
+ * @summary Cancel Schedules
+ */
+export const actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostBody = zod.object({
+  "schedule_ids": zod.union([zod.array(zod.number()),zod.null()]).optional(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "status": zod.union([zod.enum(['pending', 'enqueued', 'running', 'done', 'failed', 'cancelled']),zod.null()]).optional(),
+  "window_start": zod.iso.datetime({}).nullish(),
+  "window_end": zod.iso.datetime({}).nullish()
+}).describe('filter options ')
+
+export const actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostResponse = zod.object({
+  "message": zod.string()
 })
 
 

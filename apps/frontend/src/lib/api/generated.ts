@@ -170,6 +170,30 @@ export interface CampaignUpdateCommand {
   campaign_id?: CampaignUpdateCommandCampaignId;
 }
 
+export interface CancelPostScheduleCommand {
+  variant_id: number;
+  persona_account_id: number;
+}
+
+export type CancelSchedulesCommandScheduleIds = number[] | null;
+
+export type CancelSchedulesCommandPersonaAccountId = number | null;
+
+export type CancelSchedulesCommandStatus = ScheduleStatus | null;
+
+/**
+ * filter options 
+ */
+export interface CancelSchedulesCommand {
+  schedule_ids?: CancelSchedulesCommandScheduleIds;
+  persona_account_id?: CancelSchedulesCommandPersonaAccountId;
+  status?: CancelSchedulesCommandStatus;
+  /** @nullable */
+  window_start?: string | null;
+  /** @nullable */
+  window_end?: string | null;
+}
+
 export type ChatCardData = { [key: string]: unknown };
 
 export interface ChatCard {
@@ -300,16 +324,6 @@ export interface DraftUpdateCommand {
   /** @nullable */
   goal?: string | null;
   campaign_id?: DraftUpdateCommandCampaignId;
-}
-
-export type DraftVariantReadyCommandDraftId = number | null;
-
-export interface DraftVariantReadyCommand {
-  draft_id?: DraftVariantReadyCommandDraftId;
-  platform: PlatformKind;
-  ready: boolean;
-  /** @nullable */
-  scheduled_at?: string | null;
 }
 
 export type DraftVariantRenderRenderedBlocks = RenderedVariantBlocks | null;
@@ -993,11 +1007,6 @@ export const PostStatus = {
   monitoring: 'monitoring',
 } as const;
 
-export interface PublishVariantPayload {
-  post_publication_id: number;
-  persona_account_id: number;
-}
-
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
 
 
@@ -1067,30 +1076,43 @@ export interface ScheduleCompileRequest {
 }
 
 export interface ScheduleCompileResult {
-  dag_spec: ScheduleDagSpec;
+  dag_spec: ScheduleDagSpecOutput;
 }
 
-export type ScheduleCreateRequestMetaAnyOf = { [key: string]: unknown };
+export type ScheduleCreateFromRawDagRequestMetaAnyOf = { [key: string]: unknown };
 
 /**
- * Optional metadata attached to the resulting schedules
+ * Metadata to merge into the DAG spec before persisting
  */
-export type ScheduleCreateRequestMeta = ScheduleCreateRequestMetaAnyOf | null;
+export type ScheduleCreateFromRawDagRequestMeta = ScheduleCreateFromRawDagRequestMetaAnyOf | null;
 
 /**
- * Request to create one or more schedules from a template.
+ * Request to create schedule rows from a fully specified DAG.
  */
-export interface ScheduleCreateRequest {
-  /** Template to use */
-  template: ScheduleTemplateKey;
-  params: MailScheduleTemplateParams;
+export interface ScheduleCreateFromRawDagRequest {
+  /** Persona account owning the schedule */
+  persona_account_id: number;
+  /** Full DAG specification to persist */
+  dag_spec: ScheduleDagSpecInput;
+  /** Initial execution time for the first schedule */
   run_at?: string;
+  /**
+   * Number of schedules to create in sequence
+   * @minimum 1
+   */
   repeats?: number;
+  /**
+   * Minutes between successive schedule runs
+   * @minimum 0
+   */
   repeat_interval_minutes?: number;
-  /** @nullable */
+  /**
+   * Optional queue override
+   * @nullable
+   */
   queue?: string | null;
-  /** Optional metadata attached to the resulting schedules */
-  meta?: ScheduleCreateRequestMeta;
+  /** Metadata to merge into the DAG spec before persisting */
+  meta?: ScheduleCreateFromRawDagRequestMeta;
 }
 
 export interface ScheduleCreateResult {
@@ -1123,18 +1145,44 @@ export interface ScheduleDagNode {
   in?: ScheduleDagNodeIn;
 }
 
-export type ScheduleDagSpecPayload = { [key: string]: unknown };
+export type ScheduleDagSpecInputPayload = { [key: string]: unknown };
 
-export type ScheduleDagSpecMeta = { [key: string]: unknown };
+export type ScheduleDagSpecInputMeta = { [key: string]: unknown };
 
 /**
  * Full DAG specification including optional schedule payload and metadata.
  */
-export interface ScheduleDagSpec {
+export interface ScheduleDagSpecInput {
   dag: ScheduleDagGraph;
-  payload?: ScheduleDagSpecPayload;
-  meta?: ScheduleDagSpecMeta;
+  payload?: ScheduleDagSpecInputPayload;
+  meta?: ScheduleDagSpecInputMeta;
 }
+
+export type ScheduleDagSpecOutputPayload = { [key: string]: unknown };
+
+export type ScheduleDagSpecOutputMeta = { [key: string]: unknown };
+
+/**
+ * Full DAG specification including optional schedule payload and metadata.
+ */
+export interface ScheduleDagSpecOutput {
+  dag: ScheduleDagGraph;
+  payload?: ScheduleDagSpecOutputPayload;
+  meta?: ScheduleDagSpecOutputMeta;
+}
+
+export type ScheduleStatus = typeof ScheduleStatus[keyof typeof ScheduleStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ScheduleStatus = {
+  pending: 'pending',
+  enqueued: 'enqueued',
+  running: 'running',
+  done: 'done',
+  failed: 'failed',
+  cancelled: 'cancelled',
+} as const;
 
 export type ScheduleTemplateKey = typeof ScheduleTemplateKey[keyof typeof ScheduleTemplateKey];
 
@@ -5090,137 +5138,6 @@ export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPV
     }
     
 /**
- * Mark or unmark a draft variant as ready for publishing with scheduling
- * @summary Toggle Ready For Post
- */
-export const draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut = (
-    draftVariantReadyCommand: DraftVariantReadyCommand,
- options?: SecondParameter<typeof apiFetch>,) => {
-      
-      
-      return apiFetch<PostPublicationOut>(
-      {url: `/api/orchestrator/drafts/variants/ready`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: draftVariantReadyCommand
-    },
-      options);
-    }
-  
-
-
-export const getDraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, TError,{data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, TError,{data: DraftVariantReadyCommand}, TContext> => {
-
-const mutationKey = ['draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, {data: DraftVariantReadyCommand}> = (props) => {
-          const {data} = props ?? {};
-
-          return  draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationResult = NonNullable<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>>
-    export type DraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationBody = DraftVariantReadyCommand
-    export type DraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationError = HTTPValidationError
-
-    /**
- * @summary Toggle Ready For Post
- */
-export const useDraftsToggleReadyApiOrchestratorDraftsVariantsReadyPut = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>, TError,{data: DraftVariantReadyCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof draftsToggleReadyApiOrchestratorDraftsVariantsReadyPut>>,
-        TError,
-        {data: DraftVariantReadyCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getDraftsToggleReadyApiOrchestratorDraftsVariantsReadyPutMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Execute a scheduled publish for a draft variant
- * @summary Publish Scheduled Variant
- */
-export const draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost = (
-    publishVariantPayload: PublishVariantPayload,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<PostPublicationOut>(
-      {url: `/api/orchestrator/drafts/variants/publish`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: publishVariantPayload, signal
-    },
-      options);
-    }
-  
-
-
-export const getDraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, TError,{data: PublishVariantPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, TError,{data: PublishVariantPayload}, TContext> => {
-
-const mutationKey = ['draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, {data: PublishVariantPayload}> = (props) => {
-          const {data} = props ?? {};
-
-          return  draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationResult = NonNullable<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>>
-    export type DraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationBody = PublishVariantPayload
-    export type DraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationError = HTTPValidationError
-
-    /**
- * @summary Publish Scheduled Variant
- */
-export const useDraftsPublishVariantApiOrchestratorDraftsVariantsPublishPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>, TError,{data: PublishVariantPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof draftsPublishVariantApiOrchestratorDraftsVariantsPublishPost>>,
-        TError,
-        {data: PublishVariantPayload},
-        TContext
-      > => {
-
-      const mutationOptions = getDraftsPublishVariantApiOrchestratorDraftsVariantsPublishPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
  * Ingest new insight data for analysis and trend detection
  * @summary Process and Store Insight Data
  */
@@ -5442,30 +5359,30 @@ export function useActionScheduleListTemplatesApiOrchestratorActionsSchedulesTem
 
 
 /**
- * Create one or multiple schedules from a template and timing options
- * @summary Schedule Template Instances
+ * Persist one or multiple schedules using a provided DAG specification
+ * @summary Create Schedule(s) From DAG
  */
-export const actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost = (
-    scheduleCreateRequest: ScheduleCreateRequest,
+export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost = (
+    scheduleCreateFromRawDagRequest: ScheduleCreateFromRawDagRequest,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
       
       return apiFetch<ScheduleCreateResult>(
-      {url: `/api/orchestrator/actions/schedules/create`, method: 'POST',
+      {url: `/api/orchestrator/actions/schedules/create/raw`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: scheduleCreateRequest, signal
+      data: scheduleCreateFromRawDagRequest, signal
     },
       options);
     }
   
 
 
-export const getActionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost>>, TError,{data: ScheduleCreateRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost>>, TError,{data: ScheduleCreateRequest}, TContext> => {
+export const getActionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost>>, TError,{data: ScheduleCreateFromRawDagRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost>>, TError,{data: ScheduleCreateFromRawDagRequest}, TContext> => {
 
-const mutationKey = ['actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost'];
+const mutationKey = ['actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5475,10 +5392,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost>>, {data: ScheduleCreateRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost>>, {data: ScheduleCreateFromRawDagRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost(data,requestOptions)
+          return  actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost(data,requestOptions)
         }
 
         
@@ -5486,23 +5403,221 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ActionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost>>>
-    export type ActionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostMutationBody = ScheduleCreateRequest
-    export type ActionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostMutationError = HTTPValidationError
+    export type ActionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost>>>
+    export type ActionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostMutationBody = ScheduleCreateFromRawDagRequest
+    export type ActionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostMutationError = HTTPValidationError
 
     /**
- * @summary Schedule Template Instances
+ * @summary Create Schedule(s) From DAG
  */
-export const useActionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost>>, TError,{data: ScheduleCreateRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useActionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost>>, TError,{data: ScheduleCreateFromRawDagRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof actionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePost>>,
+        Awaited<ReturnType<typeof actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPost>>,
         TError,
-        {data: ScheduleCreateRequest},
+        {data: ScheduleCreateFromRawDagRequest},
         TContext
       > => {
 
-      const mutationOptions = getActionScheduleCreateFromTemplateApiOrchestratorActionsSchedulesCreatePostMutationOptions(options);
+      const mutationOptions = getActionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Create or update a post publication schedule for the given draft variant
+ * @summary Create Post Schedule
+ */
+export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost = (
+    postPublishTemplateParams: PostPublishTemplateParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ScheduleCreateResult>(
+      {url: `/api/orchestrator/actions/schedules/create/draft/post`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: postPublishTemplateParams, signal
+    },
+      options);
+    }
+  
+
+
+export const getActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: PostPublishTemplateParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: PostPublishTemplateParams}, TContext> => {
+
+const mutationKey = ['actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, {data: PostPublishTemplateParams}> = (props) => {
+          const {data} = props ?? {};
+
+          return  actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>>
+    export type ActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationBody = PostPublishTemplateParams
+    export type ActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Post Schedule
+ */
+export const useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: PostPublishTemplateParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>,
+        TError,
+        {data: PostPublishTemplateParams},
+        TContext
+      > => {
+
+      const mutationOptions = getActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Cancel a post publication schedule for the given draft variant
+ * @summary Cancel Post Schedule
+ */
+export const actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost = (
+    cancelPostScheduleCommand: CancelPostScheduleCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/actions/schedules/cancel/draft/post`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: cancelPostScheduleCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost>>, TError,{data: CancelPostScheduleCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost>>, TError,{data: CancelPostScheduleCommand}, TContext> => {
+
+const mutationKey = ['actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost>>, {data: CancelPostScheduleCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost>>>
+    export type ActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostMutationBody = CancelPostScheduleCommand
+    export type ActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Cancel Post Schedule
+ */
+export const useActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost>>, TError,{data: CancelPostScheduleCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPost>>,
+        TError,
+        {data: CancelPostScheduleCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Cancel a list of schedules
+ * @summary Cancel Schedules
+ */
+export const actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost = (
+    cancelSchedulesCommand: CancelSchedulesCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/actions/schedules/cancel`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: cancelSchedulesCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost>>, TError,{data: CancelSchedulesCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost>>, TError,{data: CancelSchedulesCommand}, TContext> => {
+
+const mutationKey = ['actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost>>, {data: CancelSchedulesCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost>>>
+    export type ActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostMutationBody = CancelSchedulesCommand
+    export type ActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Cancel Schedules
+ */
+export const useActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost>>, TError,{data: CancelSchedulesCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost>>,
+        TError,
+        {data: CancelSchedulesCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

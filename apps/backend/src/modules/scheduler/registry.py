@@ -13,6 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing helpers
         ScheduleCompileRequest,
         ScheduleCompileResult,
         ScheduleDagSpec,
+        ScheduleCreateFromRawDagRequest,
     )
 
 
@@ -131,7 +132,6 @@ def _build_mail_trends_with_reply(request: "ScheduleCompileRequest") -> "Schedul
 
 def _build_post_publish_template(request: "ScheduleCompileRequest") -> "ScheduleDagSpec":
     from .schemas import (
-        PostPublishTemplateParams,
         ScheduleDagBuilder,
         payload_ref,
     )
@@ -154,7 +154,7 @@ def _build_post_publish_template(request: "ScheduleCompileRequest") -> "Schedule
         platform=params.platform.value,
     )
     builder.add_node(
-        "drafts.publish_variant",
+        "internal.drafts.create_post_schedule",
         node_id="publish",
         post_publication_id=payload_ref("post_publication_id"),
         persona_account_id=payload_ref("persona_account_id"),

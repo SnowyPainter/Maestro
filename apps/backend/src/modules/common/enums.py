@@ -72,3 +72,11 @@ class InsightSource(str, enum.Enum):
 
 DO_NOT_RECOMPILE_STATUS = {PostStatus.SCHEDULED, PostStatus.PUBLISHED, PostStatus.MONITORING}
 ALREADY_PUBLISHED_STATUS = {PostStatus.PUBLISHED, PostStatus.MONITORING}
+
+class ScheduleStatus(str, enum.Enum):
+    PENDING = "pending"
+    ENQUEUED = "enqueued"
+    RUNNING = "running"
+    DONE = "done"
+    FAILED = "failed"
+    CANCELLED = "cancelled"

@@ -48,6 +48,12 @@ slots:
   - campaigns.upsert_kpi_defs
   - drafts.create
   - drafts.update_ir
+- name: constraints
+  label: Constraints
+  description: Filter by constraints
+  value_type: string
+  flows:
+  - action.schedule.create_trends_mail_schedule
 - name: content_kind
   label: Content Kind
   description: Filter by content kind
@@ -67,6 +73,12 @@ slots:
   value_type: string
   flows:
   - bff.trends.list_trends
+- name: dag_spec
+  label: Dag Spec
+  description: Filter by dag spec
+  value_type: string
+  flows:
+  - action.schedule.create_from_raw_dag
 - name: data
   label: Data
   description: Filter by data
@@ -74,6 +86,12 @@ slots:
   flows:
   - accounts.persona.update
   - accounts.platform.update
+- name: date_range
+  label: Date Range
+  description: Filter by date range
+  value_type: string
+  flows:
+  - action.schedule.create_trends_mail_schedule
 - name: defs
   label: Defs
   description: Filter by defs
@@ -87,16 +105,22 @@ slots:
   flows:
   - campaigns.create_campaign
   - campaigns.update_campaign
+- name: distribution
+  label: Distribution
+  description: Filter by distribution
+  value_type: string
+  flows:
+  - action.schedule.create_trends_mail_schedule
 - name: draft_id
   label: Draft Id
   description: Target a specific draft id
   value_type: integer
   flows:
+  - action.schedule.create_draft_post_schedule
   - bff.drafts.list_variants
   - bff.drafts.read_draft
   - bff.drafts.read_variant
   - drafts.delete
-  - drafts.toggle_ready
   - drafts.update_ir
 - name: end
   label: End
@@ -119,6 +143,12 @@ slots:
   - bff.timeline.campaigns
   - bff.timeline.post_publications
   - bff.timeline.trends
+- name: exdates
+  label: Exdates
+  description: Filter by exdates
+  value_type: string_list
+  flows:
+  - action.schedule.create_trends_mail_schedule
 - name: goal
   label: Goal
   description: Filter by goal
@@ -182,7 +212,7 @@ slots:
   description: Filter by meta
   value_type: string
   flows:
-  - action.schedule.create_from_template
+  - action.schedule.create_from_raw_dag
 - name: metrics
   label: Metrics
   description: Filter by metrics
@@ -218,12 +248,12 @@ slots:
   value_type: integer
   flows:
   - insights.ingest
-- name: params
-  label: Params
-  description: Filter by params
+- name: payload_template
+  label: Payload Template
+  description: Filter by payload template
   value_type: string
   flows:
-  - action.schedule.create_from_template
+  - action.schedule.create_trends_mail_schedule
 - name: persona
   label: Persona
   description: Filter by persona
@@ -235,12 +265,15 @@ slots:
   description: Target a specific persona account id
   value_type: integer
   flows:
+  - action.schedule.cancel_draft_post_schedule
+  - action.schedule.cancel_schedules
+  - action.schedule.create_draft_post_schedule
+  - action.schedule.create_from_raw_dag
   - bff.contexts.current_persona
   - bff.contexts.current_persona_account
   - bff.timeline.campaigns
   - bff.timeline.post_publications
   - bff.timeline.trends
-  - drafts.publish_variant
 - name: persona_id
   label: Persona Id
   description: Target a specific persona id
@@ -259,11 +292,11 @@ slots:
   - instagram
   - threads
   flows:
+  - action.schedule.create_draft_post_schedule
   - bff.accounts.list_platform_accounts
   - bff.drafts.list_post_publications_by_platform
   - bff.drafts.list_variants_by_platform
   - bff.drafts.read_variant
-  - drafts.toggle_ready
   - insights.ingest
 - name: platform_post_id
   label: Platform Post Id
@@ -276,7 +309,7 @@ slots:
   description: Target a specific post publication id
   value_type: integer
   flows:
-  - drafts.publish_variant
+  - action.schedule.create_draft_post_schedule
   - insights.ingest
 - name: post_publish
   label: Post Publish
@@ -296,43 +329,38 @@ slots:
   description: Filter by queue
   value_type: string
   flows:
-  - action.schedule.create_from_template
+  - action.schedule.create_from_raw_dag
+  - action.schedule.create_trends_mail_schedule
 - name: raw
   label: Raw
   description: Filter by raw
   value_type: string
   flows:
   - insights.ingest
-- name: ready
-  label: Ready
-  description: Filter by ready
-  value_type: boolean
-  flows:
-  - drafts.toggle_ready
 - name: repeat_interval_minutes
   label: Repeat Interval Minutes
   description: Filter by repeat interval minutes
   value_type: integer
   flows:
-  - action.schedule.create_from_template
+  - action.schedule.create_from_raw_dag
 - name: repeats
   label: Repeats
   description: Filter by repeats
   value_type: integer
   flows:
-  - action.schedule.create_from_template
+  - action.schedule.create_from_raw_dag
 - name: run_at
   label: Run At
   description: Filter by run at
   value_type: string
   flows:
-  - action.schedule.create_from_template
-- name: scheduled_at
-  label: Scheduled At
-  description: Filter by scheduled at
-  value_type: string
+  - action.schedule.create_from_raw_dag
+- name: schedule_ids
+  label: Schedule Ids
+  description: Filter by schedule ids
+  value_type: integer_list
   flows:
-  - drafts.toggle_ready
+  - action.schedule.cancel_schedules
 - name: scope
   label: Scope
   description: Filter by scope
@@ -343,6 +371,12 @@ slots:
   - interval
   flows:
   - insights.ingest
+- name: segments
+  label: Segments
+  description: Filter by segments
+  value_type: string_list
+  flows:
+  - action.schedule.create_trends_mail_schedule
 - name: since
   label: Since
   description: Set a since date
@@ -384,8 +418,9 @@ slots:
 - name: status
   label: Status
   description: Filter by status
-  value_type: string_list
+  value_type: enum
   flows:
+  - action.schedule.cancel_schedules
   - bff.drafts.list_post_publications_by_status
 - name: tags
   label: Tags
@@ -403,12 +438,18 @@ slots:
   - post.publish
   flows:
   - action.schedule.compile_template
-  - action.schedule.create_from_template
+- name: timezone
+  label: Timezone
+  description: Filter by timezone
+  value_type: string
+  flows:
+  - action.schedule.create_trends_mail_schedule
 - name: title
   label: Title
   description: Filter by title
   value_type: string
   flows:
+  - action.schedule.create_trends_mail_schedule
   - drafts.create
   - drafts.update_ir
 - name: ts
@@ -437,6 +478,8 @@ slots:
   description: Target a specific variant id
   value_type: integer
   flows:
+  - action.schedule.cancel_draft_post_schedule
+  - action.schedule.create_draft_post_schedule
   - bff.drafts.list_post_publications_by_variant
   - bff.drafts.read_variant_by_id
 - name: warnings
@@ -445,3 +488,21 @@ slots:
   value_type: string_list
   flows:
   - insights.ingest
+- name: weekmask
+  label: Weekmask
+  description: Filter by weekmask
+  value_type: string_list
+  flows:
+  - action.schedule.create_trends_mail_schedule
+- name: window_end
+  label: Window End
+  description: Filter by window end
+  value_type: string
+  flows:
+  - action.schedule.cancel_schedules
+- name: window_start
+  label: Window Start
+  description: Filter by window start
+  value_type: string
+  flows:
+  - action.schedule.cancel_schedules

@@ -856,46 +856,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/drafts/variants/ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Toggle Ready For Post
-         * @description Mark or unmark a draft variant as ready for publishing with scheduling
-         */
-        put: operations["drafts_toggle_ready_api_orchestrator_drafts_variants_ready_put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/drafts/variants/publish": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Publish Scheduled Variant
-         * @description Execute a scheduled publish for a draft variant
-         */
-        post: operations["drafts_publish_variant_api_orchestrator_drafts_variants_publish_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/insights": {
         parameters: {
             query?: never;
@@ -956,7 +916,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/actions/schedules/create": {
+    "/api/orchestrator/actions/schedules/create/raw": {
         parameters: {
             query?: never;
             header?: never;
@@ -966,10 +926,70 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Schedule Template Instances
-         * @description Create one or multiple schedules from a template and timing options
+         * Create Schedule(s) From DAG
+         * @description Persist one or multiple schedules using a provided DAG specification
          */
-        post: operations["action_schedule_create_from_template_api_orchestrator_actions_schedules_create_post"];
+        post: operations["action_schedule_create_from_raw_dag_api_orchestrator_actions_schedules_create_raw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/create/draft/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Post Schedule
+         * @description Create or update a post publication schedule for the given draft variant
+         */
+        post: operations["action_schedule_create_draft_post_schedule_api_orchestrator_actions_schedules_create_draft_post_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/cancel/draft/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Post Schedule
+         * @description Cancel a post publication schedule for the given draft variant
+         */
+        post: operations["action_schedule_cancel_draft_post_schedule_api_orchestrator_actions_schedules_cancel_draft_post_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Schedules
+         * @description Cancel a list of schedules
+         */
+        post: operations["action_schedule_cancel_schedules_api_orchestrator_actions_schedules_cancel_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1395,6 +1415,34 @@ export interface components {
             /** Campaign Id */
             campaign_id?: number | null;
         };
+        /** CancelPostScheduleCommand */
+        CancelPostScheduleCommand: {
+            /** Variant Id */
+            variant_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+        };
+        /**
+         * CancelSchedulesCommand
+         * @description filter options
+         */
+        CancelSchedulesCommand: {
+            /** Schedule Ids */
+            schedule_ids?: number[] | null;
+            /** Persona Account Id */
+            persona_account_id?: number | null;
+            status?: components["schemas"]["ScheduleStatus"] | null;
+            /**
+             * Window Start
+             * Format: date-time
+             */
+            window_start?: string | null;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end?: string | null;
+        };
         /** ChatCard */
         ChatCard: {
             /** Card Type */
@@ -1542,19 +1590,6 @@ export interface components {
             goal?: string | null;
             /** Campaign Id */
             campaign_id?: number | null;
-        };
-        /** DraftVariantReadyCommand */
-        DraftVariantReadyCommand: {
-            /** Draft Id */
-            draft_id?: number | null;
-            platform: components["schemas"]["PlatformKind"];
-            /** Ready */
-            ready: boolean;
-            /**
-             * Scheduled At
-             * Format: date-time
-             */
-            scheduled_at?: string | null;
         };
         /** DraftVariantRender */
         DraftVariantRender: {
@@ -2307,13 +2342,6 @@ export interface components {
          * @enum {string}
          */
         PostStatus: "pending" | "scheduled" | "published" | "deleted" | "failed" | "cancelled" | "monitoring";
-        /** PublishVariantPayload */
-        PublishVariantPayload: {
-            /** Post Publication Id */
-            post_publication_id: number;
-            /** Persona Account Id */
-            persona_account_id: number;
-        };
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**
@@ -2397,36 +2425,46 @@ export interface components {
         };
         /** ScheduleCompileResult */
         ScheduleCompileResult: {
-            dag_spec: components["schemas"]["ScheduleDagSpec"];
+            dag_spec: components["schemas"]["ScheduleDagSpec-Output"];
         };
         /**
-         * ScheduleCreateRequest
-         * @description Request to create one or more schedules from a template.
+         * ScheduleCreateFromRawDagRequest
+         * @description Request to create schedule rows from a fully specified DAG.
          */
-        ScheduleCreateRequest: {
-            /** @description Template to use */
-            template: components["schemas"]["ScheduleTemplateKey"];
-            params: components["schemas"]["MailScheduleTemplateParams"];
+        ScheduleCreateFromRawDagRequest: {
+            /**
+             * Persona Account Id
+             * @description Persona account owning the schedule
+             */
+            persona_account_id: number;
+            /** @description Full DAG specification to persist */
+            dag_spec: components["schemas"]["ScheduleDagSpec-Input"];
             /**
              * Run At
              * Format: date-time
+             * @description Initial execution time for the first schedule
              */
             run_at?: string;
             /**
              * Repeats
+             * @description Number of schedules to create in sequence
              * @default 1
              */
             repeats: number;
             /**
              * Repeat Interval Minutes
+             * @description Minutes between successive schedule runs
              * @default 0
              */
             repeat_interval_minutes: number;
-            /** Queue */
+            /**
+             * Queue
+             * @description Optional queue override
+             */
             queue?: string | null;
             /**
              * Meta
-             * @description Optional metadata attached to the resulting schedules
+             * @description Metadata to merge into the DAG spec before persisting
              */
             meta?: {
                 [key: string]: unknown;
@@ -2478,7 +2516,7 @@ export interface components {
          * ScheduleDagSpec
          * @description Full DAG specification including optional schedule payload and metadata.
          */
-        ScheduleDagSpec: {
+        "ScheduleDagSpec-Input": {
             dag: components["schemas"]["ScheduleDagGraph"];
             /** Payload */
             payload?: {
@@ -2489,6 +2527,26 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * ScheduleDagSpec
+         * @description Full DAG specification including optional schedule payload and metadata.
+         */
+        "ScheduleDagSpec-Output": {
+            dag: components["schemas"]["ScheduleDagGraph"];
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ScheduleStatus
+         * @enum {string}
+         */
+        ScheduleStatus: "pending" | "enqueued" | "running" | "done" | "failed" | "cancelled";
         /**
          * ScheduleTemplateKey
          * @enum {string}
@@ -4190,72 +4248,6 @@ export interface operations {
             };
         };
     };
-    drafts_toggle_ready_api_orchestrator_drafts_variants_ready_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DraftVariantReadyCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PostPublicationOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    drafts_publish_variant_api_orchestrator_drafts_variants_publish_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PublishVariantPayload"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PostPublicationOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     insights_ingest_api_orchestrator_insights_post: {
         parameters: {
             query?: never;
@@ -4342,7 +4334,7 @@ export interface operations {
             };
         };
     };
-    action_schedule_create_from_template_api_orchestrator_actions_schedules_create_post: {
+    action_schedule_create_from_raw_dag_api_orchestrator_actions_schedules_create_raw_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4351,7 +4343,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ScheduleCreateRequest"];
+                "application/json": components["schemas"]["ScheduleCreateFromRawDagRequest"];
             };
         };
         responses: {
@@ -4362,6 +4354,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScheduleCreateResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_create_draft_post_schedule_api_orchestrator_actions_schedules_create_draft_post_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostPublishTemplateParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleCreateResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_cancel_draft_post_schedule_api_orchestrator_actions_schedules_cancel_draft_post_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelPostScheduleCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_cancel_schedules_api_orchestrator_actions_schedules_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelSchedulesCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
                 };
             };
             /** @description Validation Error */

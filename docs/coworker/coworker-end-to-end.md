@@ -24,6 +24,11 @@ CoWorker는 Persona 계정 단위로 반복적인 아웃바운드(이메일, 게
 | Runtime Provider | `apps/backend/src/orchestrator/dispatch.py` | Flow 실행 컨텍스트 주입(AsyncSession, User 등) |
 | Lease 도메인 | `coworker_leases` 테이블 + Repo | 사용자별 자동 실행 간격, Persona 범위 관리 |
 
+### 2.0 파일 위치
+
+registry: internal 에 있는 flow들의 조합으로 템플릿 구성
+schedule: 템플릿 wrapper, 이것은 외부에 보임, 각기 다른 params
+
 ### 2.1 실행 환경
 
 - **Celery**: 워커는 `coworker` 큐에서 실행되며, Beat가 30초 주기로 `execute_due_schedules` 태스크를 호출한다.
@@ -234,3 +239,26 @@ spec = builder.build()
 - **Sniffer**: 외부 이벤트(메일, 댓글 등)를 감지해 스케줄을 재개시키는 워커.
 - **Resume Payload (`_resume`)**: 중단된 DAG를 이어 실행하기 위한 입력.
 - **Pipeline ID**: 메일 발송과 회신을 매칭하기 위한 식별자.
+
+## 12. 배치 메일 스케줄 구조
+
+### 12.1 파일 레이아웃
+- `apps/backend/src/modules/scheduler/schemas.py`: 배치 입력(`MailScheduleBatchRequest`), 제약(`MailScheduleConstraints`), 결과 슬라이스(`MailSchedulePlanInstance`)를 정의한다.
+- `apps/backend/src/modules/scheduler/planner.py`: 배치 요청을 UTC 실행 타임라인으로 확장한다. 주중 필터, 제외 일자, 세그먼트 분포, 블랙아웃 검증을 한 곳에 모았다.
+- `apps/backend/src/orchestrator/flows/action/schedule.py`: 퍼블릭 액션 플로우. 배치 플래너를 호출해 `Schedule` 레코드를 만들고, 템플릿 컴파일 결과를 queue에 맞게 저장한다.
+
+### 12.2 실행 흐름
+1. 클라이언트가 `MailScheduleBatchRequest`를 `/actions/schedules/create/trends_mail`에 전송하면 액션 플로우가 템플릿 컴파일(`ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY`)을 수행한다.
+2. Planner가 주기/제약을 계산해 `MailSchedulePlanInstance` 목록을 반환한다. 각 인스턴스는 UTC due 시간과 현지 시간이 모두 포함되어 후속 메타데이터에 재사용된다.
+3. 액션 플로우는 계획 결과를 반복하면서 `Schedule` 레코드를 생성하고, 메타/컨텍스트에 `plan_segment`, `schedule_index`, `plan_local_due` 등을 저장한다.
+4. CoWorker 워커는 다른 스케줄과 동일하게 새 레코드를 집어가서 실행한다. DAG 자체는 registry에 선언된 internal 플로우 묶음이기 때문에 추가 수정 없이 재사용된다.
+
+### 12.3 Registry와 액션 플로우의 책임 분리
+- **Registry (`apps/backend/src/modules/scheduler/registry.py`)**는 템플릿-레벨 로직만 담는다. 즉, 어떤 internal flow 조합이 어느 순서로 실행돼야 하는지 정의한다. 여기서는 `internal.mail.compose_trends_email`, `internal.mail.await_reply` 등 내부 플로우만 사용한다. 이유는 *도메인 의존성의 단방향성* 때문이다. 템플릿은 재사용 가능한 빌딩 블록이어야 하므로 HTTP 액션/권한/사용자 컨텍스트에 묶이지 않도록 internal flow만 참조한다.
+- **액션 플로우 (`apps/backend/src/orchestrator/flows/action/schedule.py`)**는 템플릿을 노출하는 HTTP 엔드포인트 역할을 한다. Registry에서 컴파일한 DAG을 실제 `Schedule` 레코드로 영속화하고, 사용자/큐/시간대 같은 외부 파라미터를 메타데이터에 주입한다. 덕분에 템플릿은 재사용되고, 퍼블릭 API는 추가 검증과 컨텍스트 주입을 담당한다.
+
+### 12.4 시행착오 기록
+- **초기 구현**: 배치 계산을 액션 플로우 안에 직접 작성했지만, 파일이 비대해지고 도메인 계층에서 재사용할 수 없었다. 또한 테스트가 어려워 플래너 로직을 scheduler 도메인으로 옮기게 되었다.
+- **예외 전파**: 처음에는 플래너에서 `HTTPException`을 바로 던졌지만, FastAPI에 종속되면서 도메인 계층이 무거워졌다. 현재는 `ValueError`만 발생시키고, 액션 계층에서 HTTP 에러로 매핑한다.
+- **시간대 처리**: ZoneInfo 생성을 액션 플로우에 두었더니 동일한 검증을 여러 곳에서 반복해야 했다. 플래너가 직접 시간대를 파싱하고 메시지를 표준화하면서 로직이 단일화되었다.
+- **분포 모드**: `even`/`fixed`만 지원한다는 사실을 누락해 잘못된 입력이 그대로 통과되었다. 지원하지 않는 모드를 플래너가 명시적으로 거부하도록 추가했다. 추후 `weighted`/`jittered`를 확장할 때는 이 부분만 확장하면 된다.

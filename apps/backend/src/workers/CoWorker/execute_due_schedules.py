@@ -5,7 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from apps.backend.src.orchestrator.dag_executor import ExecutionResult
 
 from celery import shared_task
 from sqlalchemy import create_engine
@@ -17,7 +20,6 @@ from apps.backend.src.core.db import SessionLocal as AsyncSessionLocal
 from apps.backend.src.modules.scheduler import repository as repo
 from apps.backend.src.modules.scheduler.models import Schedule, ScheduleStatus
 from apps.backend.src.modules.users.models import User
-from apps.backend.src.orchestrator.dag_executor import DagExecutor, ExecutionResult
 from apps.backend.src.orchestrator.dispatch import ExecutionRuntime
 from apps.backend.src.orchestrator.dsl import parse_dag_spec
 from apps.backend.src.workers.CoWorker.runtime import ScheduleReschedule
@@ -150,6 +152,9 @@ def execute_due_schedules(self, owner_user_id: Optional[int] = None):
 
 
 async def _run_snapshot(snapshot: ScheduleSnapshot) -> ExecutionResult:
+    # Import here to avoid circular import
+    from apps.backend.src.orchestrator.dag_executor import DagExecutor, ExecutionResult
+
     if not snapshot.dag_spec:
         raise ValueError("Schedule is missing dag_spec")
 

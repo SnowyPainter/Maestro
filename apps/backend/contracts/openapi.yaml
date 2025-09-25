@@ -1812,68 +1812,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/drafts/variants/ready:
-    put:
-      tags:
-      - action
-      - action
-      - drafts
-      - variants
-      - publication
-      - schedule
-      summary: Toggle Ready For Post
-      description: Mark or unmark a draft variant as ready for publishing with scheduling
-      operationId: drafts_toggle_ready_api_orchestrator_drafts_variants_ready_put
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DraftVariantReadyCommand'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostPublicationOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/drafts/variants/publish:
-    post:
-      tags:
-      - action
-      - action
-      - drafts
-      - variants
-      - publication
-      - schedule
-      summary: Publish Scheduled Variant
-      description: Execute a scheduled publish for a draft variant
-      operationId: drafts_publish_variant_api_orchestrator_drafts_variants_publish_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PublishVariantPayload'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PostPublicationOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/insights:
     post:
       tags:
@@ -1954,22 +1892,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListScheduleTemplatesResult'
-  /api/orchestrator/actions/schedules/create:
+  /api/orchestrator/actions/schedules/create/raw:
     post:
       tags:
       - action
       - action
       - schedule
       - create
-      - batch
-      summary: Schedule Template Instances
-      description: Create one or multiple schedules from a template and timing options
-      operationId: action_schedule_create_from_template_api_orchestrator_actions_schedules_create_post
+      - dag
+      summary: Create Schedule(s) From DAG
+      description: Persist one or multiple schedules using a provided DAG specification
+      operationId: action_schedule_create_from_raw_dag_api_orchestrator_actions_schedules_create_raw_post
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ScheduleCreateRequest'
+              $ref: '#/components/schemas/ScheduleCreateFromRawDagRequest'
         required: true
       responses:
         '200':
@@ -1978,6 +1916,98 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScheduleCreateResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/create/draft/post:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - create
+      - draft
+      - post
+      summary: Create Post Schedule
+      description: Create or update a post publication schedule for the given draft
+        variant
+      operationId: action_schedule_create_draft_post_schedule_api_orchestrator_actions_schedules_create_draft_post_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostPublishTemplateParams'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleCreateResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/cancel/draft/post:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - cancel
+      - draft
+      - post
+      summary: Cancel Post Schedule
+      description: Cancel a post publication schedule for the given draft variant
+      operationId: action_schedule_cancel_draft_post_schedule_api_orchestrator_actions_schedules_cancel_draft_post_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelPostScheduleCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/cancel:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - cancel
+      summary: Cancel Schedules
+      description: Cancel a list of schedules
+      operationId: action_schedule_cancel_schedules_api_orchestrator_actions_schedules_cancel_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSchedulesCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
         '422':
           description: Validation Error
           content:
@@ -2654,6 +2684,50 @@ components:
           title: Campaign Id
       type: object
       title: CampaignUpdateCommand
+    CancelPostScheduleCommand:
+      properties:
+        variant_id:
+          type: integer
+          title: Variant Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+      type: object
+      required:
+      - variant_id
+      - persona_account_id
+      title: CancelPostScheduleCommand
+    CancelSchedulesCommand:
+      properties:
+        schedule_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Schedule Ids
+        persona_account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/ScheduleStatus'
+          - type: 'null'
+        window_start:
+          title: Window Start
+          format: date-time
+          type: string
+          nullable: true
+        window_end:
+          title: Window End
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+      title: CancelSchedulesCommand
+      description: 'filter options '
     ChatCard:
       properties:
         card_type:
@@ -2937,28 +3011,6 @@ components:
       required:
       - ir
       title: DraftUpdateCommand
-    DraftVariantReadyCommand:
-      properties:
-        draft_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Draft Id
-        platform:
-          $ref: '#/components/schemas/PlatformKind'
-        ready:
-          type: boolean
-          title: Ready
-        scheduled_at:
-          title: Scheduled At
-          format: date-time
-          type: string
-          nullable: true
-      type: object
-      required:
-      - platform
-      - ready
-      title: DraftVariantReadyCommand
     DraftVariantRender:
       properties:
         variant_id:
@@ -4248,19 +4300,6 @@ components:
       - cancelled
       - monitoring
       title: PostStatus
-    PublishVariantPayload:
-      properties:
-        post_publication_id:
-          type: integer
-          title: Post Publication Id
-        persona_account_id:
-          type: integer
-          title: Persona Account Id
-      type: object
-      required:
-      - post_publication_id
-      - persona_account_id
-      title: PublishVariantPayload
     RenderedMediaItem:
       properties:
         type:
@@ -4397,32 +4436,40 @@ components:
     ScheduleCompileResult:
       properties:
         dag_spec:
-          $ref: '#/components/schemas/ScheduleDagSpec'
+          $ref: '#/components/schemas/ScheduleDagSpec-Output'
       type: object
       required:
       - dag_spec
       title: ScheduleCompileResult
-    ScheduleCreateRequest:
+    ScheduleCreateFromRawDagRequest:
       properties:
-        template:
-          $ref: '#/components/schemas/ScheduleTemplateKey'
-          description: Template to use
-        params:
-          $ref: '#/components/schemas/MailScheduleTemplateParams'
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+          description: Persona account owning the schedule
+        dag_spec:
+          $ref: '#/components/schemas/ScheduleDagSpec-Input'
+          description: Full DAG specification to persist
         run_at:
           type: string
           format: date-time
           title: Run At
+          description: Initial execution time for the first schedule
         repeats:
           type: integer
+          minimum: 1.0
           title: Repeats
+          description: Number of schedules to create in sequence
           default: 1
         repeat_interval_minutes:
           type: integer
+          minimum: 0.0
           title: Repeat Interval Minutes
+          description: Minutes between successive schedule runs
           default: 0
         queue:
           title: Queue
+          description: Optional queue override
           type: string
           nullable: true
         meta:
@@ -4431,13 +4478,13 @@ components:
             type: object
           - type: 'null'
           title: Meta
-          description: Optional metadata attached to the resulting schedules
+          description: Metadata to merge into the DAG spec before persisting
       type: object
       required:
-      - template
-      - params
-      title: ScheduleCreateRequest
-      description: Request to create one or more schedules from a template.
+      - persona_account_id
+      - dag_spec
+      title: ScheduleCreateFromRawDagRequest
+      description: Request to create schedule rows from a fully specified DAG.
     ScheduleCreateResult:
       properties:
         schedule_ids:
@@ -4499,7 +4546,7 @@ components:
       - flow
       title: ScheduleDagNode
       description: Single node within a schedule DAG.
-    ScheduleDagSpec:
+    ScheduleDagSpec-Input:
       properties:
         dag:
           $ref: '#/components/schemas/ScheduleDagGraph'
@@ -4517,6 +4564,34 @@ components:
       title: ScheduleDagSpec
       description: Full DAG specification including optional schedule payload and
         metadata.
+    ScheduleDagSpec-Output:
+      properties:
+        dag:
+          $ref: '#/components/schemas/ScheduleDagGraph'
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
+      type: object
+      required:
+      - dag
+      title: ScheduleDagSpec
+      description: Full DAG specification including optional schedule payload and
+        metadata.
+    ScheduleStatus:
+      type: string
+      enum:
+      - pending
+      - enqueued
+      - running
+      - done
+      - failed
+      - cancelled
+      title: ScheduleStatus
     ScheduleTemplateKey:
       type: string
       enum:
