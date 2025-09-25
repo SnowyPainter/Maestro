@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 from apps.backend.src.orchestrator.registry import FLOWS, FlowDefinition
 
@@ -15,6 +15,7 @@ class DagNode:
     id: str
     flow: FlowDefinition
     inputs: Dict[str, Any]
+    payload_builder: Optional[Callable[[Mapping[str, Any]], Dict[str, Any]]] = None
 
 
 @dataclass

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Literal, Mapping, Optional, Sequence
 
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ from apps.backend.src.workers.CoWorker.runtime import ScheduleReschedule
 class ExecutionResult:
     node_results: Dict[str, Dict[str, Any]]
     context: Dict[str, Any]
+    raw_results: Dict[str, Any] = field(default_factory=dict)
 
 
 class DagExecutor:
@@ -30,12 +31,22 @@ class DagExecutor:
         schedule_payload: Dict[str, Any],
         schedule_context: Dict[str, Any],
         resume_payload: Optional[Dict[str, Any]] = None,
+        result_transform: Optional[Callable[[Any], Dict[str, Any]]] = None,
+        continue_on_error: bool = False,
+        on_error: Optional[
+            Callable[[str, Exception, Literal["prepare", "execute"]], None]
+        ] = None,
+        on_skip: Optional[Callable[[str, Sequence[str]], None]] = None,
     ) -> None:
         self.spec = spec
         self.runtime = runtime
         self.payload = schedule_payload or {}
         self.context = schedule_context
         self.resume_payload = resume_payload or {}
+        self._result_transform = result_transform or _normalize_result
+        self.continue_on_error = continue_on_error
+        self.on_error = on_error
+        self.on_skip = on_skip
 
         self.dag_state = self.context.setdefault("_dag", {})
         stored_results = self.dag_state.get("results", {})
@@ -43,6 +54,11 @@ class DagExecutor:
             stored_results = {}
         self.node_results: Dict[str, Dict[str, Any]] = {
             node_id: _ensure_dict(stored_results.get(node_id)) for node_id in self.spec.nodes
+        }
+        self.raw_results: Dict[str, Any] = {
+            node_id: stored_results[node_id]
+            for node_id in self.spec.nodes
+            if node_id in stored_results
         }
         completed = self.dag_state.get("completed", [])
         if isinstance(completed, list):
@@ -72,31 +88,52 @@ class DagExecutor:
             node_id = order[idx]
             if node_id in self.completed:
                 continue
-            if not self._dependencies_completed(node_id):
+
+            missing = [
+                dep for dep in self.spec.predecessors.get(node_id, []) if dep not in self.completed
+            ]
+            if missing:
+                if self.on_skip:
+                    self.on_skip(node_id, missing)
                 continue
 
             node = self.spec.nodes[node_id]
-            payload_model = self._build_inputs(node)
+            try:
+                payload_model = self._build_inputs(node)
+            except Exception as exc:
+                if self.on_error:
+                    self.on_error(node_id, exc, "prepare")
+                if self.continue_on_error:
+                    continue
+                raise
+
             try:
                 outcome = await orchestrate_flow(node.flow, payload_model, self.runtime)
-                if isinstance(outcome, BaseModel):
-                    result_dict = _model_to_dict(outcome)
-                elif isinstance(outcome, dict):
-                    result_dict = outcome
-                else:
-                    result_dict = {"value": outcome}
-                self.node_results[node_id] = result_dict
-                self.completed.add(node_id)
-                self._update_dag_state()
             except ScheduleReschedule as suspend:
                 self._handle_reschedule(node_id, suspend)
                 raise
+            except Exception as exc:
+                if self.on_error:
+                    self.on_error(node_id, exc, "execute")
+                if self.continue_on_error:
+                    continue
+                raise
+
+            self.raw_results[node_id] = outcome
+            result_dict = self._result_transform(outcome)
+            self.node_results[node_id] = result_dict
+            self.completed.add(node_id)
+            self._update_dag_state()
 
         # completed all reachable nodes
         self.dag_state.pop("resume_next", None)
         self.context.pop("_resume", None)
         self._update_dag_state()
-        return ExecutionResult(node_results=self.node_results, context=self.context)
+        return ExecutionResult(
+            node_results=self.node_results,
+            context=self.context,
+            raw_results=self.raw_results,
+        )
 
     def _handle_reschedule(self, node_id: str, suspend: ScheduleReschedule) -> None:
         downstream = self.spec.adjacency.get(node_id, [])
@@ -110,16 +147,26 @@ class DagExecutor:
         if suspend.directive.context is None:
             suspend.directive.context = self.context
 
-    def _dependencies_completed(self, node_id: str) -> bool:
-        for upstream in self.spec.predecessors.get(node_id, []):
-            if upstream not in self.completed:
-                return False
-        return True
-
     def _build_inputs(self, node: DagNode) -> BaseModel:
-        raw_inputs = {
-            key: self._materialize(value) for key, value in node.inputs.items()
-        }
+        if node.payload_builder is not None:
+            raw_inputs = node.payload_builder(self.raw_results)
+        else:
+            raw_inputs = {
+                key: self._materialize(value) for key, value in node.inputs.items()
+            }
+
+        if isinstance(raw_inputs, BaseModel):
+            if hasattr(raw_inputs, "model_dump"):
+                raw_inputs = raw_inputs.model_dump()  # type: ignore[attr-defined]
+            else:
+                raw_inputs = raw_inputs.dict()  # type: ignore[attr-defined]
+        elif isinstance(raw_inputs, Mapping):
+            raw_inputs = dict(raw_inputs)
+        else:
+            raise TypeError(
+                "payload builder must return a mapping or BaseModel-compatible object"
+            )
+
         model_cls = node.flow.input_model
         if hasattr(model_cls, "model_validate"):
             return model_cls.model_validate(raw_inputs)
@@ -147,6 +194,8 @@ class DagExecutor:
             current = self.context.get("_resume", {}) or self.resume_payload
         elif root == "nodes":
             current = self.node_results
+        elif root == "nodes_raw":
+            current = self.raw_results
         else:
             return None
         for segment in segments:
@@ -173,6 +222,14 @@ def _model_to_dict(model: BaseModel) -> Dict[str, Any]:
     if hasattr(model, "model_dump"):
         return model.model_dump()
     return model.dict()
+
+
+def _normalize_result(value: Any) -> Dict[str, Any]:
+    if isinstance(value, BaseModel):
+        return _model_to_dict(value)
+    if isinstance(value, dict):
+        return value
+    return {"value": value}
 
 
 def _ensure_dict(value: Any) -> Dict[str, Any]:
