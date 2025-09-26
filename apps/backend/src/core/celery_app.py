@@ -70,4 +70,10 @@ beat_schedule["sniff_mailbox"] = {
     "options": {"queue": "sniffer"},
 }
 
+beat_schedule["ensure_coworker_polls"] = {
+    "task": "apps.backend.src.workers.coworker.ensure_coworker_polls",
+    "schedule": timedelta(seconds=45),
+    "options": {"queue": "coworker"},
+}
+
 celery_app.conf.beat_schedule = beat_schedule

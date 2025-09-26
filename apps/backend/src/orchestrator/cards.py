@@ -30,7 +30,9 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "TrendsListResponse": "trends.list",
 
     "TimelineEventCollectionOut": "timeline.events.composed",
-    
+
+    "CoworkerLeaseOut": "coworker.detail",
+
     "MessageOut": "info",
 }
 

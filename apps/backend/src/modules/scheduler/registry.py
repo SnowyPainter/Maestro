@@ -158,6 +158,8 @@ def _build_post_publish_template(request: "ScheduleCompileRequest") -> "Schedule
         node_id="publish",
         post_publication_id=payload_ref("post_publication_id"),
         persona_account_id=payload_ref("persona_account_id"),
+        variant_id=payload_ref("variant_id"),
+        platform=payload_ref("platform"),
     )
     return builder.build_model()
 

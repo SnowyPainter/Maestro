@@ -44,6 +44,12 @@ slots:
   flows:
   - campaigns.aggregate_kpis
   - campaigns.record_kpi_result
+- name: body
+  label: Body
+  description: Filter by body
+  value_type: string
+  flows:
+  - internal.event.mail.ingest_draft_mail
 - name: campaign_id
   label: Campaign Id
   description: Target a specific campaign id
@@ -85,6 +91,7 @@ slots:
   value_type: string
   flows:
   - bff.trends.list_trends
+  - internal.mail.compose_trends_email
 - name: dag_spec
   label: Dag Spec
   description: Filter by dag spec
@@ -133,6 +140,12 @@ slots:
   - bff.drafts.read_variant
   - drafts.delete
   - drafts.update_ir
+- name: email_to
+  label: Email To
+  description: Filter by email to
+  value_type: string
+  flows:
+  - internal.mail.compose_trends_email
 - name: end
   label: End
   description: Filter by end
@@ -146,6 +159,12 @@ slots:
   flows:
   - campaigns.create_campaign
   - campaigns.update_campaign
+- name: envelope
+  label: Envelope
+  description: Filter by envelope
+  value_type: string
+  flows:
+  - internal.event.mail.ingest_draft_mail
 - name: events
   label: Events
   description: Filter by events
@@ -166,6 +185,12 @@ slots:
   value_type: boolean
   flows:
   - action.coworker.update_my_coworker
+- name: from_email
+  label: From Email
+  description: Filter by from email
+  value_type: string
+  flows:
+  - internal.event.mail.ingest_draft_mail
 - name: goal
   label: Goal
   description: Filter by goal
@@ -213,6 +238,7 @@ slots:
   - bff.timeline.post_publications
   - bff.timeline.trends
   - bff.trends.list_trends
+  - internal.mail.compose_trends_email
 - name: link
   label: Link
   description: Filter by link
@@ -300,6 +326,7 @@ slots:
   - bff.timeline.campaigns
   - bff.timeline.post_publications
   - bff.timeline.trends
+  - internal.drafts.create_post_schedule
 - name: persona_account_ids
   label: Persona Account Ids
   description: Filter by persona account ids
@@ -316,6 +343,14 @@ slots:
   - accounts.persona.update
   - bff.accounts.list_accounts_for_persona
   - bff.accounts.read_persona
+  - internal.mail.compose_trends_email
+- name: pipeline_id
+  label: Pipeline Id
+  description: Target a specific pipeline id
+  value_type: integer
+  flows:
+  - internal.mail.await_reply
+  - internal.mail.compose_trends_email
 - name: platform
   label: Platform
   description: Filter by platform slug
@@ -329,6 +364,7 @@ slots:
   - bff.drafts.list_variants_by_platform
   - bff.drafts.read_variant
   - insights.ingest
+  - internal.drafts.create_post_schedule
 - name: platform_post_id
   label: Platform Post Id
   description: Target a specific platform post id
@@ -399,6 +435,12 @@ slots:
   value_type: integer_list
   flows:
   - action.schedule.cancel_schedules
+- name: scheduled_at
+  label: Scheduled At
+  description: Filter by scheduled at
+  value_type: string
+  flows:
+  - internal.drafts.create_post_schedule
 - name: scope
   label: Scope
   description: Filter by scope
@@ -415,6 +457,12 @@ slots:
   value_type: string_list
   flows:
   - action.schedule.create_trends_mail_schedule
+- name: sender
+  label: Sender
+  description: Filter by sender
+  value_type: string
+  flows:
+  - internal.event.mail.ingest_draft_mail
 - name: since
   label: Since
   description: Set a since date
@@ -461,6 +509,13 @@ slots:
   - action.schedule.cancel_schedules
   - bff.drafts.list_post_publications_by_status
   - bff.schedule.list_schedules
+- name: subject
+  label: Subject
+  description: Filter by subject
+  value_type: string
+  flows:
+  - internal.event.mail.ingest_draft_mail
+  - internal.mail.compose_trends_email
 - name: tags
   label: Tags
   description: Filter by tags
@@ -477,6 +532,24 @@ slots:
   - post.publish
   flows:
   - action.schedule.compile_template
+- name: text
+  label: Text
+  description: Filter by text
+  value_type: string
+  flows:
+  - internal.event.mail.ingest_draft_mail
+- name: text_plain
+  label: Text Plain
+  description: Filter by text plain
+  value_type: string
+  flows:
+  - internal.event.mail.ingest_draft_mail
+- name: timeout_s
+  label: Timeout S
+  description: Filter by timeout s
+  value_type: string
+  flows:
+  - internal.mail.await_reply
 - name: timezone
   label: Timezone
   description: Filter by timezone
@@ -521,6 +594,7 @@ slots:
   - action.schedule.create_draft_post_schedule
   - bff.drafts.list_post_publications_by_variant
   - bff.drafts.read_variant_by_id
+  - internal.drafts.create_post_schedule
 - name: warnings
   label: Warnings
   description: Filter by warnings

@@ -21,6 +21,7 @@ import { DraftVariantList } from "../drafts/components/DraftVariantList";
 import { DraftVariantDetail } from "../drafts/components/DraftVariantDetail";
 import { TimelineCard } from "@/entities/timeline/components/TimelineCard";
 import { TimelineEvent } from "@/entities/timeline/model/types";
+import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -29,6 +30,7 @@ export interface CardRenderCallbacks {
   onPersonaSelect?: (personaId: number, sourceMessageId: number) => void;
   onAccountSelect?: (accountId: number, sourceMessageId: number) => void;
   onDraftVariantSelect?: (variant: DraftVariantRender, sourceMessageId: number) => void;
+  onCoworkerSelect?: () => void;
 }
 
 export interface RenderCardOptions {
@@ -143,6 +145,10 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         onDelete={() => callbacks.onRemoveMessage?.(messageId)}
       />
     );
+  }
+
+  if (card_type === 'coworker.detail') {
+    return <CoWorkerDetail />;
   }
 
   // 카드 타입에 따라 컴포넌트 선택

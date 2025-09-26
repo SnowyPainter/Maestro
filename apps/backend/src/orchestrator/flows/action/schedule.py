@@ -217,7 +217,7 @@ async def op_create_draft_post_schedule(
     variant = await _load_owned_draft(
         db,
         variant_id=payload.variant_id,
-        owner_user_id=user.id,
+        owner_user_id=user.id,  
     )
 
     try:

@@ -114,7 +114,17 @@ class OperatorRegistry(MutableMapping[str, OperatorMeta]):
         return len(self._operators)
 
     def register(self, meta: OperatorMeta) -> OperatorMeta:
-        if meta.key in self._operators:
+        existing = self._operators.get(meta.key)
+        if existing is not None:
+            if (
+                getattr(existing.handler, "__module__", None)
+                == getattr(meta.handler, "__module__", None)
+                and getattr(existing.handler, "__qualname__", None)
+                == getattr(meta.handler, "__qualname__", None)
+            ):
+                logger.debug("Operator '%s' re-registered; replacing previous definition", meta.key)
+                self._operators[meta.key] = meta
+                return meta
             raise ValueError(f"Operator '{meta.key}' already registered")
         self._operators[meta.key] = meta
         return meta
@@ -539,18 +549,52 @@ class FlowRegistry:
         self._autodiscover_in_progress = False
 
     def register(self, flow: FlowDefinition) -> FlowDefinition:
-        if flow.key in self._flows:
+        existing = self._flows.get(flow.key)
+        if existing is not None:
+            if (
+                getattr(existing, "__builder_module__", None)
+                == getattr(flow, "__builder_module__", None)
+                and getattr(existing, "__builder_name__", None)
+                == getattr(flow, "__builder_name__", None)
+            ):
+                logger.debug("Flow '%s' re-registered; replacing previous definition", flow.key)
+                self._flows[flow.key] = flow
+                return flow
             raise ValueError(f"Flow '{flow.key}' already registered")
         self._flows[flow.key] = flow
         return flow
 
     def get(self, key: str) -> FlowDefinition:
         self._ensure_discovery()
-        return self._flows[key]
+        flow = self._flows.get(key)
+        if flow is not None:
+            return flow
+        if self._attempt_lazy_import(key):
+            return self._flows[key]
+        raise KeyError(key)
 
     def all(self) -> Tuple[FlowDefinition, ...]:
         self._ensure_discovery()
         return tuple(self._flows.values())
+
+    def _attempt_lazy_import(self, flow_key: str) -> bool:
+        if not self._autodiscover_package:
+            return False
+
+        module_parts = flow_key.split(".")
+        imported = False
+        for depth in range(len(module_parts), 0, -1):
+            module_name = ".".join(module_parts[:depth])
+            candidate = f"{self._autodiscover_package}.{module_name}"
+            try:
+                importlib.import_module(candidate)
+                imported = True
+            except ModuleNotFoundError:
+                continue
+            except Exception as exc:  # pragma: no cover - defensive logging only
+                logger.debug("Lazy import failed for %s: %s", candidate, exc)
+
+        return imported and flow_key in self._flows
 
     def flow(
         self,
@@ -583,6 +627,8 @@ class FlowRegistry:
                 flow = result.compile()
             else:
                 flow = builder.compile()
+            setattr(flow, "__builder_module__", getattr(builder_fn, "__module__", None))
+            setattr(flow, "__builder_name__", getattr(builder_fn, "__qualname__", None))
             self.register(flow)
             setattr(builder_fn, "__flow_definition__", flow)
             return builder_fn

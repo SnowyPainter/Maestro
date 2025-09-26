@@ -66,6 +66,10 @@ export function useChatPageEvents() {
   const messageIdRef = useRef<number>(Date.now());
   const { t } = useTranslation();
 
+  const handleCoworkerSelect = useCallback(() => {
+    // Placeholder for future implementation
+  }, []);
+
   const getNextMessageId = useCallback(() => {
     messageIdRef.current += 1;
     return messageIdRef.current;
@@ -578,6 +582,7 @@ export function useChatPageEvents() {
             onPersonaSelect: handlePersonaSelect,
             onAccountSelect: handleAccountSelect,
             onDraftVariantSelect: handleDraftVariantSelect,
+            onCoworkerSelect: handleCoworkerSelect,
           },
         }));
       });
@@ -585,7 +590,7 @@ export function useChatPageEvents() {
       console.error('Chat error:', error);
       addTextMessage(t('chat.error_message'), 'bot');
     }
-  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleDraftVariantSelect, t]);
+  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, t]);
 
   return {
     handleChatSend,

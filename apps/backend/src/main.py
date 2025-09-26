@@ -66,7 +66,7 @@ async def reset_db():
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         """
         
-        await conn.execute(text("DELETE FROM draft_variants"))
+        await conn.execute(text("DELETE FROM schedules"))
         
         await conn.run_sync(Base.metadata.create_all)
         

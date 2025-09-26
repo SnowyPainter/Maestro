@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import select
+from sqlalchemy import select
 
 from apps.backend.src.modules.drafts.service import (
     _now,
@@ -65,12 +65,6 @@ async def op_create_post_schedule(
     await db.commit()
     await db.refresh(publication)
     return PostPublicationOut.model_validate(publication)
-
-@operator(
-    key="internal.drafts.cancel_post_schedule",
-    title="Cancel Post Schedule",
-    side_effect="write",
-)
 
 @FLOWS.flow(
     key="internal.drafts.create_post_schedule",

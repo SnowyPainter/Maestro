@@ -456,7 +456,7 @@ async def ensure_publication_schedule(
         schedule.status = ScheduleStatus.PENDING.value
         schedule.due_at = due_at_naive
         schedule.queue = schedule.queue or "coworker"
-        schedule.updated_at = _now()
+        schedule.updated_at = _now().replace(tzinfo=None)
         db.add(schedule)
 
     meta.update(
