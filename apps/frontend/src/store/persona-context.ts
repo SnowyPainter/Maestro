@@ -69,6 +69,7 @@ const initialState = {
     | 'setUserMemo'
     | 'clearUserMemo'
     | 'setUserMemoEnabled'
+    | 'setActiveTool'
 >;
 
 export const usePersonaContextStore = create<PersonaContextState>()(

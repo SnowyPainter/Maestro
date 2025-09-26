@@ -16,6 +16,8 @@ const initialTools = [
     { id: 'campaigns', title: 'Campaigns', icon: <Volume2 className="w-5 h-5 text-primary" /> },
     { id: 'personas', title: 'Personas', icon: <PersonStanding className="w-5 h-5 text-primary" /> },
     { id: 'accounts', title: 'Accounts', icon: <BadgeCheck className="w-5 h-5 text-primary" /> },
+    { id: 'schedules', title: 'Schedules', icon: <Calendar className="w-5 h-5 text-primary" /> },
+    { id: 'coworker', title: 'CoWorker', icon: <TowerControl className="w-5 h-5 text-primary" /> },
 ];
 
 function SortableToolCard({ tool, onClick, ...props }: {

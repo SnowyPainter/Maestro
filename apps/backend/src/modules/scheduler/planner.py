@@ -41,7 +41,8 @@ def normalize_due_at(dt: datetime) -> datetime:
         dt = dt.replace(tzinfo=timezone.utc)
     else:
         dt = dt.astimezone(timezone.utc)
-    return dt.replace(second=0, microsecond=0)
+    dt = dt.replace(second=0, microsecond=0)
+    return dt.replace(tzinfo=None)
 
 
 def _weekmask_indices(weekmask: List[str]) -> set[int]:

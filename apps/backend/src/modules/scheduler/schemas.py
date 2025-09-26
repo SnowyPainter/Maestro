@@ -190,12 +190,10 @@ class ScheduleCreateFromRawDagRequest(BaseModel):
     )
     repeats: int = Field(
         default=1,
-        ge=1,
         description="Number of schedules to create in sequence",
     )
     repeat_interval_minutes: int = Field(
         default=0,
-        ge=0,
         description="Minutes between successive schedule runs",
     )
     queue: Optional[str] = Field(default=None, description="Optional queue override")

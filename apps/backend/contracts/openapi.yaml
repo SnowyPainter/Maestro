@@ -558,6 +558,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/coworker/lease:
+    get:
+      tags:
+      - bff
+      - bff
+      - coworker
+      - lease
+      - status
+      summary: Get CoWorker Lease State
+      description: Retrieve the current CoWorker lease configuration for the authenticated
+        user.
+      operationId: bff_coworker_read_lease_api_bff_coworker_lease_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoworkerLeaseState'
   /api/bff/drafts/post-publications/variant:
     post:
       tags:
@@ -902,6 +921,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+  /api/bff/schedules:
+    get:
+      tags:
+      - bff
+      - bff
+      - schedule
+      - list
+      summary: List Schedules
+      description: List schedules for the authenticated user with optional persona
+        filtering and meta information.
+      operationId: bff_schedule_list_schedules_api_bff_schedules_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ScheduleStatus'
+          - type: 'null'
+          title: Status
+      - name: queue
+        in: query
+        required: false
+        schema:
+          title: Queue
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleListResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/timeline/post-publications:
     get:
       tags:
@@ -1812,38 +1893,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/insights:
-    post:
-      tags:
-      - action
-      - action
-      - insights
-      - data
-      - analytics
-      - ingestion
-      - processing
-      summary: Process and Store Insight Data
-      description: Ingest new insight data for analysis and trend detection
-      operationId: insights_ingest_api_orchestrator_insights_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InsightInCommand'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InsightOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/actions/schedules/compile:
     post:
       tags:
@@ -1939,7 +1988,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PostPublishTemplateParams'
+              $ref: '#/components/schemas/DraftPostScheduleRequest'
         required: true
       responses:
         '200':
@@ -1985,6 +2034,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/mail/create:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - cancel
+      summary: Create Trends similar to persona Mail Schedule
+      description: Create or update a mail publication schedule for the given draft
+        variant
+      operationId: action_schedule_create_trends_mail_schedule_api_orchestrator_actions_schedules_mail_create_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MailScheduleBatchRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleCreateResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/actions/schedules/cancel:
     post:
       tags:
@@ -2019,12 +2098,12 @@ paths:
       tags:
       - action
       - action
+      - coworker
       - schedule
       - start
-      - coworker
       summary: Start My CoWorker
       description: Start the CoWorker worker
-      operationId: action_schedule_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post
+      operationId: action_coworker_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post
       requestBody:
         content:
           application/json:
@@ -2049,12 +2128,12 @@ paths:
       tags:
       - action
       - action
+      - coworker
       - schedule
       - stop
-      - coworker
       summary: Stop My CoWorker
       description: Stop the CoWorker worker
-      operationId: action_schedule_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post
+      operationId: action_coworker_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post
       requestBody:
         content:
           application/json:
@@ -2068,6 +2147,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_EmptyPayload'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/coworker/lease:
+    post:
+      tags:
+      - action
+      - action
+      - coworker
+      - schedule
+      - update
+      summary: Update My CoWorker Lease
+      description: Update CoWorker lease scope, interval, and activation state.
+      operationId: action_coworker_update_my_coworker_api_orchestrator_actions_schedules_coworker_lease_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoworkerLeaseUpdatePayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoworkerLeaseOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/insights:
+    post:
+      tags:
+      - action
+      - action
+      - insights
+      - data
+      - analytics
+      - ingestion
+      - processing
+      summary: Process and Store Insight Data
+      description: Ingest new insight data for analysis and trend detection
+      operationId: insights_ingest_api_orchestrator_insights_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightInCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightOut'
         '422':
           description: Validation Error
           content:
@@ -2806,6 +2947,185 @@ components:
       - live
       - unknown
       title: ContentKind
+    CoworkerLeaseOut:
+      properties:
+        active:
+          type: boolean
+          title: Active
+        interval_seconds:
+          type: integer
+          title: Interval Seconds
+        persona_account_ids:
+          items:
+            type: integer
+          type: array
+          title: Persona Account Ids
+        task_id:
+          title: Task Id
+          type: string
+          nullable: true
+      type: object
+      required:
+      - active
+      - interval_seconds
+      - persona_account_ids
+      - task_id
+      title: CoworkerLeaseOut
+      description: Representation of a CoWorker lease returned by action operators.
+    CoworkerLeaseState:
+      properties:
+        has_lease:
+          type: boolean
+          title: Has Lease
+        active:
+          type: boolean
+          title: Active
+        interval_seconds:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Interval Seconds
+        persona_account_ids:
+          items:
+            type: integer
+          type: array
+          title: Persona Account Ids
+        persona_accounts:
+          items:
+            $ref: '#/components/schemas/CoworkerPersonaSummary'
+          type: array
+          title: Persona Accounts
+        task_id:
+          title: Task Id
+          type: string
+          nullable: true
+        current_task:
+          anyOf:
+          - $ref: '#/components/schemas/CoworkerTaskInfo'
+          - type: 'null'
+      type: object
+      required:
+      - has_lease
+      - active
+      - persona_account_ids
+      - persona_accounts
+      title: CoworkerLeaseState
+    CoworkerLeaseUpdatePayload:
+      properties:
+        persona_account_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Persona Account Ids
+          description: Explicit list of persona_account_ids to associate with the
+            lease.
+        add_persona_account_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Add Persona Account Ids
+          description: Persona account IDs to append to the existing lease scope.
+        remove_persona_account_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Remove Persona Account Ids
+          description: Persona account IDs to remove from the existing lease scope.
+        interval_seconds:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Interval Seconds
+          description: Polling interval for the CoWorker lease. Minimum 5 seconds.
+          default: 30
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+          description: Toggle the active state of the lease.
+        force_restart:
+          type: boolean
+          title: Force Restart
+          description: If true, enqueue a fresh execute_due_schedules task even when
+            a task is already registered.
+          default: false
+      type: object
+      title: CoworkerLeaseUpdatePayload
+      description: Payload for updating the caller's CoWorker lease.
+    CoworkerPersonaSummary:
+      properties:
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        persona_id:
+          type: integer
+          title: Persona Id
+        persona_name:
+          title: Persona Name
+          type: string
+          nullable: true
+        platform:
+          title: Platform
+          type: string
+          nullable: true
+        handle:
+          title: Handle
+          type: string
+          nullable: true
+        avatar_url:
+          title: Avatar Url
+          type: string
+          nullable: true
+      type: object
+      required:
+      - persona_account_id
+      - persona_id
+      - persona_name
+      - platform
+      - handle
+      - avatar_url
+      title: CoworkerPersonaSummary
+    CoworkerTaskInfo:
+      properties:
+        id:
+          type: string
+          title: Id
+        state:
+          type: string
+          title: State
+        info:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Info
+      type: object
+      required:
+      - id
+      - state
+      title: CoworkerTaskInfo
+    DateRange:
+      properties:
+        start:
+          type: string
+          format: date
+          title: Start
+        end:
+          type: string
+          format: date
+          title: End
+      type: object
+      required:
+      - start
+      - end
+      title: DateRange
     DraftIR:
       properties:
         blocks:
@@ -2950,6 +3270,24 @@ components:
         $ref: '#/components/schemas/PostPublicationOut'
       type: array
       title: DraftPostPublicationsList
+    DraftPostScheduleRequest:
+      properties:
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        variant_id:
+          type: integer
+          title: Variant Id
+        run_at:
+          type: string
+          format: date-time
+          title: Run At
+      type: object
+      required:
+      - persona_account_id
+      - variant_id
+      - run_at
+      title: DraftPostScheduleRequest
     DraftSaveRequest:
       properties:
         campaign_id:
@@ -3478,6 +3816,137 @@ components:
       - email
       - password
       title: LoginRequest
+    MailScheduleBatchRequest:
+      properties:
+        title:
+          title: Title
+          type: string
+          nullable: true
+        timezone:
+          type: string
+          title: Timezone
+          default: UTC
+        date_range:
+          $ref: '#/components/schemas/DateRange'
+        weekmask:
+          items:
+            type: string
+          type: array
+          title: Weekmask
+        exdates:
+          items:
+            type: string
+            format: date
+          type: array
+          title: Exdates
+        segments:
+          items:
+            $ref: '#/components/schemas/MailScheduleSegment'
+          type: array
+          title: Segments
+        distribution:
+          $ref: '#/components/schemas/MailScheduleDistribution'
+        constraints:
+          $ref: '#/components/schemas/MailScheduleConstraints'
+        payload_template:
+          $ref: '#/components/schemas/MailScheduleTemplateParams'
+        queue:
+          title: Queue
+          type: string
+          nullable: true
+      type: object
+      required:
+      - date_range
+      - segments
+      - payload_template
+      title: MailScheduleBatchRequest
+    MailScheduleBlackout:
+      properties:
+        start:
+          type: string
+          format: time
+          title: Start
+        end:
+          type: string
+          format: time
+          title: End
+      type: object
+      required:
+      - start
+      - end
+      title: MailScheduleBlackout
+    MailScheduleConstraints:
+      properties:
+        min_gap_minutes:
+          type: integer
+          minimum: 0.0
+          title: Min Gap Minutes
+          default: 0
+        max_per_day:
+          anyOf:
+          - type: integer
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Max Per Day
+        max_parallel:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Max Parallel
+          default: 1
+        blackouts:
+          items:
+            $ref: '#/components/schemas/MailScheduleBlackout'
+          type: array
+          title: Blackouts
+      type: object
+      title: MailScheduleConstraints
+    MailScheduleDistribution:
+      properties:
+        mode:
+          type: string
+          title: Mode
+          default: even
+        fixed_times:
+          additionalProperties:
+            items:
+              type: string
+              format: time
+            type: array
+          type: object
+          title: Fixed Times
+        weights:
+          additionalProperties:
+            type: number
+          type: object
+          title: Weights
+      type: object
+      title: MailScheduleDistribution
+    MailScheduleSegment:
+      properties:
+        id:
+          type: string
+          title: Id
+        start:
+          type: string
+          format: time
+          title: Start
+        end:
+          type: string
+          format: time
+          title: End
+        count_per_day:
+          type: integer
+          minimum: 0.0
+          title: Count Per Day
+          default: 1
+      type: object
+      required:
+      - id
+      - start
+      - end
+      title: MailScheduleSegment
     MailScheduleTemplateParams:
       properties:
         persona_id:
@@ -4457,13 +4926,11 @@ components:
           description: Initial execution time for the first schedule
         repeats:
           type: integer
-          minimum: 1.0
           title: Repeats
           description: Number of schedules to create in sequence
           default: 1
         repeat_interval_minutes:
           type: integer
-          minimum: 0.0
           title: Repeat Interval Minutes
           description: Minutes between successive schedule runs
           default: 0
@@ -4582,6 +5049,100 @@ components:
       title: ScheduleDagSpec
       description: Full DAG specification including optional schedule payload and
         metadata.
+    ScheduleListItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        status:
+          type: string
+          title: Status
+        queue:
+          title: Queue
+          type: string
+          nullable: true
+        due_at:
+          title: Due At
+          format: date-time
+          type: string
+          nullable: true
+        created_at:
+          title: Created At
+          format: date-time
+          type: string
+          nullable: true
+        updated_at:
+          title: Updated At
+          format: date-time
+          type: string
+          nullable: true
+        meta:
+          $ref: '#/components/schemas/ScheduleMeta'
+      type: object
+      required:
+      - id
+      - persona_account_id
+      - status
+      - queue
+      - due_at
+      - created_at
+      - updated_at
+      - meta
+      title: ScheduleListItem
+    ScheduleListResult:
+      properties:
+        total:
+          type: integer
+          title: Total
+        items:
+          items:
+            $ref: '#/components/schemas/ScheduleListItem'
+          type: array
+          title: Items
+        limit:
+          type: integer
+          title: Limit
+        offset:
+          type: integer
+          title: Offset
+      type: object
+      required:
+      - total
+      - items
+      - limit
+      - offset
+      title: ScheduleListResult
+    ScheduleMeta:
+      properties:
+        label:
+          title: Label
+          type: string
+          nullable: true
+        dag_meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Dag Meta
+        context:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Context
+        payload:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Payload
+      type: object
+      required:
+      - label
+      title: ScheduleMeta
     ScheduleStatus:
       type: string
       enum:

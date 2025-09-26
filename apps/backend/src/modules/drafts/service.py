@@ -42,7 +42,11 @@ async def _load_owned_draft(
     variant: DraftVariant | None = await db.get(DraftVariant, variant_id)
     if variant is None:
         raise HTTPException(status_code=404, detail="Variant not found")
-    if variant.draft_owner_id != owner_user_id:
+
+    owner_id = await db.scalar(select(Draft.user_id).where(Draft.id == variant.draft_id))
+    if owner_id is None:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    if owner_id != owner_user_id:
         raise HTTPException(status_code=403, detail="Not authorized")
     return variant
 
@@ -305,7 +309,6 @@ async def get_draft_variant(
     ).options(selectinload(DraftVariant.publications))
     return (await db.execute(stmt)).scalars().first()
 
-
 async def _load_persona_account_for_user(
     db: AsyncSession,
     *,
@@ -424,6 +427,7 @@ async def ensure_publication_schedule(
     dag_spec = compile_schedule_template(compile_request).dag_spec
     dag_dict: Dict[str, Any] = dag_spec.model_dump(by_alias=True, exclude_none=True)
     due_at = _normalize_schedule(scheduled_at)
+    due_at_naive = due_at.replace(tzinfo=None)
 
     meta = dict(publication.meta or {})
     schedule_id = meta.get("schedule_id")
@@ -439,7 +443,7 @@ async def ensure_publication_schedule(
             payload=dag_spec.payload,
             context={},
             status=ScheduleStatus.PENDING.value,
-            due_at=due_at,
+            due_at=due_at_naive,
             queue="coworker",
             idempotency_key=f"post:{publication.id}:{persona_account_id}",
         )
@@ -450,7 +454,7 @@ async def ensure_publication_schedule(
         schedule.dag_spec = dag_dict
         schedule.payload = dag_spec.payload
         schedule.status = ScheduleStatus.PENDING.value
-        schedule.due_at = due_at
+        schedule.due_at = due_at_naive
         schedule.queue = schedule.queue or "coworker"
         schedule.updated_at = _now()
         db.add(schedule)

@@ -10,8 +10,6 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
-from apps.backend.src.modules.scheduler import repository as scheduler_repo
 from apps.backend.src.modules.scheduler.models import Schedule
 from apps.backend.src.modules.common.enums import ScheduleStatus
 from apps.backend.src.modules.scheduler.registry import (
@@ -25,7 +23,6 @@ from apps.backend.src.modules.scheduler.schemas import (
     ScheduleCompileRequest,
     ScheduleCompileResult,
     CancelPostScheduleCommand,
-    PostPublishTemplateParams,
     MailScheduleBatchRequest,
     ScheduleCreateFromRawDagRequest,
     CancelSchedulesCommand,
@@ -38,13 +35,29 @@ from apps.backend.src.orchestrator.flows.action.drafts import MessageOut
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
-from apps.backend.src.workers.CoWorker.execute_due_schedules import execute_due_schedules
 from apps.backend.src.modules.drafts.service import (
     cancel_post_publication,
     _load_owned_draft,
     remove_publication_schedule,
+    upsert_post_publication_schedule,
+    ensure_publication_schedule,
 )
 from apps.backend.src.modules.drafts.models import PostPublication
+
+# ---- 공통 유틸: DB가 TIMESTAMP WITHOUT TIME ZONE이면 모든 dt를 UTC-naive로 강제 ----
+def to_utc_naive(dt: datetime) -> datetime:
+    """
+    - aware -> UTC로 변환 후 tzinfo 제거
+    - naive -> 그대로 사용 (이미 UTC라고 가정)
+    """
+    if dt.tzinfo is None:
+        return dt
+    return dt.astimezone(timezone.utc).replace(tzinfo=None)
+
+def opt_to_utc_naive(dt: Optional[datetime]) -> Optional[datetime]:
+    return None if dt is None else to_utc_naive(dt)
+
+# ---- 오퍼레이터 ----
 
 # ---------------------------------------------------------------------------
 # Template metadata helpers
@@ -67,6 +80,12 @@ class ScheduleCreateResult(BaseModel):
 
 class _EmptyPayload(BaseModel):
     """Placeholder model for GET endpoints."""
+
+
+class DraftPostScheduleRequest(BaseModel):
+    persona_account_id: int
+    variant_id: int
+    run_at: datetime
 
 
 
@@ -160,7 +179,7 @@ async def op_create_schedule_from_raw_dag(
     db: AsyncSession = ctx.require(AsyncSession)
 
     schedule_ids: List[int] = []
-    run_at = payload.run_at
+    run_at = normalize_due_at(payload.run_at)
     interval = timedelta(minutes=payload.repeat_interval_minutes)
 
     for _ in range(payload.repeats):
@@ -177,7 +196,7 @@ async def op_create_schedule_from_raw_dag(
         db.add(schedule)
         await db.flush()
         schedule_ids.append(schedule.id)
-        run_at += interval
+        run_at = normalize_due_at(run_at + interval) if interval else run_at
 
     await db.commit()
     return ScheduleCreateResult(schedule_ids=schedule_ids)
@@ -189,40 +208,51 @@ async def op_create_schedule_from_raw_dag(
     side_effect="write",
 )
 async def op_create_draft_post_schedule(
-    payload: PostPublishTemplateParams,
+    payload: DraftPostScheduleRequest,
     ctx: TaskContext,
 ) -> ScheduleCreateResult:
     db: AsyncSession = ctx.require(AsyncSession)
-    user: Optional[User] = ctx.optional(User)
+    user: User = ctx.require(User)
 
-    compile_request = ScheduleCompileRequest(
-        template=ScheduleTemplateKey.POST_PUBLISH,
-        post_publish=payload,
+    variant = await _load_owned_draft(
+        db,
+        variant_id=payload.variant_id,
+        owner_user_id=user.id,
     )
-    compile_result = compile_schedule_template(compile_request)
-    dag_spec = compile_result.dag_spec
-    dag_json = dag_spec.model_dump(by_alias=True, exclude_none=True)
 
-    created_at = datetime.now(timezone.utc)
-    schedule_context: Dict[str, Any] = {
-        "template": ScheduleTemplateKey.POST_PUBLISH.value,
-        "created_at": created_at.isoformat(),
-    }
-    if user is not None:
-        schedule_context["user_id"] = user.id
+    try:
+        publication = await upsert_post_publication_schedule(
+            db,
+            variant=variant,
+            persona_account_id=payload.persona_account_id,
+            scheduled_at=payload.run_at,
+            owner_user_id=user.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    schedule = Schedule(
+    schedule = await ensure_publication_schedule(
+        db,
+        publication=publication,
+        variant=variant,
         persona_account_id=payload.persona_account_id,
-        dag_spec=dag_json,
-        payload=dag_spec.payload,
-        context=schedule_context,
-        status=ScheduleStatus.PENDING.value,
-        due_at=normalize_due_at(created_at),
-        queue="coworker",
-        idempotency_key=uuid4().hex,
+        scheduled_at=payload.run_at,
     )
+
+    schedule_context = schedule.context_data()
+    schedule_context.setdefault("template", ScheduleTemplateKey.POST_PUBLISH.value)
+    schedule_context["scheduled_via"] = "action.schedule.create_draft_post_schedule"
+    schedule_context["requested_at"] = datetime.now(timezone.utc).isoformat()
+    scheduled_for = schedule.due_at or payload.run_at
+    if scheduled_for.tzinfo is None:
+        scheduled_for = scheduled_for.replace(tzinfo=timezone.utc)
+    else:
+        scheduled_for = scheduled_for.astimezone(timezone.utc)
+    schedule_context["scheduled_for"] = scheduled_for.isoformat()
+    schedule_context["user_id"] = user.id
+    schedule.context = schedule_context
     db.add(schedule)
-    await db.flush()
+
     await db.commit()
     return ScheduleCreateResult(schedule_ids=[schedule.id])
 
@@ -342,7 +372,6 @@ async def op_create_trends_mail_schedule(
     await db.commit()
     return ScheduleCreateResult(schedule_ids=schedule_ids)
 
-
 @operator(
     key="action.schedule.cancel_schedules",
     title="Cancel Schedules",
@@ -354,16 +383,19 @@ async def op_cancel_schedules(
 ) -> MessageOut:
     db: AsyncSession = ctx.require(AsyncSession)
 
-    if not any(
-        [
-            payload.schedule_ids,
-            payload.persona_account_id is not None,
-            payload.status is not None,
-            payload.window_start is not None,
-            payload.window_end is not None,
-        ]
-    ):
+    # 최소 한 개의 필터는 필요
+    if not any([
+        payload.schedule_ids,
+        payload.persona_account_id is not None,
+        payload.status is not None,
+        payload.window_start is not None,
+        payload.window_end is not None,
+    ]):
         raise HTTPException(status_code=400, detail="at least one filter must be provided")
+
+    # 필터의 날짜도 모두 UTC-naive로 정규화
+    window_start_naive = opt_to_utc_naive(payload.window_start)
+    window_end_naive   = opt_to_utc_naive(payload.window_end)
 
     stmt = select(Schedule)
     if payload.schedule_ids:
@@ -372,10 +404,10 @@ async def op_cancel_schedules(
         stmt = stmt.where(Schedule.persona_account_id == payload.persona_account_id)
     if payload.status is not None:
         stmt = stmt.where(Schedule.status == payload.status.value)
-    if payload.window_start is not None:
-        stmt = stmt.where(Schedule.due_at >= payload.window_start)
-    if payload.window_end is not None:
-        stmt = stmt.where(Schedule.due_at <= payload.window_end)
+    if window_start_naive is not None:
+        stmt = stmt.where(Schedule.due_at >= window_start_naive)
+    if window_end_naive is not None:
+        stmt = stmt.where(Schedule.due_at <= window_end_naive)
 
     result = await db.execute(stmt)
     schedules: List[Schedule] = list(result.scalars().all())
@@ -389,22 +421,25 @@ async def op_cancel_schedules(
         ScheduleStatus.RUNNING.value,
         ScheduleStatus.FAILED.value,
     }
-    cancelled = 0
-    now = datetime.now(timezone.utc)
 
+    # DB 컬럼이 TIMESTAMP WITHOUT TIME ZONE 이므로 UTC-naive 값으로 저장
+    now_utc_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    cancelled = 0
     for schedule in schedules:
         if schedule.status not in cancellable_statuses:
             continue
+
         schedule.status = ScheduleStatus.CANCELLED.value
-        schedule.updated_at = now
-        context = schedule.context_data()
-        context.update(
-            {
-                "cancelled_at": now.isoformat(),
-                "cancel_reason": "user_request",
-            }
-        )
+        schedule.updated_at = now_utc_naive
+
+        context = schedule.context_data() or {}
+        context.update({
+            "cancelled_at": now_utc_naive.isoformat() + "Z",  # 컨텍스트는 문자열 ISO UTC로
+            "cancel_reason": "user_request",
+        })
         schedule.context = context
+
         db.add(schedule)
         cancelled += 1
 
@@ -413,6 +448,7 @@ async def op_cancel_schedules(
 
     await db.commit()
     return MessageOut(message=f"Cancelled {cancelled} schedule(s)")
+
 
 @FLOWS.flow(
     key="action.schedule.create_from_raw_dag",
@@ -437,7 +473,7 @@ def _flow_create_schedule_from_raw_dag(builder: FlowBuilder):
     key="action.schedule.create_draft_post_schedule",
     title="Create Post Schedule",
     description="Create or update a post publication schedule for the given draft variant",
-    input_model=PostPublishTemplateParams,
+    input_model=DraftPostScheduleRequest,
     output_model=ScheduleCreateResult,
     method="post",
     path="/actions/schedules/create/draft/post",
@@ -475,6 +511,9 @@ def _flow_cancel_draft_post_schedule(builder: FlowBuilder):
     description="Create or update a mail publication schedule for the given draft variant",
     input_model=MailScheduleBatchRequest,
     output_model=ScheduleCreateResult,
+    method="post",
+    path="/actions/schedules/mail/create",
+    tags=("action", "schedule", "cancel")
 )
 def _flow_create_trends_mail_schedule(builder: FlowBuilder):
     task = builder.task(
@@ -496,116 +535,5 @@ def _flow_create_trends_mail_schedule(builder: FlowBuilder):
 def _flow_cancel_schedules(builder: FlowBuilder):
     task = builder.task("cancel_schedules", "action.schedule.cancel_schedules")
     builder.expect_terminal(task)
-
-# ---------------------------------------------------------------------------
-# CoWorker lease controls
-# ---------------------------------------------------------------------------
-
-
-async def _persona_account_ids_for_user(db: AsyncSession, user_id: int) -> list[int]:
-    stmt = (
-        select(PersonaAccount.id)
-        .join(Persona, PersonaAccount.persona_id == Persona.id)
-        .where(Persona.owner_user_id == user_id)
-    )
-    res = await db.execute(stmt)
-    return [pid for pid in res.scalars().all()]
-
-
-@operator(
-    key="action.schedule.start_my_coworker",
-    title="Start My CoWorker",
-    side_effect="write",
-)
-async def op_start_my_coworker(payload: _EmptyPayload, ctx: TaskContext) -> _EmptyPayload:
-    db: AsyncSession = ctx.require(AsyncSession)
-    user: User = ctx.require(User)
-
-    persona_ids = await _persona_account_ids_for_user(db, user.id)
-    if not persona_ids:
-        return _EmptyPayload()
-
-    existing = await scheduler_repo.get_coworker_lease(db, owner_user_id=user.id)
-    interval = existing.interval_seconds if existing else 30
-    interval = max(interval, 5)
-    task_id = existing.task_id if existing and existing.active else None
-
-    await scheduler_repo.upsert_coworker_lease(
-        db,
-        owner_user_id=user.id,
-        persona_account_ids=persona_ids,
-        interval_seconds=interval,
-        active=True,
-        task_id=task_id,
-    )
-    await db.commit()
-
-    if existing and existing.active and existing.task_id:
-        return _EmptyPayload()
-
-    async_result = execute_due_schedules.apply_async(kwargs={"owner_user_id": user.id})
-    await scheduler_repo.update_coworker_lease_task(
-        db,
-        owner_user_id=user.id,
-        task_id=async_result.id,
-    )
-    await db.commit()
-    return _EmptyPayload()
-
-
-@operator(
-    key="action.schedule.stop_my_coworker",
-    title="Stop My CoWorker",
-    side_effect="write",
-)
-async def op_stop_my_coworker(payload: _EmptyPayload, ctx: TaskContext) -> _EmptyPayload:
-    db: AsyncSession = ctx.require(AsyncSession)
-    user: User = ctx.require(User)
-
-    lease = await scheduler_repo.get_coworker_lease(db, owner_user_id=user.id)
-    if lease is None:
-        return _EmptyPayload()
-
-    await scheduler_repo.set_coworker_lease_active(
-        db,
-        owner_user_id=user.id,
-        active=False,
-    )
-    await db.commit()
-
-    if lease.task_id:
-        execute_due_schedules.app.control.revoke(lease.task_id, terminate=True)
-    return _EmptyPayload()
-
-
-@FLOWS.flow(
-    key="action.schedule.start_my_coworker",
-    title="Start My CoWorker",
-    description="Start the CoWorker worker",
-    input_model=_EmptyPayload,
-    output_model=_EmptyPayload,
-    method="post",
-    path="/actions/schedules/start_my_coworker",
-    tags=("action", "schedule", "start", "coworker"),
-)
-def _flow_start_my_coworker(builder: FlowBuilder):
-    task = builder.task("start_my_coworker", "action.schedule.start_my_coworker")
-    builder.expect_terminal(task)
-
-
-@FLOWS.flow(
-    key="action.schedule.stop_my_coworker",
-    title="Stop My CoWorker",
-    description="Stop the CoWorker worker",
-    input_model=_EmptyPayload,
-    output_model=_EmptyPayload,
-    method="post",
-    path="/actions/schedules/stop_my_coworker",
-    tags=("action", "schedule", "stop", "coworker"),
-)
-def _flow_stop_my_coworker(builder: FlowBuilder):
-    task = builder.task("stop_my_coworker", "action.schedule.stop_my_coworker")
-    builder.expect_terminal(task)
-
 
 __all__ = []

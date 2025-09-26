@@ -28,7 +28,7 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
     const handleSelectPersonaAccount = useCallback((richPersonaAccount: any) => {
         // Start injection animation
         setInjectingAccount(String(richPersonaAccount.id));
-
+        console.log(richPersonaAccount.persona_id)
         // After 0.8 seconds, complete the selection
         setTimeout(() => {
             setPersonaContext({
@@ -172,6 +172,7 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
                         // Convert RichPersonaAccountOut to DisplayPersonaAccountCard format
                         const displayPersonaAccount = {
                             id: personaAccount.id,
+                            persona_id: personaAccount.persona_id,
                             persona_name: personaAccount.persona_name,
                             persona_avatar_url: personaAccount.persona_avatar_url || undefined,
                             persona_description: personaAccount.persona_description || undefined,

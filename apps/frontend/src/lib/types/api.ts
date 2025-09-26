@@ -284,6 +284,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/coworker/lease": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get CoWorker Lease State
+         * @description Retrieve the current CoWorker lease configuration for the authenticated user.
+         */
+        get: operations["bff_coworker_read_lease_api_bff_coworker_lease_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/drafts/post-publications/variant": {
         parameters: {
             query?: never;
@@ -476,6 +496,26 @@ export interface paths {
          * @description Retrieve authenticated user profile information for user interface and settings
          */
         get: operations["bff_me_read_me_api_bff_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Schedules
+         * @description List schedules for the authenticated user with optional persona filtering and meta information.
+         */
+        get: operations["bff_schedule_list_schedules_api_bff_schedules_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -856,26 +896,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/insights": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Process and Store Insight Data
-         * @description Ingest new insight data for analysis and trend detection
-         */
-        post: operations["insights_ingest_api_orchestrator_insights_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/actions/schedules/compile": {
         parameters: {
             query?: never;
@@ -976,6 +996,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/actions/schedules/mail/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Trends similar to persona Mail Schedule
+         * @description Create or update a mail publication schedule for the given draft variant
+         */
+        post: operations["action_schedule_create_trends_mail_schedule_api_orchestrator_actions_schedules_mail_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/actions/schedules/cancel": {
         parameters: {
             query?: never;
@@ -1009,7 +1049,7 @@ export interface paths {
          * Start My CoWorker
          * @description Start the CoWorker worker
          */
-        post: operations["action_schedule_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post"];
+        post: operations["action_coworker_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1029,7 +1069,47 @@ export interface paths {
          * Stop My CoWorker
          * @description Stop the CoWorker worker
          */
-        post: operations["action_schedule_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post"];
+        post: operations["action_coworker_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/actions/schedules/coworker/lease": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update My CoWorker Lease
+         * @description Update CoWorker lease scope, interval, and activation state.
+         */
+        post: operations["action_coworker_update_my_coworker_api_orchestrator_actions_schedules_coworker_lease_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Process and Store Insight Data
+         * @description Ingest new insight data for analysis and trend detection
+         */
+        post: operations["insights_ingest_api_orchestrator_insights_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1487,6 +1567,113 @@ export interface components {
          * @enum {string}
          */
         ContentKind: "post" | "video" | "story" | "carousel" | "live" | "unknown";
+        /**
+         * CoworkerLeaseOut
+         * @description Representation of a CoWorker lease returned by action operators.
+         */
+        CoworkerLeaseOut: {
+            /** Active */
+            active: boolean;
+            /** Interval Seconds */
+            interval_seconds: number;
+            /** Persona Account Ids */
+            persona_account_ids: number[];
+            /** Task Id */
+            task_id: string | null;
+        };
+        /** CoworkerLeaseState */
+        CoworkerLeaseState: {
+            /** Has Lease */
+            has_lease: boolean;
+            /** Active */
+            active: boolean;
+            /** Interval Seconds */
+            interval_seconds?: number | null;
+            /** Persona Account Ids */
+            persona_account_ids: number[];
+            /** Persona Accounts */
+            persona_accounts: components["schemas"]["CoworkerPersonaSummary"][];
+            /** Task Id */
+            task_id?: string | null;
+            current_task?: components["schemas"]["CoworkerTaskInfo"] | null;
+        };
+        /**
+         * CoworkerLeaseUpdatePayload
+         * @description Payload for updating the caller's CoWorker lease.
+         */
+        CoworkerLeaseUpdatePayload: {
+            /**
+             * Persona Account Ids
+             * @description Explicit list of persona_account_ids to associate with the lease.
+             */
+            persona_account_ids?: number[] | null;
+            /**
+             * Add Persona Account Ids
+             * @description Persona account IDs to append to the existing lease scope.
+             */
+            add_persona_account_ids?: number[] | null;
+            /**
+             * Remove Persona Account Ids
+             * @description Persona account IDs to remove from the existing lease scope.
+             */
+            remove_persona_account_ids?: number[] | null;
+            /**
+             * Interval Seconds
+             * @description Polling interval for the CoWorker lease. Minimum 5 seconds.
+             * @default 30
+             */
+            interval_seconds: number | null;
+            /**
+             * Active
+             * @description Toggle the active state of the lease.
+             */
+            active?: boolean | null;
+            /**
+             * Force Restart
+             * @description If true, enqueue a fresh execute_due_schedules task even when a task is already registered.
+             * @default false
+             */
+            force_restart: boolean;
+        };
+        /** CoworkerPersonaSummary */
+        CoworkerPersonaSummary: {
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Persona Id */
+            persona_id: number;
+            /** Persona Name */
+            persona_name: string | null;
+            /** Platform */
+            platform: string | null;
+            /** Handle */
+            handle: string | null;
+            /** Avatar Url */
+            avatar_url: string | null;
+        };
+        /** CoworkerTaskInfo */
+        CoworkerTaskInfo: {
+            /** Id */
+            id: string;
+            /** State */
+            state: string;
+            /** Info */
+            info?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** DateRange */
+        DateRange: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+        };
         /** DraftIR */
         DraftIR: {
             /** Blocks */
@@ -1565,6 +1752,18 @@ export interface components {
         };
         /** DraftPostPublicationsList */
         DraftPostPublicationsList: components["schemas"]["PostPublicationOut"][];
+        /** DraftPostScheduleRequest */
+        DraftPostScheduleRequest: {
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Variant Id */
+            variant_id: number;
+            /**
+             * Run At
+             * Format: date-time
+             */
+            run_at: string;
+        };
         /** DraftSaveRequest */
         DraftSaveRequest: {
             /** Campaign Id */
@@ -1857,6 +2056,94 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** MailScheduleBatchRequest */
+        MailScheduleBatchRequest: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Timezone
+             * @default UTC
+             */
+            timezone: string;
+            date_range: components["schemas"]["DateRange"];
+            /** Weekmask */
+            weekmask?: string[];
+            /** Exdates */
+            exdates?: string[];
+            /** Segments */
+            segments: components["schemas"]["MailScheduleSegment"][];
+            distribution?: components["schemas"]["MailScheduleDistribution"];
+            constraints?: components["schemas"]["MailScheduleConstraints"];
+            payload_template: components["schemas"]["MailScheduleTemplateParams"];
+            /** Queue */
+            queue?: string | null;
+        };
+        /** MailScheduleBlackout */
+        MailScheduleBlackout: {
+            /**
+             * Start
+             * Format: time
+             */
+            start: string;
+            /**
+             * End
+             * Format: time
+             */
+            end: string;
+        };
+        /** MailScheduleConstraints */
+        MailScheduleConstraints: {
+            /**
+             * Min Gap Minutes
+             * @default 0
+             */
+            min_gap_minutes: number;
+            /** Max Per Day */
+            max_per_day?: number | null;
+            /**
+             * Max Parallel
+             * @default 1
+             */
+            max_parallel: number | null;
+            /** Blackouts */
+            blackouts?: components["schemas"]["MailScheduleBlackout"][];
+        };
+        /** MailScheduleDistribution */
+        MailScheduleDistribution: {
+            /**
+             * Mode
+             * @default even
+             */
+            mode: string;
+            /** Fixed Times */
+            fixed_times?: {
+                [key: string]: string[];
+            };
+            /** Weights */
+            weights?: {
+                [key: string]: number;
+            };
+        };
+        /** MailScheduleSegment */
+        MailScheduleSegment: {
+            /** Id */
+            id: string;
+            /**
+             * Start
+             * Format: time
+             */
+            start: string;
+            /**
+             * End
+             * Format: time
+             */
+            end: string;
+            /**
+             * Count Per Day
+             * @default 1
+             */
+            count_per_day: number;
         };
         /**
          * MailScheduleTemplateParams
@@ -2542,6 +2829,61 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** ScheduleListItem */
+        ScheduleListItem: {
+            /** Id */
+            id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Status */
+            status: string;
+            /** Queue */
+            queue: string | null;
+            /**
+             * Due At
+             * Format: date-time
+             */
+            due_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string | null;
+            meta: components["schemas"]["ScheduleMeta"];
+        };
+        /** ScheduleListResult */
+        ScheduleListResult: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["ScheduleListItem"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /** ScheduleMeta */
+        ScheduleMeta: {
+            /** Label */
+            label: string | null;
+            /** Dag Meta */
+            dag_meta?: {
+                [key: string]: unknown;
+            } | null;
+            /** Context */
+            context?: {
+                [key: string]: unknown;
+            } | null;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
+        };
         /**
          * ScheduleStatus
          * @enum {string}
@@ -3222,6 +3564,26 @@ export interface operations {
             };
         };
     };
+    bff_coworker_read_lease_api_bff_coworker_lease_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoworkerLeaseState"];
+                };
+            };
+        };
+    };
     bff_drafts_list_post_publications_by_variant_api_bff_drafts_post_publications_variant_post: {
         parameters: {
             query?: never;
@@ -3526,6 +3888,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    bff_schedule_list_schedules_api_bff_schedules_get: {
+        parameters: {
+            query?: {
+                persona_account_id?: number | null;
+                status?: components["schemas"]["ScheduleStatus"] | null;
+                queue?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleListResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -4248,39 +4645,6 @@ export interface operations {
             };
         };
     };
-    insights_ingest_api_orchestrator_insights_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InsightInCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InsightOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     action_schedule_compile_template_api_orchestrator_actions_schedules_compile_post: {
         parameters: {
             query?: never;
@@ -4376,7 +4740,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PostPublishTemplateParams"];
+                "application/json": components["schemas"]["DraftPostScheduleRequest"];
             };
         };
         responses: {
@@ -4433,6 +4797,39 @@ export interface operations {
             };
         };
     };
+    action_schedule_create_trends_mail_schedule_api_orchestrator_actions_schedules_mail_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MailScheduleBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleCreateResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_schedule_cancel_schedules_api_orchestrator_actions_schedules_cancel_post: {
         parameters: {
             query?: never;
@@ -4466,7 +4863,7 @@ export interface operations {
             };
         };
     };
-    action_schedule_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post: {
+    action_coworker_start_my_coworker_api_orchestrator_actions_schedules_start_my_coworker_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4499,7 +4896,7 @@ export interface operations {
             };
         };
     };
-    action_schedule_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post: {
+    action_coworker_stop_my_coworker_api_orchestrator_actions_schedules_stop_my_coworker_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4519,6 +4916,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["_EmptyPayload"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_coworker_update_my_coworker_api_orchestrator_actions_schedules_coworker_lease_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoworkerLeaseUpdatePayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoworkerLeaseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    insights_ingest_api_orchestrator_insights_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InsightInCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightOut"];
                 };
             };
             /** @description Validation Error */

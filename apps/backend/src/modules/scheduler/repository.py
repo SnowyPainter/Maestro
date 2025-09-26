@@ -158,11 +158,6 @@ class CoWorkerLeaseData:
     active: bool
     task_id: Optional[str]
 
-
-async def ensure_coworker_leases_table(session: AsyncSession) -> None:
-    await session.run_sync(CoWorkerLease.__table__.create, checkfirst=True)
-
-
 def _coerce_persona_ids(raw: Iterable[int]) -> list[int]:
     return sorted({int(pid) for pid in raw})
 
@@ -185,7 +180,6 @@ async def get_coworker_lease(
     owner_user_id: int,
     for_update: bool = False,
 ) -> Optional[CoWorkerLeaseData]:
-    await ensure_coworker_leases_table(session)
     stmt = select(CoWorkerLease).where(CoWorkerLease.owner_user_id == owner_user_id)
     if for_update:
         stmt = stmt.with_for_update()
@@ -205,7 +199,6 @@ async def upsert_coworker_lease(
     active: bool,
     task_id: Optional[str] = None,
 ) -> CoWorkerLeaseData:
-    await ensure_coworker_leases_table(session)
     stmt = (
         select(CoWorkerLease)
         .where(CoWorkerLease.owner_user_id == owner_user_id)
@@ -244,7 +237,6 @@ async def update_coworker_lease_task(
     owner_user_id: int,
     task_id: Optional[str],
 ) -> Optional[CoWorkerLeaseData]:
-    await ensure_coworker_leases_table(session)
     stmt = (
         select(CoWorkerLease)
         .where(CoWorkerLease.owner_user_id == owner_user_id)
@@ -266,7 +258,6 @@ async def set_coworker_lease_active(
     owner_user_id: int,
     active: bool,
 ) -> Optional[CoWorkerLeaseData]:
-    await ensure_coworker_leases_table(session)
     stmt = select(CoWorkerLease).where(CoWorkerLease.owner_user_id == owner_user_id).with_for_update()
     res = await session.execute(stmt)
     lease_row = res.scalar_one_or_none()
@@ -293,5 +284,4 @@ __all__ = [
     "upsert_coworker_lease",
     "update_coworker_lease_task",
     "set_coworker_lease_active",
-    "ensure_coworker_leases_table",
 ]

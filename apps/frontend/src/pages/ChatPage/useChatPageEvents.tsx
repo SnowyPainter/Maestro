@@ -6,6 +6,7 @@ import {
   TrendsListResponse,
   bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet,
   DraftVariantRender,
+  CoworkerLeaseState,
   ChatCard,
 } from "@/lib/api/generated";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
@@ -33,6 +34,14 @@ import { PlatformAccountOut } from "@/lib/api/generated";
 import { DraftVariantList } from "@/entities/drafts/components/DraftVariantList";
 import { DraftVariantDetail } from "@/entities/drafts/components/DraftVariantDetail";
 import { useTranslation } from 'react-i18next';
+import { CoworkerToolCard } from "@/features/coworkers/components/CoworkerToolCard";
+import { ScheduleToolCard } from "@/features/schedules/components/ScheduleToolCard";
+import { CreateRawScheduleForm } from "@/features/schedules/components/CreateRawScheduleForm";
+import { CreatePostScheduleForm } from "@/features/schedules/components/CreatePostScheduleForm";
+import { CreateBatchTrendsMailScheduleForm } from "@/features/schedules/components/CreateBatchTrendsMailScheduleForm";
+import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
+import { EditCoworkerForm } from "@/features/coworkers/components/EditCoworkerForm";
+import { CancelScheduleForm } from "@/features/schedules/components/CancelScheduleForm";
 
 const DEFAULT_ERROR_MESSAGE = '채팅 처리 중 오류가 발생했습니다.';
 
@@ -376,6 +385,99 @@ export function useChatPageEvents() {
     });
   }, [appendMessage, getNextMessageId, removeMessagesByComponent, handleShowLinkedAccounts]);
 
+  const handleScheduleCreateSuccess = useCallback<EntitySuccessHandler>((scheduleId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addTextMessage(`Schedule(s) created successfully.`, 'bot');
+    removeMessagesByComponent(ScheduleToolCard); // Close the tool card on success
+  }, [addTextMessage, removeMessage, removeMessagesByComponent]);
+
+  const handleNewPostSchedule = useCallback(() => {
+    removeMessagesByComponent(ScheduleToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <CreatePostScheduleForm
+          onCreated={(scheduleIds) => handleScheduleCreateSuccess(scheduleIds[0], messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleScheduleCreateSuccess, removeMessagesByComponent]);
+
+  const handleNewMailSchedule = useCallback(() => {
+    removeMessagesByComponent(ScheduleToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <CreateBatchTrendsMailScheduleForm
+          onCreated={(scheduleIds) => handleScheduleCreateSuccess(scheduleIds[0], messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleScheduleCreateSuccess, removeMessagesByComponent]);
+
+  const handleNewRawSchedule = useCallback(() => {
+    removeMessagesByComponent(ScheduleToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <CreateRawScheduleForm
+          onCreated={(scheduleIds) => handleScheduleCreateSuccess(scheduleIds[0], messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleScheduleCreateSuccess, removeMessagesByComponent]);
+
+  const handleCancelScheduleSuccess = useCallback((sourceMessageId?: number) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addTextMessage(`Schedule(s) cancelled successfully.`, 'bot');
+    removeMessagesByComponent(ScheduleToolCard); // Close the tool card on success
+  }, [addTextMessage, removeMessage, removeMessagesByComponent]);
+
+  const handleCancelSchedule = useCallback(() => {
+    removeMessagesByComponent(ScheduleToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <CancelScheduleForm
+          onCancelled={() => handleCancelScheduleSuccess(messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleCancelScheduleSuccess, removeMessagesByComponent]);
+
+  const handleViewCoworkerDetails = useCallback(() => {
+    removeMessagesByComponent(CoworkerToolCard);
+    addCardMessage(() => <CoWorkerDetail />);
+  }, [addCardMessage, removeMessagesByComponent]);
+
+  const handleEditCoworker = useCallback((lease: CoworkerLeaseState) => {
+    removeMessagesByComponent(CoworkerToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+        id: messageId,
+        type: 'card',
+        content: (
+            <EditCoworkerForm 
+                lease={lease} 
+                onSuccess={() => removeMessage(messageId)} 
+            />
+        )
+    });
+  }, [addCardMessage, removeMessagesByComponent, removeMessage, getNextMessageId]);
+
+
   const handleToolClick = useCallback((toolId: string) => {
     switch (toolId) {
       case 'campaigns':
@@ -415,10 +517,30 @@ export function useChatPageEvents() {
           />
         ));
         break;
+      case 'schedules':
+        removeMessagesByComponent(ScheduleToolCard);
+        addCardMessage(() => (
+          <ScheduleToolCard
+            onNewPostSchedule={handleNewPostSchedule}
+            onNewMailSchedule={handleNewMailSchedule}
+            onNewRawSchedule={handleNewRawSchedule}
+            onCancel={handleCancelSchedule}
+          />
+        ));
+        break;
+      case 'coworker':
+        removeMessagesByComponent(CoworkerToolCard);
+        addCardMessage(() => (
+          <CoworkerToolCard 
+            onViewDetails={handleViewCoworkerDetails}
+            onEdit={handleEditCoworker}
+          />
+        ));
+        break;
       default:
         break;
     }
-  }, [addCardMessage, handleNewCampaign, handleNewDraft, handleNewPersona, handleSelectCampaign, handleSelectDraft, handleSelectPersona, handleNewAccount, handleSelectAccount, handleSelectPersonaForLinks, removeMessagesByComponent]);
+  }, [addCardMessage, handleNewCampaign, handleNewDraft, handleNewPersona, handleSelectCampaign, handleSelectDraft, handleSelectPersona, handleNewAccount, handleSelectAccount, handleSelectPersonaForLinks, removeMessagesByComponent, handleNewPostSchedule, handleNewMailSchedule, handleNewRawSchedule, handleCancelSchedule]);
 
   const clearChat = useCallback(() => {
     clearMessages();

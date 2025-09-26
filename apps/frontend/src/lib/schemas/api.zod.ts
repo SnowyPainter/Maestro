@@ -393,6 +393,32 @@ export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponse = 
 
 
 /**
+ * Retrieve the current CoWorker lease configuration for the authenticated user.
+ * @summary Get CoWorker Lease State
+ */
+export const bffCoworkerReadLeaseApiBffCoworkerLeaseGetResponse = zod.object({
+  "has_lease": zod.boolean(),
+  "active": zod.boolean(),
+  "interval_seconds": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_account_ids": zod.array(zod.number()),
+  "persona_accounts": zod.array(zod.object({
+  "persona_account_id": zod.number(),
+  "persona_id": zod.number(),
+  "persona_name": zod.string().nullable(),
+  "platform": zod.string().nullable(),
+  "handle": zod.string().nullable(),
+  "avatar_url": zod.string().nullable()
+})),
+  "task_id": zod.string().nullish(),
+  "current_task": zod.union([zod.object({
+  "id": zod.string(),
+  "state": zod.string(),
+  "info": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional()
+}),zod.null()]).optional()
+})
+
+
+/**
  * List all post publications for a specific variant
  * @summary List Post Publications by Variant
  */
@@ -730,6 +756,42 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
   "id": zod.number(),
   "email": zod.email(),
   "display_name": zod.string().nullish()
+})
+
+
+/**
+ * List schedules for the authenticated user with optional persona filtering and meta information.
+ * @summary List Schedules
+ */
+export const bffScheduleListSchedulesApiBffSchedulesGetQueryLimitDefault = 50;export const bffScheduleListSchedulesApiBffSchedulesGetQueryOffsetDefault = 0;
+
+export const bffScheduleListSchedulesApiBffSchedulesGetQueryParams = zod.object({
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "status": zod.union([zod.enum(['pending', 'enqueued', 'running', 'done', 'failed', 'cancelled']),zod.null()]).optional(),
+  "queue": zod.string().nullish(),
+  "limit": zod.number().default(bffScheduleListSchedulesApiBffSchedulesGetQueryLimitDefault),
+  "offset": zod.number().optional()
+})
+
+export const bffScheduleListSchedulesApiBffSchedulesGetResponse = zod.object({
+  "total": zod.number(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "persona_account_id": zod.number(),
+  "status": zod.string(),
+  "queue": zod.string().nullable(),
+  "due_at": zod.iso.datetime({}).nullable(),
+  "created_at": zod.iso.datetime({}).nullable(),
+  "updated_at": zod.iso.datetime({}).nullable(),
+  "meta": zod.object({
+  "label": zod.string().nullable(),
+  "dag_meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "context": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "payload": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional()
+})
+})),
+  "limit": zod.number(),
+  "offset": zod.number()
 })
 
 
@@ -1487,51 +1549,6 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
 
 
 /**
- * Ingest new insight data for analysis and trend detection
- * @summary Process and Store Insight Data
- */
-export const insightsIngestApiOrchestratorInsightsPostBodyMappingVersionDefault = 1;
-
-export const insightsIngestApiOrchestratorInsightsPostBody = zod.object({
-  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
-  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads']),
-  "platform_post_id": zod.string().nullish(),
-  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "ts": zod.iso.datetime({}),
-  "metrics": zod.record(zod.string(), zod.number()).optional(),
-  "scope": zod.enum(['lifetime', 'since_publish', 'interval']).optional(),
-  "content_kind": zod.enum(['post', 'video', 'story', 'carousel', 'live', 'unknown']).optional(),
-  "mapping_version": zod.number().default(insightsIngestApiOrchestratorInsightsPostBodyMappingVersionDefault),
-  "raw": zod.record(zod.string(), zod.any()).optional(),
-  "warnings": zod.array(zod.string()).optional(),
-  "source": zod.enum(['webhook', 'poll', 'manual']).optional(),
-  "ingest_key": zod.string().nullish()
-})
-
-export const insightsIngestApiOrchestratorInsightsPostResponseMappingVersionDefault = 1;
-
-export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
-  "owner_user_id": zod.number(),
-  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
-  "platform": zod.enum(['instagram', 'threads']),
-  "platform_post_id": zod.string().nullish(),
-  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "ts": zod.iso.datetime({}),
-  "metrics": zod.record(zod.string(), zod.number()).optional(),
-  "scope": zod.enum(['lifetime', 'since_publish', 'interval']).optional(),
-  "content_kind": zod.enum(['post', 'video', 'story', 'carousel', 'live', 'unknown']).optional(),
-  "mapping_version": zod.number().default(insightsIngestApiOrchestratorInsightsPostResponseMappingVersionDefault),
-  "raw": zod.record(zod.string(), zod.any()).optional(),
-  "warnings": zod.array(zod.string()).optional(),
-  "source": zod.enum(['webhook', 'poll', 'manual']).optional(),
-  "ingest_key": zod.string().nullish(),
-  "id": zod.number(),
-  "ingested_at": zod.iso.datetime({})
-})
-
-
-/**
  * Generate a schedule DAG specification from higher level template parameters
  * @summary Compile Schedule DAG
  */
@@ -1595,8 +1612,6 @@ export const actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplates
  * @summary Create Schedule(s) From DAG
  */
 export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatsDefault = 1;export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatIntervalMinutesDefault = 0;
-export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatIntervalMinutesMin = 0;
-
 
 export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBody = zod.object({
   "persona_account_id": zod.number().describe('Persona account owning the schedule'),
@@ -1616,8 +1631,8 @@ export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreate
   "meta": zod.record(zod.string(), zod.any()).optional()
 }).describe('Full DAG specification including optional schedule payload and metadata.'),
   "run_at": zod.iso.datetime({}).optional().describe('Initial execution time for the first schedule'),
-  "repeats": zod.number().min(1).default(actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatsDefault).describe('Number of schedules to create in sequence'),
-  "repeat_interval_minutes": zod.number().min(actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatIntervalMinutesMin).optional().describe('Minutes between successive schedule runs'),
+  "repeats": zod.number().default(actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreateRawPostBodyRepeatsDefault).describe('Number of schedules to create in sequence'),
+  "repeat_interval_minutes": zod.number().optional().describe('Minutes between successive schedule runs'),
   "queue": zod.string().nullish().describe('Optional queue override'),
   "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional().describe('Metadata to merge into the DAG spec before persisting')
 }).describe('Request to create schedule rows from a fully specified DAG.')
@@ -1632,12 +1647,10 @@ export const actionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCreate
  * @summary Create Post Schedule
  */
 export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostBody = zod.object({
-  "post_publication_id": zod.number(),
   "persona_account_id": zod.number(),
   "variant_id": zod.number(),
-  "draft_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads'])
-}).describe('Parameters for publishing a compiled draft variant.')
+  "run_at": zod.iso.datetime({})
+})
 
 export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostResponse = zod.object({
   "schedule_ids": zod.array(zod.number())
@@ -1655,6 +1668,62 @@ export const actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedule
 
 export const actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostResponse = zod.object({
   "message": zod.string()
+})
+
+
+/**
+ * Create or update a mail publication schedule for the given draft variant
+ * @summary Create Trends similar to persona Mail Schedule
+ */
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefault = "UTC";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefault = 1;
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMin = 0;
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefault = "even";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesDefault = 0;
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMin = 0;
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefault = 1;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateCountryDefault = "US";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateLimitDefault = 20;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateWaitTimeoutSDefault = 604800;
+
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody = zod.object({
+  "title": zod.string().nullish(),
+  "timezone": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefault),
+  "date_range": zod.object({
+  "start": zod.iso.date(),
+  "end": zod.iso.date()
+}),
+  "weekmask": zod.array(zod.string()).optional(),
+  "exdates": zod.array(zod.iso.date()).optional(),
+  "segments": zod.array(zod.object({
+  "id": zod.string(),
+  "start": zod.iso.time({}),
+  "end": zod.iso.time({}),
+  "count_per_day": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMin).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefault)
+})),
+  "distribution": zod.object({
+  "mode": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefault),
+  "fixed_times": zod.record(zod.string(), zod.array(zod.iso.time({}))).optional(),
+  "weights": zod.record(zod.string(), zod.number()).optional()
+}).optional(),
+  "constraints": zod.object({
+  "min_gap_minutes": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMin).optional(),
+  "max_per_day": zod.union([zod.number(),zod.null()]).optional(),
+  "max_parallel": zod.union([zod.number().min(1),zod.null()]).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefault),
+  "blackouts": zod.array(zod.object({
+  "start": zod.iso.time({}),
+  "end": zod.iso.time({})
+})).optional()
+}).optional(),
+  "payload_template": zod.object({
+  "persona_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "email_to": zod.string(),
+  "country": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateCountryDefault),
+  "limit": zod.number().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateLimitDefault),
+  "wait_timeout_s": zod.number().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateWaitTimeoutSDefault),
+  "pipeline_id": zod.string().nullish()
+}).describe('Parameters for the mail trends + reply template.'),
+  "queue": zod.string().nullish()
+})
+
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostResponse = zod.object({
+  "schedule_ids": zod.array(zod.number())
 })
 
 
@@ -1679,11 +1748,11 @@ export const actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelP
  * Start the CoWorker worker
  * @summary Start My CoWorker
  */
-export const actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostBody = zod.object({
+export const actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostBody = zod.object({
 
 }).describe('Placeholder model for GET endpoints.')
 
-export const actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostResponse = zod.object({
+export const actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostResponse = zod.object({
 
 }).describe('Placeholder model for GET endpoints.')
 
@@ -1692,13 +1761,81 @@ export const actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMy
  * Stop the CoWorker worker
  * @summary Stop My CoWorker
  */
-export const actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostBody = zod.object({
+export const actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostBody = zod.object({
 
 }).describe('Placeholder model for GET endpoints.')
 
-export const actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostResponse = zod.object({
+export const actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostResponse = zod.object({
 
 }).describe('Placeholder model for GET endpoints.')
+
+
+/**
+ * Update CoWorker lease scope, interval, and activation state.
+ * @summary Update My CoWorker Lease
+ */
+export const actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostBodyIntervalSecondsDefault = 30;export const actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostBodyForceRestartDefault = false;
+
+export const actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostBody = zod.object({
+  "persona_account_ids": zod.union([zod.array(zod.number()),zod.null()]).optional().describe('Explicit list of persona_account_ids to associate with the lease.'),
+  "add_persona_account_ids": zod.union([zod.array(zod.number()),zod.null()]).optional().describe('Persona account IDs to append to the existing lease scope.'),
+  "remove_persona_account_ids": zod.union([zod.array(zod.number()),zod.null()]).optional().describe('Persona account IDs to remove from the existing lease scope.'),
+  "interval_seconds": zod.union([zod.number(),zod.null()]).default(actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostBodyIntervalSecondsDefault).describe('Polling interval for the CoWorker lease. Minimum 5 seconds.'),
+  "active": zod.union([zod.boolean(),zod.null()]).optional().describe('Toggle the active state of the lease.'),
+  "force_restart": zod.boolean().optional().describe('If true, enqueue a fresh execute_due_schedules task even when a task is already registered.')
+}).describe('Payload for updating the caller\'s CoWorker lease.')
+
+export const actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostResponse = zod.object({
+  "active": zod.boolean(),
+  "interval_seconds": zod.number(),
+  "persona_account_ids": zod.array(zod.number()),
+  "task_id": zod.string().nullable()
+}).describe('Representation of a CoWorker lease returned by action operators.')
+
+
+/**
+ * Ingest new insight data for analysis and trend detection
+ * @summary Process and Store Insight Data
+ */
+export const insightsIngestApiOrchestratorInsightsPostBodyMappingVersionDefault = 1;
+
+export const insightsIngestApiOrchestratorInsightsPostBody = zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ts": zod.iso.datetime({}),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "scope": zod.enum(['lifetime', 'since_publish', 'interval']).optional(),
+  "content_kind": zod.enum(['post', 'video', 'story', 'carousel', 'live', 'unknown']).optional(),
+  "mapping_version": zod.number().default(insightsIngestApiOrchestratorInsightsPostBodyMappingVersionDefault),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "warnings": zod.array(zod.string()).optional(),
+  "source": zod.enum(['webhook', 'poll', 'manual']).optional(),
+  "ingest_key": zod.string().nullish()
+})
+
+export const insightsIngestApiOrchestratorInsightsPostResponseMappingVersionDefault = 1;
+
+export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
+  "owner_user_id": zod.number(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ts": zod.iso.datetime({}),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "scope": zod.enum(['lifetime', 'since_publish', 'interval']).optional(),
+  "content_kind": zod.enum(['post', 'video', 'story', 'carousel', 'live', 'unknown']).optional(),
+  "mapping_version": zod.number().default(insightsIngestApiOrchestratorInsightsPostResponseMappingVersionDefault),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "warnings": zod.array(zod.string()).optional(),
+  "source": zod.enum(['webhook', 'poll', 'manual']).optional(),
+  "ingest_key": zod.string().nullish(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})
 
 
 /**

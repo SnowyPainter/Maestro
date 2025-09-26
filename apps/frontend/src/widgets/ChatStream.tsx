@@ -5,8 +5,7 @@ import { ContextCard } from "@/features/contexts/ContextCard";
 import { SelectPersonaAccount } from "@/features/contexts/SelectPersonaAccount";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { MessageBubble } from "@/entities/messages/components/MessageBubble";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, User, FileText, Target, StickyNote } from "lucide-react";
+import { User, FileText, Target, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatStreamProps {
@@ -17,6 +16,7 @@ interface ChatStreamProps {
 
 export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
 
   const {
     personaAccountId,

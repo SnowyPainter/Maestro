@@ -240,6 +240,103 @@ export const ContentKind = {
   unknown: 'unknown',
 } as const;
 
+/**
+ * Representation of a CoWorker lease returned by action operators.
+ */
+export interface CoworkerLeaseOut {
+  active: boolean;
+  interval_seconds: number;
+  persona_account_ids: number[];
+  /** @nullable */
+  task_id: string | null;
+}
+
+export type CoworkerLeaseStateIntervalSeconds = number | null;
+
+export type CoworkerLeaseStateCurrentTask = CoworkerTaskInfo | null;
+
+export interface CoworkerLeaseState {
+  has_lease: boolean;
+  active: boolean;
+  interval_seconds?: CoworkerLeaseStateIntervalSeconds;
+  persona_account_ids: number[];
+  persona_accounts: CoworkerPersonaSummary[];
+  /** @nullable */
+  task_id?: string | null;
+  current_task?: CoworkerLeaseStateCurrentTask;
+}
+
+/**
+ * Explicit list of persona_account_ids to associate with the lease.
+ */
+export type CoworkerLeaseUpdatePayloadPersonaAccountIds = number[] | null;
+
+/**
+ * Persona account IDs to append to the existing lease scope.
+ */
+export type CoworkerLeaseUpdatePayloadAddPersonaAccountIds = number[] | null;
+
+/**
+ * Persona account IDs to remove from the existing lease scope.
+ */
+export type CoworkerLeaseUpdatePayloadRemovePersonaAccountIds = number[] | null;
+
+/**
+ * Polling interval for the CoWorker lease. Minimum 5 seconds.
+ */
+export type CoworkerLeaseUpdatePayloadIntervalSeconds = number | null;
+
+/**
+ * Toggle the active state of the lease.
+ */
+export type CoworkerLeaseUpdatePayloadActive = boolean | null;
+
+/**
+ * Payload for updating the caller's CoWorker lease.
+ */
+export interface CoworkerLeaseUpdatePayload {
+  /** Explicit list of persona_account_ids to associate with the lease. */
+  persona_account_ids?: CoworkerLeaseUpdatePayloadPersonaAccountIds;
+  /** Persona account IDs to append to the existing lease scope. */
+  add_persona_account_ids?: CoworkerLeaseUpdatePayloadAddPersonaAccountIds;
+  /** Persona account IDs to remove from the existing lease scope. */
+  remove_persona_account_ids?: CoworkerLeaseUpdatePayloadRemovePersonaAccountIds;
+  /** Polling interval for the CoWorker lease. Minimum 5 seconds. */
+  interval_seconds?: CoworkerLeaseUpdatePayloadIntervalSeconds;
+  /** Toggle the active state of the lease. */
+  active?: CoworkerLeaseUpdatePayloadActive;
+  /** If true, enqueue a fresh execute_due_schedules task even when a task is already registered. */
+  force_restart?: boolean;
+}
+
+export interface CoworkerPersonaSummary {
+  persona_account_id: number;
+  persona_id: number;
+  /** @nullable */
+  persona_name: string | null;
+  /** @nullable */
+  platform: string | null;
+  /** @nullable */
+  handle: string | null;
+  /** @nullable */
+  avatar_url: string | null;
+}
+
+export type CoworkerTaskInfoInfoAnyOf = { [key: string]: unknown };
+
+export type CoworkerTaskInfoInfo = CoworkerTaskInfoInfoAnyOf | null;
+
+export interface CoworkerTaskInfo {
+  id: string;
+  state: string;
+  info?: CoworkerTaskInfoInfo;
+}
+
+export interface DateRange {
+  start: string;
+  end: string;
+}
+
 export type DraftIRBlocksItem = BlockText | BlockImage | BlockVideo;
 
 export type DraftIROptions = { [key: string]: unknown };
@@ -294,6 +391,12 @@ export interface DraftPostPublicationsByVariantPayload {
 }
 
 export type DraftPostPublicationsList = PostPublicationOut[];
+
+export interface DraftPostScheduleRequest {
+  persona_account_id: number;
+  variant_id: number;
+  run_at: string;
+}
 
 export type DraftSaveRequestCampaignId = number | null;
 
@@ -549,6 +652,56 @@ export interface ListScheduleTemplatesResult {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface MailScheduleBatchRequest {
+  /** @nullable */
+  title?: string | null;
+  timezone?: string;
+  date_range: DateRange;
+  weekmask?: string[];
+  exdates?: string[];
+  segments: MailScheduleSegment[];
+  distribution?: MailScheduleDistribution;
+  constraints?: MailScheduleConstraints;
+  payload_template: MailScheduleTemplateParams;
+  /** @nullable */
+  queue?: string | null;
+}
+
+export interface MailScheduleBlackout {
+  start: string;
+  end: string;
+}
+
+export type MailScheduleConstraintsMaxPerDay = number | null;
+
+export type MailScheduleConstraintsMaxParallel = number | null;
+
+export interface MailScheduleConstraints {
+  /** @minimum 0 */
+  min_gap_minutes?: number;
+  max_per_day?: MailScheduleConstraintsMaxPerDay;
+  max_parallel?: MailScheduleConstraintsMaxParallel;
+  blackouts?: MailScheduleBlackout[];
+}
+
+export type MailScheduleDistributionFixedTimes = {[key: string]: string[]};
+
+export type MailScheduleDistributionWeights = {[key: string]: number};
+
+export interface MailScheduleDistribution {
+  mode?: string;
+  fixed_times?: MailScheduleDistributionFixedTimes;
+  weights?: MailScheduleDistributionWeights;
+}
+
+export interface MailScheduleSegment {
+  id: string;
+  start: string;
+  end: string;
+  /** @minimum 0 */
+  count_per_day?: number;
 }
 
 /**
@@ -1096,15 +1249,9 @@ export interface ScheduleCreateFromRawDagRequest {
   dag_spec: ScheduleDagSpecInput;
   /** Initial execution time for the first schedule */
   run_at?: string;
-  /**
-   * Number of schedules to create in sequence
-   * @minimum 1
-   */
+  /** Number of schedules to create in sequence */
   repeats?: number;
-  /**
-   * Minutes between successive schedule runs
-   * @minimum 0
-   */
+  /** Minutes between successive schedule runs */
   repeat_interval_minutes?: number;
   /**
    * Optional queue override
@@ -1169,6 +1316,48 @@ export interface ScheduleDagSpecOutput {
   dag: ScheduleDagGraph;
   payload?: ScheduleDagSpecOutputPayload;
   meta?: ScheduleDagSpecOutputMeta;
+}
+
+export interface ScheduleListItem {
+  id: number;
+  persona_account_id: number;
+  status: string;
+  /** @nullable */
+  queue: string | null;
+  /** @nullable */
+  due_at: string | null;
+  /** @nullable */
+  created_at: string | null;
+  /** @nullable */
+  updated_at: string | null;
+  meta: ScheduleMeta;
+}
+
+export interface ScheduleListResult {
+  total: number;
+  items: ScheduleListItem[];
+  limit: number;
+  offset: number;
+}
+
+export type ScheduleMetaDagMetaAnyOf = { [key: string]: unknown };
+
+export type ScheduleMetaDagMeta = ScheduleMetaDagMetaAnyOf | null;
+
+export type ScheduleMetaContextAnyOf = { [key: string]: unknown };
+
+export type ScheduleMetaContext = ScheduleMetaContextAnyOf | null;
+
+export type ScheduleMetaPayloadAnyOf = { [key: string]: unknown };
+
+export type ScheduleMetaPayload = ScheduleMetaPayloadAnyOf | null;
+
+export interface ScheduleMeta {
+  /** @nullable */
+  label: string | null;
+  dag_meta?: ScheduleMetaDagMeta;
+  context?: ScheduleMetaContext;
+  payload?: ScheduleMetaPayload;
 }
 
 export type ScheduleStatus = typeof ScheduleStatus[keyof typeof ScheduleStatus];
@@ -1430,6 +1619,17 @@ persona_account_id?: number | null;
 
 export type BffDraftsListDraftsApiBffDraftsGetParams = {
 campaign_id?: number | null;
+limit?: number;
+offset?: number;
+};
+
+export type BffScheduleListSchedulesApiBffSchedulesGetParams = {
+persona_account_id?: number | null;
+status?: ScheduleStatus | null;
+/**
+ * @nullable
+ */
+queue?: string | null;
 limit?: number;
 offset?: number;
 };
@@ -2813,6 +3013,95 @@ export function useBffContextsCurrentPersonaApiBffContextsPersonaCurrentGet<TDat
 
 
 /**
+ * Retrieve the current CoWorker lease configuration for the authenticated user.
+ * @summary Get CoWorker Lease State
+ */
+export const bffCoworkerReadLeaseApiBffCoworkerLeaseGet = (
+    
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<CoworkerLeaseState>(
+      {url: `/api/bff/coworker/lease`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffCoworkerReadLeaseApiBffCoworkerLeaseGetQueryKey = () => {
+    return [`/api/bff/coworker/lease`] as const;
+    }
+
+    
+export const getBffCoworkerReadLeaseApiBffCoworkerLeaseGetQueryOptions = <TData = Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffCoworkerReadLeaseApiBffCoworkerLeaseGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>> = ({ signal }) => bffCoworkerReadLeaseApiBffCoworkerLeaseGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffCoworkerReadLeaseApiBffCoworkerLeaseGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>>
+export type BffCoworkerReadLeaseApiBffCoworkerLeaseGetQueryError = unknown
+
+
+export function useBffCoworkerReadLeaseApiBffCoworkerLeaseGet<TData = Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffCoworkerReadLeaseApiBffCoworkerLeaseGet<TData = Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffCoworkerReadLeaseApiBffCoworkerLeaseGet<TData = Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get CoWorker Lease State
+ */
+
+export function useBffCoworkerReadLeaseApiBffCoworkerLeaseGet<TData = Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffCoworkerReadLeaseApiBffCoworkerLeaseGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffCoworkerReadLeaseApiBffCoworkerLeaseGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * List all post publications for a specific variant
  * @summary List Post Publications by Variant
  */
@@ -3630,6 +3919,96 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffMeReadMeApiBffMeGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * List schedules for the authenticated user with optional persona filtering and meta information.
+ * @summary List Schedules
+ */
+export const bffScheduleListSchedulesApiBffSchedulesGet = (
+    params?: BffScheduleListSchedulesApiBffSchedulesGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ScheduleListResult>(
+      {url: `/api/bff/schedules`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffScheduleListSchedulesApiBffSchedulesGetQueryKey = (params?: BffScheduleListSchedulesApiBffSchedulesGetParams,) => {
+    return [`/api/bff/schedules`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffScheduleListSchedulesApiBffSchedulesGetQueryOptions = <TData = Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError = HTTPValidationError>(params?: BffScheduleListSchedulesApiBffSchedulesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffScheduleListSchedulesApiBffSchedulesGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>> = ({ signal }) => bffScheduleListSchedulesApiBffSchedulesGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffScheduleListSchedulesApiBffSchedulesGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>>
+export type BffScheduleListSchedulesApiBffSchedulesGetQueryError = HTTPValidationError
+
+
+export function useBffScheduleListSchedulesApiBffSchedulesGet<TData = Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffScheduleListSchedulesApiBffSchedulesGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffScheduleListSchedulesApiBffSchedulesGet<TData = Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError = HTTPValidationError>(
+ params?: BffScheduleListSchedulesApiBffSchedulesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffScheduleListSchedulesApiBffSchedulesGet<TData = Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError = HTTPValidationError>(
+ params?: BffScheduleListSchedulesApiBffSchedulesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Schedules
+ */
+
+export function useBffScheduleListSchedulesApiBffSchedulesGet<TData = Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError = HTTPValidationError>(
+ params?: BffScheduleListSchedulesApiBffSchedulesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListSchedulesApiBffSchedulesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffScheduleListSchedulesApiBffSchedulesGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5138,72 +5517,6 @@ export const useDraftsDeleteApiOrchestratorDraftsDraftIdDelete = <TError = HTTPV
     }
     
 /**
- * Ingest new insight data for analysis and trend detection
- * @summary Process and Store Insight Data
- */
-export const insightsIngestApiOrchestratorInsightsPost = (
-    insightInCommand: InsightInCommand,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<InsightOut>(
-      {url: `/api/orchestrator/insights`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: insightInCommand, signal
-    },
-      options);
-    }
-  
-
-
-export const getInsightsIngestApiOrchestratorInsightsPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext> => {
-
-const mutationKey = ['insightsIngestApiOrchestratorInsightsPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, {data: InsightInCommand}> = (props) => {
-          const {data} = props ?? {};
-
-          return  insightsIngestApiOrchestratorInsightsPost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type InsightsIngestApiOrchestratorInsightsPostMutationResult = NonNullable<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>>
-    export type InsightsIngestApiOrchestratorInsightsPostMutationBody = InsightInCommand
-    export type InsightsIngestApiOrchestratorInsightsPostMutationError = HTTPValidationError
-
-    /**
- * @summary Process and Store Insight Data
- */
-export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>,
-        TError,
-        {data: InsightInCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getInsightsIngestApiOrchestratorInsightsPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
  * Generate a schedule DAG specification from higher level template parameters
  * @summary Compile Schedule DAG
  */
@@ -5429,7 +5742,7 @@ export const useActionScheduleCreateFromRawDagApiOrchestratorActionsSchedulesCre
  * @summary Create Post Schedule
  */
 export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost = (
-    postPublishTemplateParams: PostPublishTemplateParams,
+    draftPostScheduleRequest: DraftPostScheduleRequest,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
@@ -5437,7 +5750,7 @@ export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedule
       return apiFetch<ScheduleCreateResult>(
       {url: `/api/orchestrator/actions/schedules/create/draft/post`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: postPublishTemplateParams, signal
+      data: draftPostScheduleRequest, signal
     },
       options);
     }
@@ -5445,8 +5758,8 @@ export const actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedule
 
 
 export const getActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: PostPublishTemplateParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: PostPublishTemplateParams}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: DraftPostScheduleRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: DraftPostScheduleRequest}, TContext> => {
 
 const mutationKey = ['actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -5458,7 +5771,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, {data: PostPublishTemplateParams}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, {data: DraftPostScheduleRequest}> = (props) => {
           const {data} = props ?? {};
 
           return  actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost(data,requestOptions)
@@ -5470,18 +5783,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>>
-    export type ActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationBody = PostPublishTemplateParams
+    export type ActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationBody = DraftPostScheduleRequest
     export type ActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPostMutationError = HTTPValidationError
 
     /**
  * @summary Create Post Schedule
  */
 export const useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: PostPublishTemplateParams}, TContext>, request?: SecondParameter<typeof apiFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>, TError,{data: DraftPostScheduleRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof actionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost>>,
         TError,
-        {data: PostPublishTemplateParams},
+        {data: DraftPostScheduleRequest},
         TContext
       > => {
 
@@ -5557,6 +5870,72 @@ export const useActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSched
     }
     
 /**
+ * Create or update a mail publication schedule for the given draft variant
+ * @summary Create Trends similar to persona Mail Schedule
+ */
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost = (
+    mailScheduleBatchRequest: MailScheduleBatchRequest,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ScheduleCreateResult>(
+      {url: `/api/orchestrator/actions/schedules/mail/create`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: mailScheduleBatchRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailScheduleBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailScheduleBatchRequest}, TContext> => {
+
+const mutationKey = ['actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, {data: MailScheduleBatchRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>>
+    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationBody = MailScheduleBatchRequest
+    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Trends similar to persona Mail Schedule
+ */
+export const useActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailScheduleBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>,
+        TError,
+        {data: MailScheduleBatchRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * Cancel a list of schedules
  * @summary Cancel Schedules
  */
@@ -5626,7 +6005,7 @@ export const useActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCanc
  * Start the CoWorker worker
  * @summary Start My CoWorker
  */
-export const actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost = (
+export const actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost = (
     _emptyPayload: _EmptyPayload,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
@@ -5642,11 +6021,11 @@ export const actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMy
   
 
 
-export const getActionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext> => {
+export const getActionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext> => {
 
-const mutationKey = ['actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost'];
+const mutationKey = ['actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5656,10 +6035,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, {data: _EmptyPayload}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, {data: _EmptyPayload}> = (props) => {
           const {data} = props ?? {};
 
-          return  actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost(data,requestOptions)
+          return  actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost(data,requestOptions)
         }
 
         
@@ -5667,23 +6046,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ActionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>>
-    export type ActionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationBody = _EmptyPayload
-    export type ActionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationError = HTTPValidationError
+    export type ActionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>>
+    export type ActionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationBody = _EmptyPayload
+    export type ActionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationError = HTTPValidationError
 
     /**
  * @summary Start My CoWorker
  */
-export const useActionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useActionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof actionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>,
+        Awaited<ReturnType<typeof actionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPost>>,
         TError,
         {data: _EmptyPayload},
         TContext
       > => {
 
-      const mutationOptions = getActionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationOptions(options);
+      const mutationOptions = getActionCoworkerStartMyCoworkerApiOrchestratorActionsSchedulesStartMyCoworkerPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
@@ -5692,7 +6071,7 @@ export const useActionScheduleStartMyCoworkerApiOrchestratorActionsSchedulesStar
  * Stop the CoWorker worker
  * @summary Stop My CoWorker
  */
-export const actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost = (
+export const actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost = (
     _emptyPayload: _EmptyPayload,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
@@ -5708,11 +6087,11 @@ export const actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCo
   
 
 
-export const getActionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext> => {
+export const getActionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext> => {
 
-const mutationKey = ['actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost'];
+const mutationKey = ['actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5722,10 +6101,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, {data: _EmptyPayload}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, {data: _EmptyPayload}> = (props) => {
           const {data} = props ?? {};
 
-          return  actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost(data,requestOptions)
+          return  actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost(data,requestOptions)
         }
 
         
@@ -5733,23 +6112,155 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ActionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>>
-    export type ActionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationBody = _EmptyPayload
-    export type ActionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationError = HTTPValidationError
+    export type ActionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationResult = NonNullable<Awaited<ReturnType<typeof actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>>
+    export type ActionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationBody = _EmptyPayload
+    export type ActionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationError = HTTPValidationError
 
     /**
  * @summary Stop My CoWorker
  */
-export const useActionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+export const useActionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>, TError,{data: _EmptyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof actionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>,
+        Awaited<ReturnType<typeof actionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPost>>,
         TError,
         {data: _EmptyPayload},
         TContext
       > => {
 
-      const mutationOptions = getActionScheduleStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationOptions(options);
+      const mutationOptions = getActionCoworkerStopMyCoworkerApiOrchestratorActionsSchedulesStopMyCoworkerPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update CoWorker lease scope, interval, and activation state.
+ * @summary Update My CoWorker Lease
+ */
+export const actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost = (
+    coworkerLeaseUpdatePayload: CoworkerLeaseUpdatePayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<CoworkerLeaseOut>(
+      {url: `/api/orchestrator/actions/schedules/coworker/lease`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: coworkerLeaseUpdatePayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getActionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost>>, TError,{data: CoworkerLeaseUpdatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost>>, TError,{data: CoworkerLeaseUpdatePayload}, TContext> => {
+
+const mutationKey = ['actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost>>, {data: CoworkerLeaseUpdatePayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost>>>
+    export type ActionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostMutationBody = CoworkerLeaseUpdatePayload
+    export type ActionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Update My CoWorker Lease
+ */
+export const useActionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost>>, TError,{data: CoworkerLeaseUpdatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof actionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePost>>,
+        TError,
+        {data: CoworkerLeaseUpdatePayload},
+        TContext
+      > => {
+
+      const mutationOptions = getActionCoworkerUpdateMyCoworkerApiOrchestratorActionsSchedulesCoworkerLeasePostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Ingest new insight data for analysis and trend detection
+ * @summary Process and Store Insight Data
+ */
+export const insightsIngestApiOrchestratorInsightsPost = (
+    insightInCommand: InsightInCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<InsightOut>(
+      {url: `/api/orchestrator/insights`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: insightInCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getInsightsIngestApiOrchestratorInsightsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext> => {
+
+const mutationKey = ['insightsIngestApiOrchestratorInsightsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, {data: InsightInCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  insightsIngestApiOrchestratorInsightsPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InsightsIngestApiOrchestratorInsightsPostMutationResult = NonNullable<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>>
+    export type InsightsIngestApiOrchestratorInsightsPostMutationBody = InsightInCommand
+    export type InsightsIngestApiOrchestratorInsightsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Process and Store Insight Data
+ */
+export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>, TError,{data: InsightInCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof insightsIngestApiOrchestratorInsightsPost>>,
+        TError,
+        {data: InsightInCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getInsightsIngestApiOrchestratorInsightsPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

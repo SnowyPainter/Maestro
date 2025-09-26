@@ -25,6 +25,18 @@ slots:
   - bff.drafts.list_post_publications_by_status
   - bff.drafts.list_post_publications_by_variant
   - insights.ingest
+- name: active
+  label: Active
+  description: Filter by active
+  value_type: boolean
+  flows:
+  - action.coworker.update_my_coworker
+- name: add_persona_account_ids
+  label: Add Persona Account Ids
+  description: Filter by add persona account ids
+  value_type: integer_list
+  flows:
+  - action.coworker.update_my_coworker
 - name: as_of
   label: As Of
   description: Filter by as of
@@ -116,7 +128,6 @@ slots:
   description: Target a specific draft id
   value_type: integer
   flows:
-  - action.schedule.create_draft_post_schedule
   - bff.drafts.list_variants
   - bff.drafts.read_draft
   - bff.drafts.read_variant
@@ -149,6 +160,12 @@ slots:
   value_type: string_list
   flows:
   - action.schedule.create_trends_mail_schedule
+- name: force_restart
+  label: Force Restart
+  description: Filter by force restart
+  value_type: boolean
+  flows:
+  - action.coworker.update_my_coworker
 - name: goal
   label: Goal
   description: Filter by goal
@@ -168,6 +185,12 @@ slots:
   value_type: string
   flows:
   - insights.ingest
+- name: interval_seconds
+  label: Interval Seconds
+  description: Filter by interval seconds
+  value_type: integer
+  flows:
+  - action.coworker.update_my_coworker
 - name: ir
   label: Ir
   description: Filter by ir
@@ -185,6 +208,7 @@ slots:
   - bff.campaigns.list_campaigns
   - bff.campaigns.list_kpi_results
   - bff.drafts.list_drafts
+  - bff.schedule.list_schedules
   - bff.timeline.campaigns
   - bff.timeline.post_publications
   - bff.timeline.trends
@@ -236,6 +260,7 @@ slots:
   - bff.accounts.list_platform_accounts
   - bff.campaigns.list_campaigns
   - bff.drafts.list_drafts
+  - bff.schedule.list_schedules
 - name: on_date
   label: On Date
   description: Filter by on date
@@ -271,9 +296,16 @@ slots:
   - action.schedule.create_from_raw_dag
   - bff.contexts.current_persona
   - bff.contexts.current_persona_account
+  - bff.schedule.list_schedules
   - bff.timeline.campaigns
   - bff.timeline.post_publications
   - bff.timeline.trends
+- name: persona_account_ids
+  label: Persona Account Ids
+  description: Filter by persona account ids
+  value_type: integer_list
+  flows:
+  - action.coworker.update_my_coworker
 - name: persona_id
   label: Persona Id
   description: Target a specific persona id
@@ -292,7 +324,6 @@ slots:
   - instagram
   - threads
   flows:
-  - action.schedule.create_draft_post_schedule
   - bff.accounts.list_platform_accounts
   - bff.drafts.list_post_publications_by_platform
   - bff.drafts.list_variants_by_platform
@@ -309,7 +340,6 @@ slots:
   description: Target a specific post publication id
   value_type: integer
   flows:
-  - action.schedule.create_draft_post_schedule
   - insights.ingest
 - name: post_publish
   label: Post Publish
@@ -331,12 +361,19 @@ slots:
   flows:
   - action.schedule.create_from_raw_dag
   - action.schedule.create_trends_mail_schedule
+  - bff.schedule.list_schedules
 - name: raw
   label: Raw
   description: Filter by raw
   value_type: string
   flows:
   - insights.ingest
+- name: remove_persona_account_ids
+  label: Remove Persona Account Ids
+  description: Filter by remove persona account ids
+  value_type: integer_list
+  flows:
+  - action.coworker.update_my_coworker
 - name: repeat_interval_minutes
   label: Repeat Interval Minutes
   description: Filter by repeat interval minutes
@@ -354,6 +391,7 @@ slots:
   description: Filter by run at
   value_type: string
   flows:
+  - action.schedule.create_draft_post_schedule
   - action.schedule.create_from_raw_dag
 - name: schedule_ids
   label: Schedule Ids
@@ -422,6 +460,7 @@ slots:
   flows:
   - action.schedule.cancel_schedules
   - bff.drafts.list_post_publications_by_status
+  - bff.schedule.list_schedules
 - name: tags
   label: Tags
   description: Filter by tags

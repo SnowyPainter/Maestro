@@ -19,7 +19,7 @@ function ChatPageContent() {
         onToolClick={handleToolClick}
       />
       <ChatStream messages={messages} onSendMessage={handleChatSend} onClearChat={clearChat} />
-      <ChatContextPanel flows={flows} />
+      <ChatContextPanel flows={flows || []} />
     </div>
   );
 }
