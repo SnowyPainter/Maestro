@@ -13,7 +13,7 @@ def extract_pipeline_id(subject: str) -> str | None:
     match = re.search(r'\[PIPELINE\s*#([a-zA-Z0-9]+[a-zA-Z0-9]*)\]', subject)
     return match.group(1) if match else None
 
-def parse_email_metadata(text: str) -> EmailMetadata:
+def parse_email_metadata(text: str, subject: str | None = None) -> EmailMetadata:
     import re
 
     metadata = {"settings": {}}
@@ -33,12 +33,13 @@ def parse_email_metadata(text: str) -> EmailMetadata:
     metadata["tags"] = metadata["settings"].get("tags",
         [tag.strip() for tag in metadata["settings"].get("tags", "").split(",") if tag.strip()] if metadata["settings"].get("tags") else [])
 
-    pipeline_id = extract_pipeline_id(raw_text) or metadata["settings"].get("pipeline_id")
+    # pipeline_id는 제목 토큰에서 우선 추출, 없으면 settings에서 fallback
+    pipeline_id = (extract_pipeline_id(subject) if isinstance(subject, str) and subject else None) or metadata["settings"].get("pipeline_id")
     metadata["pipeline_id"] = pipeline_id or "default"
 
     return EmailMetadata(**metadata)
 
-def parse_mail_body(text: str, *, paragraph_split: str = "\n\n") -> Tuple[DraftIR, EmailMetadata]:
+def parse_mail_body(text: str, *, subject: str | None = None, paragraph_split: str = "\n\n") -> Tuple[DraftIR, EmailMetadata]:
     """
     이메일 텍스트를 파싱하여 DraftIR로 변환합니다.
     
@@ -48,7 +49,7 @@ def parse_mail_body(text: str, *, paragraph_split: str = "\n\n") -> Tuple[DraftI
     - 나머지는 BlockText로 변환
     """
     import re
-    metadata = parse_email_metadata(text)
+    metadata = parse_email_metadata(text, subject=subject)
     
     blocks = []
     if paragraph_split.startswith("#"):

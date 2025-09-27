@@ -11,7 +11,11 @@ from pydantic import BaseModel
 from apps.backend.src.orchestrator.dsl import DagSpec, DagNode
 from apps.backend.src.orchestrator.dispatch import ExecutionRuntime, orchestrate_flow
 from apps.backend.src.workers.CoWorker.runtime import ScheduleReschedule
+from apps.backend.src.core.logging import setup_logging
 
+import logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 @dataclass
 class ExecutionResult:
@@ -83,6 +87,17 @@ class DagExecutor:
                 start_index = order.index(resume_next_id)
             except ValueError:
                 start_index = 0
+            # Treat the previously waiting node as completed so its successors can run
+            waiting_node = self.dag_state.pop("waiting_node", None)
+            if isinstance(waiting_node, str):
+                self.completed.add(waiting_node)
+            else:
+                # context를 dict로 감싸서 실제 sqlalchemy 변경 사항 저장
+                # suspend시 completed에 안들어감. 이 부분에서 처리
+                for predecessor in self.spec.predecessors.get(resume_next_id, []):
+                    self.completed.add(predecessor)
+            self.dag_state.pop("wait_started_at", None)
+            self._update_dag_state()
 
         for idx in range(start_index, len(order)):
             node_id = order[idx]

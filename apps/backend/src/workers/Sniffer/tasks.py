@@ -158,24 +158,37 @@ def sniff_mailbox(self):
             pipeline_id = item.get("pipeline_id")
             event_payload = item.get("event")
             if not pipeline_id or not event_payload:
+                logger.debug("No pipeline_id or event_payload")
                 continue
 
-            pipeline_match = cast(Schedule.context["pipeline_id"], String)
-            schedule: Schedule | None = (
+            # Cross-dialect safe lookup: fetch RUNNING schedules and match pipeline_id in Python
+            candidates = (
                 session.execute(
-                    select(Schedule).where(pipeline_match == pipeline_id)
-                ).scalars().first()
+                    select(Schedule).where(Schedule.status == ScheduleStatus.RUNNING.value)
+                ).scalars().all()
             )
+            schedule: Schedule | None = None
+            for s in candidates:
+                ctx = s.context or {}
+                if isinstance(ctx, dict) and ctx.get("pipeline_id") == pipeline_id:
+                    schedule = s
+                    break
             if not schedule:
                 logger.debug("No schedule awaiting pipeline %s", pipeline_id)
                 continue
 
-            context = schedule.context or {}
+            context = dict(schedule.context or {})
             resume_bucket = context.get("_resume") or {}
             resume_bucket["event"] = event_payload
             context["_resume"] = resume_bucket
             context["pipeline_id"] = pipeline_id
             context["reply_received"] = True
+            # Clear stale waiting markers so executor/UI doesn't display wait state after resume
+            dag_ctx = context.get("_dag") or {}
+            if isinstance(dag_ctx, dict):
+                dag_ctx.pop("waiting_node", None)
+                dag_ctx.pop("wait_started_at", None)
+                context["_dag"] = dag_ctx
             if item.get("metadata"):
                 context["reply_metadata"] = item["metadata"]
 

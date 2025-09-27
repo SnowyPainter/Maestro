@@ -65,8 +65,8 @@ async def reset_db():
         await conn.execute(text("CREATE SCHEMA public"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         """
-        await conn.execute(text("DROP TABLE IF EXISTS coworker_leases CASCADE"))
-        
+        #await conn.execute(text("DROP TABLE IF EXISTS coworker_leases CASCADE"))
+        await conn.execute(text("DELETE FROM schedules"))
 
         await conn.run_sync(Base.metadata.create_all)
         

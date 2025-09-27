@@ -78,9 +78,17 @@ def parse_dag_spec(spec: Dict[str, Any]) -> DagSpec:
         raise ValueError("dag.edges must be a list")
 
     for edge in raw_edges:
-        if not isinstance(edge, (list, tuple)) or len(edge) != 2:
-            raise ValueError("dag.edges entries must be [source, target]")
-        source, target = edge
+        # Accept both legacy pair form [source, target] and object form {"source": str, "target": str}
+        if isinstance(edge, (list, tuple)) and len(edge) == 2:
+            source, target = edge
+        elif isinstance(edge, dict):
+            source = edge.get("source")
+            target = edge.get("target")
+        else:
+            raise ValueError("dag.edges entries must be [source, target] or {source, target}")
+
+        if not isinstance(source, str) or not isinstance(target, str):
+            raise ValueError("edge source/target must be strings")
         if source not in nodes:
             raise ValueError(f"Edge source '{source}' is not a node id")
         if target not in nodes:

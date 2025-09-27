@@ -18,6 +18,7 @@ from apps.backend.src.modules.scheduler.models import (
 )
 
 
+# Allow RUNNING to be picked for resume; idempotency is handled at operator level
 DEFAULT_DUE_STATUSES: tuple[str, ...] = (
     ScheduleStatus.PENDING.value,
     ScheduleStatus.FAILED.value,

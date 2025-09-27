@@ -50,8 +50,15 @@ async def op_ingest_draft_mail(payload: EmailInboundPayload, ctx: TaskContext) -
         "text/plain": payload.text_plain,
     }
 
-    result = await ingest_draft_mail(email_payload)
-    return EmailInboundResult(**result)
+    result = await ingest_draft_mail(email_payload, ctx.runtime)
+    return EmailInboundResult(
+        ok=result["ok"],
+        pipeline_id=result["pipeline_id"],
+        draft_id=result["draft_id"],
+        title=result["title"],
+        tags=result["tags"],
+        settings=result["settings"],
+    )
 
 
 @FLOWS.flow(

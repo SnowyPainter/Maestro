@@ -304,6 +304,19 @@ async def op_send_trends_email(
     ctx: TaskContext,
 ) -> ComposeTrendsEmailResult:
     schedule_context = ctx.optional(dict, name="schedule_context") or {}
+    # Idempotency guard: if we've already sent for this pipeline_id within this schedule, skip re-send
+    already_sent_for = set(schedule_context.get("mail_sent_for_pipelines", []) or [])
+    pid = payload.pipeline_id or schedule_context.get("pipeline_id")
+    if pid and pid in already_sent_for:
+        return ComposeTrendsEmailResult(
+            ok=True,
+            sent=False,
+            total=payload.total,
+            persona_name=payload.persona_name,
+            pipeline_id=payload.pipeline_id,
+            subject=payload.subject,
+            reason="already_sent",
+        )
     if payload.pipeline_id:
         schedule_context["pipeline_id"] = payload.pipeline_id
 
@@ -337,6 +350,10 @@ async def op_send_trends_email(
             subject=payload.subject or "",
             html_body=payload.html_body or "",
         )
+        # mark as sent to prevent duplicates on resume/retry
+        if pid:
+            already_sent_for.add(pid)
+            schedule_context["mail_sent_for_pipelines"] = sorted(already_sent_for)
         return ComposeTrendsEmailResult(
             ok=True,
             sent=True,

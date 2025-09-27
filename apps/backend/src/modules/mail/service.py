@@ -14,16 +14,19 @@ from apps.backend.src.core.resource import render_email_draft_created
 from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest, DraftOut
 from apps.backend.src.modules.mail.mail_parser import parse_mail_body
 from apps.backend.src.modules.mail.schemas import EmailMetadata
-from apps.backend.src.orchestrator.dispatch import orchestrate_flow
+from apps.backend.src.orchestrator.dispatch import orchestrate_flow, ExecutionRuntime
 from apps.backend.src.orchestrator.registry import FLOWS
 from apps.backend.src.services.mailer import get_mailer
 
+from apps.backend.src.core.logging import setup_logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
-async def ingest_draft_mail(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def ingest_draft_mail(payload: Dict[str, Any], runtime: ExecutionRuntime | None = None) -> Dict[str, Any]:
     """Process inbound email and create draft.
 
     Args:
-        payload: Gmail webhook payload
+        payload: Naver mail payload
 
     Returns:
         Processing result with draft information
@@ -48,11 +51,11 @@ async def ingest_draft_mail(payload: Dict[str, Any]) -> Dict[str, Any]:
     if not body_text:
         raise ValueError("Email body is empty")
 
-    # Parse email content
-    result: Tuple[DraftIR, EmailMetadata] = parse_mail_body(body_text)
+    # Parse email content, prefer pipeline_id from subject token
+    result: Tuple[DraftIR, EmailMetadata] = parse_mail_body(body_text, subject=subject)
     ir: DraftIR = result[0]
     metadata: EmailMetadata = result[1]
-    pipeline_id = metadata.settings.get('pipeline_id')
+    pipeline_id = metadata.pipeline_id or metadata.settings.get('pipeline_id')
 
     if not pipeline_id:
         raise ValueError("pipeline_id not found in email settings")
@@ -63,11 +66,11 @@ async def ingest_draft_mail(payload: Dict[str, Any]) -> Dict[str, Any]:
         tags=metadata.tags,
         ir=ir,
         campaign_id=metadata.settings.get('campaign_id'),
-        goal=f"Email draft from pipeline #{pipeline_id}"
+        goal=f"Go for a trend"
     )
 
     flow = FLOWS.get("drafts.create")
-    draft: DraftOut = await orchestrate_flow(flow, draft_request, None)
+    draft: DraftOut = await orchestrate_flow(flow, draft_request, runtime)
 
     # Send confirmation email
     await _send_draft_confirmation_email(
@@ -93,7 +96,7 @@ async def _send_draft_confirmation_email(
 ) -> None:
     """Send draft creation confirmation email."""
     mailer = get_mailer()
-    done_subject = f"Draft Created - {draft.title or 'Untitled'}"
+    done_subject = f"Draft Created - {draft.title or 'Untitled'} [PIPELINE #{metadata.pipeline_id}]"
     done_html = render_email_draft_created(
         draft=draft,
         pipeline_id=metadata.pipeline_id
@@ -104,8 +107,6 @@ async def _send_draft_confirmation_email(
     except Exception as e:
         print(f"Warning: Failed to send completion email: {str(e)}")
         # Don't raise exception for email failures
-
-logger = logging.getLogger(__name__)
 
 
 async def poll_mailbox(limit: int = 50) -> list[Dict[str, Any]]:
