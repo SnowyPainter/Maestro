@@ -167,7 +167,9 @@ export function DraftVariantDetail({
     );
   }
 
-  if (isError || (draftId && platform && !data) || (!variantData)) {
+  const displayData = variantData || data;
+
+  if (isError || !displayData) {
     return (
       <Card className="border-destructive/40">
         <CardHeader className="flex justify-between items-center">
@@ -183,8 +185,6 @@ export function DraftVariantDetail({
       </Card>
     );
   }
-
-  const displayData = variantData || data;
   const kind = ensurePlatformKind(displayData.platform);
   const platformMeta = kind ? platformPresentation[kind] : null;
   const warningCount = countListItems(displayData.warnings);
