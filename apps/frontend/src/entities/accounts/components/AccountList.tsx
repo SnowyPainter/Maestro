@@ -1,19 +1,40 @@
 
 import { useEffect } from "react";
-import { useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet } from "@/lib/api/generated";
+import {
+  useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet,
+  useAccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost,
+} from "@/lib/api/generated";
 import { PlatformAccountOut } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, WifiOff, Ban } from "lucide-react";
+import { AlertTriangle, WifiOff, Ban, RotateCw } from "lucide-react";
 import { useContextRegistryStore } from "@/store/chat-context-registry";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 interface AccountListProps {
   onSelectAccount?: (accountId: number) => void;
 }
 
 export function AccountList({ onSelectAccount }: AccountListProps) {
-  const { data: accounts, isLoading, isError, error } = useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet();
+  const queryClient = useQueryClient();
+  const {
+    data: accounts,
+    isLoading,
+    isError,
+    error,
+  } = useBffAccountsListPlatformAccountsApiBffAccountsPlatformGet();
   const registerEmission = useContextRegistryStore((state) => state.registerEmission);
+
+  const restoreAccountMutation = useAccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["bff-accounts", "listPlatformAccountsApiBffAccountsPlatformGet"],
+        });
+      },
+    },
+  });
 
   // Register accounts and platforms in context registry
   useEffect(() => {
@@ -21,7 +42,7 @@ export function AccountList({ onSelectAccount }: AccountListProps) {
       const platforms = new Set<string>();
       accounts.forEach((account) => {
         // Register account_id
-        registerEmission('account_id', {
+        registerEmission("account_id", {
           value: account.id.toString(),
           label: `@${account.handle}`,
         });
@@ -32,7 +53,7 @@ export function AccountList({ onSelectAccount }: AccountListProps) {
 
       // Register platforms
       platforms.forEach((platform) => {
-        registerEmission('platform', {
+        registerEmission("platform", {
           value: platform,
           label: platform.charAt(0).toUpperCase() + platform.slice(1),
         });
@@ -84,10 +105,8 @@ export function AccountList({ onSelectAccount }: AccountListProps) {
         <Card
           key={account.id}
           onClick={() => account.is_active !== false && onSelectAccount?.(account.id)}
-          className={`rounded-2xl border bg-card text-card-foreground shadow-md ${
-            account.is_active === false
-              ? 'opacity-50 cursor-not-allowed'
-              : 'cursor-pointer hover:bg-muted'
+          className={`rounded-2xl border bg-card text-card-foreground shadow-md relative ${
+            account.is_active === false ? "opacity-50" : "cursor-pointer hover:bg-muted"
           }`}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -104,6 +123,24 @@ export function AccountList({ onSelectAccount }: AccountListProps) {
             <div className="text-lg font-bold">@{account.handle}</div>
             <p className="text-xs text-muted-foreground">{account.bio || "No bio available."}</p>
           </CardContent>
+          {account.is_active === false && (
+            <div className="absolute inset-0 bg-card/60 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  restoreAccountMutation.mutate({ data: {
+                    account_id: account.id
+                  }});
+                }}
+                disabled={restoreAccountMutation.isPending}
+              >
+                <RotateCw className="w-4 h-4 mr-2" />
+                Restore
+              </Button>
+            </div>
+          )}
         </Card>
       ))}
     </div>

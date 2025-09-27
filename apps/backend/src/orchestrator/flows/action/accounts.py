@@ -27,6 +27,7 @@ from apps.backend.src.modules.accounts.service import (
     get_persona,
     get_platform_account,
     link_persona_account,
+    restore_platform_account,
     unlink_persona_account,
     update_persona,
     update_platform_account,
@@ -53,6 +54,10 @@ class PlatformAccountUpdateCommand(BaseModel):
 class PlatformAccountDeleteCommand(BaseModel):
     account_id: Optional[int] = None
     soft: bool = True
+
+
+class PlatformAccountRestoreCommand(BaseModel):
+    account_id: Optional[int] = None
 
 
 class PersonaCreatePayload(PersonaBase):
@@ -160,6 +165,31 @@ async def op_delete_platform_account(
         raise HTTPException(status_code=404, detail="Platform account not found")
     await delete_platform_account(db, account=account, soft=payload.soft)
     return MessageOut(message="Platform account deleted successfully")
+
+
+@operator(
+    key="accounts.platform.restore_account",
+    title="Restore platform account",
+    side_effect="write",
+)
+async def op_restore_platform_account(
+    payload: PlatformAccountRestoreCommand,
+    ctx: TaskContext,
+) -> PlatformAccountOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    if payload.account_id is None:
+        raise HTTPException(status_code=422, detail="account_id is required")
+    account = await get_platform_account(
+        db, account_id=payload.account_id, owner_user_id=user.id
+    )
+    if not account:
+        raise HTTPException(status_code=404, detail="Platform account not found")
+    try:
+        restored = await restore_platform_account(db, account=account)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return _to_model(PlatformAccountOut, restored)
 
 
 @operator(
@@ -271,6 +301,21 @@ def _flow_create_platform(builder: FlowBuilder):
 
 
 @FLOWS.flow(
+    key="accounts.platform.restore",
+    title="Restore Soft Deleted Platform Account",
+    description="Re-activate a previously soft deleted platform account",
+    input_model=PlatformAccountRestoreCommand,
+    output_model=PlatformAccountOut,
+    method="post",
+    path="/accounts/platform/restore",
+    tags=("action", "accounts", "platform", "restore", "social-media"),
+)
+def _flow_restore_platform(builder: FlowBuilder):
+    task = builder.task("restore_platform", "accounts.platform.restore_account")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
     key="accounts.platform.update",
     title="Update Platform Account Details",
     description="Update platform account information like username, credentials, or settings",
@@ -284,11 +329,10 @@ def _flow_update_platform(builder: FlowBuilder):
     task = builder.task("update_platform", "accounts.platform.update_account")
     builder.expect_terminal(task)
 
-
 @FLOWS.flow(
     key="accounts.platform.delete",
     title="Remove Platform Account",
-    description="Permanently delete a platform account and all associated data",
+    description="Delete a platform account (soft delete by default unless explicitly hard deleted)",
     input_model=PlatformAccountDeleteCommand,
     output_model=MessageOut,
     method="delete",
@@ -373,4 +417,3 @@ def _flow_link_persona_account(builder: FlowBuilder):
 def _flow_unlink_persona_account(builder: FlowBuilder):
     task = builder.task("unlink_persona_account", "accounts.link.unlink")
     builder.expect_terminal(task)
-

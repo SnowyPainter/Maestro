@@ -1061,6 +1061,12 @@ export interface PlatformAccountOut {
   updated_at: string;
 }
 
+export type PlatformAccountRestoreCommandAccountId = number | null;
+
+export interface PlatformAccountRestoreCommand {
+  account_id?: PlatformAccountRestoreCommandAccountId;
+}
+
 export type PlatformAccountUpdateScopes = string[] | null;
 
 export type PlatformAccountUpdateIsActive = boolean | null;
@@ -1068,6 +1074,8 @@ export type PlatformAccountUpdateIsActive = boolean | null;
 export interface PlatformAccountUpdate {
   /** @nullable */
   handle?: string | null;
+  /** @nullable */
+  external_id?: string | null;
   /** @nullable */
   avatar_url?: string | null;
   /** @nullable */
@@ -4471,6 +4479,72 @@ export const useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost = <TEr
     }
     
 /**
+ * Re-activate a previously soft deleted platform account
+ * @summary Restore Soft Deleted Platform Account
+ */
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost = (
+    platformAccountRestoreCommand: PlatformAccountRestoreCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PlatformAccountOut>(
+      {url: `/api/orchestrator/accounts/platform/restore`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: platformAccountRestoreCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getAccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost>>, TError,{data: PlatformAccountRestoreCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost>>, TError,{data: PlatformAccountRestoreCommand}, TContext> => {
+
+const mutationKey = ['accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost>>, {data: PlatformAccountRestoreCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost>>>
+    export type AccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostMutationBody = PlatformAccountRestoreCommand
+    export type AccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Restore Soft Deleted Platform Account
+ */
+export const useAccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost>>, TError,{data: PlatformAccountRestoreCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePost>>,
+        TError,
+        {data: PlatformAccountRestoreCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * Update platform account information like username, credentials, or settings
  * @summary Update Platform Account Details
  */
@@ -4537,7 +4611,7 @@ export const useAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPu
     }
     
 /**
- * Permanently delete a platform account and all associated data
+ * Delete a platform account (soft delete by default unless explicitly hard deleted)
  * @summary Remove Platform Account
  */
 export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDelete = (

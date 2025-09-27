@@ -323,6 +323,7 @@ async def _update_platform_account(
 ) -> PlatformAccount:
     update_payload = PlatformAccountUpdate(
         handle=profile.username or profile.name or profile.id,
+        external_id=profile.id,
         avatar_url=profile.avatar_url,
         access_token=token.access_token,
         refresh_token=token.refresh_token,

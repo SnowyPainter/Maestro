@@ -30,7 +30,7 @@ class PlatformAccount(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
     __table_args__ = (
-        UniqueConstraint('platform', 'external_id', name='uq_platform_external'),
+        UniqueConstraint('owner_user_id', 'platform', 'external_id', 'is_active', name='uq_platform_owner_external_active'),
         Index('ix_platform_handle', 'platform', 'handle'),
     )
 

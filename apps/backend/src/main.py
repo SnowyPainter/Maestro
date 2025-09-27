@@ -67,7 +67,9 @@ async def reset_db():
         """
         
         await conn.execute(text("DELETE FROM schedules"))
-        
+        await conn.execute(text("DELETE FROM persona_accounts"))
+        await conn.execute(text("DELETE FROM platform_accounts"))
+
         await conn.run_sync(Base.metadata.create_all)
         
     return {"ok": True}

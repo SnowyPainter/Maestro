@@ -61,6 +61,26 @@ async def get_platform_account(
     res = await db.execute(q)
     return res.scalar_one_or_none()
 
+
+async def get_platform_account_by_external_id(
+    db: AsyncSession,
+    *,
+    platform: PlatformKind,
+    external_id: str,
+    owner_user_id: Optional[int] = None,
+    is_active: Optional[bool] = None,
+) -> Optional[PlatformAccount]:
+    stmt = select(PlatformAccount).where(
+        PlatformAccount.platform == platform,
+        PlatformAccount.external_id == external_id,
+    )
+    if owner_user_id is not None:
+        stmt = stmt.where(PlatformAccount.owner_user_id == owner_user_id)
+    if is_active is not None:
+        stmt = stmt.where(PlatformAccount.is_active == is_active)
+    res = await db.execute(stmt)
+    return res.scalar_one_or_none()
+
 async def is_valid_platform_account(
     db: AsyncSession, *, account_id: int, owner_user_id: int
 ) -> bool:
@@ -69,12 +89,18 @@ async def is_valid_platform_account(
     if not account or not account.is_active:
         return False
     
-    # access_token도 없고 expires도 없으면 False
-    if account.access_token is None and account.token_expires_at is None:
+    # 필수 식별자 누락 시 바로 비활성 처리
+    external_id = (account.external_id or "").strip()
+    if not external_id:
         return False
 
-    # expires는 없는데 access_token 있으면 True
-    if account.token_expires_at is None and account.access_token is not None:
+    access_token = (account.access_token or "").strip()
+
+    if not access_token:
+        return False
+
+    # 토큰 문자열만 있고 만료 정보는 없으면 true (수동 토큰)
+    if account.token_expires_at is None:
         return True
 
     # expires가 있으면 만료 시간 체크
@@ -106,8 +132,85 @@ async def list_platform_accounts(
 async def update_platform_account(
     db: AsyncSession, *, account: PlatformAccount, data: PlatformAccountUpdate
 ) -> PlatformAccount:
-    for k, v in data.model_dump(exclude_unset=True).items():
-        setattr(account, k, v)
+    payload = data.model_dump(exclude_unset=True)
+
+    new_external = payload.get("external_id")
+    if isinstance(new_external, str):
+        new_external = new_external.strip()
+        payload["external_id"] = new_external or None
+
+    target = account
+
+    if isinstance(new_external, str) and new_external:
+        current = (account.external_id or "").strip()
+        if new_external != current:
+            duplicate = await get_platform_account_by_external_id(
+                db,
+                platform=account.platform,
+                external_id=new_external,
+                owner_user_id=account.owner_user_id,
+                is_active=True,
+            )
+            if duplicate and duplicate.id != account.id:
+                await merge_platform_accounts(db, primary=duplicate, secondary=account)
+                target = duplicate
+
+    for key, value in payload.items():
+        setattr(target, key, value)
+    target.updated_at = _utcnow()
+    db.add(target)
+    await db.flush()
+    await db.refresh(target)
+    await db.commit()
+    return target
+
+
+async def merge_platform_accounts(
+    db: AsyncSession,
+    *,
+    primary: PlatformAccount,
+    secondary: PlatformAccount,
+) -> None:
+    if primary.id == secondary.id:
+        return
+
+    await db.execute(
+        update(PersonaAccount)
+        .where(PersonaAccount.account_id == secondary.id)
+        .values(account_id=primary.id)
+    )
+
+    secondary.is_active = False
+    secondary.external_id = None
+    secondary.access_token = None
+    secondary.refresh_token = None
+    secondary.token_expires_at = None
+    secondary.updated_at = _utcnow()
+    db.add(secondary)
+    await db.flush()
+
+
+async def restore_platform_account(
+    db: AsyncSession,
+    *,
+    account: PlatformAccount,
+) -> PlatformAccount:
+    if account.is_active:
+        return account
+
+    external_id = (account.external_id or "").strip()
+    if external_id:
+        duplicate = await get_platform_account_by_external_id(
+            db,
+            platform=account.platform,
+            external_id=external_id,
+            owner_user_id=account.owner_user_id,
+            is_active=True,
+        )
+        if duplicate and duplicate.id != account.id:
+            raise ValueError("an active account with this external id already exists")
+
+    account.is_active = True
     account.updated_at = _utcnow()
     db.add(account)
     await db.flush()

@@ -23,6 +23,7 @@ class PlatformAccountCreate(PlatformAccountBase):
 
 class PlatformAccountUpdate(BaseModel):
     handle: Optional[str] = None
+    external_id: Optional[str] = None
     avatar_url: Optional[str] = None
     bio: Optional[str] = None
     scopes: Optional[list[str]] = None

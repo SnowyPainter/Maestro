@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Dict, List, TYPE_CHECKING
 
+from apps.backend.src.core.context import draft_id_ctx
+
 if TYPE_CHECKING:  # pragma: no cover - typing helpers
     from .schemas import (
         MailScheduleTemplateParams,
@@ -154,12 +156,13 @@ def _build_post_publish_template(request: "ScheduleCompileRequest") -> "Schedule
         platform=params.platform.value,
     )
     builder.add_node(
-        "internal.drafts.create_post_schedule",
+        "internal.drafts.publish",
         node_id="publish",
         post_publication_id=payload_ref("post_publication_id"),
         persona_account_id=payload_ref("persona_account_id"),
         variant_id=payload_ref("variant_id"),
         platform=payload_ref("platform"),
+        draft_id=payload_ref("draft_id")
     )
     return builder.build_model()
 

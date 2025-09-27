@@ -1290,6 +1290,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/platform/restore:
+    post:
+      tags:
+      - action
+      - action
+      - accounts
+      - platform
+      - restore
+      - social-media
+      summary: Restore Soft Deleted Platform Account
+      description: Re-activate a previously soft deleted platform account
+      operationId: accounts_platform_restore_api_orchestrator_accounts_platform_restore_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformAccountRestoreCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformAccountOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/accounts/platform/{account_id}:
     put:
       tags:
@@ -1341,7 +1372,8 @@ paths:
       - social-media
       - dangerous
       summary: Remove Platform Account
-      description: Permanently delete a platform account and all associated data
+      description: Delete a platform account (soft delete by default unless explicitly
+        hard deleted)
       operationId: accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete
       parameters:
       - name: account_id
@@ -4580,10 +4612,23 @@ components:
       - created_at
       - updated_at
       title: PlatformAccountOut
+    PlatformAccountRestoreCommand:
+      properties:
+        account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Id
+      type: object
+      title: PlatformAccountRestoreCommand
     PlatformAccountUpdate:
       properties:
         handle:
           title: Handle
+          type: string
+          nullable: true
+        external_id:
+          title: External Id
           type: string
           nullable: true
         avatar_url:

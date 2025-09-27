@@ -1026,6 +1026,38 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponse =
 
 
 /**
+ * Re-activate a previously soft deleted platform account
+ * @summary Restore Soft Deleted Platform Account
+ */
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostBody = zod.object({
+  "account_id": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseHandleMax = 128;
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseExternalIdMax = 256;
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseAvatarUrlMax = 512;
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseBioMax = 160;
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseIsActiveDefault = true;
+
+export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponse = zod.object({
+  "owner_user_id": zod.number(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "handle": zod.string().max(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseHandleMax),
+  "external_id": zod.string().max(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseExternalIdMax).nullish(),
+  "avatar_url": zod.string().max(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseAvatarUrlMax).nullish(),
+  "bio": zod.string().max(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseBioMax).nullish(),
+  "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).default(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseIsActiveDefault),
+  "id": zod.number(),
+  "last_checked_at": zod.iso.datetime({}).nullish(),
+  "last_error": zod.string().nullish(),
+  "token_expires_at": zod.iso.datetime({}).nullish(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
  * Update platform account information like username, credentials, or settings
  * @summary Update Platform Account Details
  */
@@ -1037,6 +1069,7 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutBo
   "account_id": zod.union([zod.number(),zod.null()]).optional(),
   "data": zod.object({
   "handle": zod.string().nullish(),
+  "external_id": zod.string().nullish(),
   "avatar_url": zod.string().nullish(),
   "bio": zod.string().nullish(),
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
@@ -1072,7 +1105,7 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutRe
 
 
 /**
- * Permanently delete a platform account and all associated data
+ * Delete a platform account (soft delete by default unless explicitly hard deleted)
  * @summary Remove Platform Account
  */
 export const accountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams = zod.object({

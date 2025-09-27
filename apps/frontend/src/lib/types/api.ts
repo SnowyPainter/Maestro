@@ -624,6 +624,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/accounts/platform/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Soft Deleted Platform Account
+         * @description Re-activate a previously soft deleted platform account
+         */
+        post: operations["accounts_platform_restore_api_orchestrator_accounts_platform_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/accounts/platform/{account_id}": {
         parameters: {
             query?: never;
@@ -640,7 +660,7 @@ export interface paths {
         post?: never;
         /**
          * Remove Platform Account
-         * @description Permanently delete a platform account and all associated data
+         * @description Delete a platform account (soft delete by default unless explicitly hard deleted)
          */
         delete: operations["accounts_platform_delete_api_orchestrator_accounts_platform__account_id__delete"];
         options?: never;
@@ -2511,10 +2531,17 @@ export interface components {
              */
             updated_at: string;
         };
+        /** PlatformAccountRestoreCommand */
+        PlatformAccountRestoreCommand: {
+            /** Account Id */
+            account_id?: number | null;
+        };
         /** PlatformAccountUpdate */
         PlatformAccountUpdate: {
             /** Handle */
             handle?: string | null;
+            /** External Id */
+            external_id?: string | null;
             /** Avatar Url */
             avatar_url?: string | null;
             /** Bio */
@@ -4087,6 +4114,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PlatformAccountCreateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformAccountOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_platform_restore_api_orchestrator_accounts_platform_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlatformAccountRestoreCommand"];
             };
         };
         responses: {
