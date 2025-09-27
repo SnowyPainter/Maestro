@@ -1489,7 +1489,7 @@ paths:
       - targeting
       - dangerous
       summary: Remove Persona Profile
-      description: Permanently delete a persona and all associated targeting data
+      description: Soft delete a persona and exclude it from operations
       operationId: accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete
       parameters:
       - name: persona_id
@@ -1507,6 +1507,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/accounts/personas/restore:
+    post:
+      tags:
+      - action
+      - action
+      - accounts
+      - persona
+      - restore
+      summary: Restore Persona Profile
+      description: Restore a previously soft deleted persona
+      operationId: accounts_persona_restore_api_orchestrator_accounts_personas_restore_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaRestoreCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaOut'
         '422':
           description: Validation Error
           content:
@@ -4254,6 +4284,12 @@ components:
           type: integer
           title: Schema Version
           default: 1
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+          default: true
       type: object
       required:
       - name
@@ -4350,6 +4386,9 @@ components:
           type: integer
           title: Schema Version
           default: 1
+        is_active:
+          type: boolean
+          title: Is Active
         id:
           type: integer
           title: Id
@@ -4364,10 +4403,20 @@ components:
       type: object
       required:
       - name
+      - is_active
       - id
       - created_at
       - updated_at
       title: PersonaOut
+    PersonaRestoreCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      type: object
+      title: PersonaRestoreCommand
     PersonaUpdate:
       properties:
         name:
@@ -4573,11 +4622,8 @@ components:
           - type: 'null'
           title: Scopes
         is_active:
-          anyOf:
-          - type: boolean
-          - type: 'null'
+          type: boolean
           title: Is Active
-          default: true
         id:
           type: integer
           title: Id
@@ -4608,6 +4654,7 @@ components:
       - owner_user_id
       - platform
       - handle
+      - is_active
       - id
       - created_at
       - updated_at

@@ -704,9 +704,29 @@ export interface paths {
         post?: never;
         /**
          * Remove Persona Profile
-         * @description Permanently delete a persona and all associated targeting data
+         * @description Soft delete a persona and exclude it from operations
          */
         delete: operations["accounts_persona_delete_api_orchestrator_accounts_personas__persona_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/accounts/personas/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Persona Profile
+         * @description Restore a previously soft deleted persona
+         */
+        post: operations["accounts_persona_restore_api_orchestrator_accounts_personas_restore_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2337,6 +2357,11 @@ export interface components {
              * @default 1
              */
             schema_version: number;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean | null;
         };
         /** PersonaList */
         PersonaList: components["schemas"]["PersonaOut"][];
@@ -2388,6 +2413,8 @@ export interface components {
              * @default 1
              */
             schema_version: number;
+            /** Is Active */
+            is_active: boolean;
             /** Id */
             id: number;
             /**
@@ -2400,6 +2427,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** PersonaRestoreCommand */
+        PersonaRestoreCommand: {
+            /** Persona Id */
+            persona_id?: number | null;
         };
         /** PersonaUpdate */
         PersonaUpdate: {
@@ -2501,11 +2533,8 @@ export interface components {
             bio?: string | null;
             /** Scopes */
             scopes?: string[] | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean | null;
+            /** Is Active */
+            is_active: boolean;
             /** Id */
             id: number;
             /**
@@ -4348,6 +4377,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accounts_persona_restore_api_orchestrator_accounts_personas_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonaRestoreCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaOut"];
                 };
             };
             /** @description Validation Error */

@@ -826,6 +826,8 @@ export type PersonaCreatePayloadExtrasAnyOf = { [key: string]: unknown };
 
 export type PersonaCreatePayloadExtras = PersonaCreatePayloadExtrasAnyOf | null;
 
+export type PersonaCreatePayloadIsActive = boolean | null;
+
 export interface PersonaCreatePayload {
   /** @maxLength 100 */
   name: string;
@@ -857,6 +859,7 @@ export interface PersonaCreatePayload {
   posting_windows?: PersonaCreatePayloadPostingWindows;
   extras?: PersonaCreatePayloadExtras;
   schema_version?: number;
+  is_active?: PersonaCreatePayloadIsActive;
 }
 
 export type PersonaList = PersonaOut[];
@@ -918,9 +921,16 @@ export interface PersonaOut {
   posting_windows?: PersonaOutPostingWindows;
   extras?: PersonaOutExtras;
   schema_version?: number;
+  is_active: boolean;
   id: number;
   created_at: string;
   updated_at: string;
+}
+
+export type PersonaRestoreCommandPersonaId = number | null;
+
+export interface PersonaRestoreCommand {
+  persona_id?: PersonaRestoreCommandPersonaId;
 }
 
 export type PersonaUpdatePillars = string[] | null;
@@ -1026,8 +1036,6 @@ export type PlatformAccountList = PlatformAccountOut[];
 
 export type PlatformAccountOutScopes = string[] | null;
 
-export type PlatformAccountOutIsActive = boolean | null;
-
 export interface PlatformAccountOut {
   owner_user_id: number;
   platform: PlatformKind;
@@ -1049,7 +1057,7 @@ export interface PlatformAccountOut {
    */
   bio?: string | null;
   scopes?: PlatformAccountOutScopes;
-  is_active?: PlatformAccountOutIsActive;
+  is_active: boolean;
   id: number;
   /** @nullable */
   last_checked_at?: string | null;
@@ -4838,7 +4846,7 @@ export const useAccountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPut
     }
     
 /**
- * Permanently delete a persona and all associated targeting data
+ * Soft delete a persona and exclude it from operations
  * @summary Remove Persona Profile
  */
 export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete = (
@@ -4896,6 +4904,72 @@ export const useAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDel
       > => {
 
       const mutationOptions = getAccountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Restore a previously soft deleted persona
+ * @summary Restore Persona Profile
+ */
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost = (
+    personaRestoreCommand: PersonaRestoreCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PersonaOut>(
+      {url: `/api/orchestrator/accounts/personas/restore`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: personaRestoreCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getAccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost>>, TError,{data: PersonaRestoreCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost>>, TError,{data: PersonaRestoreCommand}, TContext> => {
+
+const mutationKey = ['accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost>>, {data: PersonaRestoreCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostMutationResult = NonNullable<Awaited<ReturnType<typeof accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost>>>
+    export type AccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostMutationBody = PersonaRestoreCommand
+    export type AccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Restore Persona Profile
+ */
+export const useAccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost>>, TError,{data: PersonaRestoreCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost>>,
+        TError,
+        {data: PersonaRestoreCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

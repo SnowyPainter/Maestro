@@ -59,6 +59,9 @@ class Persona(Base):
     extras: Mapped[dict | None] = mapped_column(JSON)                 # JSONSchema로 검증
     schema_version: Mapped[int] = mapped_column(Integer, default=1)
 
+    # 상태
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 

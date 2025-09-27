@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link2, X, Zap } from "lucide-react";
+import { Link2, X, Zap, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { useCallback } from "react";
@@ -63,13 +63,21 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
     return <Skeleton className="h-24 w-full" />;
   }
 
+  const isLinkActive = persona.is_active !== false && account.is_active !== false;
   const isActive = activePersonaAccountId === link.id;
 
   return (
     <Card className={cn(
-      "rounded-2xl border bg-card text-card-foreground shadow-md relative group transition-shadow",
-      isActive && "border-primary/70 shadow-lg"
+      "rounded-2xl border bg-card text-card-foreground shadow-md relative group transition-shadow overflow-hidden",
+      isActive && isLinkActive && "border-primary/70 shadow-lg",
+      !isLinkActive && "border-amber-500/50 bg-amber-500/5"
     )}>
+      {!isLinkActive && (
+        <div className="p-2 text-xs text-amber-900 bg-amber-400/80 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4" />
+          <p className="font-medium">This link is inactive because the persona or account has been archived.</p>
+        </div>
+      )}
       <CardContent className="p-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10">
@@ -100,21 +108,21 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
           Persona Account ID: <span className="font-mono text-foreground">{link.id}</span>
         </div>
         <div className="flex items-center gap-2">
-          {isActive && <Badge variant="secondary">Active</Badge>}
+          {isActive && isLinkActive && <Badge variant="secondary">Active</Badge>}
           <button
             onClick={handleInject}
-            disabled={isActive}
+            disabled={isActive || !isLinkActive}
             className={`p-2 rounded-md transition-colors ${
-              isActive
+              isActive && isLinkActive
                 ? 'bg-emerald-500 text-white cursor-not-allowed opacity-75'
                 : 'hover:bg-muted/50 cursor-pointer'
-            }`}
+            } ${!isLinkActive && 'cursor-not-allowed opacity-50'}`}
           >
             <Zap className={`h-4 w-4 ${
-              isActive
+              isActive && isLinkActive
                 ? 'text-white'
                 : 'text-emerald-500'
-            }`} />
+            }  ${!isLinkActive && 'text-muted-foreground'}`} />
           </button>
         </div>
       </CardFooter>

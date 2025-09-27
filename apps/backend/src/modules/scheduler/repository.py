@@ -231,6 +231,68 @@ async def upsert_coworker_lease(
     return _lease_to_data(lease)
 
 
+async def append_lease_persona_ids(
+    session: AsyncSession,
+    *,
+    owner_user_id: int,
+    add_persona_account_ids: Iterable[int],
+) -> CoWorkerLeaseData:
+    add_ids = _coerce_persona_ids(add_persona_account_ids)
+    stmt = (
+        select(CoWorkerLease)
+        .where(CoWorkerLease.owner_user_id == owner_user_id)
+        .with_for_update()
+    )
+    res = await session.execute(stmt)
+    lease = res.scalar_one_or_none()
+    now = datetime.utcnow()
+    if lease is None:
+        lease = CoWorkerLease(
+            owner_user_id=owner_user_id,
+            persona_account_ids=add_ids,
+            interval_seconds=30,
+            active=True,
+            task_id=None,
+            created_at=now,
+            updated_at=now,
+        )
+        session.add(lease)
+    else:
+        current_ids = set(int(pid) for pid in (lease.persona_account_ids or []))
+        current_ids.update(add_ids)
+        lease.persona_account_ids = sorted(current_ids)
+        lease.touch()
+    await session.flush()
+    return _lease_to_data(lease)
+
+
+async def remove_lease_persona_ids(
+    session: AsyncSession,
+    *,
+    owner_user_id: int,
+    remove_persona_account_ids: Iterable[int],
+) -> Optional[CoWorkerLeaseData]:
+    remove_ids = set(_coerce_persona_ids(remove_persona_account_ids))
+    stmt = (
+        select(CoWorkerLease)
+        .where(CoWorkerLease.owner_user_id == owner_user_id)
+        .with_for_update()
+    )
+    res = await session.execute(stmt)
+    lease = res.scalar_one_or_none()
+    if lease is None:
+        return None
+    if not remove_ids:
+        return _lease_to_data(lease)
+    current_ids = [int(pid) for pid in (lease.persona_account_ids or [])]
+    next_ids = [pid for pid in current_ids if pid not in remove_ids]
+    if next_ids != current_ids:
+        lease.persona_account_ids = next_ids
+        lease.touch()
+        await session.flush()
+    return _lease_to_data(lease)
+
+
 async def update_coworker_lease_task(
     session: AsyncSession,
     *,
@@ -284,4 +346,6 @@ __all__ = [
     "upsert_coworker_lease",
     "update_coworker_lease_task",
     "set_coworker_lease_active",
+    "append_lease_persona_ids",
+    "remove_lease_persona_ids",
 ]

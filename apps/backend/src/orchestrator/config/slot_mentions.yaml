@@ -342,6 +342,7 @@ slots:
   flows:
   - accounts.link.delete
   - accounts.persona.delete
+  - accounts.persona.restore
   - accounts.persona.update
   - bff.accounts.list_accounts_for_persona
   - bff.accounts.read_persona

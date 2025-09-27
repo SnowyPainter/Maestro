@@ -41,6 +41,7 @@ class PlatformAccountOut(PlatformAccountBase):
     token_expires_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    is_active: bool
 
 # ---------- Persona ----------
 class PersonaBase(BaseModel):
@@ -59,6 +60,7 @@ class PersonaBase(BaseModel):
     posting_windows: Optional[list[dict[str, Any]]] = None
     extras: Optional[dict[str, Any]] = None
     schema_version: int = 1
+    is_active: Optional[bool] = True
 
     @field_validator("hashtag_rules")
     @classmethod
@@ -96,7 +98,8 @@ class PersonaOut(PersonaBase):
     id: int
     created_at: datetime
     updated_at: datetime
-
+    is_active: bool
+    
 # ---------- PersonaAccount (link) ----------
 class PersonaAccountLinkCreate(BaseModel):
     persona_id: int

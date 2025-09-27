@@ -33,7 +33,7 @@ export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetRes
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseExternalIdMax = 256;
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseAvatarUrlMax = 512;
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseBioMax = 160;
-export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseIsActiveDefault = true;
+
 
 export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponse = zod.object({
   "owner_user_id": zod.number(),
@@ -43,7 +43,7 @@ export const bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetRes
   "avatar_url": zod.string().max(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseAvatarUrlMax).nullish(),
   "bio": zod.string().max(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseBioMax).nullish(),
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "is_active": zod.union([zod.boolean(),zod.null()]).default(bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGetResponseIsActiveDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
@@ -70,7 +70,7 @@ export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseHan
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseExternalIdMax = 256;
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseAvatarUrlMax = 512;
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseBioMax = 160;
-export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseIsActiveDefault = true;
+
 
 export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseItem = zod.object({
   "owner_user_id": zod.number(),
@@ -80,7 +80,7 @@ export const bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseIte
   "avatar_url": zod.string().max(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseAvatarUrlMax).nullish(),
   "bio": zod.string().max(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseBioMax).nullish(),
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "is_active": zod.union([zod.boolean(),zod.null()]).default(bffAccountsListPlatformAccountsApiBffAccountsPlatformGetResponseIsActiveDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
@@ -123,6 +123,7 @@ export const bffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGetResponse = 
   "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
   "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "schema_version": zod.number().default(bffAccountsReadPersonaApiBffAccountsPersonasPersonaIdGetResponseSchemaVersionDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "created_at": zod.iso.datetime({}),
   "updated_at": zod.iso.datetime({})
@@ -165,6 +166,7 @@ export const bffAccountsListPersonasApiBffAccountsPersonasGetResponseItem = zod.
   "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
   "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "schema_version": zod.number().default(bffAccountsListPersonasApiBffAccountsPersonasGetResponseSchemaVersionDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "created_at": zod.iso.datetime({}),
   "updated_at": zod.iso.datetime({})
@@ -386,6 +388,7 @@ export const bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponse = 
   "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
   "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "schema_version": zod.number().default(bffContextsCurrentPersonaApiBffContextsPersonaCurrentGetResponseSchemaVersionDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "created_at": zod.iso.datetime({}),
   "updated_at": zod.iso.datetime({})
@@ -1013,7 +1016,7 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseHa
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseExternalIdMax = 256;
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseAvatarUrlMax = 512;
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseBioMax = 160;
-export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseIsActiveDefault = true;
+
 
 export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponse = zod.object({
   "owner_user_id": zod.number(),
@@ -1023,7 +1026,7 @@ export const accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponse =
   "avatar_url": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseAvatarUrlMax).nullish(),
   "bio": zod.string().max(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseBioMax).nullish(),
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "is_active": zod.union([zod.boolean(),zod.null()]).default(accountsPlatformCreateApiOrchestratorAccountsPlatformPostResponseIsActiveDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
@@ -1045,7 +1048,7 @@ export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostRe
 export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseExternalIdMax = 256;
 export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseAvatarUrlMax = 512;
 export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseBioMax = 160;
-export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseIsActiveDefault = true;
+
 
 export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponse = zod.object({
   "owner_user_id": zod.number(),
@@ -1055,7 +1058,7 @@ export const accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostRe
   "avatar_url": zod.string().max(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseAvatarUrlMax).nullish(),
   "bio": zod.string().max(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseBioMax).nullish(),
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "is_active": zod.union([zod.boolean(),zod.null()]).default(accountsPlatformRestoreApiOrchestratorAccountsPlatformRestorePostResponseIsActiveDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
@@ -1092,7 +1095,7 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutRe
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseExternalIdMax = 256;
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseAvatarUrlMax = 512;
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseBioMax = 160;
-export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseIsActiveDefault = true;
+
 
 export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponse = zod.object({
   "owner_user_id": zod.number(),
@@ -1102,7 +1105,7 @@ export const accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutRe
   "avatar_url": zod.string().max(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseAvatarUrlMax).nullish(),
   "bio": zod.string().max(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseBioMax).nullish(),
   "scopes": zod.union([zod.array(zod.string()),zod.null()]).optional(),
-  "is_active": zod.union([zod.boolean(),zod.null()]).default(accountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPutResponseIsActiveDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "last_checked_at": zod.iso.datetime({}).nullish(),
   "last_error": zod.string().nullish(),
@@ -1141,7 +1144,7 @@ export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersona
 export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaLanguageDefault = "en";
 export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaLanguageMax = 10;
 export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaToneMax = 40;
-export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaSchemaVersionDefault = 1;
+export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaSchemaVersionDefault = 1;export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaIsActiveDefault = true;
 
 export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBody = zod.object({
   "persona": zod.object({
@@ -1159,7 +1162,8 @@ export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostBody = zod.
   "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
   "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
-  "schema_version": zod.number().default(accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaSchemaVersionDefault)
+  "schema_version": zod.number().default(accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaSchemaVersionDefault),
+  "is_active": zod.union([zod.boolean(),zod.null()]).default(accountsPersonaCreateApiOrchestratorAccountsPersonasPostBodyPersonaIsActiveDefault)
 })
 })
 
@@ -1187,6 +1191,7 @@ export const accountsPersonaCreateApiOrchestratorAccountsPersonasPostResponse = 
   "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
   "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "schema_version": zod.number().default(accountsPersonaCreateApiOrchestratorAccountsPersonasPostResponseSchemaVersionDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "created_at": zod.iso.datetime({}),
   "updated_at": zod.iso.datetime({})
@@ -1246,6 +1251,7 @@ export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutRes
   "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
   "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
   "schema_version": zod.number().default(accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutResponseSchemaVersionDefault),
+  "is_active": zod.boolean(),
   "id": zod.number(),
   "created_at": zod.iso.datetime({}),
   "updated_at": zod.iso.datetime({})
@@ -1253,7 +1259,7 @@ export const accountsPersonaUpdateApiOrchestratorAccountsPersonasPersonaIdPutRes
 
 
 /**
- * Permanently delete a persona and all associated targeting data
+ * Soft delete a persona and exclude it from operations
  * @summary Remove Persona Profile
  */
 export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteParams = zod.object({
@@ -1262,6 +1268,45 @@ export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDelete
 
 export const accountsPersonaDeleteApiOrchestratorAccountsPersonasPersonaIdDeleteResponse = zod.object({
   "message": zod.string()
+})
+
+
+/**
+ * Restore a previously soft deleted persona
+ * @summary Restore Persona Profile
+ */
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostBody = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseNameMax = 100;
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseAvatarUrlMax = 512;
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseBioMax = 200;
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseLanguageDefault = "en";
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseLanguageMax = 10;
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseToneMax = 40;
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseSchemaVersionDefault = 1;
+
+export const accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponse = zod.object({
+  "name": zod.string().max(accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseNameMax),
+  "avatar_url": zod.string().max(accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseAvatarUrlMax).nullish(),
+  "bio": zod.string().max(accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseBioMax).nullish(),
+  "language": zod.string().max(accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseLanguageMax).default(accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseLanguageDefault),
+  "tone": zod.string().max(accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseToneMax).nullish(),
+  "style_guide": zod.string().nullish(),
+  "pillars": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "banned_words": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "default_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "hashtag_rules": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "link_policy": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "media_prefs": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "posting_windows": zod.union([zod.array(zod.record(zod.string(), zod.any())),zod.null()]).optional(),
+  "extras": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "schema_version": zod.number().default(accountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePostResponseSchemaVersionDefault),
+  "is_active": zod.boolean(),
+  "id": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
 })
 
 

@@ -304,10 +304,27 @@ async def update_persona(
 async def delete_persona(
     db: AsyncSession, *, persona: Persona
 ) -> None:
-    # CASCADE로 PersonaAccount도 함께 제거됨 (FK ondelete="CASCADE")
-    await db.delete(persona)
+    # Soft delete
+    if not persona.is_active:
+        return
+    persona.is_active = False
+    persona.updated_at = _utcnow()
+    db.add(persona)
     await db.flush()
     await db.commit()
+
+async def restore_persona(
+    db: AsyncSession, *, persona: Persona
+) -> Persona:
+    if persona.is_active:
+        return persona
+    persona.is_active = True
+    persona.updated_at = _utcnow()
+    db.add(persona)
+    await db.flush()
+    await db.refresh(persona)
+    await db.commit()
+    return persona
 
 
 # ------------------------
@@ -324,6 +341,17 @@ async def link_persona_account(
     if owner_user_id is not None:
         if persona.owner_user_id != owner_user_id or account.owner_user_id != owner_user_id:
             raise PermissionError("owner_user_id mismatch")
+
+    #check if the link already exists
+    link = await get_persona_account_by_persona_and_account(db, persona_id=data.persona_id, account_id=data.account_id)
+    if link:
+        raise ValueError("link already exists")
+    
+    # 두 엔터티 모두 활성 상태여야 링크 가능
+    if not persona.is_active:
+        raise ValueError("persona is inactive")
+    if not account.is_active:
+        raise ValueError("platform account is inactive")
 
     # UniqueConstraint('persona_id','account_id') 보호
     link = PersonaAccount(
@@ -367,8 +395,11 @@ async def list_accounts_for_persona(
 ) -> Sequence[PersonaAccount]:
     q = (
         select(PersonaAccount)
+        .join(Persona, PersonaAccount.persona_id == Persona.id)
+        .join(PlatformAccount, PersonaAccount.account_id == PlatformAccount.id)
         .where(PersonaAccount.persona_id == persona_id)
-        .options()
+        .where(Persona.is_active == True)
+        .where(PlatformAccount.is_active == True)
         .order_by(PersonaAccount.id.desc())
     )
     res = await db.execute(q)
@@ -379,7 +410,11 @@ async def list_personas_for_account(
 ) -> Sequence[PersonaAccount]:
     q = (
         select(PersonaAccount)
+        .join(Persona, PersonaAccount.persona_id == Persona.id)
+        .join(PlatformAccount, PersonaAccount.account_id == PlatformAccount.id)
         .where(PersonaAccount.account_id == account_id)
+        .where(Persona.is_active == True)
+        .where(PlatformAccount.is_active == True)
         .order_by(PersonaAccount.id.desc())
     )
     res = await db.execute(q)
@@ -389,6 +424,13 @@ async def get_persona_account(
     db: AsyncSession, *, persona_account_id: int
 ) -> Optional[PersonaAccount]:
     q = select(PersonaAccount).where(PersonaAccount.id == persona_account_id)
+    res = await db.execute(q)
+    return res.scalar_one_or_none()
+
+async def get_persona_account_by_persona_and_account(
+    db: AsyncSession, *, persona_id: int, account_id: int
+) -> Optional[PersonaAccount]:
+    q = select(PersonaAccount).where(PersonaAccount.persona_id == persona_id, PersonaAccount.account_id == account_id)
     res = await db.execute(q)
     return res.scalar_one_or_none()
 
@@ -408,7 +450,7 @@ async def list_persona_accounts_for_user(
             PlatformAccount.platform.label("account_platform"),
             PlatformAccount.avatar_url.label("account_avatar_url"),
             PlatformAccount.bio.label("account_bio"),
-            PlatformAccount.is_active.label("is_active"),
+            (Persona.is_active & PlatformAccount.is_active).label("is_active"),
             PersonaAccount.can_permissions,
             PersonaAccount.is_verified_link,
             PersonaAccount.created_at,
@@ -418,6 +460,8 @@ async def list_persona_accounts_for_user(
         .join(PlatformAccount, PersonaAccount.account_id == PlatformAccount.id)
         .where(Persona.owner_user_id == owner_user_id)
         .where(PlatformAccount.owner_user_id == owner_user_id)
+        .where(Persona.is_active == True)
+        .where(PlatformAccount.is_active == True)
         .order_by(PersonaAccount.id.desc())
     )
 
@@ -446,3 +490,4 @@ async def list_persona_accounts_for_user(
         ))
 
     return result
+

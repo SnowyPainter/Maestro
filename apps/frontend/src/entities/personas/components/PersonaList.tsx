@@ -1,24 +1,41 @@
 import { useEffect } from "react";
-import { useBffAccountsListPersonasApiBffAccountsPersonasGet, PersonaOut } from "@/lib/api/generated";
+import {
+  useBffAccountsListPersonasApiBffAccountsPersonasGet,
+  PersonaOut,
+  useAccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost,
+} from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, WifiOff } from "lucide-react";
+import { AlertTriangle, WifiOff, Ban, RotateCw } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useContextRegistryStore } from "@/store/chat-context-registry";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 interface PersonaListProps {
   onSelectPersona: (personaId: number) => void;
 }
 
 export function PersonaList({ onSelectPersona }: PersonaListProps) {
+  const queryClient = useQueryClient();
   const { data: personas, isLoading, isError } = useBffAccountsListPersonasApiBffAccountsPersonasGet();
   const registerEmission = useContextRegistryStore((state) => state.registerEmission);
+
+  const restorePersonaMutation = useAccountsPersonaRestoreApiOrchestratorAccountsPersonasRestorePost({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["bff-accounts", "listPersonasApiBffAccountsPersonasGet"],
+        });
+      },
+    },
+  });
 
   // Register personas in context registry
   useEffect(() => {
     if (personas) {
       personas.forEach((persona) => {
-        registerEmission('persona_id', {
+        registerEmission("persona_id", {
           value: persona.id.toString(),
           label: persona.name,
         });
@@ -64,24 +81,51 @@ export function PersonaList({ onSelectPersona }: PersonaListProps) {
       </div>
     );
   }
-
+  
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {personas.map((persona: PersonaOut) => (
-        <Card key={persona.id} onClick={() => onSelectPersona(persona.id)} className="cursor-pointer rounded-2xl border bg-card text-card-foreground shadow-md hover:bg-muted">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-8 h-8 flex-shrink-0">
-                {persona.avatar_url && <AvatarImage src={persona.avatar_url} alt={persona.name} />}
-                <AvatarFallback className="text-xs">{persona.name.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <CardTitle className="text-sm font-medium">{persona.name}</CardTitle>
+        <Card
+          key={persona.id}
+          onClick={() => persona.is_active !== false && onSelectPersona(persona.id)}
+          className={`rounded-2xl border bg-card text-card-foreground shadow-md relative ${
+            persona.is_active !== false && "cursor-pointer hover:bg-muted"
+          }`}
+        >
+          <div className={persona.is_active === false ? "opacity-40" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  {persona.avatar_url && <AvatarImage src={persona.avatar_url} alt={persona.name} />}
+                  <AvatarFallback className="text-xs">{persona.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {persona.is_active === false && <Ban className="w-4 h-4" />}
+                  {persona.name}
+                </CardTitle>
+              </div>
+              <span className="text-xs text-muted-foreground">#{persona.id}</span>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground line-clamp-2">{persona.bio || "No bio available."}</p>
+            </CardContent>
+          </div>
+          {persona.is_active === false && (
+            <div className="absolute inset-0 bg-background/30 flex items-center justify-center rounded-2xl">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  restorePersonaMutation.mutate({ data: { persona_id: persona.id } });
+                }}
+                disabled={restorePersonaMutation.isPending}
+              >
+                <RotateCw className={`w-4 h-4 mr-2 ${restorePersonaMutation.isPending ? "animate-spin" : ""}`} />
+                {restorePersonaMutation.isPending ? "Restoring..." : "Restore"}
+              </Button>
             </div>
-            <span className="text-xs text-muted-foreground">#{persona.id}</span>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground line-clamp-2">{persona.bio || "No bio available."}</p>
-          </CardContent>
+          )}
         </Card>
       ))}
     </div>

@@ -83,7 +83,6 @@ async def _persona_account_ids_for_user(
         raise HTTPException(status_code=403, detail={"missing_persona_account_ids": missing})
     return sorted(owned)
 
-
 def _lease_to_output(lease: CoWorkerLeaseData) -> CoworkerLeaseOut:
     return CoworkerLeaseOut(
         active=lease.active,

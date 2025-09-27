@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from apps.backend.src.modules.accounts.schemas import (
     PersonaAccountLinkCreate,
@@ -19,6 +20,7 @@ from apps.backend.src.modules.accounts.schemas import (
     PlatformAccountOut,
     PlatformAccountUpdate,
 )
+from apps.backend.src.modules.accounts.models import PersonaAccount
 from apps.backend.src.modules.accounts.service import (
     create_persona,
     create_platform_account,
@@ -26,7 +28,10 @@ from apps.backend.src.modules.accounts.service import (
     delete_platform_account,
     get_persona,
     get_platform_account,
+    list_accounts_for_persona,
+    list_personas_for_account,
     link_persona_account,
+    restore_persona,
     restore_platform_account,
     unlink_persona_account,
     update_persona,
@@ -36,6 +41,7 @@ from apps.backend.src.modules.users.models import User
 
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
+from apps.backend.src.modules.scheduler import repository as scheduler_repo
 
 
 class MessageOut(BaseModel):
@@ -74,6 +80,10 @@ class PersonaUpdateCommand(BaseModel):
 
 
 class PersonaDeleteCommand(BaseModel):
+    persona_id: Optional[int] = None
+
+
+class PersonaRestoreCommand(BaseModel):
     persona_id: Optional[int] = None
 
 
@@ -163,7 +173,19 @@ async def op_delete_platform_account(
     )
     if not account:
         raise HTTPException(status_code=404, detail="Platform account not found")
+    # Collect linked persona_account_ids before delete (regardless of activity)
+    res = await db.execute(
+        select(PersonaAccount.id).where(PersonaAccount.account_id == account.id)
+    )
+    linked_ids = [row[0] for row in res.all()]
+
     await delete_platform_account(db, account=account, soft=payload.soft)
+
+    # Remove any linked persona_account_ids from the user's lease
+    if linked_ids:
+        await scheduler_repo.remove_lease_persona_ids(
+            db, owner_user_id=user.id, remove_persona_account_ids=linked_ids
+        )
     return MessageOut(message="Platform account deleted successfully")
 
 
@@ -239,8 +261,39 @@ async def op_delete_persona(payload: PersonaDeleteCommand, ctx: TaskContext) -> 
     )
     if not persona:
         raise HTTPException(status_code=404, detail="Persona not found")
+    # Collect linked persona_account_ids before soft delete (regardless of activity)
+    res = await db.execute(
+        select(PersonaAccount.id).where(PersonaAccount.persona_id == persona.id)
+    )
+    linked_ids = [row[0] for row in res.all()]
+
     await delete_persona(db, persona=persona)
+
+    # Remove any linked persona_account_ids from the user's lease
+    if linked_ids:
+        await scheduler_repo.remove_lease_persona_ids(
+            db, owner_user_id=user.id, remove_persona_account_ids=linked_ids
+        )
     return MessageOut(message="Persona deleted successfully")
+
+
+@operator(
+    key="accounts.persona.restore_persona",
+    title="Restore persona",
+    side_effect="write",
+)
+async def op_restore_persona(payload: PersonaRestoreCommand, ctx: TaskContext) -> PersonaOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    if payload.persona_id is None:
+        raise HTTPException(status_code=422, detail="persona_id is required")
+    persona = await get_persona(
+        db, persona_id=payload.persona_id, owner_user_id=user.id
+    )
+    if not persona:
+        raise HTTPException(status_code=404, detail="Persona not found")
+    restored = await restore_persona(db, persona=persona)
+    return _to_model(PersonaOut, restored)
 
 
 @operator(
@@ -255,6 +308,10 @@ async def op_link_persona_account(
     db: AsyncSession = ctx.require(AsyncSession)
     user: User = ctx.require(User)
     link = await link_persona_account(db, payload.link, owner_user_id=user.id)
+    # Append the new link id into the user's coworker lease
+    await scheduler_repo.append_lease_persona_ids(
+        db, owner_user_id=user.id, add_persona_account_ids=[link.id]
+    )
     return _to_model(PersonaAccountOut, link)
 
 
@@ -377,7 +434,7 @@ def _flow_update_persona(builder: FlowBuilder):
 @FLOWS.flow(
     key="accounts.persona.delete",
     title="Remove Persona Profile",
-    description="Permanently delete a persona and all associated targeting data",
+    description="Soft delete a persona and exclude it from operations",
     input_model=PersonaDeleteCommand,
     output_model=MessageOut,
     method="delete",
@@ -386,6 +443,21 @@ def _flow_update_persona(builder: FlowBuilder):
 )
 def _flow_delete_persona(builder: FlowBuilder):
     task = builder.task("delete_persona", "accounts.persona.delete_persona")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="accounts.persona.restore",
+    title="Restore Persona Profile",
+    description="Restore a previously soft deleted persona",
+    input_model=PersonaRestoreCommand,
+    output_model=PersonaOut,
+    method="post",
+    path="/accounts/personas/restore",
+    tags=("action", "accounts", "persona", "restore"),
+)
+def _flow_restore_persona(builder: FlowBuilder):
+    task = builder.task("restore_persona", "accounts.persona.restore_persona")
     builder.expect_terminal(task)
 
 

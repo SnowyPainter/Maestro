@@ -106,38 +106,38 @@ export function AccountList({ onSelectAccount }: AccountListProps) {
           key={account.id}
           onClick={() => account.is_active !== false && onSelectAccount?.(account.id)}
           className={`rounded-2xl border bg-card text-card-foreground shadow-md relative ${
-            account.is_active === false ? "opacity-50" : "cursor-pointer hover:bg-muted"
+            account.is_active !== false && "cursor-pointer hover:bg-muted"
           }`}
         >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              {account.is_active === false && <Ban className="w-4 h-4 text-muted-foreground" />}
-              {account.handle}
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">#{account.id}</span>
-              <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{account.platform}</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold">@{account.handle}</div>
-            <p className="text-xs text-muted-foreground">{account.bio || "No bio available."}</p>
-          </CardContent>
+          <div className={account.is_active === false ? "opacity-40" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                {account.is_active === false && <Ban className="w-4 h-4" />}
+                {account.handle}
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">#{account.id}</span>
+                <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">{account.platform}</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-lg font-bold">@{account.handle}</div>
+              <p className="text-xs text-muted-foreground">{account.bio || "No bio available."}</p>
+            </CardContent>
+          </div>
           {account.is_active === false && (
-            <div className="absolute inset-0 bg-card/60 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+            <div className="absolute inset-0 bg-background/30 flex items-center justify-center rounded-2xl">
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  restoreAccountMutation.mutate({ data: {
-                    account_id: account.id
-                  }});
+                  restoreAccountMutation.mutate({ data: { account_id: account.id } });
                 }}
                 disabled={restoreAccountMutation.isPending}
               >
-                <RotateCw className="w-4 h-4 mr-2" />
-                Restore
+                <RotateCw className={`w-4 h-4 mr-2 ${restoreAccountMutation.isPending ? "animate-spin" : ""}`} />
+                {restoreAccountMutation.isPending ? "Restoring..." : "Restore"}
               </Button>
             </div>
           )}
