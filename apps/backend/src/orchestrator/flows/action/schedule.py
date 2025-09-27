@@ -283,6 +283,63 @@ async def op_cancel_post_schedule(
     await db.refresh(publication)
     return MessageOut(message="Post schedule cancelled")
 
+
+def _infer_schedule_template(schedule: Schedule) -> Optional[str]:
+    context = schedule.context_data()
+    template = context.get("template") if isinstance(context, dict) else None
+    if isinstance(template, str):
+        return template
+
+    dag_spec = schedule.dag_spec
+    if isinstance(dag_spec, dict):
+        meta = dag_spec.get("meta")
+        if isinstance(meta, dict):
+            label = meta.get("label") or meta.get("kind")
+            if isinstance(label, str):
+                return label
+    return None
+
+
+async def _cancel_post_publish_schedule(
+    db: AsyncSession,
+    *,
+    schedule: Schedule,
+    user: Optional[User],
+) -> bool:
+    if user is None:
+        return False
+
+    payload = schedule.payload_data()
+    variant_id = payload.get("variant_id")
+    persona_account_id = payload.get("persona_account_id", schedule.persona_account_id)
+
+    if variant_id is None or persona_account_id is None:
+        return False
+
+    try:
+        variant_id_int = int(variant_id)
+        persona_account_id_int = int(persona_account_id)
+    except (TypeError, ValueError):
+        return False
+
+    variant = await _load_owned_draft(
+        db,
+        variant_id=variant_id_int,
+        owner_user_id=user.id,
+    )
+    try:
+        publication = await cancel_post_publication(
+            db,
+            variant=variant,
+            persona_account_id=persona_account_id_int,
+            owner_user_id=user.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    await remove_publication_schedule(db, publication=publication)
+    return True
+
+
 @operator(
     key="action.schedule.create_trends_mail_schedule",
     title="Create Trends Mail Schedule",
@@ -382,6 +439,7 @@ async def op_cancel_schedules(
     ctx: TaskContext,
 ) -> MessageOut:
     db: AsyncSession = ctx.require(AsyncSession)
+    user: Optional[User] = ctx.optional(User)
 
     # 최소 한 개의 필터는 필요
     if not any([
@@ -429,6 +487,17 @@ async def op_cancel_schedules(
     for schedule in schedules:
         if schedule.status not in cancellable_statuses:
             continue
+
+        template_key = _infer_schedule_template(schedule)
+        if template_key == ScheduleTemplateKey.POST_PUBLISH.value:
+            draft_cancelled = await _cancel_post_publish_schedule(
+                db,
+                schedule=schedule,
+                user=user,
+            )
+            if draft_cancelled:
+                cancelled += 1
+                continue
 
         schedule.status = ScheduleStatus.CANCELLED.value
         schedule.updated_at = now_utc_naive

@@ -50,6 +50,14 @@ class ScheduleListItem(BaseModel):
     due_at: Optional[datetime]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+    dag_spec: Optional[Dict[str, Any]]
+    payload: Optional[Dict[str, Any]]
+    context: Optional[Dict[str, Any]]
+    attempts: Optional[int]
+    max_attempts: Optional[int]
+    last_error: Optional[str]
+    errors: Optional[Dict[str, Any]]
+    idempotency_key: Optional[str]
     meta: ScheduleMeta
 
 
@@ -123,6 +131,14 @@ async def op_list_schedules(
             due_at=schedule.due_at,
             created_at=schedule.created_at,
             updated_at=schedule.updated_at,
+            dag_spec=schedule.dag_spec,
+            payload=schedule.payload,
+            context=schedule.context,
+            attempts=schedule.attempts,
+            max_attempts=schedule.max_attempts,
+            last_error=schedule.last_error,
+            errors=schedule.errors,
+            idempotency_key=schedule.idempotency_key,
             meta=_build_meta(schedule),
         )
         for schedule in rows
@@ -149,6 +165,5 @@ async def op_list_schedules(
 def _flow_bff_list_schedules(builder: FlowBuilder):
     task = builder.task("list", "bff.schedule.list_schedules")
     builder.expect_terminal(task)
-
 
 __all__ = []

@@ -2881,6 +2881,30 @@ export interface components {
              * Format: date-time
              */
             updated_at: string | null;
+            /** Dag Spec */
+            dag_spec: {
+                [key: string]: unknown;
+            } | null;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            } | null;
+            /** Context */
+            context: {
+                [key: string]: unknown;
+            } | null;
+            /** Attempts */
+            attempts: number | null;
+            /** Max Attempts */
+            max_attempts: number | null;
+            /** Last Error */
+            last_error: string | null;
+            /** Errors */
+            errors: {
+                [key: string]: unknown;
+            } | null;
+            /** Idempotency Key */
+            idempotency_key: string | null;
             meta: components["schemas"]["ScheduleMeta"];
         };
         /** ScheduleListResult */

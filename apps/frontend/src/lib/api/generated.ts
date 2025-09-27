@@ -1326,6 +1326,26 @@ export interface ScheduleDagSpecOutput {
   meta?: ScheduleDagSpecOutputMeta;
 }
 
+export type ScheduleListItemDagSpecAnyOf = { [key: string]: unknown };
+
+export type ScheduleListItemDagSpec = ScheduleListItemDagSpecAnyOf | null;
+
+export type ScheduleListItemPayloadAnyOf = { [key: string]: unknown };
+
+export type ScheduleListItemPayload = ScheduleListItemPayloadAnyOf | null;
+
+export type ScheduleListItemContextAnyOf = { [key: string]: unknown };
+
+export type ScheduleListItemContext = ScheduleListItemContextAnyOf | null;
+
+export type ScheduleListItemAttempts = number | null;
+
+export type ScheduleListItemMaxAttempts = number | null;
+
+export type ScheduleListItemErrorsAnyOf = { [key: string]: unknown };
+
+export type ScheduleListItemErrors = ScheduleListItemErrorsAnyOf | null;
+
 export interface ScheduleListItem {
   id: number;
   persona_account_id: number;
@@ -1338,6 +1358,16 @@ export interface ScheduleListItem {
   created_at: string | null;
   /** @nullable */
   updated_at: string | null;
+  dag_spec: ScheduleListItemDagSpec;
+  payload: ScheduleListItemPayload;
+  context: ScheduleListItemContext;
+  attempts: ScheduleListItemAttempts;
+  max_attempts: ScheduleListItemMaxAttempts;
+  /** @nullable */
+  last_error: string | null;
+  errors: ScheduleListItemErrors;
+  /** @nullable */
+  idempotency_key: string | null;
   meta: ScheduleMeta;
 }
 

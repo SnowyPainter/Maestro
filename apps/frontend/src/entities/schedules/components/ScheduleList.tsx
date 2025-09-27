@@ -1,76 +1,176 @@
+
+import { useState, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ScheduleListItem } from "@/lib/api/generated";
+import { ScheduleListItem, ScheduleStatus } from "@/lib/api/generated";
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle2, CalendarDays, UserCircle, AlertTriangle } from "lucide-react";
+import { 
+    Clock, CheckCircle2, CalendarDays, UserCircle, AlertTriangle, 
+    ChevronDown, Copy, RefreshCw, XCircle, AlertCircle, HelpCircle, Ban, CircleDashed
+} from "lucide-react";
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast, isFuture, isThisWeek } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const parseUtcDate = (dateString: string | null | undefined): Date | null => {
     if (!dateString) return null;
-    // Check if timezone is already specified (Z or +/- offset)
     if (dateString.endsWith('Z') || /[-+]\d{2}:\d{2}$/.test(dateString)) {
         return new Date(dateString);
     }
-    // If not, append 'Z' to treat as UTC
     return new Date(dateString + 'Z');
 };
 
-function ScheduleItem({ item, onSelect, isSelected }: { item: ScheduleListItem, onSelect: (id: number) => void, isSelected: boolean }) {
-  const dueDate = parseUtcDate(item.due_at);
-  const isPending = item.status === 'pending';
-  const isOverdue = dueDate && isPast(dueDate) && isPending;
+const JsonViewer = ({ data, title }: { data: any; title: string }) => (
+    <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="item-1">
+            <AccordionTrigger className="text-xs font-semibold">{title}</AccordionTrigger>
+            <AccordionContent>
+                <pre className="text-xs bg-muted/50 p-2 rounded-md overflow-auto">
+                    {JSON.stringify(data, null, 2)}
+                </pre>
+            </AccordionContent>
+        </AccordionItem>
+    </Accordion>
+);
 
-  const statusIcon = isOverdue 
-    ? <AlertTriangle className="h-4 w-4 text-red-500" />
-    : isPending 
-    ? <Clock className="h-4 w-4 text-amber-500" /> 
-    : <CheckCircle2 className="h-4 w-4 text-green-500" />;
+const StatusDisplay = ({ status, dueDate }: { status: ScheduleStatus, dueDate: Date | null }) => {
+    const isOverdue = dueDate && isPast(dueDate) && status === 'pending';
+
+    const STATUS_MAP: Record<ScheduleStatus, { icon: React.ReactNode; color: string; label: string }> = {
+        pending: {
+            icon: isOverdue ? <AlertTriangle className="h-4 w-4 text-red-500" /> : <Clock className="h-4 w-4 text-amber-500" />,
+            color: isOverdue ? "text-red-500" : "text-amber-500",
+            label: isOverdue ? "Overdue" : "Pending",
+        },
+        enqueued: { icon: <CircleDashed className="h-4 w-4 text-blue-500" />, color: "text-blue-500", label: "Enqueued" },
+        running: { icon: <RefreshCw className="h-4 w-4 text-indigo-500 animate-spin" />, color: "text-indigo-500", label: "Running" },
+        done: { icon: <CheckCircle2 className="h-4 w-4 text-green-500" />, color: "text-green-500", label: "Done" },
+        failed: { icon: <AlertCircle className="h-4 w-4 text-red-700" />, color: "text-red-700", label: "Failed" },
+        cancelled: { icon: <Ban className="h-4 w-4 text-muted-foreground" />, color: "text-muted-foreground", label: "Cancelled" },
+    };
+
+    const currentStatus = STATUS_MAP[status] || { icon: <HelpCircle className="h-4 w-4" />, color: "", label: status };
+
+    return (
+        <div className={cn("flex items-center gap-1.5", currentStatus.color)}>
+            {currentStatus.icon}
+            <span className="capitalize font-medium">{currentStatus.label}</span>
+        </div>
+    );
+};
+
+function ScheduleItemDetails({ item }: { item: ScheduleListItem }) {
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        // Add toast notification here in a real app
+    };
+
+    return (
+        <div className="p-3 bg-muted/30 border-t">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-xs">
+                <div className="space-y-2">
+                    <h5 className="font-semibold text-xs uppercase text-muted-foreground">Details</h5>
+                    {item.last_error && (
+                        <div className="p-2 bg-red-500/10 text-red-700 rounded-md">
+                            <p className="font-bold flex items-center gap-2"><AlertCircle className="h-4 w-4" />Last Error</p>
+                            <p className="font-mono text-xs mt-1">{item.last_error}</p>
+                        </div>
+                    )}
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Attempts:</span>
+                        <span className="font-mono">{item.attempts || 0} / {item.max_attempts ?? '∞'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Idempotency Key:</span>
+                        {item.idempotency_key ? (
+                            <div className="flex items-center gap-1">
+                                <span className="font-mono text-gray-500 truncate max-w-[120px]">{item.idempotency_key}</span>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(item.idempotency_key!)}>
+                                    <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
+                        ) : <span className="text-muted-foreground">N/A</span>}
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-muted-foreground">Created:</span>
+                        <span className="font-mono">{item.created_at ? format(parseUtcDate(item.created_at)!, 'Pp') : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-muted-foreground">Updated:</span>
+                        <span className="font-mono">{item.updated_at ? format(parseUtcDate(item.updated_at)!, 'Pp') : 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-3">
+                {item.dag_spec && <JsonViewer data={item.dag_spec} title="DAG Spec" />}
+                {item.payload && <JsonViewer data={item.payload} title="Payload" />}
+                {item.context && <JsonViewer data={item.context} title="Context" />}
+            </div>
+        </div>
+    );
+}
+
+
+function ScheduleItem({ item, onSelect, isSelected }: { item: ScheduleListItem, onSelect: (id: number) => void, isSelected: boolean }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const dueDate = parseUtcDate(item.due_at);
+  const isOverdue = dueDate && isPast(dueDate) && item.status === 'pending';
 
   const dateColor = cn("text-muted-foreground", {
     "text-red-600 font-bold": isOverdue,
     "text-blue-600 font-medium": !isOverdue && dueDate && isToday(dueDate),
     "text-purple-500 font-medium": !isOverdue && dueDate && isTomorrow(dueDate),
-    "text-blue-400": !isOverdue && dueDate && !isToday(dueDate) && !isTomorrow(dueDate) && isThisWeek(dueDate, { weekStartsOn: 1 }),
   });
 
   return (
     <div 
-        className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/50 cursor-pointer data-[is-selected=true]:bg-blue-500/10"
-        onClick={() => onSelect(item.id)}
+        className="rounded-lg border bg-card text-card-foreground transition-all duration-200"
         data-is-selected={isSelected}
     >
-      <div className="pt-1">
-        <Checkbox checked={isSelected} onCheckedChange={() => onSelect(item.id)} />
-      </div>
-      <div className="flex-1 grid gap-1">
-        <p className="font-medium text-sm leading-tight">{item.meta?.label || `Schedule #${item.id}`}</p>
-        
-        <div className={`flex items-center gap-2 text-xs ${dateColor}`}>
-            {dueDate ? (
-                <>
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    <span className="font-mono">{format(dueDate, "MMM d, h:mm a")}</span>
-                    <span className="hidden md:inline-block italic">({formatDistanceToNow(dueDate, { addSuffix: true })})</span>
-                </>
-            ) : (
-                <span className="text-xs text-muted-foreground">No due date</span>
-            )}
-        </div>
+        <div 
+            className="flex items-start gap-3 p-2.5 cursor-pointer"
+            onClick={() => setIsExpanded(!isExpanded)}
+        >
+            <div className="pt-1 flex items-center gap-3">
+                <Checkbox checked={isSelected} onCheckedChange={(checked) => onSelect(item.id)} onClick={(e) => e.stopPropagation()} />
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isExpanded && "rotate-180")} />
+            </div>
+            <div className="flex-1 grid gap-1">
+                <p className="font-medium text-sm leading-tight">{item.meta?.label || `Schedule #${item.id}`}</p>
+                
+                <div className={`flex items-center gap-2 text-xs ${dateColor}`}>
+                    {dueDate ? (
+                        <>
+                            <CalendarDays className="h-3.5 w-3.5" />
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span className="font-mono">{format(dueDate, "MMM d, h:mm a")}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{formatDistanceToNow(dueDate, { addSuffix: true })}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </>
+                    ) : (
+                        <span className="text-xs text-muted-foreground">No due date</span>
+                    )}
+                </div>
 
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
-            <div className="flex items-center gap-1.5">
-                {statusIcon}
-                <span className="capitalize">{item.status}</span>
+                <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
+                    <StatusDisplay status={item.status as ScheduleStatus} dueDate={dueDate} />
+                    <div className="flex items-center gap-1.5">
+                        <UserCircle className="h-3.5 w-3.5" />
+                        <span>ID: {item.persona_account_id}</span>
+                    </div>
+                    <Badge variant="outline" className="font-mono text-xs px-1.5 py-0.5">{item.queue || 'default'}</Badge>
+                </div>
             </div>
-            <div className="flex items-center gap-1.5">
-                <UserCircle className="h-3.5 w-3.5" />
-                <span>ID: {item.persona_account_id}</span>
-            </div>
-            <Badge variant="outline" className="font-mono text-xs px-1.5 py-0.5">{item.queue || 'default'}</Badge>
         </div>
-      </div>
+        {isExpanded && <ScheduleItemDetails item={item} />}
     </div>
   )
 }
@@ -119,12 +219,12 @@ const UpcomingList = ({ items, selectedIds, onSelect }: ScheduleListProps) => {
     }, [items]);
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {groupOrder.map(group => (
                 groupedSchedules[group] && groupedSchedules[group].length > 0 && (
                     <div key={group}>
                         <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 tracking-wider mb-2 px-2">{group} <span className="font-mono">({groupedSchedules[group].length})</span></h4>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                             {groupedSchedules[group].map(item => (
                                 <ScheduleItem key={item.id} item={item} onSelect={onSelect} isSelected={selectedIds.includes(item.id)} />
                             ))}
@@ -134,9 +234,9 @@ const UpcomingList = ({ items, selectedIds, onSelect }: ScheduleListProps) => {
             ))}
 
             {otherSchedules.length > 0 && (
-                    <div className="pt-2">
+                <div className="pt-2">
                     <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 tracking-wider mb-2 px-2">Processed & Undated <span className="font-mono">({otherSchedules.length})</span></h4>
-                    <div className="space-y-1 opacity-80 hover:opacity-100 transition-opacity">
+                    <div className="space-y-2 opacity-90 hover:opacity-100 transition-opacity">
                         {otherSchedules.map(item => (
                             <ScheduleItem key={item.id} item={item} onSelect={onSelect} isSelected={selectedIds.includes(item.id)} />
                         ))}
@@ -148,7 +248,7 @@ const UpcomingList = ({ items, selectedIds, onSelect }: ScheduleListProps) => {
 }
 
 const OverdueList = ({ items, selectedIds, onSelect }: ScheduleListProps) => (
-    <div className="space-y-1">
+    <div className="space-y-2">
         {items.map(item => (
             <ScheduleItem key={item.id} item={item} onSelect={onSelect} isSelected={selectedIds.includes(item.id)} />
         ))}
@@ -186,18 +286,18 @@ export function ScheduleList({ items, selectedIds, onSelect, isLoading }: Schedu
 
         if (showTwoColumns) {
             return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 p-4">
                     <div>
-                        <h3 className="text-base font-semibold px-2 mb-3 text-blue-400">Upcoming ({upcomingSchedules.length})</h3>
-                        <ScrollArea className="h-[450px] -mx-2">
+                        <h3 className="text-base font-semibold px-2 mb-3 text-blue-500">Upcoming ({upcomingSchedules.length})</h3>
+                        <ScrollArea className="h-[calc(100vh_-_250px)] -mx-2">
                             <div className="px-2">
                                 <UpcomingList items={upcomingSchedules} selectedIds={selectedIds} onSelect={onSelect} isLoading={false} />
                             </div>
                         </ScrollArea>
                     </div>
                     <div>
-                        <h3 className="text-base font-semibold px-2 mb-3 text-red-400">Overdue ({overdueSchedules.length})</h3>
-                        <ScrollArea className="h-[450px] -mx-2">
+                        <h3 className="text-base font-semibold px-2 mb-3 text-red-500">Overdue ({overdueSchedules.length})</h3>
+                        <ScrollArea className="h-[calc(100vh_-_250px)] -mx-2">
                             <div className="px-2">
                                 <OverdueList items={overdueSchedules} selectedIds={selectedIds} onSelect={onSelect} isLoading={false} />
                             </div>
@@ -208,7 +308,7 @@ export function ScheduleList({ items, selectedIds, onSelect, isLoading }: Schedu
         }
 
         return (
-            <ScrollArea className="h-[480px]">
+            <ScrollArea className="h-[calc(100vh_-_220px)]">
                 <div className="p-4">
                     {upcomingSchedules.length > 0 && <UpcomingList items={upcomingSchedules} selectedIds={selectedIds} onSelect={onSelect} isLoading={false} />}
                     {overdueSchedules.length > 0 && (

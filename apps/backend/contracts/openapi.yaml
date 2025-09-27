@@ -5124,6 +5124,48 @@ components:
           format: date-time
           type: string
           nullable: true
+        dag_spec:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Dag Spec
+        payload:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Payload
+        context:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Context
+        attempts:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Attempts
+        max_attempts:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Attempts
+        last_error:
+          title: Last Error
+          type: string
+          nullable: true
+        errors:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Errors
+        idempotency_key:
+          title: Idempotency Key
+          type: string
+          nullable: true
         meta:
           $ref: '#/components/schemas/ScheduleMeta'
       type: object
@@ -5135,6 +5177,14 @@ components:
       - due_at
       - created_at
       - updated_at
+      - dag_spec
+      - payload
+      - context
+      - attempts
+      - max_attempts
+      - last_error
+      - errors
+      - idempotency_key
       - meta
       title: ScheduleListItem
     ScheduleListResult:
