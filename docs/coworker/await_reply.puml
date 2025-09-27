@@ -1,0 +1,35 @@
+@startuml
+title await_reply suspend/resume sequence
+
+actor User
+participant "Sniffer" as S
+participant "CoWorker" as W
+database "DB (schedules)" as DB
+participant "DagExecutor" as X
+participant "Mailer" as M
+
+== Compose & Await ==
+User -> W: due schedule picked (compose)
+W -> X: run DAG
+X -> M: send trends email (includes [PIPELINE #id])
+X -> DB: request_reschedule (RUNNING, due_at+timeout)
+note right: context._dag.waiting_node=wait_reply\ncontext._dag.resume_next=[ingest_reply]
+X --> W: suspend
+
+== Resume by reply ==
+User -> S: email reply (subject contains token)
+S -> DB: find RUNNING schedule by pipeline_id
+S -> DB: update context._resume.event, due_at=now
+
+== Executor resumes ==
+W -> DB: pick due (RUNNING)
+W -> X: run DAG (resume)
+note right: executor marks waiting node or predecessors as completed
+X -> X: continue at ingest_reply
+X -> DB: ingest_draft_mail -> drafts.create
+X -> DB: mark DONE, clear _resume
+X --> W: success
+
+@enduml
+
+
