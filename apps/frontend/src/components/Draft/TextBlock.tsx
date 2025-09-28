@@ -11,6 +11,7 @@ interface TextBlockProps {
     isLastBlock: boolean;
     onChange: (value: string) => void;
     onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+    onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
     onDeleteBlock: () => void;
     onBlur: () => void;
     onToggleExpand: () => void;
@@ -23,6 +24,7 @@ export function TextBlock({
     isLastBlock,
     onChange,
     onKeyDown,
+    onPaste,
     onDeleteBlock,
     onBlur,
     onToggleExpand
@@ -53,6 +55,7 @@ export function TextBlock({
                 value={markdown}
                 onChange={(e) => onChange(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onPaste={onPaste}
                 onBlur={onBlur}
                 className="p-3 min-h-20 resize-none border-0 bg-transparent focus:ring-0 text-sm"
             />

@@ -5,6 +5,7 @@ import { DraftIR } from "@/lib/api/generated";
 import { TextBlock } from "./TextBlock";
 import { ImageBlock } from "./ImageBlock";
 import { VideoBlock } from "./VideoBlock";
+import { parsePastedText } from "./paste";
 
 interface Block {
     id: string;
@@ -126,6 +127,40 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
         }
     };
 
+    const handlePasteInTextBlock = (e: React.ClipboardEvent<HTMLTextAreaElement>, index: number) => {
+        const pastedText = e.clipboardData.getData('text/plain');
+        const parsedMarkdown = parsePastedText(pastedText);
+    
+        if (parsedMarkdown.length > 0) {
+            e.preventDefault();
+    
+            const target = e.target as HTMLTextAreaElement;
+            const currentMarkdown = blocks[index].props.markdown || '';
+            
+            const newContentForCurrentBlock = 
+                currentMarkdown.slice(0, target.selectionStart) + 
+                parsedMarkdown[0] + 
+                currentMarkdown.slice(target.selectionEnd);
+    
+            const newBlocksToAdd: Block[] = parsedMarkdown.slice(1).map((markdown, i) => ({
+                id: `block-${Date.now()}-${i}`,
+                type: 'text',
+                expanded: true,
+                props: { markdown }
+            }));
+    
+            setBlocks(currentBlocks => {
+                const newBlocks = [...currentBlocks];
+                newBlocks[index] = { ...newBlocks[index], props: { ...newBlocks[index].props, markdown: newContentForCurrentBlock } };
+                newBlocks.splice(index + 1, 0, ...newBlocksToAdd);
+                
+                const draftIRBlocks = newBlocks.map(({ id, expanded, ...block }) => block);
+                onBlocksChange(draftIRBlocks);
+    
+                return newBlocks;
+            });
+        }
+    };
 
     const handleImageUrlChange = (blockId: string, value: string) => {
         updateBlockProps(blockId, { url: value });
@@ -215,6 +250,7 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
                                 isLastBlock={index === blocks.length - 1}
                                 onChange={(value) => handleTextChange(block.id, value)}
                                 onKeyDown={(e) => handleTextKeyDown(e, block.id, index)}
+                                onPaste={(e) => handlePasteInTextBlock(e, index)}
                                 onDeleteBlock={() => handleDeleteBlock(block.id, index)}
                                 onBlur={() => handleBlockBlur(block.id)}
                                 onToggleExpand={() => toggleBlockExpansion(block.id)}

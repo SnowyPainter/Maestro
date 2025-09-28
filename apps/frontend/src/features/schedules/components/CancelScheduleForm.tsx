@@ -84,6 +84,7 @@ export function CancelScheduleForm({ onCancelled }: { onCancelled: () => void })
             <ToggleGroup type="single" value={filters.status} onValueChange={handleStatusChange} defaultValue="pending">
                 <ToggleGroupItem value="pending">Pending</ToggleGroupItem>
                 <ToggleGroupItem value="enqueued">Enqueued</ToggleGroupItem>
+                <ToggleGroupItem value="running">Running</ToggleGroupItem>
             </ToggleGroup>
         </div>
         <div className="grid grid-cols-2 gap-4">

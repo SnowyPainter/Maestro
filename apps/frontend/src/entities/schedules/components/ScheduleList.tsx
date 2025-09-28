@@ -1,8 +1,10 @@
 
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ScheduleListItem, ScheduleStatus } from "@/lib/api/generated";
+import { useActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost, ScheduleListItem, ScheduleStatus } from "@/lib/api/generated";
 import { Badge } from "@/components/ui/badge";
 import { 
     Clock, CheckCircle2, CalendarDays, UserCircle, AlertTriangle, 
@@ -64,7 +66,7 @@ const StatusDisplay = ({ status, dueDate }: { status: ScheduleStatus, dueDate: D
 function ScheduleItemDetails({ item }: { item: ScheduleListItem }) {
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        // Add toast notification here in a real app
+        toast.success("Copied to clipboard");
     };
 
     return (
@@ -118,6 +120,24 @@ function ScheduleItem({ item, onSelect, isSelected }: { item: ScheduleListItem, 
   const dueDate = parseUtcDate(item.due_at);
   const isOverdue = dueDate && isPast(dueDate) && item.status === 'pending';
 
+  const queryClient = useQueryClient();
+  const { mutate: cancelSchedule, isPending: isCancelling } = useActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost({
+    mutation: {
+      onSuccess: (_, variables) => {
+        toast.success(`Schedule #${variables.data.schedule_ids?.join(', ')} cancelled.`);
+        queryClient.invalidateQueries({ queryKey: ['BffScheduleListSchedulesApiBffSchedulesGet'] });
+      },
+      onError: (error: any) => {
+        toast.error("Failed to cancel schedule.", { description: error.detail?.[0]?.msg || error.message });
+      },
+    },
+  });
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    cancelSchedule({ data: { schedule_ids: [item.id] } });
+  };
+
   const dateColor = cn("text-muted-foreground", {
     "text-red-600 font-bold": isOverdue,
     "text-blue-600 font-medium": !isOverdue && dueDate && isToday(dueDate),
@@ -167,6 +187,26 @@ function ScheduleItem({ item, onSelect, isSelected }: { item: ScheduleListItem, 
                         <span>ID: {item.persona_account_id}</span>
                     </div>
                     <Badge variant="outline" className="font-mono text-xs px-1.5 py-0.5">{item.queue || 'default'}</Badge>
+                    {['enqueued', 'running'].includes(item.status) && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 ml-1"
+                                        onClick={handleCancel}
+                                        disabled={isCancelling}
+                                    >
+                                        {isCancelling ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Cancel Schedule</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                 </div>
             </div>
         </div>
@@ -221,11 +261,11 @@ const UpcomingList = ({ items, selectedIds, onSelect }: ScheduleListProps) => {
     return (
         <div className="space-y-4">
             {groupOrder.map(group => (
-                groupedSchedules[group] && groupedSchedules[group].length > 0 && (
+                groupedSchedules[group as keyof typeof groupedSchedules] && groupedSchedules[group as keyof typeof groupedSchedules].length > 0 && (
                     <div key={group}>
-                        <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 tracking-wider mb-2 px-2">{group} <span className="font-mono">({groupedSchedules[group].length})</span></h4>
+                        <h4 className="text-xs font-semibold uppercase text-muted-foreground/80 tracking-wider mb-2 px-2">{group} <span className="font-mono">({groupedSchedules[group as keyof typeof groupedSchedules].length})</span></h4>
                         <div className="space-y-2">
-                            {groupedSchedules[group].map(item => (
+                            {groupedSchedules[group as keyof typeof groupedSchedules].map(item => (
                                 <ScheduleItem key={item.id} item={item} onSelect={onSelect} isSelected={selectedIds.includes(item.id)} />
                             ))}
                         </div>

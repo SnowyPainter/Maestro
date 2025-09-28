@@ -147,7 +147,7 @@ const WorklogItem = ({ item, onShowDetails }: { item: ScheduleListItem, onShowDe
                     <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 )}
                 {updatedAt && (
-                    <p className="text-xs text-muted-foreground whitespace-nowrap w-[85px]">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
                         {formatDistanceToNow(updatedAt, { addSuffix: true })}
                     </p>
                 )}
