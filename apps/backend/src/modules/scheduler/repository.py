@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Iterable, Optional, Sequence
+from typing import Any, Iterable, Optional, Sequence
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,16 @@ from apps.backend.src.modules.scheduler.models import (
     Schedule,
     ScheduleStatus,
 )
+
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_json_safe(v) for v in value]
+    return value
 
 
 # Allow RUNNING to be picked for resume; idempotency is handled at operator level
@@ -84,7 +94,7 @@ def mark_done(session: Session, schedule_id: int, *, context: Optional[dict] = N
         "last_error": None,
     }
     if context is not None:
-        values["context"] = context
+        values["context"] = _json_safe(context)
     session.execute(
         update(Schedule)
         .where(Schedule.id == schedule_id)
@@ -98,7 +108,7 @@ def mark_failed(session: Session, schedule_id: int, *, error: str, context: Opti
         "last_error": error,
     }
     if context is not None:
-        values["context"] = context
+        values["context"] = _json_safe(context)
     session.execute(
         update(Schedule)
         .where(Schedule.id == schedule_id)
@@ -121,9 +131,9 @@ def mark_rescheduled(
         "due_at": due_at,
     }
     if payload is not None:
-        values["payload"] = payload
+        values["payload"] = _json_safe(payload)
     if context is not None:
-        values["context"] = context
+        values["context"] = _json_safe(context)
     session.execute(
         update(Schedule)
         .where(Schedule.id == schedule_id)

@@ -81,7 +81,8 @@ async def op_publish_post(
     if publication.variant_id != variant.id or publication.account_persona_id != payload.persona_account_id:
         raise HTTPException(status_code=404, detail="Publication mismatch")
     if publication.status in ALREADY_PUBLISHED_STATUS:
-        raise HTTPException(status_code=409, detail="Publication already published")
+        await db.refresh(publication)
+        return PostPublicationOut.model_validate(publication)
 
     try:
         persona_account = await _load_persona_account_for_user(

@@ -196,6 +196,8 @@ class ThreadsPublishingCapability(ThreadsCapabilityBase, PublishingCapability):
             payload["text"] = text
         if media_payload:
             payload.update(media_payload)
+        elif text:
+            payload["media_type"] = "TEXT"
         payload.update(extract_publish_options(options))
 
         client = self._client(access_token=resolved_credentials.access_token)
