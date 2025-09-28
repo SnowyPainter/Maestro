@@ -111,7 +111,7 @@ export function ChatSidebar({
     }
 
     return (
-        <aside className="bg-muted/30 p-2 flex flex-col gap-3 w-64 border-r hidden md:flex">
+        <aside className="bg-muted/30 p-2 flex flex-col gap-3 w-64 border-r hidden md:flex h-screen">
             <div className="p-2">
                 <Logo />
             </div>

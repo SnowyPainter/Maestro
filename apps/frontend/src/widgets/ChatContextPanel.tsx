@@ -20,7 +20,7 @@ export function ChatContextPanel({ flows }: { flows?: FlowInfo[] }) {
                     <AccordionItem value="flows">
                         <AccordionTrigger className="text-sm font-semibold">Available Flows</AccordionTrigger>
                         <AccordionContent>
-                            <div className="overflow-y-auto space-y-2 mt-2 max-h-[calc(100vh-16rem)] pr-1 no-scrollbar">
+                            <div className="overflow-y-auto space-y-2 mt-2 max-h-[300px] pr-1 no-scrollbar">
                                 {flows?.map((flow, index) => (
                                     <div key={index} className="p-3 bg-muted/50 rounded-lg border break-words">
                                         <h3 className="font-medium text-sm leading-tight">{flow.title}</h3>

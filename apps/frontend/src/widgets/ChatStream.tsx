@@ -159,7 +159,7 @@ export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamP
   }
   return (
     <main className="flex flex-col h-screen bg-background">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar min-h-0">
         <div className="mx-auto max-w-3xl w-full">
           {messages.map((m) => (
             <div key={m.id} className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -169,7 +169,7 @@ export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamP
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <div className="p-4 border-t bg-card">
+      <div className="p-4 border-t bg-card flex-shrink-0">
         <div className="mx-auto max-w-3xl">
           <ChatInput onSendMessage={onSendMessage} onClearChat={onClearChat} />
         </div>
