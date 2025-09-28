@@ -91,7 +91,18 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
     };
 
     const toggleBlockExpansion = (blockId: string) => {
-        updateBlock(blockId, { expanded: !blocks.find(b => b.id === blockId)?.expanded });
+        setBlocks(currentBlocks => {
+            const isAlreadyExpanded = currentBlocks.find(b => b.id === blockId)?.expanded;
+
+            const newBlocks = currentBlocks.map(block => ({
+                ...block,
+                expanded: block.id === blockId ? !isAlreadyExpanded : false
+            }));
+
+            const draftIRBlocks = newBlocks.map(({ id, expanded, ...block }) => block);
+            onBlocksChange(draftIRBlocks);
+            return newBlocks;
+        });
     };
 
     const handleTextKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, blockId: string, index: number) => {

@@ -34,8 +34,12 @@ export function TextBlock({
     useEffect(() => {
         if (expanded && textareaRef.current) {
             // 블록이 열릴 때 커서를 텍스트 끝으로 이동
-            textareaRef.current.focus();
-            textareaRef.current.setSelectionRange(markdown.length, markdown.length);
+            setTimeout(() => {
+                if (textareaRef.current) {
+                    textareaRef.current.focus({ preventScroll: true });
+                    textareaRef.current.setSelectionRange(markdown.length, markdown.length);
+                }
+            }, 0);
         }
     }, [expanded, markdown.length]);
 

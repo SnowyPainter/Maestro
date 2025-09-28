@@ -55,7 +55,15 @@ export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) =>
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 p-4 border rounded-lg" onMouseDown={() => topFocusTrapRef.current?.focus()}>
+    <form
+      onSubmit={handleSubmit}
+      className="grid gap-4 p-4 border rounded-lg"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) {
+          topFocusTrapRef.current?.focus();
+        }
+      }}
+    >
       <div
         ref={topFocusTrapRef}
         tabIndex={-1}
