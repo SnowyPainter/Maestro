@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
     useDraftsCreateApiOrchestratorDraftsPost, 
     getBffDraftsListDraftsApiBffDraftsGetQueryKey,
@@ -22,6 +22,11 @@ export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) =>
   const [campaignId, setCampaignId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
+  const topFocusTrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    topFocusTrapRef.current?.focus();
+  }, []);
 
   const { data: campaigns } = useBffCampaignsListCampaignsApiBffCampaignsGet();
 
@@ -50,7 +55,13 @@ export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) =>
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 p-4 border rounded-lg">
+    <form onSubmit={handleSubmit} className="grid gap-4 p-4 border rounded-lg" onMouseDown={() => topFocusTrapRef.current?.focus()}>
+      <div
+        ref={topFocusTrapRef}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="pointer-events-none h-0 w-0 overflow-hidden"
+      />
       <div className="grid gap-2">
         <label htmlFor="title">Draft Title</label>
         <Input

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccountsPersonaCreateApiOrchestratorAccountsPersonasPost, getBffAccountsListPersonasApiBffAccountsPersonasGetQueryKey } from "@/lib/api/generated";
 import { Button } from "@/components/ui/button";
+import AvatarSelector from "@/components/ui/AvatarSelector";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,6 +19,12 @@ export function CreatePersonaForm({ onSuccess }: { onSuccess: (personaId: number
   const [pillars, setPillars] = useState("");
   const [bannedWords, setBannedWords] = useState("");
   const [defaultHashtags, setDefaultHashtags] = useState("");
+
+  const topFocusTrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    topFocusTrapRef.current?.focus();
+  }, []);
 
   const queryClient = useQueryClient();
 
@@ -42,13 +49,20 @@ export function CreatePersonaForm({ onSuccess }: { onSuccess: (personaId: number
       pillars: pillars ? pillars.split(',').map(p => p.trim()) : null,
       banned_words: bannedWords ? bannedWords.split(',').map(w => w.trim()) : null,
       default_hashtags: defaultHashtags ? defaultHashtags.split(',').map(h => h.trim()) : null,
-      schema_version: 1
+      schema_version: 1,
+      is_active: true,
     };
     createPersona({ data: { persona: payload } });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 p-4 border rounded-lg max-h-[70vh] overflow-y-auto">
+    <form onSubmit={handleSubmit} className="grid gap-4 p-4 border rounded-lg max-h-[70vh] overflow-y-auto" onMouseDown={() => topFocusTrapRef.current?.focus()}>
+      <div
+        ref={topFocusTrapRef}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="pointer-events-none h-0 w-0 overflow-hidden"
+      />
       <div className="grid gap-2">
         <label htmlFor="name">Persona Name</label>
         <Input
@@ -75,6 +89,10 @@ export function CreatePersonaForm({ onSuccess }: { onSuccess: (personaId: number
           value={avatarUrl}
           onChange={(e) => setAvatarUrl(e.target.value)}
           placeholder="https://example.com/avatar.png"
+        />
+        <AvatarSelector
+          selectedAvatarUrl={avatarUrl}
+          onAvatarSelect={setAvatarUrl}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">

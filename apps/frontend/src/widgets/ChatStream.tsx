@@ -15,7 +15,7 @@ interface ChatStreamProps {
 }
 
 export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
 
   const {
@@ -91,13 +91,15 @@ export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamP
       helper: "Share this memo with the assistant when enabled.",
     }] : []),
   ].flat();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages]);
 
   if (messages.length === 0) {
@@ -159,14 +161,13 @@ export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamP
   }
   return (
     <main className="flex flex-col h-screen bg-background">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar min-h-0">
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar min-h-0">
         <div className="mx-auto max-w-3xl w-full">
           {messages.map((m) => (
             <div key={m.id} className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
               <MessageBubble message={m} />
             </div>
           ))}
-          <div ref={messagesEndRef} />
         </div>
       </div>
       <div className="p-4 border-t bg-card flex-shrink-0">

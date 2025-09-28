@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAccountsPlatformUpdateApiOrchestratorAccountsPlatformAccountIdPut, PlatformAccountOut } from "@/lib/api/generated";
 import { Button } from "@/components/ui/button";
+import AvatarSelector from "@/components/ui/AvatarSelector";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +60,10 @@ export function EditAccountForm({ account, onSuccess }: EditAccountFormProps) {
           <div className="space-y-2">
             <label htmlFor="avatar_url">Avatar URL</label>
             <Input id="avatar_url" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} />
+            <AvatarSelector
+              selectedAvatarUrl={avatarUrl}
+              onAvatarSelect={setAvatarUrl}
+            />
           </div>
 
           <div className="space-y-2">

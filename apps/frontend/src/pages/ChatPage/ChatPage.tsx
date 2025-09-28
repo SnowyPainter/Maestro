@@ -12,7 +12,7 @@ function ChatPageContent() {
   const { data: flows } = useGetAvailableFlowsApiOrchestratorChatFlowsGet();
 
   return (
-    <div className="grid md:grid-cols-[256px_1fr] lg:grid-cols-[256px_1fr_280px] h-screen bg-muted/20 overflow-hidden">
+    <div className="grid md:grid-cols-[256px_1fr] lg:grid-cols-[256px_1fr_280px] h-screen bg-muted/20 min-h-[100dvh] overflow-hidden">
       <ChatSidebar
         onQueryTrendsClick={addTrendQueryCard}
         onNewChatClick={clearChat}

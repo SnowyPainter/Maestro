@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQueryClient } from "@tanstack/react-query";
 import { components } from "@/lib/types/api";
 import { Plus, Trash2 } from "lucide-react";
+import AvatarSelector from "@/components/ui/AvatarSelector";
 
 type PersonaUpdate = components["schemas"]["PersonaUpdate"];
 
@@ -30,6 +31,7 @@ type PostingWindowRow = {
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const allowedHashtagCasings = ["original", "lower", "upper"] as const;
+
 
 const createRowId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -308,14 +310,20 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
         />
       </section>
 
-      <section className="grid gap-2">
+      <section className="grid gap-3">
         <label htmlFor="avatar_url" className="text-sm font-medium">Avatar URL</label>
-        <Input
-          id="avatar_url"
-          value={avatarUrl}
-          onChange={(e) => setAvatarUrl(e.target.value)}
-          placeholder="https://example.com/avatar.png"
-        />
+        <div className="grid gap-2">
+          <Input
+            id="avatar_url"
+            value={avatarUrl}
+            onChange={(e) => setAvatarUrl(e.target.value)}
+            placeholder="https://example.com/avatar.png"
+          />
+          <AvatarSelector
+            selectedAvatarUrl={avatarUrl}
+            onAvatarSelect={setAvatarUrl}
+          />
+        </div>
       </section>
 
       <section className="grid grid-cols-2 gap-4">
