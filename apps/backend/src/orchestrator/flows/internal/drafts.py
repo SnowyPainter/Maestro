@@ -92,23 +92,35 @@ async def op_publish_post(
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
 
-    account = await db.get(PlatformAccount, persona_account.account_id)
-    if account is None:
-        raise HTTPException(status_code=404, detail="Platform account not found")
-    if account.platform != payload.platform:
-        raise HTTPException(status_code=400, detail="Persona account platform mismatch")
-
-    if not variant.rendered_caption and not variant.rendered_blocks:
-        raise HTTPException(status_code=409, detail="Variant has no rendered content")
-
-    credentials = _build_adapter_credentials(account)
-    if "access_token" not in credentials:
-        raise HTTPException(status_code=400, detail="Persona account missing access token")
-
     meta = dict(publication.meta or {})
-    publish_options = meta.get("publish_options")
-    if not isinstance(publish_options, dict):
-        publish_options = meta.get("options") if isinstance(meta.get("options"), dict) else None
+    try:
+        account = await db.get(PlatformAccount, persona_account.account_id)
+        if account is None:
+            raise HTTPException(status_code=404, detail="Platform account not found")
+        if account.platform != payload.platform:
+            raise HTTPException(status_code=400, detail="Persona account platform mismatch")
+
+        if not variant.rendered_caption and not variant.rendered_blocks:
+            raise HTTPException(status_code=409, detail="Variant has no rendered content")
+
+        credentials = _build_adapter_credentials(account)
+        if "access_token" not in credentials:
+            raise HTTPException(status_code=400, detail="Persona account missing access token")
+
+        publish_options = meta.get("publish_options")
+        if not isinstance(publish_options, dict):
+            publish_options = meta.get("options") if isinstance(meta.get("options"), dict) else None
+    except Exception as exc:
+        publication.status = PostStatus.FAILED
+        publication.errors = [f"credentials error: {exc}"]
+        publication.warnings = None
+        publication.published_at = None
+        publication.meta = _strip_schedule_meta(meta)
+        publication.updated_at = _now()
+        db.add(publication)
+        await db.flush()
+        await db.commit()
+        raise HTTPException(status_code=502, detail="Credentials error") from exc
 
     try:
         result = await publish_variant_with_adapter(

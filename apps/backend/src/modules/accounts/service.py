@@ -451,6 +451,7 @@ async def list_persona_accounts_for_user(
             PlatformAccount.avatar_url.label("account_avatar_url"),
             PlatformAccount.bio.label("account_bio"),
             (Persona.is_active & PlatformAccount.is_active).label("is_active"),
+            PlatformAccount.id.label("account_id"),
             PersonaAccount.can_permissions,
             PersonaAccount.is_verified_link,
             PersonaAccount.created_at,

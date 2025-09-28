@@ -50,6 +50,7 @@ const PLATFORM_COLORS = {
 interface DisplayPersonaAccountCardProps {
     personaAccount: {
         id: number;
+        account_id: number;
         persona_name: string;
         persona_avatar_url?: string | null;
         persona_description?: string | null;
