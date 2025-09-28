@@ -47,15 +47,269 @@
   },
   "terms_of_service": {
     "title": "服务条款",
-    "description": "这是服务条款页面的占位符。"
+    "description": "使用 Maestro AI 驱动的内容编排平台的服务条款和条件的综合说明。",
+    "sections": {
+      "acceptance": {
+        "title": "1. 接受条款",
+        "content": "通过访问和使用 Maestro（\"服务\"），您接受并同意受本协议条款和规定的约束。Maestro 是一个 AI 驱动的内容编排平台，帮助用户在社交媒体平台上创建、管理和部署内容。"
+      },
+      "service_description": {
+        "title": "2. 服务描述",
+        "content": "Maestro 提供 AI 驱动的内容创建和管理平台，包括：",
+        "features": {
+          "ai_content": "为社交媒体平台提供 AI 驱动的内容生成",
+          "scheduling": "自动内容调度和发布",
+          "email_workflow": "基于电子邮件的内容工作流程管理",
+          "multi_platform": "多平台内容分发（Twitter、Instagram、LinkedIn 等）",
+          "comment_analysis": "评论分析和自动回复生成",
+          "trend_analysis": "趋势分析和创意内容建议"
+        }
+      },
+      "user_responsibilities": {
+        "title": "3. 用户责任",
+        "content": "您有责任：",
+        "items": {
+          "law_compliance": "确保通过服务创建的所有内容符合适用的法律和平台政策",
+          "security": "维护您的账户凭据的安全性",
+          "content_review": "在发布前审查和批准所有 AI 生成的内容",
+          "ip_respect": "尊重他人的知识产权",
+          "legal_compliance": "在符合地方法律、州法律、国家法律和国际法律的情况下使用服务"
+        }
+      },
+      "ai_content": {
+        "title": "4. AI 生成的内容",
+        "content": "虽然 Maestro 使用先进的 AI 来生成内容建议，但您承认：",
+        "items": {
+          "editorial_control": "您对所有已发布的内容保持完全的编辑控制权和责任",
+          "inaccuracies": "AI 生成的内容可能包含不准确或不适当的材料",
+          "review_required": "您必须在发布前审查、编辑和批准所有内容",
+          "liability": "Maestro 对 AI 生成内容的准确性、适当性和合法性不承担责任"
+        }
+      },
+      "data_privacy": {
+        "title": "5. 数据和隐私",
+        "content": "您对服务的使用也受我们的隐私政策管辖，该政策通过引用纳入本条款。我们收集和处理提供我们的服务所需的数据，包括您创建的内容、使用模式和技术信息。"
+      },
+      "intellectual_property": {
+        "title": "6. 知识产权",
+        "content": "服务及其原始内容、功能和功能现在是并且将继续是 Maestro 及其许可方的专有财产。服务受版权、商标和其他法律保护。"
+      },
+      "service_availability": {
+        "title": "7. 服务可用性",
+        "content": "我们保留随时修改、暂停或终止服务的权利。我们还可能对某些功能施加限制或限制对服务某些部分的访问。"
+      },
+      "liability": {
+        "title": "8. 责任限制",
+        "content": "Maestro 不对因您使用服务而产生的任何间接、附带、特殊、后果性或惩罚性损害承担责任。我们的总责任不应超过您在索赔前十二个月内为服务支付的金额。"
+      },
+      "terms_changes": {
+        "title": "9. 条款变更",
+        "content": "我们保留随时修改这些条款的权利。我们将通过电子邮件或通过服务通知用户重大变更。在变更后继续使用服务即表示接受修改后的条款。"
+      },
+      "contact": {
+        "title": "10. 联系信息",
+        "content": "如果您对这些服务条款有任何疑问，请通过我们的联系信息中提供的电子邮件与我们联系。"
+      }
+    },
+    "last_updated": "最后更新："
   },
   "privacy_policy": {
     "title": "隐私政策",
-    "description": "这是隐私政策页面的占位符。"
+    "description": "在使用 Maestro AI 内容服务时，我们如何收集、使用和保护您的个人信息。",
+    "sections": {
+      "information_collection": {
+        "title": "1. 我们收集的信息",
+        "content": "我们收集您直接提供给我们的信息、我们使用服务时自动获得的信息以及来自第三方来源的信息。",
+        "subsections": {
+          "user_provided": {
+            "title": "您提供的信息",
+            "items": {
+              "account_info": "账户信息（电子邮件地址、用户名、密码）",
+              "profile_info": "您选择提供的个人资料信息",
+              "content_created": "您通过服务创建、编辑或发布的内容",
+              "communications": "您发送给我们的通信"
+            }
+          },
+          "automatic": {
+            "title": "我们自动收集的信息",
+            "items": {
+              "usage_data": "使用数据（您如何与服务互动）",
+              "device_info": "设备信息（IP 地址、浏览器类型、操作系统）",
+              "log_data": "日志数据（在服务中采取的操作）",
+              "cookies": "Cookie 和类似跟踪技术"
+            }
+          },
+          "third_party": {
+            "title": "来自第三方的信息",
+            "items": {
+              "social_media": "连接账户时来自社交媒体平台的数据",
+              "analytics": "来自我们服务提供商的分析数据"
+            }
+          }
+        }
+      },
+      "information_usage": {
+        "title": "2. 我们如何使用您的信息",
+        "content": "我们使用收集的信息来：",
+        "items": {
+          "service_provision": "提供、维护和改进我们的 AI 驱动内容编排服务",
+          "content_processing": "处理并履行您的内容创建请求",
+          "ai_generation": "生成 AI 驱动的内容建议和分析",
+          "account_management": "管理您的账户并提供客户支持",
+          "communication": "与您沟通更新、功能和促销信息",
+          "usage_analysis": "监控使用模式并分析趋势",
+          "security": "确保安全并防止欺诈",
+          "legal_compliance": "遵守法律义务"
+        }
+      },
+      "ai_machine_learning": {
+        "title": "3. AI 和机器学习",
+        "content": "为了提供我们的 AI 驱动功能，我们通过机器学习模型处理您的内容：",
+        "items": {
+          "model_training": "您创建或编辑的内容可能用于训练和改进我们的 AI 模型",
+          "usage_analysis": "我们可能会分析使用模式来增强我们的服务",
+          "aggregated_data": "AI 生成的内容基于从聚合数据中学习到的模式",
+          "safeguards": "我们在 AI 处理期间实施保护措施来保护您的个人信息"
+        }
+      },
+      "information_sharing": {
+        "title": "4. 信息共享和披露",
+        "content": "我们不会出售您的个人信息。我们可能在以下情况下共享您的信息：",
+        "items": {
+          "with_consent": "在您明确同意的情况下",
+          "service_providers": "与协助我们运营的服务提供商（根据严格的保密协议）",
+          "legal_requirements": "当法律要求或保护我们的权利时",
+          "business_transfer": "与业务转让或收购相关联时",
+          "safety_security": "保护用户和公众的安全与保障"
+        }
+      },
+      "data_security": {
+        "title": "5. 数据安全",
+        "content": "我们实施适当的技术和组织安全措施来保护您的个人信息免受未经授权的访问、更改、披露或破坏。然而，互联网上的传输方法没有 100% 的安全性。"
+      },
+      "data_retention": {
+        "title": "6. 数据保留",
+        "content": "我们保留您的信息的时间仅为提供服务和实现本政策中概述的目的所必需。您可以按照我们的数据删除政策请求删除您的数据。"
+      },
+      "user_rights": {
+        "title": "7. 您的权利和选择",
+        "content": "根据您的位置，您可能拥有以下权利：",
+        "items": {
+          "access": "访问您的个人信息",
+          "correction": "更正不准确的信息",
+          "deletion": "删除您的个人信息",
+          "restriction": "限制处理",
+          "portability": "数据可移植性",
+          "objection": "反对处理",
+          "consent_withdrawal": "撤回同意"
+        }
+      },
+      "cookies": {
+        "title": "8. Cookie 和跟踪",
+        "content": "我们使用 Cookie 和类似技术来增强您的体验、分析使用情况并提供个性化内容。您可以通过浏览器设置控制 Cookie 偏好。"
+      },
+      "third_party_services": {
+        "title": "9. 第三方服务",
+        "content": "我们的服务可能包含指向第三方网站的链接或与第三方服务集成。我们不对这些第三方的隐私实践负责。"
+      },
+      "policy_changes": {
+        "title": "10. 本政策变更",
+        "content": "我们可能会不时更新本隐私政策。我们将通过电子邮件或通过服务通知您重大变更。在变更后继续使用服务即表示接受更新的政策。"
+      },
+      "contact": {
+        "title": "11. 联系我们",
+        "content": "如果您对本隐私政策或我们的数据实践有任何疑问，请通过我们的联系信息中提供的电子邮件与我们联系。"
+      }
+    },
+    "last_updated": "最后更新："
   },
   "data_deletion_policy": {
     "title": "数据删除政策",
-    "description": "这是数据删除政策页面的占位符。"
+    "description": "您在 Maestro 系统中删除个人数据的权利和我们的程序。",
+    "sections": {
+      "deletion_right": {
+        "title": "1. 您的删除权",
+        "content": "您有权请求删除我们已收集和存储的您的个人信息。此权利受适用的隐私法中概述的某些例外和限制的约束，包括但不限于 GDPR、CCPA 和其他相关法规。"
+      },
+      "deletable_information": {
+        "title": "2. 受删除约束的信息",
+        "content": "以下类型的信息可以根据您的请求删除：",
+        "items": {
+          "account_info": "账户信息（电子邮件、用户名、个人资料数据）",
+          "created_content": "您创建或上传到服务的内容",
+          "usage_history": "使用历史和分析数据",
+          "communications": "与我们支持团队的通信记录",
+          "preferences": "与您的账户相关的偏好和设置"
+        }
+      },
+      "deletion_exceptions": {
+        "title": "3. 删除例外",
+        "content": "即使在您的删除请求后，我们也可能在以下情况下保留某些信息：",
+        "items": {
+          "legal_compliance": "法律合规或监管要求所需的信息",
+          "transaction_completion": "完成交易或提供您请求的服务所需的数据",
+          "security_incidents": "检测安全事件或防止欺诈所需的信息",
+          "legal_claims": "行使或辩护法律索赔所需的数据",
+          "anonymized_data": "已被匿名化或聚合的信息（无法追溯到您）"
+        }
+      },
+      "request_methods": {
+        "title": "4. 如何请求数据删除",
+        "content": "您可以通过以下方法请求删除您的数据：",
+        "methods": {
+          "account_settings": {
+            "title": "方法 1：通过您的账户设置",
+            "steps": {
+              "login": "登录您的 Maestro 账户",
+              "navigate": "导航到设置 > 账户",
+              "select": "选择\"删除账户\"选项",
+              "confirm": "遵循确认过程"
+            }
+          },
+          "support_email": {
+            "title": "方法 2：联系我们的支持团队",
+            "content": "向我们网站上提供的联系电子邮件发送主题为\"数据删除请求\"的电子邮件。请包含您的账户电子邮件地址和您希望删除数据的明确声明。"
+          }
+        }
+      },
+      "verification": {
+        "title": "5. 验证过程",
+        "content": "为了保护您的隐私和安全，我们将在处理删除请求前验证您的身份。这可能涉及确认您的电子邮件地址、提供额外身份信息或回答安全问题。"
+      },
+      "processing_time": {
+        "title": "6. 处理时间",
+        "content": "我们将在收到并验证您的删除请求后 30 天内处理。在某些情况下，特别是处理大量数据或复杂系统时，此过程可能需要长达 90 天。我们将在删除完成后通知您。"
+      },
+      "ai_training_data": {
+        "title": "7. AI 模型训练数据",
+        "content": "请注意，如果您的内容已被用于训练我们的 AI 模型，从训练数据集中完全移除可能是不可能的。但是，我们将移除任何个人身份信息，并采取措施防止您的内容影响未来的 AI 输出。"
+      },
+      "third_party_services": {
+        "title": "8. 第三方服务",
+        "content": "如果您的账户连接到第三方服务（社交媒体平台等），您可能需要分别向这些服务请求数据删除。我们将删除我们从这些第三方获得的所有数据，但无法删除他们直接持有的数据。"
+      },
+      "backup_recovery": {
+        "title": "9. 数据备份和恢复",
+        "content": "删除的数据可能在我们的备份系统中保留长达 6 个月，然后被永久移除。这些备份是加密的，仅用于灾难恢复目的。"
+      },
+      "account_vs_data": {
+        "title": "10. 账户删除 vs 数据删除",
+        "content": "请求账户删除将自动触发您的个人数据删除。但是，您也可以在保持账户活动的同时请求删除特定数据。请在请求时说明您的偏好。"
+      },
+      "deletion_reversal": {
+        "title": "11. 删除的撤销",
+        "content": "一旦您的数据被删除，就无法恢复。如果您在删除后希望再次使用我们的服务，您需要创建一个新账户并重新开始。"
+      },
+      "policy_changes": {
+        "title": "12. 本政策变更",
+        "content": "我们可能会不时更新本数据删除政策。我们将通过电子邮件或通过服务通知您重大变更。"
+      },
+      "contact": {
+        "title": "13. 联系信息",
+        "content": "如果您对本数据删除政策有任何疑问或需要删除请求的帮助，请通过我们的联系信息中提供的电子邮件与我们联系。"
+      }
+    },
+    "last_updated": "最后更新："
   },
   "settings": {
     "logout_success": "成功退出。",

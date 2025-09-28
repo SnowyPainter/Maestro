@@ -47,15 +47,269 @@
   },
   "terms_of_service": {
     "title": "Terms of Service",
-    "description": "This is a placeholder for the Terms of Service page."
+    "description": "Comprehensive terms and conditions for using Maestro's AI-powered content orchestration platform.",
+    "sections": {
+      "acceptance": {
+        "title": "1. Acceptance of Terms",
+        "content": "By accessing and using Maestro (\"the Service\"), you accept and agree to be bound by the terms and provision of this agreement. Maestro is an AI-powered content orchestration platform that helps users create, manage, and deploy content across social media platforms."
+      },
+      "service_description": {
+        "title": "2. Description of Service",
+        "content": "Maestro provides an AI-driven platform for content creation and management, including:",
+        "features": {
+          "ai_content": "AI-powered content generation for social media platforms",
+          "scheduling": "Automated content scheduling and publishing",
+          "email_workflow": "Email-based content workflow management",
+          "multi_platform": "Multi-platform content distribution (Twitter, Instagram, LinkedIn, etc.)",
+          "comment_analysis": "Comment analysis and automated response generation",
+          "trend_analysis": "Trend analysis and creative content suggestions"
+        }
+      },
+      "user_responsibilities": {
+        "title": "3. User Responsibilities",
+        "content": "You are responsible for:",
+        "items": {
+          "law_compliance": "Ensuring all content created through the Service complies with applicable laws and platform policies",
+          "security": "Maintaining the security of your account credentials",
+          "content_review": "Reviewing and approving all AI-generated content before publishing",
+          "ip_respect": "Respecting intellectual property rights of others",
+          "legal_compliance": "Using the Service in compliance with local, state, national, and international laws"
+        }
+      },
+      "ai_content": {
+        "title": "4. AI-Generated Content",
+        "content": "While Maestro uses advanced AI to generate content suggestions, you acknowledge that:",
+        "items": {
+          "editorial_control": "You maintain full editorial control and responsibility for all published content",
+          "inaccuracies": "AI-generated content may contain inaccuracies or inappropriate material",
+          "review_required": "You must review, edit, and approve all content before publishing",
+          "liability": "Maestro is not liable for the accuracy, appropriateness, or legality of AI-generated content"
+        }
+      },
+      "data_privacy": {
+        "title": "5. Data and Privacy",
+        "content": "Your use of the Service is also governed by our Privacy Policy, which is incorporated into these Terms by reference. We collect and process data necessary to provide our services, including content you create, usage patterns, and technical information."
+      },
+      "intellectual_property": {
+        "title": "6. Intellectual Property",
+        "content": "The Service and its original content, features, and functionality are and will remain the exclusive property of Maestro and its licensors. The Service is protected by copyright, trademark, and other laws."
+      },
+      "service_availability": {
+        "title": "7. Service Availability",
+        "content": "We reserve the right to modify, suspend, or discontinue the Service at any time. We may also impose limits on certain features or restrict access to parts of the Service."
+      },
+      "liability": {
+        "title": "8. Limitation of Liability",
+        "content": "Maestro shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service. Our total liability shall not exceed the amount paid by you for the Service in the twelve months preceding the claim."
+      },
+      "terms_changes": {
+        "title": "9. Changes to Terms",
+        "content": "We reserve the right to modify these Terms at any time. We will notify users of material changes via email or through the Service. Continued use of the Service after changes constitutes acceptance of the modified Terms."
+      },
+      "contact": {
+        "title": "10. Contact Information",
+        "content": "If you have any questions about these Terms of Service, please contact us at the email provided in our contact information."
+      }
+    },
+    "last_updated": "Last updated:"
   },
   "privacy_policy": {
     "title": "Privacy Policy",
-    "description": "This is a placeholder for the Privacy Policy page."
+    "description": "How we collect, use, and protect your personal information when using Maestro's AI content services.",
+    "sections": {
+      "information_collection": {
+        "title": "1. Information We Collect",
+        "content": "We collect information you provide directly to us, information we obtain automatically when you use our Service, and information from third-party sources.",
+        "subsections": {
+          "user_provided": {
+            "title": "Information You Provide",
+            "items": {
+              "account_info": "Account information (email address, username, password)",
+              "profile_info": "Profile information you choose to provide",
+              "content_created": "Content you create, edit, or publish through our Service",
+              "communications": "Communications you send to us"
+            }
+          },
+          "automatic": {
+            "title": "Information We Collect Automatically",
+            "items": {
+              "usage_data": "Usage data (how you interact with our Service)",
+              "device_info": "Device information (IP address, browser type, operating system)",
+              "log_data": "Log data (actions taken within the Service)",
+              "cookies": "Cookies and similar tracking technologies"
+            }
+          },
+          "third_party": {
+            "title": "Information from Third Parties",
+            "items": {
+              "social_media": "Social media platform data when you connect accounts",
+              "analytics": "Analytics data from our service providers"
+            }
+          }
+        }
+      },
+      "information_usage": {
+        "title": "2. How We Use Your Information",
+        "content": "We use the collected information to:",
+        "items": {
+          "service_provision": "Provide, maintain, and improve our AI-powered content orchestration services",
+          "content_processing": "Process and fulfill your content creation requests",
+          "ai_generation": "Generate AI-powered content suggestions and analysis",
+          "account_management": "Manage your account and provide customer support",
+          "communication": "Communicate with you about updates, features, and promotions",
+          "usage_analysis": "Monitor usage patterns and analyze trends",
+          "security": "Ensure security and prevent fraud",
+          "legal_compliance": "Comply with legal obligations"
+        }
+      },
+      "ai_machine_learning": {
+        "title": "3. AI and Machine Learning",
+        "content": "To provide our AI-powered features, we process your content through our machine learning models:",
+        "items": {
+          "model_training": "Content you create or edit may be used to train and improve our AI models",
+          "usage_analysis": "We may analyze usage patterns to enhance our services",
+          "aggregated_data": "AI-generated content is based on patterns learned from aggregated data",
+          "safeguards": "We implement safeguards to protect your personal information during AI processing"
+        }
+      },
+      "information_sharing": {
+        "title": "4. Information Sharing and Disclosure",
+        "content": "We do not sell your personal information. We may share your information in the following circumstances:",
+        "items": {
+          "with_consent": "With your explicit consent",
+          "service_providers": "With service providers who assist in our operations (under strict confidentiality agreements)",
+          "legal_requirements": "When required by law or to protect our rights",
+          "business_transfer": "In connection with a business transfer or acquisition",
+          "safety_security": "To protect the safety and security of our users and the public"
+        }
+      },
+      "data_security": {
+        "title": "5. Data Security",
+        "content": "We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the internet is 100% secure."
+      },
+      "data_retention": {
+        "title": "6. Data Retention",
+        "content": "We retain your information for as long as necessary to provide our services and fulfill the purposes outlined in this policy. You may request deletion of your data as described in our Data Deletion Policy."
+      },
+      "user_rights": {
+        "title": "7. Your Rights and Choices",
+        "content": "Depending on your location, you may have the following rights:",
+        "items": {
+          "access": "Access to your personal information",
+          "correction": "Correction of inaccurate information",
+          "deletion": "Deletion of your personal information",
+          "restriction": "Restriction of processing",
+          "portability": "Data portability",
+          "objection": "Objection to processing",
+          "consent_withdrawal": "Withdrawal of consent"
+        }
+      },
+      "cookies": {
+        "title": "8. Cookies and Tracking",
+        "content": "We use cookies and similar technologies to enhance your experience, analyze usage, and provide personalized content. You can control cookie preferences through your browser settings."
+      },
+      "third_party_services": {
+        "title": "9. Third-Party Services",
+        "content": "Our Service may contain links to third-party websites or integrate with third-party services. We are not responsible for the privacy practices of these third parties."
+      },
+      "policy_changes": {
+        "title": "10. Changes to This Policy",
+        "content": "We may update this Privacy Policy from time to time. We will notify you of material changes via email or through our Service. Continued use of the Service after changes constitutes acceptance of the updated policy."
+      },
+      "contact": {
+        "title": "11. Contact Us",
+        "content": "If you have any questions about this Privacy Policy or our data practices, please contact us at the email provided in our contact information."
+      }
+    },
+    "last_updated": "Last updated:"
   },
   "data_deletion_policy": {
     "title": "Data Deletion Policy",
-    "description": "This is a placeholder for the Data Deletion Policy page."
+    "description": "Your rights and our procedures for deleting your personal data from Maestro's systems.",
+    "sections": {
+      "deletion_right": {
+        "title": "1. Your Right to Deletion",
+        "content": "You have the right to request the deletion of your personal information that we have collected and stored. This right is subject to certain exceptions and limitations as outlined in applicable privacy laws, including but not limited to GDPR, CCPA, and other relevant regulations."
+      },
+      "deletable_information": {
+        "title": "2. Information Subject to Deletion",
+        "content": "The following types of information may be deleted upon your request:",
+        "items": {
+          "account_info": "Account information (email, username, profile data)",
+          "created_content": "Content you have created or uploaded to the Service",
+          "usage_history": "Usage history and analytics data",
+          "communications": "Communication records with our support team",
+          "preferences": "Preferences and settings associated with your account"
+        }
+      },
+      "deletion_exceptions": {
+        "title": "3. Exceptions to Deletion",
+        "content": "We may retain certain information even after your deletion request in the following cases:",
+        "items": {
+          "legal_compliance": "Information required for legal compliance or regulatory requirements",
+          "transaction_completion": "Data necessary to complete transactions or provide services you have requested",
+          "security_incidents": "Information needed to detect security incidents or prevent fraud",
+          "legal_claims": "Data required for exercising or defending legal claims",
+          "anonymized_data": "Information that has been anonymized or aggregated (cannot be traced back to you)"
+        }
+      },
+      "request_methods": {
+        "title": "4. How to Request Data Deletion",
+        "content": "You can request deletion of your data through the following methods:",
+        "methods": {
+          "account_settings": {
+            "title": "Method 1: Through Your Account Settings",
+            "steps": {
+              "login": "Log in to your Maestro account",
+              "navigate": "Navigate to Settings > Account",
+              "select": "Select \"Delete Account\" option",
+              "confirm": "Follow the confirmation process"
+            }
+          },
+          "support_email": {
+            "title": "Method 2: Contact Our Support Team",
+            "content": "Send an email to our support team at the contact email provided on our website with the subject line \"Data Deletion Request\". Please include your account email address and a clear statement that you wish to delete your data."
+          }
+        }
+      },
+      "verification": {
+        "title": "5. Verification Process",
+        "content": "To protect your privacy and security, we will verify your identity before processing deletion requests. This may involve confirming your email address, providing additional identification information, or answering security questions."
+      },
+      "processing_time": {
+        "title": "6. Processing Time",
+        "content": "We will process your deletion request within 30 days of receiving and verifying it. In some cases, particularly when dealing with large amounts of data or complex systems, this process may take up to 90 days. We will notify you once the deletion is complete."
+      },
+      "ai_training_data": {
+        "title": "7. AI Model Training Data",
+        "content": "Please note that if your content has been used to train our AI models, complete removal from training datasets may not be possible. However, we will remove any personally identifiable information and take steps to prevent your content from influencing future AI outputs."
+      },
+      "third_party_services": {
+        "title": "8. Third-Party Services",
+        "content": "If your account is connected to third-party services (social media platforms, etc.), you may need to separately request data deletion from those services. We will delete any data we have obtained from these third parties, but cannot delete data held directly by them."
+      },
+      "backup_recovery": {
+        "title": "9. Data Backup and Recovery",
+        "content": "Deleted data may remain in our backup systems for up to 6 months before being permanently removed. These backups are encrypted and used only for disaster recovery purposes."
+      },
+      "account_vs_data": {
+        "title": "10. Account Deletion vs Data Deletion",
+        "content": "Requesting account deletion will automatically trigger deletion of your personal data. However, you may also request deletion of specific data while keeping your account active. Please specify your preference when making the request."
+      },
+      "deletion_reversal": {
+        "title": "11. Reversal of Deletion",
+        "content": "Once your data has been deleted, it cannot be recovered. If you wish to use our Service again after deletion, you will need to create a new account and start fresh."
+      },
+      "policy_changes": {
+        "title": "12. Changes to This Policy",
+        "content": "We may update this Data Deletion Policy from time to time. We will notify you of material changes via email or through our Service."
+      },
+      "contact": {
+        "title": "13. Contact Information",
+        "content": "If you have any questions about this Data Deletion Policy or need assistance with a deletion request, please contact us at the email provided in our contact information."
+      }
+    },
+    "last_updated": "Last updated:"
   },
   "settings": {
     "logout_success": "Logged out successfully.",
