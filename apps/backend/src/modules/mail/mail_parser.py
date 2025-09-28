@@ -1,7 +1,63 @@
 #apps.backend.src.modules.mail.mail_parser.py
+import re
 from typing import Tuple
 from apps.backend.src.modules.drafts.schemas import DraftIR, BlockText, BlockImage, BlockVideo
 from apps.backend.src.modules.mail.schemas import EmailMetadata
+
+"""
+
+"""
+
+REPLY_BREAK_PATTERNS = (
+    re.compile(r"^On .+wrote:$", re.IGNORECASE),
+    re.compile(r"^.+\d{4}[/-].+wrote:$", re.IGNORECASE),
+    re.compile(r"^.+\d{4}년.+작성:$"),
+    re.compile(r"^-+\s*Original Message\s*-+$", re.IGNORECASE),
+    re.compile(r"^-+\s*Forwarded message\s*-+$", re.IGNORECASE),
+    re.compile(r"^Begin forwarded message:", re.IGNORECASE),
+    re.compile(r"^보낸 사람:"),
+    re.compile(r"^받는 사람:"),
+    re.compile(r"^보낸 시간:"),
+    re.compile(r"^제목:"),
+    re.compile(r"^-{6,}$"),
+    re.compile(r"^_{6,}$"),
+)
+
+HEADER_PREFIXES = ("From:", "Sent:", "To:", "Subject:", "Date:")
+
+
+def extract_reply_content(text: str) -> str:
+    """Remove quoted original messages from a reply email body."""
+
+    if not text:
+        return text
+
+    lines = text.splitlines()
+    cleaned: list[str] = []
+    header_prefix_hits = 0
+
+    for line in lines:
+        stripped = line.strip()
+
+        if not stripped and not cleaned:
+            continue
+
+        if stripped and any(pattern.match(stripped) for pattern in REPLY_BREAK_PATTERNS):
+            break
+
+        if stripped.startswith(">"):
+            continue
+
+        if any(stripped.startswith(prefix) for prefix in HEADER_PREFIXES):
+            header_prefix_hits += 1
+            if cleaned or header_prefix_hits > 1:
+                break
+            continue
+
+        cleaned.append(line)
+
+    cleaned_text = "\n".join(cleaned).strip()
+    return cleaned_text if cleaned_text else text.strip()
 
 def extract_pipeline_id(subject: str) -> str | None:
     """
@@ -14,8 +70,6 @@ def extract_pipeline_id(subject: str) -> str | None:
     return match.group(1) if match else None
 
 def parse_email_metadata(text: str, subject: str | None = None) -> EmailMetadata:
-    import re
-
     metadata = {"settings": {}}
     raw_text = text
     content = raw_text.strip()
@@ -48,17 +102,23 @@ def parse_mail_body(text: str, *, subject: str | None = None, paragraph_split: s
     - 비디오 URL이 포함된 경우 BlockVideo로 변환
     - 나머지는 BlockText로 변환
     """
-    import re
-    metadata = parse_email_metadata(text, subject=subject)
+    filtered_text = extract_reply_content(text)
+    metadata = parse_email_metadata(filtered_text, subject=subject)
+    if (
+        filtered_text != text
+        and metadata.pipeline_id == "default"
+        and not metadata.settings
+    ):
+        metadata = parse_email_metadata(text, subject=subject)
     
     blocks = []
     if paragraph_split.startswith("#"):
         header_pattern = rf'^{re.escape(paragraph_split)}+'
-        paragraphs = re.split(header_pattern, text, flags=re.MULTILINE)
+        paragraphs = re.split(header_pattern, filtered_text, flags=re.MULTILINE)
         if paragraphs and not paragraphs[0].strip():
             paragraphs = paragraphs[1:]
     else:
-        paragraphs = text.split(paragraph_split)
+        paragraphs = filtered_text.split(paragraph_split)
     
     for paragraph in paragraphs:
         paragraph = paragraph.strip()
