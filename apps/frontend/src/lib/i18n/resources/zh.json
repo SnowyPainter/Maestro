@@ -331,7 +331,61 @@
     "ready_to_get_started_description": "立即改变您的内容工作流程。",
     "start_for_free": "免费开始",
     "contact_info": "联系方式：{{email}}",
-    "copyright": "© {{year}} Maestro. 保留所有权利。"
+    "copyright": "© {{year}} Maestro. 保留所有权利。",
+    "typing_phrases": {
+      "0": "为新产品发布制定营销活动...",
+      "1": "撰写一系列关于医疗保健AI的博客文章...",
+      "2": "为下周创建社交媒体内容...",
+      "3": "编写宣传视频脚本..."
+    },
+    "features_section": {
+      "title": "为什么选择 Maestro？",
+      "subtitle": "体验 AI 驱动的内容编排的力量",
+      "features": {
+        "0": {
+          "title": "AI 驱动的内容生成",
+          "description": "使用先进的 AI 技术生成引人入胜的社交媒体帖子、博客文章和营销文案。"
+        },
+        "1": {
+          "title": "多平台分发",
+          "description": "无缝跨 Twitter、Instagram、LinkedIn 和其他社交平台发布内容。"
+        },
+        "2": {
+          "title": "智能调度",
+          "description": "基于受众参与模式和平台算法优化发布时机。"
+        },
+        "3": {
+          "title": "评论分析与自动化",
+          "description": "AI 分析用户评论并自动生成相关回复，提升参与度。"
+        }
+      }
+    },
+    "testimonials_section": {
+      "title": "用户评价",
+      "testimonials": {
+        "0": {
+          "name": "陈莎拉",
+          "role": "市场总监",
+          "company": "科技公司",
+          "content": "Maestro 彻底改变了我们的内容策略。我们每周节省 15 个小时，同时实现了 40% 更高的参与率。",
+          "avatar": "/avatars/sarah.jpg"
+        },
+        "1": {
+          "name": "迈克尔·罗德里格斯",
+          "role": "社交媒体经理",
+          "company": "增长公司",
+          "content": "AI 生成的内容质量令人难以置信。就像在我们的团队中有一个专业的文案撰稿人 24/7 在工作。",
+          "avatar": "/avatars/michael.jpg"
+        },
+        "2": {
+          "name": "艾米莉·沃森",
+          "role": "内容创作者",
+          "company": "创意工作室",
+          "content": "多平台分发和调度功能让我的工作流程高效多了。",
+          "avatar": "/avatars/emily.jpg"
+        }
+      }
+    }
   },
   "login": {
     "success_message": "登录成功！",

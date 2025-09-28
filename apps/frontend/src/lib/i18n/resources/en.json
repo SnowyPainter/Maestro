@@ -331,7 +331,61 @@
     "ready_to_get_started_description": "Transform your content workflow today.",
     "start_for_free": "Start for Free",
     "contact_info": "Contact: {{email}}",
-    "copyright": "© {{year}} Maestro. All Rights Reserved."
+    "copyright": "© {{year}} Maestro. All Rights Reserved.",
+    "typing_phrases": {
+      "0": "a marketing campaign for the new product launch...",
+      "1": "a series of blog posts about AI in healthcare...",
+      "2": "social media content for the next week...",
+      "3": "a script for a promotional video..."
+    },
+    "features_section": {
+      "title": "Why Choose Maestro?",
+      "subtitle": "Experience the power of AI-driven content orchestration",
+      "features": {
+        "0": {
+          "title": "AI-Powered Content Generation",
+          "description": "Generate engaging social media posts, blog articles, and marketing copy with advanced AI technology."
+        },
+        "1": {
+          "title": "Multi-Platform Distribution",
+          "description": "Seamlessly publish content across Twitter, Instagram, LinkedIn, and other social platforms."
+        },
+        "2": {
+          "title": "Smart Scheduling",
+          "description": "Optimize posting times based on audience engagement patterns and platform algorithms."
+        },
+        "3": {
+          "title": "Comment Analysis & Automation",
+          "description": "AI analyzes user comments and automatically generates relevant responses to boost engagement."
+        }
+      }
+    },
+    "testimonials_section": {
+      "title": "What Our Users Say",
+      "testimonials": {
+        "0": {
+          "name": "Sarah Chen",
+          "role": "Marketing Director",
+          "company": "TechCorp",
+          "content": "Maestro has revolutionized our content strategy. We save 15 hours per week while achieving 40% higher engagement rates.",
+          "avatar": "/avatars/sarah.jpg"
+        },
+        "1": {
+          "name": "Michael Rodriguez",
+          "role": "Social Media Manager",
+          "company": "GrowthCo",
+          "content": "The AI-generated content quality is incredible. It's like having a professional copywriter on our team 24/7.",
+          "avatar": "/avatars/michael.jpg"
+        },
+        "2": {
+          "name": "Emily Watson",
+          "role": "Content Creator",
+          "company": "Creative Studio",
+          "content": "The multi-platform distribution and scheduling features have made my workflow so much more efficient.",
+          "avatar": "/avatars/emily.jpg"
+        }
+      }
+    }
   },
   "login": {
     "success_message": "Login successful!",
