@@ -364,6 +364,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/drafts/post-publications/platform-and-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * List Post Publications by Platform and Status
+         * @description List all post publications for specific platform and status combination
+         */
+        post: operations["bff_drafts_list_post_publications_by_platform_and_status_api_bff_drafts_post_publications_platform_and_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/drafts/post-publications/enriched": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * List Enriched Post Publications
+         * @description List post publications with enriched information including variant and draft details
+         */
+        post: operations["bff_drafts_list_post_publications_enriched_api_bff_drafts_post_publications_enriched_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/drafts/platform/{platform}": {
         parameters: {
             query?: never;
@@ -1734,6 +1774,8 @@ export interface components {
              */
             end: string;
         };
+        /** DraftEnrichedPostPublicationsList */
+        DraftEnrichedPostPublicationsList: components["schemas"]["EnrichedPostPublicationOut"][];
         /** DraftIR */
         DraftIR: {
             /** Blocks */
@@ -1789,6 +1831,15 @@ export interface components {
              */
             updated_at: string;
         };
+        /** DraftPostPublicationsByPlatformAndStatusPayload */
+        DraftPostPublicationsByPlatformAndStatusPayload: {
+            /** Account Persona Id */
+            account_persona_id: number;
+            /** Platform */
+            platform: components["schemas"]["PlatformKind"][];
+            /** Status */
+            status: components["schemas"]["PostStatus"][];
+        };
         /** DraftPostPublicationsByPlatformPayload */
         DraftPostPublicationsByPlatformPayload: {
             /** Account Persona Id */
@@ -1809,6 +1860,17 @@ export interface components {
             account_persona_id: number;
             /** Variant Id */
             variant_id: number;
+        };
+        /** DraftPostPublicationsEnrichedPayload */
+        DraftPostPublicationsEnrichedPayload: {
+            /** Account Persona Id */
+            account_persona_id: number;
+            /** Platform */
+            platform?: components["schemas"]["PlatformKind"][] | null;
+            /** Status */
+            status?: components["schemas"]["PostStatus"][] | null;
+            /** Variant Id */
+            variant_id?: number | null;
         };
         /** DraftPostPublicationsList */
         DraftPostPublicationsList: components["schemas"]["PostPublicationOut"][];
@@ -1932,6 +1994,86 @@ export interface components {
         };
         /** DraftVariantRenderList */
         DraftVariantRenderList: components["schemas"]["DraftVariantRender"][];
+        /**
+         * EnrichedPostPublicationOut
+         * @description Enriched post publication with variant and draft information.
+         */
+        EnrichedPostPublicationOut: {
+            /** Id */
+            id: number;
+            /** Variant Id */
+            variant_id: number;
+            /** Account Persona Id */
+            account_persona_id: number;
+            /** Platform */
+            platform: string;
+            /** External Id */
+            external_id?: string | null;
+            /** Permalink */
+            permalink?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Scheduled At
+             * Format: date-time
+             */
+            scheduled_at?: string | null;
+            /**
+             * Published At
+             * Format: date-time
+             */
+            published_at?: string | null;
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at?: string | null;
+            /**
+             * Monitoring Started At
+             * Format: date-time
+             */
+            monitoring_started_at?: string | null;
+            /**
+             * Monitoring Ended At
+             * Format: date-time
+             */
+            monitoring_ended_at?: string | null;
+            /**
+             * Last Polled At
+             * Format: date-time
+             */
+            last_polled_at?: string | null;
+            /** Errors */
+            errors?: string[] | null;
+            /** Warnings */
+            warnings?: string[] | null;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Variant Content */
+            variant_content?: string | null;
+            /** Variant Platform */
+            variant_platform?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Tags */
+            tags?: string[] | null;
+            /** Goal */
+            goal?: string | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+        };
         /** FlowInfo */
         FlowInfo: {
             /** Key */
@@ -3840,6 +3982,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftPostPublicationsList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_post_publications_by_platform_and_status_api_bff_drafts_post_publications_platform_and_status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftPostPublicationsByPlatformAndStatusPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftPostPublicationsList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_drafts_list_post_publications_enriched_api_bff_drafts_post_publications_enriched_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftPostPublicationsEnrichedPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftEnrichedPostPublicationsList"];
                 };
             };
             /** @description Validation Error */

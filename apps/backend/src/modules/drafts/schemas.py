@@ -120,3 +120,15 @@ class PostPublicationOut(BaseModel):
     meta: Optional[dict] = None
     created_at: datetime
     updated_at: datetime
+
+
+class EnrichedPostPublicationOut(PostPublicationOut):
+    """Enriched post publication with variant and draft information."""
+    model_config = ConfigDict(from_attributes=True)
+
+    variant_content: Optional[str] = None
+    variant_platform: Optional[str] = None
+    title: Optional[str] = None
+    tags: Optional[List[str]] = None
+    goal: Optional[str] = None
+    campaign_id: Optional[int] = None

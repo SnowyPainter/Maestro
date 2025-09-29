@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -540,4 +540,47 @@ async def list_post_publications_by_status(
     status: List[PostStatus],
 ) -> List[PostPublication]:
     stmt = select(PostPublication).where(PostPublication.account_persona_id == account_persona_id, PostPublication.status.in_(status))
+    return (await db.execute(stmt)).scalars().all()
+
+
+async def list_post_publications_by_platform_and_status(
+    db: AsyncSession,
+    *,
+    account_persona_id: int,
+    platform: List[PlatformKind],
+    status: List[PostStatus],
+) -> List[PostPublication]:
+    stmt = select(PostPublication).where(
+        PostPublication.account_persona_id == account_persona_id,
+        PostPublication.platform.in_(platform),
+        PostPublication.status.in_(status)
+    )
+    return (await db.execute(stmt)).scalars().all()
+
+
+async def list_post_publications_enriched(
+    db: AsyncSession,
+    *,
+    account_persona_id: int,
+    platform: Optional[List[PlatformKind]] = None,
+    status: Optional[List[PostStatus]] = None,
+    variant_id: Optional[int] = None,
+) -> List[PostPublication]:
+    """Enriched post publications with variant and draft information."""
+    stmt = (
+        select(PostPublication)
+        .join(DraftVariant, PostPublication.variant_id == DraftVariant.id)
+        .join(Draft, DraftVariant.draft_id == Draft.id)
+        .where(PostPublication.account_persona_id == account_persona_id)
+        .options(selectinload(PostPublication.variant).selectinload(DraftVariant.draft))
+    )
+
+    if platform is not None:
+        stmt = stmt.where(PostPublication.platform.in_(platform))
+    if status is not None:
+        stmt = stmt.where(PostPublication.status.in_(status))
+    if variant_id is not None:
+        stmt = stmt.where(PostPublication.variant_id == variant_id)
+
+    stmt = stmt.order_by(PostPublication.created_at.desc())
     return (await db.execute(stmt)).scalars().all()

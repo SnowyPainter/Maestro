@@ -518,6 +518,79 @@ export const bffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsSt
 
 
 /**
+ * List all post publications for specific platform and status combination
+ * @summary List Post Publications by Platform and Status
+ */
+export const bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostBody = zod.object({
+  "account_persona_id": zod.number(),
+  "platform": zod.array(zod.enum(['instagram', 'threads'])),
+  "status": zod.array(zod.enum(['pending', 'scheduled', 'published', 'deleted', 'failed', 'cancelled', 'monitoring']))
+})
+
+export const bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostResponseItem = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+export const bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostResponse = zod.array(bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostResponseItem)
+
+
+/**
+ * List post publications with enriched information including variant and draft details
+ * @summary List Enriched Post Publications
+ */
+export const bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostBody = zod.object({
+  "account_persona_id": zod.number(),
+  "platform": zod.union([zod.array(zod.enum(['instagram', 'threads'])),zod.null()]).optional(),
+  "status": zod.union([zod.array(zod.enum(['pending', 'scheduled', 'published', 'deleted', 'failed', 'cancelled', 'monitoring'])),zod.null()]).optional(),
+  "variant_id": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostResponseItem = zod.object({
+  "id": zod.number(),
+  "variant_id": zod.number(),
+  "account_persona_id": zod.number(),
+  "platform": zod.string(),
+  "external_id": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "status": zod.string(),
+  "scheduled_at": zod.iso.datetime({}).nullish(),
+  "published_at": zod.iso.datetime({}).nullish(),
+  "deleted_at": zod.iso.datetime({}).nullish(),
+  "monitoring_started_at": zod.iso.datetime({}).nullish(),
+  "monitoring_ended_at": zod.iso.datetime({}).nullish(),
+  "last_polled_at": zod.iso.datetime({}).nullish(),
+  "errors": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "warnings": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({}),
+  "variant_content": zod.string().nullish(),
+  "variant_platform": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "tags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "goal": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional()
+}).describe('Enriched post publication with variant and draft information.')
+export const bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostResponse = zod.array(bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostResponseItem)
+
+
+/**
  * List all variants of a draft for a specific platform
  * @summary List Draft Variants by Platform
  */

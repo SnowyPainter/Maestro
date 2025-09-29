@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DraftPostScheduleRequest, useBffDraftsListDraftsApiBffDraftsGet, useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet, DraftVariantRender, useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Instagram, Twitter, Facebook, Linkedin, Newspaper, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Instagram, Twitter, Facebook, Linkedin, Newspaper, CheckCircle2, ChevronLeft, ChevronRight, Clock, FileText, Eye, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const platformIcons: { [key: string]: React.ReactNode } = {
@@ -61,8 +64,9 @@ function PlatformSpecificPreview({ variant }: { variant: DraftVariantRender }) {
 }
 
 export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds: number[]) => void }) {
+    const [currentStep, setCurrentStep] = useState(1);
     const [draftId, setDraftId] = useState<number | null>(null);
-    const [variantId, setVariantId] = useState<number | null>(null);
+    const [selectedVariant, setSelectedVariant] = useState<DraftVariantRender | null>(null);
     const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
     const [time, setTime] = useState("");
     const { personaAccountId } = usePersonaContextStore();
@@ -72,28 +76,26 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
         query: { enabled: !!draftId }
     });
 
-    useEffect(() => {
-        if (variants && variants.length > 0) {
-            setVariantId(variants[currentVariantIndex]?.variant_id ?? null);
-        } else {
-            setVariantId(null);
-        }
-    }, [currentVariantIndex, variants]);
-
-    const handlePrevVariant = () => {
-        if (!variants) return;
-        setCurrentVariantIndex(prev => (prev === 0 ? variants.length - 1 : prev - 1));
-    };
-
-    const handleNextVariant = () => {
-        if (!variants) return;
-        setCurrentVariantIndex(prev => (prev === variants.length - 1 ? 0 : prev + 1));
-    };
-
     const createScheduleMutation = useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost();
 
+    const handleDraftSelect = (id: number) => {
+        setDraftId(id);
+        setSelectedVariant(null);
+        setCurrentVariantIndex(0);
+        setCurrentStep(2);
+    };
+
+    const handleVariantSelect = (variant: DraftVariantRender) => {
+        setSelectedVariant(variant);
+        setCurrentStep(3);
+    };
+
+    const handleTimeSelect = () => {
+        setCurrentStep(4);
+    };
+
     const handleSchedule = async () => {
-        if (!draftId || !variantId || !personaAccountId || !time) {
+        if (!selectedVariant || !personaAccountId || !time) {
             toast.error("Please complete all steps: select a draft, a variant, and a time.");
             return;
         }
@@ -101,7 +103,7 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
         const runAt = new Date(time).toISOString();
 
         const payload: DraftPostScheduleRequest = {
-            variant_id: variantId,
+            variant_id: selectedVariant.variant_id,
             persona_account_id: personaAccountId,
             run_at: runAt,
         };
@@ -118,97 +120,296 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
 
     const isPending = createScheduleMutation.isPending;
     const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    
-    const currentVariant = variants?.[currentVariantIndex];
+
+    const progressValue = (currentStep / 4) * 100;
+    const selectedDraft = drafts?.find(d => d.id === draftId);
 
     return (
-        <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-2xl">
-            <CardHeader>
-                <CardTitle>Schedule a New Post</CardTitle>
-                <CardDescription>Follow the steps to select a draft, choose a platform variant, and set the publication time.</CardDescription>
+        <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-5xl mx-auto">
+            <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-2xl">Schedule a New Post</CardTitle>
+                        <CardDescription className="text-base mt-1">
+                            Create and schedule content across multiple platforms
+                        </CardDescription>
+                    </div>
+                    <Badge variant="outline" className="text-sm">
+                        Step {currentStep} of 4
+                    </Badge>
+                </div>
+                <Progress value={progressValue} className="mt-4" />
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
-                {/* Step 1: Draft Selection */}
-                <div className="space-y-3">
-                    <Label htmlFor="draft-select" className="text-base font-semibold">Step 1: Select a Draft</Label>
-                    <ScrollArea className="h-40 w-full rounded-md border">
-                        <div className="p-2 space-y-1">
-                            {isLoadingDrafts && <p className="p-4 text-center text-sm text-muted-foreground">Loading drafts...</p>}
+
+            <CardContent className="p-6">
+                {currentStep === 1 && (
+                    /* Step 1: Draft Selection */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <FileText className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Choose a Draft</Label>
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                            {isLoadingDrafts && (
+                                <div className="col-span-full p-8 text-center text-muted-foreground">
+                                    <div className="animate-pulse">Loading drafts...</div>
+                                </div>
+                            )}
+
                             {drafts?.map(draft => (
-                                <button
+                                <Card
                                     key={draft.id}
                                     className={cn(
-                                        "w-full text-left p-2 rounded-md transition-colors flex items-center justify-between",
-                                        draftId === draft.id ? "bg-secondary text-secondary-foreground" : "hover:bg-muted/50"
+                                        "cursor-pointer transition-all hover:shadow-md",
+                                        draftId === draft.id
+                                            ? "ring-2 ring-primary bg-primary/5"
+                                            : "hover:bg-muted/50"
                                     )}
-                                    onClick={() => { setDraftId(draft.id); setCurrentVariantIndex(0); }}
+                                    onClick={() => handleDraftSelect(draft.id)}
                                 >
-                                    <span>{draft.title || `Draft #${draft.id}`}</span>
-                                    {draftId === draft.id && <CheckCircle2 className="h-5 w-5 text-primary" />}
-                                </button>
+                                    <CardContent className="p-4">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-sm mb-1">
+                                                    {draft.title || `Draft #${draft.id}`}
+                                                </h3>
+                                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                                    {draft.goal || "No goal specified"}
+                                                </p>
+                                            </div>
+                                            {draftId === draft.id && (
+                                                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 ml-2" />
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             ))}
                         </div>
-                    </ScrollArea>
-                </div>
+                    </div>
+                )}
 
-                {/* Step 2: Variant Selection Stepper */}
-                {draftId && (
-                    <div className="space-y-3">
-                        <Label className="text-base font-semibold">Step 2: Choose a Variant</Label>
-                        {isLoadingVariants && <p className="p-4 text-center text-sm text-muted-foreground">Loading variants...</p>}
-                        {variants && variants.length > 0 && currentVariant && (
-                             <div className="space-y-3">
-                                <div className="flex items-center justify-center space-x-2">
-                                    <Button variant="outline" size="icon" onClick={handlePrevVariant} disabled={variants.length <= 1}>
-                                        <ChevronLeft className="h-5 w-5" />
+                {currentStep === 2 && draftId && (
+                    /* Step 2: Variant Selection */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <Eye className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Select Platform Variant</Label>
+                        </div>
+
+                        {isLoadingVariants && (
+                            <div className="p-8 text-center text-muted-foreground">
+                                <div className="animate-pulse">Loading variants...</div>
+                            </div>
+                        )}
+
+                        {variants && variants.length > 0 && (
+                            <div className="space-y-4">
+                                {/* Current variant preview - larger and more prominent */}
+                                <div className="flex justify-center">
+                                    <div className="w-full max-w-md">
+                                        <PlatformSpecificPreview variant={variants[currentVariantIndex]} />
+                                    </div>
+                                </div>
+
+                                {/* Variant selector buttons */}
+                                <div className="flex items-center justify-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentVariantIndex(prev =>
+                                            prev === 0 ? variants.length - 1 : prev - 1
+                                        )}
+                                        disabled={variants.length <= 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
                                     </Button>
 
-                                    <div className="w-full max-w-sm">
-                                        <PlatformSpecificPreview variant={currentVariant} />
+                                    <div className="flex items-center gap-2 min-w-32 justify-center">
+                                        {variants.map((variant, index) => (
+                                            <button
+                                                key={variant.variant_id}
+                                                className={cn(
+                                                    "w-2 h-2 rounded-full transition-colors",
+                                                    index === currentVariantIndex
+                                                        ? "bg-primary"
+                                                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                                                )}
+                                                onClick={() => setCurrentVariantIndex(index)}
+                                            />
+                                        ))}
                                     </div>
 
-                                    <Button variant="outline" size="icon" onClick={handleNextVariant} disabled={variants.length <= 1}>
-                                        <ChevronRight className="h-5 w-5" />
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentVariantIndex(prev =>
+                                            prev === variants.length - 1 ? 0 : prev + 1
+                                        )}
+                                        disabled={variants.length <= 1}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
                                     </Button>
                                 </div>
+
                                 <div className="text-center text-sm text-muted-foreground">
-                                    {`Variant ${currentVariantIndex + 1} of ${variants.length}`}
+                                    {variants[currentVariantIndex].platform} • Variant {currentVariantIndex + 1} of {variants.length}
+                                </div>
+
+                                <div className="flex justify-center">
+                                    <Button
+                                        onClick={() => handleVariantSelect(variants[currentVariantIndex])}
+                                        className="w-full max-w-sm"
+                                    >
+                                        Select This Variant
+                                    </Button>
                                 </div>
                             </div>
                         )}
-                         {variants && variants.length === 0 && !isLoadingVariants && (
-                            <div className="p-4 text-center text-sm text-muted-foreground bg-muted/50 rounded-md">
+
+                        {variants && variants.length === 0 && !isLoadingVariants && (
+                            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
                                 No variants found for this draft.
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* Step 3: Time Selection */}
-                {variantId && (
-                    <div className="space-y-3">
-                        <Label htmlFor="schedule-time" className="text-base font-semibold">
-                            Step 3: Set Schedule Time
-                            <span className="ml-2 text-xs font-normal text-muted-foreground">({timezoneName})</span>
-                        </Label>
-                        <Input
-                            id="schedule-time"
-                            type="datetime-local"
-                            value={time}
-                            onChange={e => setTime(e.target.value)}
-                            disabled={!personaAccountId}
-                            className="max-w-sm"
-                        />
+                {currentStep === 3 && selectedVariant && (
+                    /* Step 3: Time Selection */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <Calendar className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Schedule Time</Label>
+                        </div>
+
+                        <div className="max-w-md mx-auto">
+                            <Card>
+                                <CardContent className="p-6 space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="schedule-time" className="text-sm font-medium">
+                                            Publication Time
+                                        </Label>
+                                        <Input
+                                            id="schedule-time"
+                                            type="datetime-local"
+                                            value={time}
+                                            onChange={e => setTime(e.target.value)}
+                                            disabled={!personaAccountId}
+                                            className="text-base"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Timezone: {timezoneName}
+                                        </p>
+                                    </div>
+
+                                    <Button
+                                        onClick={handleTimeSelect}
+                                        disabled={!time || !personaAccountId}
+                                        className="w-full"
+                                    >
+                                        <Clock className="h-4 w-4 mr-2" />
+                                        Set Time & Continue
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 )}
 
-                {!personaAccountId && <p className="text-sm text-destructive text-center pt-2">A persona must be active to schedule a post.</p>}
+                {currentStep === 4 && time && selectedVariant && (
+                    /* Step 4: Confirmation */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Confirm & Schedule</Label>
+                        </div>
 
+                        <Card className="bg-muted/20">
+                            <CardContent className="p-6">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h3 className="font-semibold mb-2">Draft Details</h3>
+                                            <div className="text-sm text-muted-foreground space-y-1">
+                                                <p><strong>Title:</strong> {selectedDraft?.title || `Draft #${selectedDraft?.id}`}</p>
+                                                <p><strong>Platform:</strong> {selectedVariant.platform}</p>
+                                                <p><strong>Time:</strong> {new Date(time).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="font-semibold mb-2">Preview</h3>
+                                            <div className="max-w-sm">
+                                                <PlatformSpecificPreview variant={selectedVariant} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {!personaAccountId && (
+                    <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+                        <p className="text-sm text-destructive font-medium">
+                            A persona must be active to schedule a post.
+                        </p>
+                    </div>
+                )}
             </CardContent>
-            <CardFooter className="p-6 border-t flex justify-end">
-                <Button onClick={handleSchedule} disabled={isPending || !draftId || !variantId || !time || !personaAccountId}>
-                    {isPending ? "Scheduling..." : "Schedule Post"}
-                </Button>
+
+            <CardFooter className="p-6 border-t bg-muted/20 flex justify-between">
+                <div className="flex gap-2">
+                    {currentStep > 1 && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setCurrentStep(prev => prev - 1)}
+                            disabled={isPending}
+                        >
+                            Previous
+                        </Button>
+                    )}
+                </div>
+
+                <div className="flex gap-2">
+                    {currentStep === 2 && variants && variants.length > 0 && (
+                        <Button
+                            onClick={() => handleVariantSelect(variants[currentVariantIndex])}
+                            disabled={isPending}
+                        >
+                            Select This Variant
+                        </Button>
+                    )}
+
+                    {currentStep === 3 && (
+                        <Button
+                            onClick={handleTimeSelect}
+                            disabled={isPending || !time || !personaAccountId}
+                        >
+                            Set Time & Continue
+                        </Button>
+                    )}
+
+                    {currentStep === 4 && (
+                        <Button
+                            onClick={handleSchedule}
+                            disabled={isPending || !time || !selectedVariant || !personaAccountId}
+                            className="min-w-32"
+                        >
+                            {isPending ? "Scheduling..." : "Schedule Post"}
+                        </Button>
+                    )}
+                </div>
             </CardFooter>
         </Card>
     );

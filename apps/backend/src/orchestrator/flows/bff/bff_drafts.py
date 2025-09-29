@@ -17,7 +17,7 @@ from apps.backend.src.modules.adapters.core.types import (
 )
 from apps.backend.src.modules.common.enums import PlatformKind, PostStatus
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant
-from apps.backend.src.modules.drafts.schemas import DraftOut, PostPublicationOut
+from apps.backend.src.modules.drafts.schemas import DraftOut, PostPublicationOut, EnrichedPostPublicationOut
 from apps.backend.src.modules.drafts.service import (
     get_draft_for_user,
     get_draft_variant,
@@ -27,6 +27,8 @@ from apps.backend.src.modules.drafts.service import (
     list_post_publications_by_platform,
     list_post_publications_by_status,
     list_post_publications_by_account_persona,
+    list_post_publications_by_platform_and_status,
+    list_post_publications_enriched,
 )
 from apps.backend.src.modules.users.models import User
 
@@ -74,7 +76,20 @@ class DraftPostPublicationsByPlatformPayload(DraftPostPublicationsPayload):
 class DraftPostPublicationsByStatusPayload(DraftPostPublicationsPayload):
     status: List[PostStatus]
 
+class DraftPostPublicationsByPlatformAndStatusPayload(DraftPostPublicationsPayload):
+    platform: List[PlatformKind]
+    status: List[PostStatus]
+
+class DraftPostPublicationsEnrichedPayload(DraftPostPublicationsPayload):
+    platform: Optional[List[PlatformKind]] = None
+    status: Optional[List[PostStatus]] = None
+    variant_id: Optional[int] = None
+
 class DraftPostPublicationsList(RootModel[list[PostPublicationOut]]):
+    pass
+
+
+class DraftEnrichedPostPublicationsList(RootModel[list[EnrichedPostPublicationOut]]):
     pass
 
 
@@ -373,6 +388,65 @@ async def op_list_post_publications_by_status(
     )
     return DraftPostPublicationsList(root=[PostPublicationOut.model_validate(publication) for publication in publications])
 
+
+@operator(
+    key="bff.drafts.list_post_publications_by_platform_and_status",
+    title="BFF List Post Publications by Platform and Status",
+    side_effect="read",
+)
+async def op_list_post_publications_by_platform_and_status(
+    payload: DraftPostPublicationsByPlatformAndStatusPayload,
+    ctx: TaskContext,
+) -> DraftPostPublicationsList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    publications = await list_post_publications_by_platform_and_status(
+        db,
+        account_persona_id=payload.account_persona_id,
+        platform=payload.platform,
+        status=payload.status,
+    )
+    return DraftPostPublicationsList(root=[PostPublicationOut.model_validate(publication) for publication in publications])
+
+
+@operator(
+    key="bff.drafts.list_post_publications_enriched",
+    title="BFF List Enriched Post Publications",
+    side_effect="read",
+)
+async def op_list_post_publications_enriched(
+    payload: DraftPostPublicationsEnrichedPayload,
+    ctx: TaskContext,
+) -> DraftEnrichedPostPublicationsList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    publications = await list_post_publications_enriched(
+        db,
+        account_persona_id=payload.account_persona_id,
+        platform=payload.platform,
+        status=payload.status,
+        variant_id=payload.variant_id,
+    )
+
+    enriched_publications = []
+    for publication in publications:
+        enriched_pub = EnrichedPostPublicationOut.model_validate(publication)
+
+        # Add variant information
+        if publication.variant:
+            enriched_pub.variant_content = publication.variant.rendered_caption
+            enriched_pub.variant_platform = publication.variant.platform.value
+
+        # Add draft information
+        if publication.variant and publication.variant.draft:
+            enriched_pub.title = publication.variant.draft.title
+            enriched_pub.tags = publication.variant.draft.tags
+            enriched_pub.goal = publication.variant.draft.goal
+
+        enriched_publications.append(enriched_pub)
+
+    return DraftEnrichedPostPublicationsList(root=enriched_publications)
+
 """
 Payload 중 query string으로 불가한 것은 bff에서 불가피하게 post 요청
 """
@@ -417,6 +491,36 @@ def _flow_bff_list_post_publications_by_platform(builder: FlowBuilder):
 )
 def _flow_bff_list_post_publications_by_status(builder: FlowBuilder):
     task = builder.task("list_post_publications_by_status", "bff.drafts.list_post_publications_by_status")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.drafts.list_post_publications_by_platform_and_status",
+    title="List Post Publications by Platform and Status",
+    description="List all post publications for specific platform and status combination",
+    input_model=DraftPostPublicationsByPlatformAndStatusPayload,
+    output_model=DraftPostPublicationsList,
+    method="post",
+    path="/drafts/post-publications/platform-and-status",
+    tags=("bff", "drafts", "content", "post-publications", "list", "by platform and status"),
+)
+def _flow_bff_list_post_publications_by_platform_and_status(builder: FlowBuilder):
+    task = builder.task("list_post_publications_by_platform_and_status", "bff.drafts.list_post_publications_by_platform_and_status")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.drafts.list_post_publications_enriched",
+    title="List Enriched Post Publications",
+    description="List post publications with enriched information including variant and draft details",
+    input_model=DraftPostPublicationsEnrichedPayload,
+    output_model=DraftEnrichedPostPublicationsList,
+    method="post",
+    path="/drafts/post-publications/enriched",
+    tags=("bff", "drafts", "content", "post-publications", "list", "enriched"),
+)
+def _flow_bff_list_post_publications_enriched(builder: FlowBuilder):
+    task = builder.task("list_post_publications_enriched", "bff.drafts.list_post_publications_enriched")
     builder.expect_terminal(task)
 
 

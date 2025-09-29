@@ -673,6 +673,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/post-publications/platform-and-status:
+    post:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - post-publications
+      - list
+      - by platform and status
+      summary: List Post Publications by Platform and Status
+      description: List all post publications for specific platform and status combination
+      operationId: bff_drafts_list_post_publications_by_platform_and_status_api_bff_drafts_post_publications_platform_and_status_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftPostPublicationsByPlatformAndStatusPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftPostPublicationsList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/drafts/post-publications/enriched:
+    post:
+      tags:
+      - bff
+      - bff
+      - drafts
+      - content
+      - post-publications
+      - list
+      - enriched
+      summary: List Enriched Post Publications
+      description: List post publications with enriched information including variant
+        and draft details
+      operationId: bff_drafts_list_post_publications_enriched_api_bff_drafts_post_publications_enriched_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftPostPublicationsEnrichedPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftEnrichedPostPublicationsList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/drafts/platform/{platform}:
     get:
       tags:
@@ -3238,6 +3303,11 @@ components:
       - start
       - end
       title: DateRange
+    DraftEnrichedPostPublicationsList:
+      items:
+        $ref: '#/components/schemas/EnrichedPostPublicationOut'
+      type: array
+      title: DraftEnrichedPostPublicationsList
     DraftIR:
       properties:
         blocks:
@@ -3334,6 +3404,27 @@ components:
       - created_at
       - updated_at
       title: DraftOut
+    DraftPostPublicationsByPlatformAndStatusPayload:
+      properties:
+        account_persona_id:
+          type: integer
+          title: Account Persona Id
+        platform:
+          items:
+            $ref: '#/components/schemas/PlatformKind'
+          type: array
+          title: Platform
+        status:
+          items:
+            $ref: '#/components/schemas/PostStatus'
+          type: array
+          title: Status
+      type: object
+      required:
+      - account_persona_id
+      - platform
+      - status
+      title: DraftPostPublicationsByPlatformAndStatusPayload
     DraftPostPublicationsByPlatformPayload:
       properties:
         account_persona_id:
@@ -3377,6 +3468,34 @@ components:
       - account_persona_id
       - variant_id
       title: DraftPostPublicationsByVariantPayload
+    DraftPostPublicationsEnrichedPayload:
+      properties:
+        account_persona_id:
+          type: integer
+          title: Account Persona Id
+        platform:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PlatformKind'
+            type: array
+          - type: 'null'
+          title: Platform
+        status:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PostStatus'
+            type: array
+          - type: 'null'
+          title: Status
+        variant_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Variant Id
+      type: object
+      required:
+      - account_persona_id
+      title: DraftPostPublicationsEnrichedPayload
     DraftPostPublicationsList:
       items:
         $ref: '#/components/schemas/PostPublicationOut'
@@ -3620,6 +3739,128 @@ components:
         $ref: '#/components/schemas/DraftVariantRender'
       type: array
       title: DraftVariantRenderList
+    EnrichedPostPublicationOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        variant_id:
+          type: integer
+          title: Variant Id
+        account_persona_id:
+          type: integer
+          title: Account Persona Id
+        platform:
+          type: string
+          title: Platform
+        external_id:
+          title: External Id
+          type: string
+          nullable: true
+        permalink:
+          title: Permalink
+          type: string
+          nullable: true
+        status:
+          type: string
+          title: Status
+        scheduled_at:
+          title: Scheduled At
+          format: date-time
+          type: string
+          nullable: true
+        published_at:
+          title: Published At
+          format: date-time
+          type: string
+          nullable: true
+        deleted_at:
+          title: Deleted At
+          format: date-time
+          type: string
+          nullable: true
+        monitoring_started_at:
+          title: Monitoring Started At
+          format: date-time
+          type: string
+          nullable: true
+        monitoring_ended_at:
+          title: Monitoring Ended At
+          format: date-time
+          type: string
+          nullable: true
+        last_polled_at:
+          title: Last Polled At
+          format: date-time
+          type: string
+          nullable: true
+        errors:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Errors
+        warnings:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Warnings
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        variant_content:
+          title: Variant Content
+          type: string
+          nullable: true
+        variant_platform:
+          title: Variant Platform
+          type: string
+          nullable: true
+        title:
+          title: Title
+          type: string
+          nullable: true
+        tags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Tags
+        goal:
+          title: Goal
+          type: string
+          nullable: true
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      type: object
+      required:
+      - id
+      - variant_id
+      - account_persona_id
+      - platform
+      - status
+      - created_at
+      - updated_at
+      title: EnrichedPostPublicationOut
+      description: Enriched post publication with variant and draft information.
     FlowInfo:
       properties:
         key:

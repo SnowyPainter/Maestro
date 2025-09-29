@@ -252,9 +252,9 @@ spec = builder.build()
 ## 12. 배치 메일 스케줄 구조
 
 ### 12.1 파일 레이아웃
-- `apps/backend/src/modules/scheduler/schemas.py`: 배치 입력(`MailScheduleBatchRequest`), 제약(`MailScheduleConstraints`), 결과 슬라이스(`MailSchedulePlanInstance`)를 정의한다.
-- `apps/backend/src/modules/scheduler/planner.py`: 배치 요청을 UTC 실행 타임라인으로 확장한다. 주중 필터, 제외 일자, 세그먼트 분포, 블랙아웃 검증을 한 곳에 모았다.
-- `apps/backend/src/orchestrator/flows/action/schedule.py`: 퍼블릭 액션 플로우. 배치 플래너를 호출해 `Schedule` 레코드를 만들고, 템플릿 컴파일 결과를 queue에 맞게 저장한다.
+- `apps/backend/src/modules/scheduler/schemas.py`: 배치 입력(`ScheduleBatchRequest`), 제약(`ScheduleConstraints`), 결과 슬라이스(`SchedulePlanInstance`)를 정의한다. 공용 타입을 도입하여 메일, Sync Metrics 등 모든 배치 스케줄에 재사용 가능하도록 개선되었다.
+- `apps/backend/src/modules/scheduler/planner.py`: 배치 요청을 UTC 실행 타임라인으로 확장한다. `plan_schedule_instances` 함수로 범용화되어 주중 필터, 제외 일자, 세그먼트 분포, 블랙아웃 검증을 모든 배치 유형에 적용할 수 있다.
+- `apps/backend/src/orchestrator/flows/action/schedule.py`: 퍼블릭 액션 플로우. 공용 플래너 오퍼레이터(`op_plan_schedule_batch`)를 통해 배치 플래너를 호출하고, 템플릿 컴파일 결과를 queue에 맞게 저장한다. 메일과 Sync Metrics 스케줄 생성 로직의 중복을 제거했다.
 
 ### 12.2 실행 흐름
 1. 클라이언트가 `MailScheduleBatchRequest`를 `/actions/schedules/create/trends_mail`에 전송하면 액션 플로우가 템플릿 컴파일(`ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY`)을 수행한다.
@@ -266,8 +266,25 @@ spec = builder.build()
 - **Registry (`apps/backend/src/modules/scheduler/registry.py`)**는 템플릿-레벨 로직만 담는다. 즉, 어떤 internal flow 조합이 어느 순서로 실행돼야 하는지 정의한다. 여기서는 `internal.mail.compose_trends_email`, `internal.mail.await_reply` 등 내부 플로우만 사용한다. 이유는 *도메인 의존성의 단방향성* 때문이다. 템플릿은 재사용 가능한 빌딩 블록이어야 하므로 HTTP 액션/권한/사용자 컨텍스트에 묶이지 않도록 internal flow만 참조한다.
 - **액션 플로우 (`apps/backend/src/orchestrator/flows/action/schedule.py`)**는 템플릿을 노출하는 HTTP 엔드포인트 역할을 한다. Registry에서 컴파일한 DAG을 실제 `Schedule` 레코드로 영속화하고, 사용자/큐/시간대 같은 외부 파라미터를 메타데이터에 주입한다. 덕분에 템플릿은 재사용되고, 퍼블릭 API는 추가 검증과 컨텍스트 주입을 담당한다.
 
-### 12.4 시행착오 기록
+### 12.4 Sync Metrics 스케줄 지원
+공용 타입과 플래너를 활용하여 Sync Metrics 스케줄 기능을 추가했다:
+
+- **새로운 템플릿**: `ScheduleTemplateKey.INSIGHTS_SYNC_METRICS` 추가
+- **동일한 아키텍처**: 메일 스케줄과 동일한 배치 처리 방식 적용
+- **새로운 엔드포인트**: `/actions/schedules/sync_metrics/create` 추가
+- **큐 분리**: Sync Metrics는 `insights` 큐를 사용하여 메일과 분리된 처리
+
+### 12.5 RAW DAG 배치 처리 개선
+`ScheduleCreateFromRawDagRequest`를 활용한 배치 인스턴스 처리 기능을 개선했다:
+
+- **RawDagScheduleInstance**: DAG 사양과 실행 시각, 큐, 메타데이터를 묶은 구조
+- **배치 생성**: `repeats`와 `repeat_interval_minutes`를 활용한 다중 스케줄 생성
+- **메타데이터 병합**: 인스턴스별 메타데이터와 글로벌 메타데이터의 자동 병합
+- **유연한 큐 지정**: 인스턴스별 큐 오버라이드 지원
+
+### 12.6 시행착오 기록
 - **초기 구현**: 배치 계산을 액션 플로우 안에 직접 작성했지만, 파일이 비대해지고 도메인 계층에서 재사용할 수 없었다. 또한 테스트가 어려워 플래너 로직을 scheduler 도메인으로 옮기게 되었다.
 - **예외 전파**: 처음에는 플래너에서 `HTTPException`을 바로 던졌지만, FastAPI에 종속되면서 도메인 계층이 무거워졌다. 현재는 `ValueError`만 발생시키고, 액션 계층에서 HTTP 에러로 매핑한다.
 - **시간대 처리**: ZoneInfo 생성을 액션 플로우에 두었더니 동일한 검증을 여러 곳에서 반복해야 했다. 플래너가 직접 시간대를 파싱하고 메시지를 표준화하면서 로직이 단일화되었다.
 - **분포 모드**: `even`/`fixed`만 지원한다는 사실을 누락해 잘못된 입력이 그대로 통과되었다. 지원하지 않는 모드를 플래너가 명시적으로 거부하도록 추가했다. 추후 `weighted`/`jittered`를 확장할 때는 이 부분만 확장하면 된다.
+- **타입 중복**: 메일 전용 타입(`MailScheduleConstraints` 등)이 범용적으로 사용될 수 있었음에도 불구하고 중복 정의되어 있었다. 공용 타입으로 통합하여 코드 중복을 제거하고, 새로운 스케줄 유형 추가를 쉽게 만들었다.

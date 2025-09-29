@@ -337,6 +337,8 @@ export interface DateRange {
   end: string;
 }
 
+export type DraftEnrichedPostPublicationsList = EnrichedPostPublicationOut[];
+
 export type DraftIRBlocksItem = BlockText | BlockImage | BlockVideo;
 
 export type DraftIROptions = { [key: string]: unknown };
@@ -375,6 +377,12 @@ export interface DraftOut {
   updated_at: string;
 }
 
+export interface DraftPostPublicationsByPlatformAndStatusPayload {
+  account_persona_id: number;
+  platform: PlatformKind[];
+  status: PostStatus[];
+}
+
 export interface DraftPostPublicationsByPlatformPayload {
   account_persona_id: number;
   platform: PlatformKind[];
@@ -388,6 +396,19 @@ export interface DraftPostPublicationsByStatusPayload {
 export interface DraftPostPublicationsByVariantPayload {
   account_persona_id: number;
   variant_id: number;
+}
+
+export type DraftPostPublicationsEnrichedPayloadPlatform = PlatformKind[] | null;
+
+export type DraftPostPublicationsEnrichedPayloadStatus = PostStatus[] | null;
+
+export type DraftPostPublicationsEnrichedPayloadVariantId = number | null;
+
+export interface DraftPostPublicationsEnrichedPayload {
+  account_persona_id: number;
+  platform?: DraftPostPublicationsEnrichedPayloadPlatform;
+  status?: DraftPostPublicationsEnrichedPayloadStatus;
+  variant_id?: DraftPostPublicationsEnrichedPayloadVariantId;
 }
 
 export type DraftPostPublicationsList = PostPublicationOut[];
@@ -502,6 +523,60 @@ export interface DraftVariantRenderDetail {
 }
 
 export type DraftVariantRenderList = DraftVariantRender[];
+
+export type EnrichedPostPublicationOutErrors = string[] | null;
+
+export type EnrichedPostPublicationOutWarnings = string[] | null;
+
+export type EnrichedPostPublicationOutMetaAnyOf = { [key: string]: unknown };
+
+export type EnrichedPostPublicationOutMeta = EnrichedPostPublicationOutMetaAnyOf | null;
+
+export type EnrichedPostPublicationOutTags = string[] | null;
+
+export type EnrichedPostPublicationOutCampaignId = number | null;
+
+/**
+ * Enriched post publication with variant and draft information.
+ */
+export interface EnrichedPostPublicationOut {
+  id: number;
+  variant_id: number;
+  account_persona_id: number;
+  platform: string;
+  /** @nullable */
+  external_id?: string | null;
+  /** @nullable */
+  permalink?: string | null;
+  status: string;
+  /** @nullable */
+  scheduled_at?: string | null;
+  /** @nullable */
+  published_at?: string | null;
+  /** @nullable */
+  deleted_at?: string | null;
+  /** @nullable */
+  monitoring_started_at?: string | null;
+  /** @nullable */
+  monitoring_ended_at?: string | null;
+  /** @nullable */
+  last_polled_at?: string | null;
+  errors?: EnrichedPostPublicationOutErrors;
+  warnings?: EnrichedPostPublicationOutWarnings;
+  meta?: EnrichedPostPublicationOutMeta;
+  created_at: string;
+  updated_at: string;
+  /** @nullable */
+  variant_content?: string | null;
+  /** @nullable */
+  variant_platform?: string | null;
+  /** @nullable */
+  title?: string | null;
+  tags?: EnrichedPostPublicationOutTags;
+  /** @nullable */
+  goal?: string | null;
+  campaign_id?: EnrichedPostPublicationOutCampaignId;
+}
 
 export interface FlowInfo {
   key: string;
@@ -3382,6 +3457,138 @@ export const useBffDraftsListPostPublicationsByStatusApiBffDraftsPostPublication
       > => {
 
       const mutationOptions = getBffDraftsListPostPublicationsByStatusApiBffDraftsPostPublicationsStatusPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * List all post publications for specific platform and status combination
+ * @summary List Post Publications by Platform and Status
+ */
+export const bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost = (
+    draftPostPublicationsByPlatformAndStatusPayload: DraftPostPublicationsByPlatformAndStatusPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftPostPublicationsList>(
+      {url: `/api/bff/drafts/post-publications/platform-and-status`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: draftPostPublicationsByPlatformAndStatusPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost>>, TError,{data: DraftPostPublicationsByPlatformAndStatusPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost>>, TError,{data: DraftPostPublicationsByPlatformAndStatusPayload}, TContext> => {
+
+const mutationKey = ['bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost>>, {data: DraftPostPublicationsByPlatformAndStatusPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost>>>
+    export type BffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostMutationBody = DraftPostPublicationsByPlatformAndStatusPayload
+    export type BffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostMutationError = HTTPValidationError
+
+    /**
+ * @summary List Post Publications by Platform and Status
+ */
+export const useBffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost>>, TError,{data: DraftPostPublicationsByPlatformAndStatusPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPost>>,
+        TError,
+        {data: DraftPostPublicationsByPlatformAndStatusPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffDraftsListPostPublicationsByPlatformAndStatusApiBffDraftsPostPublicationsPlatformAndStatusPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * List post publications with enriched information including variant and draft details
+ * @summary List Enriched Post Publications
+ */
+export const bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost = (
+    draftPostPublicationsEnrichedPayload: DraftPostPublicationsEnrichedPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DraftEnrichedPostPublicationsList>(
+      {url: `/api/bff/drafts/post-publications/enriched`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: draftPostPublicationsEnrichedPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost>>, TError,{data: DraftPostPublicationsEnrichedPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost>>, TError,{data: DraftPostPublicationsEnrichedPayload}, TContext> => {
+
+const mutationKey = ['bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost>>, {data: DraftPostPublicationsEnrichedPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost>>>
+    export type BffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostMutationBody = DraftPostPublicationsEnrichedPayload
+    export type BffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostMutationError = HTTPValidationError
+
+    /**
+ * @summary List Enriched Post Publications
+ */
+export const useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost>>, TError,{data: DraftPostPublicationsEnrichedPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost>>,
+        TError,
+        {data: DraftPostPublicationsEnrichedPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

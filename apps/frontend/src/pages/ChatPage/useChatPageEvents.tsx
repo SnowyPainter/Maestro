@@ -38,10 +38,11 @@ import { CoworkerToolCard } from "@/features/coworkers/components/CoworkerToolCa
 import { ScheduleToolCard } from "@/features/schedules/components/ScheduleToolCard";
 import { CreateRawScheduleForm } from "@/features/schedules/components/CreateRawScheduleForm";
 import { CreatePostScheduleForm } from "@/features/schedules/components/CreatePostScheduleForm";
-import { CreateBatchTrendsMailScheduleForm } from "@/features/schedules/components/CreateBatchTrendsMailScheduleForm";
+import { CreateTrendsMailScheduleForm } from "@/features/schedules/components/CreateTrendsMailScheduleForm";
 import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
 import { EditCoworkerForm } from "@/features/coworkers/components/EditCoworkerForm";
 import { CancelScheduleForm } from "@/features/schedules/components/CancelScheduleForm";
+import { CreateSyncMetricsScheduleForm } from "@/features/schedules/components/CreateSyncMetricsScheduleForm";
 
 const DEFAULT_ERROR_MESSAGE = '채팅 처리 중 오류가 발생했습니다.';
 
@@ -418,7 +419,21 @@ export function useChatPageEvents() {
       id: messageId,
       type: 'card',
       content: (
-        <CreateBatchTrendsMailScheduleForm
+        <CreateTrendsMailScheduleForm
+          onCreated={(scheduleIds) => handleScheduleCreateSuccess(scheduleIds[0], messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleScheduleCreateSuccess, removeMessagesByComponent]);
+
+  const handleNewSyncMetricsSchedule = useCallback(() => {
+    removeMessagesByComponent(ScheduleToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <CreateSyncMetricsScheduleForm
           onCreated={(scheduleIds) => handleScheduleCreateSuccess(scheduleIds[0], messageId)}
         />
       ),
@@ -530,6 +545,8 @@ export function useChatPageEvents() {
                 handleNewMailSchedule();
               } else if (template.key.startsWith('post.')) {
                 handleNewPostSchedule();
+              } else if (template.key.startsWith('insights.')) {
+                handleNewSyncMetricsSchedule();
               } else {
                 console.log('Unknown template:', template.key);
               }

@@ -23,8 +23,10 @@ slots:
   value_type: integer
   flows:
   - bff.drafts.list_post_publications_by_platform
+  - bff.drafts.list_post_publications_by_platform_and_status
   - bff.drafts.list_post_publications_by_status
   - bff.drafts.list_post_publications_by_variant
+  - bff.drafts.list_post_publications_enriched
   - insights.ingest
 - name: active
   label: Active
@@ -335,6 +337,8 @@ slots:
   flows:
   - bff.accounts.list_platform_accounts
   - bff.drafts.list_post_publications_by_platform
+  - bff.drafts.list_post_publications_by_platform_and_status
+  - bff.drafts.list_post_publications_enriched
   - bff.drafts.list_variants_by_platform
   - bff.drafts.read_variant
   - insights.ingest
@@ -471,7 +475,9 @@ slots:
   value_type: enum
   flows:
   - action.schedule.cancel_schedules
+  - bff.drafts.list_post_publications_by_platform_and_status
   - bff.drafts.list_post_publications_by_status
+  - bff.drafts.list_post_publications_enriched
   - bff.schedule.list_schedules
 - name: subject
   label: Subject
@@ -557,6 +563,7 @@ slots:
   - action.schedule.cancel_draft_post_schedule
   - action.schedule.create_draft_post_schedule
   - bff.drafts.list_post_publications_by_variant
+  - bff.drafts.list_post_publications_enriched
   - bff.drafts.read_variant_by_id
   - internal.drafts.publish
 - name: warnings
