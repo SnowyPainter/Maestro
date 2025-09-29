@@ -2112,7 +2112,56 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MailScheduleBatchRequest'
+              oneOf:
+              - $ref: '#/components/schemas/MailBatchRequest'
+              - $ref: '#/components/schemas/PostPublishBatchRequest'
+              - $ref: '#/components/schemas/SyncMetricsBatchRequest'
+              title: Payload
+              discriminator:
+                propertyName: template
+                mapping:
+                  mail.trends_with_reply: '#/components/schemas/MailBatchRequest'
+                  post.publish: '#/components/schemas/PostPublishBatchRequest'
+                  insights.sync_metrics: '#/components/schemas/SyncMetricsBatchRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleCreateResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/schedules/sync_metrics/create:
+    post:
+      tags:
+      - action
+      - action
+      - schedule
+      - metrics
+      summary: Create Sync Metrics Schedule
+      description: Create or update sync metrics schedules for publications
+      operationId: action_schedule_create_sync_metrics_schedule_api_orchestrator_actions_schedules_sync_metrics_create_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/MailBatchRequest'
+              - $ref: '#/components/schemas/PostPublishBatchRequest'
+              - $ref: '#/components/schemas/SyncMetricsBatchRequest'
+              title: Payload
+              discriminator:
+                propertyName: template
+                mapping:
+                  mail.trends_with_reply: '#/components/schemas/MailBatchRequest'
+                  post.publish: '#/components/schemas/PostPublishBatchRequest'
+                  insights.sync_metrics: '#/components/schemas/SyncMetricsBatchRequest'
         required: true
       responses:
         '200':
@@ -3868,7 +3917,7 @@ components:
       - email
       - password
       title: LoginRequest
-    MailScheduleBatchRequest:
+    MailBatchRequest:
       properties:
         title:
           title: Title
@@ -3893,25 +3942,30 @@ components:
           title: Exdates
         segments:
           items:
-            $ref: '#/components/schemas/MailScheduleSegment'
+            $ref: '#/components/schemas/ScheduleSegment'
           type: array
           title: Segments
         distribution:
-          $ref: '#/components/schemas/MailScheduleDistribution'
+          $ref: '#/components/schemas/ScheduleDistribution'
         constraints:
-          $ref: '#/components/schemas/MailScheduleConstraints'
-        payload_template:
-          $ref: '#/components/schemas/MailScheduleTemplateParams'
+          $ref: '#/components/schemas/ScheduleConstraints'
         queue:
           title: Queue
           type: string
           nullable: true
+        template:
+          type: string
+          const: mail.trends_with_reply
+          title: Template
+        payload_template:
+          $ref: '#/components/schemas/MailScheduleTemplateParams'
       type: object
       required:
       - date_range
       - segments
+      - template
       - payload_template
-      title: MailScheduleBatchRequest
+      title: MailBatchRequest
     MailScheduleBlackout:
       properties:
         start:
@@ -3927,78 +3981,6 @@ components:
       - start
       - end
       title: MailScheduleBlackout
-    MailScheduleConstraints:
-      properties:
-        min_gap_minutes:
-          type: integer
-          minimum: 0.0
-          title: Min Gap Minutes
-          default: 0
-        max_per_day:
-          anyOf:
-          - type: integer
-            exclusiveMinimum: 0.0
-          - type: 'null'
-          title: Max Per Day
-        max_parallel:
-          anyOf:
-          - type: integer
-            minimum: 1.0
-          - type: 'null'
-          title: Max Parallel
-          default: 1
-        blackouts:
-          items:
-            $ref: '#/components/schemas/MailScheduleBlackout'
-          type: array
-          title: Blackouts
-      type: object
-      title: MailScheduleConstraints
-    MailScheduleDistribution:
-      properties:
-        mode:
-          type: string
-          title: Mode
-          default: even
-        fixed_times:
-          additionalProperties:
-            items:
-              type: string
-              format: time
-            type: array
-          type: object
-          title: Fixed Times
-        weights:
-          additionalProperties:
-            type: number
-          type: object
-          title: Weights
-      type: object
-      title: MailScheduleDistribution
-    MailScheduleSegment:
-      properties:
-        id:
-          type: string
-          title: Id
-        start:
-          type: string
-          format: time
-          title: Start
-        end:
-          type: string
-          format: time
-          title: End
-        count_per_day:
-          type: integer
-          minimum: 0.0
-          title: Count Per Day
-          default: 1
-      type: object
-      required:
-      - id
-      - start
-      - end
-      title: MailScheduleSegment
     MailScheduleTemplateParams:
       properties:
         persona_id:
@@ -4815,6 +4797,55 @@ components:
       - created_at
       - updated_at
       title: PostPublicationOut
+    PostPublishBatchRequest:
+      properties:
+        title:
+          title: Title
+          type: string
+          nullable: true
+        timezone:
+          type: string
+          title: Timezone
+          default: UTC
+        date_range:
+          $ref: '#/components/schemas/DateRange'
+        weekmask:
+          items:
+            type: string
+          type: array
+          title: Weekmask
+        exdates:
+          items:
+            type: string
+            format: date
+          type: array
+          title: Exdates
+        segments:
+          items:
+            $ref: '#/components/schemas/ScheduleSegment'
+          type: array
+          title: Segments
+        distribution:
+          $ref: '#/components/schemas/ScheduleDistribution'
+        constraints:
+          $ref: '#/components/schemas/ScheduleConstraints'
+        queue:
+          title: Queue
+          type: string
+          nullable: true
+        template:
+          type: string
+          const: post.publish
+          title: Template
+        payload_template:
+          $ref: '#/components/schemas/PostPublishTemplateParams'
+      type: object
+      required:
+      - date_range
+      - segments
+      - template
+      - payload_template
+      title: PostPublishBatchRequest
     PostPublishTemplateParams:
       properties:
         post_publication_id:
@@ -4996,6 +5027,33 @@ components:
       required:
       - dag_spec
       title: ScheduleCompileResult
+    ScheduleConstraints:
+      properties:
+        min_gap_minutes:
+          type: integer
+          minimum: 0.0
+          title: Min Gap Minutes
+          default: 0
+        max_per_day:
+          anyOf:
+          - type: integer
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Max Per Day
+        max_parallel:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Max Parallel
+          default: 1
+        blackouts:
+          items:
+            $ref: '#/components/schemas/MailScheduleBlackout'
+          type: array
+          title: Blackouts
+      type: object
+      title: ScheduleConstraints
     ScheduleCreateFromRawDagRequest:
       properties:
         persona_account_id:
@@ -5135,6 +5193,27 @@ components:
       title: ScheduleDagSpec
       description: Full DAG specification including optional schedule payload and
         metadata.
+    ScheduleDistribution:
+      properties:
+        mode:
+          type: string
+          title: Mode
+          default: even
+        fixed_times:
+          additionalProperties:
+            items:
+              type: string
+              format: time
+            type: array
+          type: object
+          title: Fixed Times
+        weights:
+          additionalProperties:
+            type: number
+          type: object
+          title: Weights
+      type: object
+      title: ScheduleDistribution
     ScheduleListItem:
       properties:
         id:
@@ -5279,6 +5358,30 @@ components:
       required:
       - label
       title: ScheduleMeta
+    ScheduleSegment:
+      properties:
+        id:
+          type: string
+          title: Id
+        start:
+          type: string
+          format: time
+          title: Start
+        end:
+          type: string
+          format: time
+          title: End
+        count_per_day:
+          type: integer
+          minimum: 0.0
+          title: Count Per Day
+          default: 1
+      type: object
+      required:
+      - id
+      - start
+      - end
+      title: ScheduleSegment
     ScheduleStatus:
       type: string
       enum:
@@ -5388,6 +5491,55 @@ components:
       - name
       - label
       title: SlotHintItem
+    SyncMetricsBatchRequest:
+      properties:
+        title:
+          title: Title
+          type: string
+          nullable: true
+        timezone:
+          type: string
+          title: Timezone
+          default: UTC
+        date_range:
+          $ref: '#/components/schemas/DateRange'
+        weekmask:
+          items:
+            type: string
+          type: array
+          title: Weekmask
+        exdates:
+          items:
+            type: string
+            format: date
+          type: array
+          title: Exdates
+        segments:
+          items:
+            $ref: '#/components/schemas/ScheduleSegment'
+          type: array
+          title: Segments
+        distribution:
+          $ref: '#/components/schemas/ScheduleDistribution'
+        constraints:
+          $ref: '#/components/schemas/ScheduleConstraints'
+        queue:
+          title: Queue
+          type: string
+          nullable: true
+        template:
+          type: string
+          const: insights.sync_metrics
+          title: Template
+        payload_template:
+          $ref: '#/components/schemas/SyncMetricsTemplateParams'
+      type: object
+      required:
+      - date_range
+      - segments
+      - template
+      - payload_template
+      title: SyncMetricsBatchRequest
     SyncMetricsTemplateParams:
       properties:
         persona_account_id:

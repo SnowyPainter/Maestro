@@ -13,17 +13,12 @@ from apps.backend.src.modules.insights.schemas import InsightIn, InsightSource
 import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from apps.backend.src.modules.scheduler.schemas import SyncMetricsTemplateParams
 
 
 """
 ingest 하는 것은 이미 있으므로 external_id 기준으로 조회해서 ingest 넘기기
 """
-
-class SyncMetricsParams(BaseModel):
-    persona_account_id: int
-    post_publication_id: int
-    platform: PlatformKind
 
 @operator(
     key="internal.insights.sync_metrics",
@@ -31,7 +26,7 @@ class SyncMetricsParams(BaseModel):
     side_effect="write",
 )
 async def op_sync_metrics(
-    payload: SyncMetricsParams,
+    payload: SyncMetricsTemplateParams,
     ctx: TaskContext,
 ) -> InsightOut:
     db: AsyncSession = ctx.require(AsyncSession)
@@ -93,7 +88,7 @@ async def op_sync_metrics(
 @FLOWS.flow(
     key="internal.insights.sync_metrics",
     title="Sync Metrics",
-    input_model=SyncMetricsParams,
+    input_model=SyncMetricsTemplateParams,
     output_model=InsightOut,
 )
 def _build_sync_metrics(builder: FlowBuilder):

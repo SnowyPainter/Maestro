@@ -7,11 +7,11 @@ from typing import Dict, List
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .schemas import (
-    MailScheduleBatchRequest,
+    BatchCommon,
     MailScheduleBlackout,
-    MailScheduleDistribution,
-    MailSchedulePlanInstance,
-    MailScheduleSegment,
+    ScheduleDistribution,
+    SchedulePlanInstance,
+    ScheduleSegment,
 )
 
 WEEKDAY_ALIASES: Dict[str, int] = {
@@ -84,8 +84,8 @@ def _evenly_distribute_times(start: time, end: time, count: int) -> List[time]:
 
 
 def _generate_segment_times(
-    segment: MailScheduleSegment,
-    distribution: MailScheduleDistribution,
+    segment: ScheduleSegment,
+    distribution: ScheduleDistribution,
 ) -> List[time]:
     count = max(segment.count_per_day, 0)
     if count == 0:
@@ -110,10 +110,10 @@ def _time_in_blackout(candidate: time, blackouts: List[MailScheduleBlackout]) ->
     return False
 
 
-def plan_mail_schedule_instances(
-    batch: MailScheduleBatchRequest,
-) -> List[MailSchedulePlanInstance]:
-    """Expand a batch request into concrete schedule timestamps."""
+def plan_schedule_instances(
+    batch: BatchCommon,
+) -> List[SchedulePlanInstance]:
+    """Expand any batch request into concrete schedule timestamps."""
 
     try:
         tz = ZoneInfo(batch.timezone)
@@ -172,7 +172,7 @@ def plan_mail_schedule_instances(
 
     aggregated.sort(key=lambda item: item[0])
     return [
-        MailSchedulePlanInstance(
+        SchedulePlanInstance(
             due_at_utc=normalize_due_at(candidate[0]),
             local_due_at=candidate[1],
             segment_id=candidate[2],
@@ -181,5 +181,7 @@ def plan_mail_schedule_instances(
         for index, candidate in enumerate(aggregated)
     ]
 
-
-__all__ = ["plan_mail_schedule_instances", "normalize_due_at"]
+__all__ = [
+    "plan_schedule_instances",
+    "normalize_due_at",
+]

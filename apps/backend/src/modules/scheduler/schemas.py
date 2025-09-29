@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Annotated, Union, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -88,52 +88,33 @@ class MailScheduleBlackout(BaseModel):
         return self
 
 
-class MailScheduleConstraints(BaseModel):
+class ScheduleConstraints(BaseModel):
     min_gap_minutes: int = Field(default=0, ge=0)
     max_per_day: Optional[int] = Field(default=None, gt=0)
     max_parallel: Optional[int] = Field(default=1, ge=1)
     blackouts: List[MailScheduleBlackout] = Field(default_factory=list)
 
 
-class MailScheduleSegment(BaseModel):
+class ScheduleSegment(BaseModel):
     id: str
     start: time
     end: time
     count_per_day: int = Field(default=1, ge=0)
 
     @model_validator(mode="after")
-    def _ensure_window(self) -> "MailScheduleSegment":
+    def _ensure_window(self) -> "ScheduleSegment":
         if self.end <= self.start:
             raise ValueError("segment end must be after start")
         return self
 
 
-class MailScheduleDistribution(BaseModel):
+class ScheduleDistribution(BaseModel):
     mode: str = Field(default="even")
     fixed_times: Dict[str, List[time]] = Field(default_factory=dict)
     weights: Dict[str, float] = Field(default_factory=dict)
 
 
-class MailScheduleBatchRequest(BaseModel):
-    title: Optional[str] = None
-    timezone: str = "UTC"
-    date_range: DateRange
-    weekmask: List[str] = Field(default_factory=list)
-    exdates: List[date] = Field(default_factory=list)
-    segments: List[MailScheduleSegment]
-    distribution: MailScheduleDistribution = Field(default_factory=MailScheduleDistribution)
-    constraints: MailScheduleConstraints = Field(default_factory=MailScheduleConstraints)
-    payload_template: MailScheduleTemplateParams
-    queue: Optional[str] = None
-
-    @model_validator(mode="after")
-    def _ensure_segments(self) -> "MailScheduleBatchRequest":
-        if not self.segments:
-            raise ValueError("at least one segment is required")
-        return self
-
-
-class MailSchedulePlanInstance(BaseModel):
+class SchedulePlanInstance(BaseModel):
     due_at_utc: datetime
     local_due_at: datetime
     segment_id: str
@@ -228,6 +209,61 @@ class CreatePostScheduleCommand(BaseModel):
         description="When to run the publication schedule; defaults to immediate execution",
     )
 
+class BatchCommon(BaseModel):
+    """배치 스케마의 공통 골격: 중복 없이 여기만 유지"""
+
+    title: Optional[str] = None
+    timezone: str = "UTC"
+    date_range: DateRange
+    weekmask: List[str] = Field(default_factory=list)
+    exdates: List[date] = Field(default_factory=list)
+    segments: List[ScheduleSegment]
+    distribution: ScheduleDistribution = Field(default_factory=ScheduleDistribution)
+    constraints: ScheduleConstraints = Field(default_factory=ScheduleConstraints)
+    queue: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _ensure_segments(self) -> "BatchCommon":
+        if not self.segments:
+            raise ValueError("at least one segment is required")
+        return self
+
+
+class MailBatchRequest(BatchCommon):
+    template: Literal[ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY]
+    payload_template: MailScheduleTemplateParams
+
+
+class PostPublishBatchRequest(BatchCommon):
+    template: Literal[ScheduleTemplateKey.POST_PUBLISH]
+    payload_template: PostPublishTemplateParams
+
+
+class SyncMetricsBatchRequest(BatchCommon):
+    template: Literal[ScheduleTemplateKey.INSIGHTS_SYNC_METRICS]
+    payload_template: SyncMetricsTemplateParams
+
+
+ScheduleBatchRequest = Annotated[
+    Union[MailBatchRequest, PostPublishBatchRequest, SyncMetricsBatchRequest],
+    Field(discriminator="template"),
+]
+
+MailScheduleBatchRequest = MailBatchRequest
+
+class RawDagScheduleInstance(BaseModel):
+    dag_spec: ScheduleDagSpec = Field(..., description="Full DAG specification to persist")
+    run_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Execution timestamp for this schedule instance",
+    )
+    queue: Optional[str] = Field(default=None, description="Optional queue override for the instance")
+    meta: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Metadata to merge into the DAG spec before persisting this instance",
+    )
+
+
 class CancelPostScheduleCommand(BaseModel):
     variant_id: int
     persona_account_id: int
@@ -313,11 +349,12 @@ __all__ = [
     "MailScheduleTemplateParams",
     "DateRange",
     "MailScheduleBlackout",
-    "MailScheduleConstraints",
-    "MailScheduleSegment",
-    "MailScheduleDistribution",
+    "ScheduleConstraints",
+    "ScheduleSegment",
+    "ScheduleDistribution",
+    "ScheduleBatchRequest",
+    "SchedulePlanInstance",
     "MailScheduleBatchRequest",
-    "MailSchedulePlanInstance",
     "PostPublishTemplateParams",
     "SyncMetricsTemplateParams",
     "ScheduleCompileRequest",

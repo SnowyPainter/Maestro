@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -23,14 +23,13 @@ from apps.backend.src.modules.scheduler.schemas import (
     ScheduleCompileRequest,
     ScheduleCompileResult,
     CancelPostScheduleCommand,
-    MailScheduleBatchRequest,
+    ScheduleBatchRequest,
     ScheduleCreateFromRawDagRequest,
     CancelSchedulesCommand,
+    RawDagScheduleInstance,
+    SchedulePlanInstance,
 )
-from apps.backend.src.modules.scheduler.planner import (
-    normalize_due_at,
-    plan_mail_schedule_instances,
-)
+from apps.backend.src.modules.scheduler.planner import normalize_due_at, plan_schedule_instances
 from apps.backend.src.orchestrator.flows.action.drafts import MessageOut
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -78,6 +77,11 @@ class ListScheduleTemplatesResult(BaseModel):
 class ScheduleCreateResult(BaseModel):
     schedule_ids: List[int]
 
+
+class SchedulePlanBatchResult(BaseModel):
+    dag_spec: Dict[str, Any]
+    instances: List[SchedulePlanInstance]
+
 class _EmptyPayload(BaseModel):
     """Placeholder model for GET endpoints."""
 
@@ -120,6 +124,119 @@ def _flow_compile_schedule(builder: FlowBuilder):
     task = builder.task("compile_template", "action.schedule.compile_template")
     builder.expect_terminal(task)
 
+def _merge_meta(base: Dict[str, Any], extra: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    merged = dict(base)
+    if extra:
+        merged.update({k: v for k, v in extra.items() if v is not None})
+    return merged
+
+
+def _persist_schedule(
+    db: AsyncSession,
+    *,
+    persona_account_id: int,
+    dag_spec: Dict[str, Any],
+    payload: Dict[str, Any],
+    due_at: datetime,
+    queue: Optional[str],
+    context: Optional[Dict[str, Any]] = None,
+) -> Schedule:
+    schedule = Schedule(
+        persona_account_id=persona_account_id,
+        dag_spec=dag_spec,
+        payload=payload,
+        context=context or {},
+        status=ScheduleStatus.PENDING.value,
+        due_at=normalize_due_at(due_at),
+        queue=queue,
+        idempotency_key=uuid4().hex,
+    )
+    db.add(schedule)
+    return schedule
+
+
+async def _persist_schedules(
+    db: AsyncSession,
+    *,
+    persona_account_id: int,
+    dag_spec: Dict[str, Any],
+    payload: Dict[str, Any],
+    due_times: Iterable[tuple[datetime, Dict[str, Any]]],
+    queue: Optional[str],
+    base_context: Optional[Dict[str, Any]] = None,
+) -> List[int]:
+    schedule_ids: List[int] = []
+    for due_at, ctx_extra in due_times:
+        context = dict(base_context or {})
+        context.update(ctx_extra)
+        schedule = _persist_schedule(
+            db,
+            persona_account_id=persona_account_id,
+            dag_spec=dag_spec,
+            payload=payload,
+            due_at=due_at,
+            queue=queue,
+            context=context,
+        )
+        await db.flush()
+        schedule_ids.append(schedule.id)
+    return schedule_ids
+
+
+def _iter_plan_instances(instances: Iterable[SchedulePlanInstance]) -> Iterable[tuple[datetime, Dict[str, Any], Dict[str, Any]]]:
+    for instance in instances:
+        meta_delta = {
+            "plan_segment": instance.segment_id,
+            "scheduled_for": instance.local_due_at.isoformat(),
+            "schedule_index": instance.schedule_index,
+        }
+        context_delta = {
+            "plan_segment": instance.segment_id,
+            "plan_local_due": instance.local_due_at.isoformat(),
+            "schedule_index": instance.schedule_index,
+        }
+        yield instance.due_at_utc, meta_delta, context_delta
+
+
+def _compile_request_for_batch(payload: ScheduleBatchRequest) -> ScheduleCompileRequest:
+    compile_kwargs: Dict[str, Any] = {"template": payload.template}
+    if payload.template == ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
+        compile_kwargs["mail"] = payload.payload_template
+    elif payload.template == ScheduleTemplateKey.POST_PUBLISH:
+        compile_kwargs["post_publish"] = payload.payload_template
+    elif payload.template == ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
+        compile_kwargs["sync_metrics"] = payload.payload_template
+    else:
+        raise HTTPException(status_code=400, detail="unsupported schedule template")
+    return ScheduleCompileRequest(**compile_kwargs)
+
+
+@operator(
+    key="action.schedule.plan_batch",
+    title="Plan Schedule Batch",
+    side_effect="read",
+)
+async def op_plan_schedule_batch(
+    payload: ScheduleBatchRequest,
+    ctx: TaskContext,
+) -> SchedulePlanBatchResult:
+    compile_request = _compile_request_for_batch(payload)
+    compile_result = compile_schedule_template(compile_request)
+
+    try:
+        planned_instances = plan_schedule_instances(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if not planned_instances:
+        raise HTTPException(
+            status_code=400,
+            detail="no schedule instances could be generated for the provided window",
+        )
+
+    return SchedulePlanBatchResult(dag_spec=compile_result.dag_spec, instances=planned_instances)
+
+
 @operator(
     key="action.schedule.create_from_raw_dag",
     title="Create Schedule(s) From DAG",
@@ -129,36 +246,56 @@ async def op_create_schedule_from_raw_dag(
     payload: ScheduleCreateFromRawDagRequest,
     ctx: TaskContext,
 ) -> ScheduleCreateResult:
-    dag_spec = payload.dag_spec
-    if payload.meta:
-        merged_meta = dict(dag_spec.meta or {})
-        merged_meta.update(payload.meta)
-        dag_spec = dag_spec.model_copy(update={"meta": merged_meta})
-
-    dag_json = dag_spec.model_dump(by_alias=True, exclude_none=True)
-    dag_payload = dag_spec.payload
-
     db: AsyncSession = ctx.require(AsyncSession)
 
-    schedule_ids: List[int] = []
-    run_at = normalize_due_at(payload.run_at)
-    interval = timedelta(minutes=payload.repeat_interval_minutes)
+    def _compact(instance: RawDagScheduleInstance) -> tuple[Dict[str, Any], Dict[str, Any]]:
+        spec = instance.dag_spec
+        meta = _merge_meta(spec.meta or {}, instance.meta)
+        spec_with_meta = spec.model_copy(update={"meta": meta})
+        return (
+            spec_with_meta.model_dump(by_alias=True, exclude_none=True),
+            spec_with_meta.payload,
+        )
 
-    for _ in range(payload.repeats):
-        schedule = Schedule(
+    base_spec = payload.dag_spec
+    base_meta = _merge_meta(base_spec.meta or {}, payload.meta)
+    base_spec_with_meta = base_spec.model_copy(update={"meta": base_meta})
+    base_dag_json = base_spec_with_meta.model_dump(by_alias=True, exclude_none=True)
+    base_payload = base_spec_with_meta.payload
+
+    instances: Iterable[RawDagScheduleInstance]
+    if payload.repeats > 1 and payload.repeat_interval_minutes:
+        step = timedelta(minutes=payload.repeat_interval_minutes)
+        instances = (
+            RawDagScheduleInstance(
+                dag_spec=base_spec_with_meta,
+                run_at=payload.run_at + step * idx,
+                queue=payload.queue,
+            )
+            for idx in range(payload.repeats)
+        )
+    else:
+        instances = (
+            RawDagScheduleInstance(
+                dag_spec=base_spec_with_meta,
+                run_at=payload.run_at,
+                queue=payload.queue,
+            ),
+        )
+
+    schedule_ids: List[int] = []
+    for instance in instances:
+        dag_json, dag_payload = _compact(instance)
+        schedule = _persist_schedule(
+            db,
             persona_account_id=payload.persona_account_id,
             dag_spec=dag_json,
             payload=dag_payload,
-            context={},
-            status=ScheduleStatus.PENDING.value,
-            due_at=run_at,
-            queue=payload.queue,
-            idempotency_key=uuid4().hex,
+            due_at=instance.run_at,
+            queue=instance.queue,
         )
-        db.add(schedule)
         await db.flush()
         schedule_ids.append(schedule.id)
-        run_at = normalize_due_at(run_at + interval) if interval else run_at
 
     await db.commit()
     return ScheduleCreateResult(schedule_ids=schedule_ids)
@@ -308,28 +445,18 @@ async def _cancel_post_publish_schedule(
     side_effect="write",
 )
 async def op_create_trends_mail_schedule(
-    payload: MailScheduleBatchRequest,
+    payload: ScheduleBatchRequest,
     ctx: TaskContext,
 ) -> ScheduleCreateResult:
     db: AsyncSession = ctx.require(AsyncSession)
     user: Optional[User] = ctx.optional(User)
 
-    compile_request = ScheduleCompileRequest(
-        template=ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY,
-        mail=payload.payload_template,
-    )
-    compile_result = compile_schedule_template(compile_request)
-    dag_spec = compile_result.dag_spec
+    if payload.template != ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
+        raise HTTPException(status_code=400, detail="mail schedule template expected")
 
-    try:
-        planned_instances = plan_mail_schedule_instances(payload)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    if not planned_instances:
-        raise HTTPException(
-            status_code=400,
-            detail="no schedule instances could be generated for the provided window",
-        )
+    plan_result = await op_plan_schedule_batch(payload, ctx)
+    dag_spec = plan_result.dag_spec
+    planned_instances = plan_result.instances
 
     base_meta = dict(dag_spec.meta or {})
     if payload.title:
@@ -347,46 +474,78 @@ async def op_create_trends_mail_schedule(
 
     persona_account_id = payload.payload_template.persona_account_id
     queue = payload.queue or "coworker"
+
     schedule_ids: List[int] = []
-
-    for instance in planned_instances:
-        segment_id = instance.segment_id
-        local_dt = instance.local_due_at
-        due_at_utc = instance.due_at_utc
-        index = instance.schedule_index
-        meta = dict(base_meta)
-        meta.update(
-            {
-                "plan_segment": segment_id,
-                "scheduled_for": local_dt.isoformat(),
-                "schedule_index": index,
-            }
-        )
-        spec_instance = dag_spec.model_copy(update={"meta": meta})
+    for due_at_utc, meta_delta, context_delta in _iter_plan_instances(planned_instances):
+        spec_instance = dag_spec.model_copy(update={"meta": _merge_meta(base_meta, meta_delta)})
         dag_json = spec_instance.model_dump(by_alias=True, exclude_none=True)
-
-        schedule_context = dict(base_context)
-        schedule_context.update(
-            {
-                "plan_segment": segment_id,
-                "plan_local_due": local_dt.isoformat(),
-                "schedule_index": index,
-            }
+        schedule_ids.extend(
+            await _persist_schedules(
+                db,
+                persona_account_id=persona_account_id,
+                dag_spec=dag_json,
+                payload=spec_instance.payload,
+                due_times=[(due_at_utc, context_delta)],
+                queue=queue,
+                base_context=base_context,
+            )
         )
 
-        schedule = Schedule(
-            persona_account_id=persona_account_id,
-            dag_spec=dag_json,
-            payload=spec_instance.payload,
-            context=schedule_context,
-            status=ScheduleStatus.PENDING.value,
-            due_at=normalize_due_at(due_at_utc),
-            queue=queue,
-            idempotency_key=uuid4().hex,
+    await db.commit()
+    return ScheduleCreateResult(schedule_ids=schedule_ids)
+
+
+@operator(
+    key="action.schedule.create_sync_metrics_schedule",
+    title="Create Sync Metrics Schedule",
+    side_effect="write",
+)
+async def op_create_sync_metrics_schedule(
+    payload: ScheduleBatchRequest,
+    ctx: TaskContext,
+) -> ScheduleCreateResult:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: Optional[User] = ctx.optional(User)
+
+    if payload.template != ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
+        raise HTTPException(status_code=400, detail="sync metrics template expected")
+
+    plan_result = await op_plan_schedule_batch(payload, ctx)
+    dag_spec = plan_result.dag_spec
+    planned_instances = plan_result.instances
+
+    base_meta = dict(dag_spec.meta or {})
+    if payload.title:
+        base_meta.setdefault("title", payload.title)
+        base_meta["plan_title"] = payload.title
+
+    base_context: Dict[str, Any] = {
+        "template": ScheduleTemplateKey.INSIGHTS_SYNC_METRICS.value,
+        "plan_timezone": payload.timezone,
+    }
+    if payload.title:
+        base_context["plan_title"] = payload.title
+    if user is not None:
+        base_context["user_id"] = user.id
+
+    persona_account_id = payload.payload_template.persona_account_id
+    queue = payload.queue or "insights"
+
+    schedule_ids: List[int] = []
+    for due_at_utc, meta_delta, context_delta in _iter_plan_instances(planned_instances):
+        spec_instance = dag_spec.model_copy(update={"meta": _merge_meta(base_meta, meta_delta)})
+        dag_json = spec_instance.model_dump(by_alias=True, exclude_none=True)
+        schedule_ids.extend(
+            await _persist_schedules(
+                db,
+                persona_account_id=persona_account_id,
+                dag_spec=dag_json,
+                payload=spec_instance.payload,
+                due_times=[(due_at_utc, context_delta)],
+                queue=queue,
+                base_context=base_context,
+            )
         )
-        db.add(schedule)
-        await db.flush()
-        schedule_ids.append(schedule.id)
 
     await db.commit()
     return ScheduleCreateResult(schedule_ids=schedule_ids)
@@ -540,7 +699,7 @@ def _flow_cancel_draft_post_schedule(builder: FlowBuilder):
     key="action.schedule.create_trends_mail_schedule",
     title="Create Trends similar to persona Mail Schedule",
     description="Create or update a mail publication schedule for the given draft variant",
-    input_model=MailScheduleBatchRequest,
+    input_model=ScheduleBatchRequest,
     output_model=ScheduleCreateResult,
     method="post",
     path="/actions/schedules/mail/create",
@@ -552,6 +711,25 @@ def _flow_create_trends_mail_schedule(builder: FlowBuilder):
         "action.schedule.create_trends_mail_schedule",
     )
     builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="action.schedule.create_sync_metrics_schedule",
+    title="Create Sync Metrics Schedule",
+    description="Create or update sync metrics schedules for publications",
+    input_model=ScheduleBatchRequest,
+    output_model=ScheduleCreateResult,
+    method="post",
+    path="/actions/schedules/sync_metrics/create",
+    tags=("action", "schedule", "metrics"),
+)
+def _flow_create_sync_metrics_schedule(builder: FlowBuilder):
+    task = builder.task(
+        "create_sync_metrics_schedule",
+        "action.schedule.create_sync_metrics_schedule",
+    )
+    builder.expect_terminal(task)
+
 
 @FLOWS.flow(
     key="action.schedule.cancel_schedules",

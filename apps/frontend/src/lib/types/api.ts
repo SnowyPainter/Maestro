@@ -1056,6 +1056,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/actions/schedules/sync_metrics/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Sync Metrics Schedule
+         * @description Create or update sync metrics schedules for publications
+         */
+        post: operations["action_schedule_create_sync_metrics_schedule_api_orchestrator_actions_schedules_sync_metrics_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/actions/schedules/cancel": {
         parameters: {
             query?: never;
@@ -2092,8 +2112,8 @@ export interface components {
             /** Password */
             password: string;
         };
-        /** MailScheduleBatchRequest */
-        MailScheduleBatchRequest: {
+        /** MailBatchRequest */
+        MailBatchRequest: {
             /** Title */
             title?: string | null;
             /**
@@ -2107,12 +2127,17 @@ export interface components {
             /** Exdates */
             exdates?: string[];
             /** Segments */
-            segments: components["schemas"]["MailScheduleSegment"][];
-            distribution?: components["schemas"]["MailScheduleDistribution"];
-            constraints?: components["schemas"]["MailScheduleConstraints"];
-            payload_template: components["schemas"]["MailScheduleTemplateParams"];
+            segments: components["schemas"]["ScheduleSegment"][];
+            distribution?: components["schemas"]["ScheduleDistribution"];
+            constraints?: components["schemas"]["ScheduleConstraints"];
             /** Queue */
             queue?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            template: "mail.trends_with_reply";
+            payload_template: components["schemas"]["MailScheduleTemplateParams"];
         };
         /** MailScheduleBlackout */
         MailScheduleBlackout: {
@@ -2126,59 +2151,6 @@ export interface components {
              * Format: time
              */
             end: string;
-        };
-        /** MailScheduleConstraints */
-        MailScheduleConstraints: {
-            /**
-             * Min Gap Minutes
-             * @default 0
-             */
-            min_gap_minutes: number;
-            /** Max Per Day */
-            max_per_day?: number | null;
-            /**
-             * Max Parallel
-             * @default 1
-             */
-            max_parallel: number | null;
-            /** Blackouts */
-            blackouts?: components["schemas"]["MailScheduleBlackout"][];
-        };
-        /** MailScheduleDistribution */
-        MailScheduleDistribution: {
-            /**
-             * Mode
-             * @default even
-             */
-            mode: string;
-            /** Fixed Times */
-            fixed_times?: {
-                [key: string]: string[];
-            };
-            /** Weights */
-            weights?: {
-                [key: string]: number;
-            };
-        };
-        /** MailScheduleSegment */
-        MailScheduleSegment: {
-            /** Id */
-            id: string;
-            /**
-             * Start
-             * Format: time
-             */
-            start: string;
-            /**
-             * End
-             * Format: time
-             */
-            end: string;
-            /**
-             * Count Per Day
-             * @default 1
-             */
-            count_per_day: number;
         };
         /**
          * MailScheduleTemplateParams
@@ -2660,6 +2632,33 @@ export interface components {
              */
             updated_at: string;
         };
+        /** PostPublishBatchRequest */
+        PostPublishBatchRequest: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Timezone
+             * @default UTC
+             */
+            timezone: string;
+            date_range: components["schemas"]["DateRange"];
+            /** Weekmask */
+            weekmask?: string[];
+            /** Exdates */
+            exdates?: string[];
+            /** Segments */
+            segments: components["schemas"]["ScheduleSegment"][];
+            distribution?: components["schemas"]["ScheduleDistribution"];
+            constraints?: components["schemas"]["ScheduleConstraints"];
+            /** Queue */
+            queue?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            template: "post.publish";
+            payload_template: components["schemas"]["PostPublishTemplateParams"];
+        };
         /**
          * PostPublishTemplateParams
          * @description Parameters for publishing a compiled draft variant.
@@ -2765,6 +2764,23 @@ export interface components {
         /** ScheduleCompileResult */
         ScheduleCompileResult: {
             dag_spec: components["schemas"]["ScheduleDagSpec-Output"];
+        };
+        /** ScheduleConstraints */
+        ScheduleConstraints: {
+            /**
+             * Min Gap Minutes
+             * @default 0
+             */
+            min_gap_minutes: number;
+            /** Max Per Day */
+            max_per_day?: number | null;
+            /**
+             * Max Parallel
+             * @default 1
+             */
+            max_parallel: number | null;
+            /** Blackouts */
+            blackouts?: components["schemas"]["MailScheduleBlackout"][];
         };
         /**
          * ScheduleCreateFromRawDagRequest
@@ -2881,6 +2897,22 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** ScheduleDistribution */
+        ScheduleDistribution: {
+            /**
+             * Mode
+             * @default even
+             */
+            mode: string;
+            /** Fixed Times */
+            fixed_times?: {
+                [key: string]: string[];
+            };
+            /** Weights */
+            weights?: {
+                [key: string]: number;
+            };
+        };
         /** ScheduleListItem */
         ScheduleListItem: {
             /** Id */
@@ -2960,6 +2992,26 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** ScheduleSegment */
+        ScheduleSegment: {
+            /** Id */
+            id: string;
+            /**
+             * Start
+             * Format: time
+             */
+            start: string;
+            /**
+             * End
+             * Format: time
+             */
+            end: string;
+            /**
+             * Count Per Day
+             * @default 1
+             */
+            count_per_day: number;
+        };
         /**
          * ScheduleStatus
          * @enum {string}
@@ -3022,6 +3074,33 @@ export interface components {
             synonyms?: string[];
             /** Flows */
             flows?: string[];
+        };
+        /** SyncMetricsBatchRequest */
+        SyncMetricsBatchRequest: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Timezone
+             * @default UTC
+             */
+            timezone: string;
+            date_range: components["schemas"]["DateRange"];
+            /** Weekmask */
+            weekmask?: string[];
+            /** Exdates */
+            exdates?: string[];
+            /** Segments */
+            segments: components["schemas"]["ScheduleSegment"][];
+            distribution?: components["schemas"]["ScheduleDistribution"];
+            constraints?: components["schemas"]["ScheduleConstraints"];
+            /** Queue */
+            queue?: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            template: "insights.sync_metrics";
+            payload_template: components["schemas"]["SyncMetricsTemplateParams"];
         };
         /**
          * SyncMetricsTemplateParams
@@ -4963,7 +5042,40 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MailScheduleBatchRequest"];
+                "application/json": components["schemas"]["MailBatchRequest"] | components["schemas"]["PostPublishBatchRequest"] | components["schemas"]["SyncMetricsBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleCreateResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_schedule_create_sync_metrics_schedule_api_orchestrator_actions_schedules_sync_metrics_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MailBatchRequest"] | components["schemas"]["PostPublishBatchRequest"] | components["schemas"]["SyncMetricsBatchRequest"];
             };
         };
         responses: {
