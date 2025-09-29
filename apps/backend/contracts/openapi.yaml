@@ -1066,6 +1066,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScheduleTemplateListResult'
+  /api/bff/schedule-stream:
+    get:
+      tags:
+      - bff
+      - bff
+      - schedule
+      - stream
+      summary: Get Schedule Stream
+      description: Get schedule stream for the authenticated user.
+      operationId: bff_schedule_get_schedule_stream_api_bff_schedule_stream_get
+      parameters:
+      - name: start
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+          title: Start
+      - name: end
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+          title: End
+      - name: zoom
+        in: query
+        required: false
+        schema:
+          enum:
+          - 5m
+          - 15m
+          - 1h
+          - 3h
+          - 1d
+          - 1w
+          type: string
+          default: 1h
+          title: Zoom
+      - name: group_by
+        in: query
+        required: false
+        schema:
+          enum:
+          - persona_account
+          - persona
+          - template
+          - label
+          - queue
+          type: string
+          default: persona_account
+          title: Group By
+      - name: owner_user_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Owner User Id
+      - name: q
+        in: query
+        required: false
+        schema:
+          title: Q
+          type: string
+          nullable: true
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+          title: Page
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 500
+          title: Limit
+      - name: with_buckets
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: With Buckets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Body_bff_schedule_get_schedule_stream_api_bff_schedule_stream_get'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleStreamResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/timeline/post-publications:
     get:
       tags:
@@ -2761,6 +2867,24 @@ components:
       - type
       - props
       title: BlockVideo
+    Body_bff_schedule_get_schedule_stream_api_bff_schedule_stream_get:
+      properties:
+        persona_account_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Persona Account Ids
+        statuses:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Statuses
+      type: object
+      title: Body_bff_schedule_get_schedule_stream_api_bff_schedule_stream_get
     CampaignAggregationCommand:
       properties:
         campaign_id:
@@ -5633,6 +5757,153 @@ components:
       - failed
       - cancelled
       title: ScheduleStatus
+    ScheduleStreamBucket:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        count:
+          type: integer
+          title: Count
+        by_status:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Status
+      type: object
+      required:
+      - ts
+      - count
+      title: ScheduleStreamBucket
+    ScheduleStreamItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        t0:
+          type: string
+          format: date-time
+          title: T0
+        t1:
+          title: T1
+          format: date-time
+          type: string
+          nullable: true
+        status:
+          type: string
+          title: Status
+        label:
+          title: Label
+          type: string
+          nullable: true
+        template:
+          title: Template
+          type: string
+          nullable: true
+        queue:
+          title: Queue
+          type: string
+          nullable: true
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        context:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Context
+      type: object
+      required:
+      - id
+      - t0
+      - status
+      - persona_account_id
+      title: ScheduleStreamItem
+      description: 타임라인 한 칸(카드).
+    ScheduleStreamLane:
+      properties:
+        key:
+          type: string
+          title: Key
+        label:
+          type: string
+          title: Label
+        avatar_url:
+          title: Avatar Url
+          type: string
+          nullable: true
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
+        items:
+          items:
+            $ref: '#/components/schemas/ScheduleStreamItem'
+          type: array
+          title: Items
+        buckets:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/ScheduleStreamBucket'
+            type: array
+          - type: 'null'
+          title: Buckets
+      type: object
+      required:
+      - key
+      - label
+      title: ScheduleStreamLane
+    ScheduleStreamResponse:
+      properties:
+        window:
+          $ref: '#/components/schemas/ScheduleStreamWindow'
+        lanes:
+          items:
+            $ref: '#/components/schemas/ScheduleStreamLane'
+          type: array
+          title: Lanes
+        next_page:
+          title: Next Page
+          type: string
+          nullable: true
+      type: object
+      required:
+      - window
+      - lanes
+      title: ScheduleStreamResponse
+    ScheduleStreamWindow:
+      properties:
+        start:
+          type: string
+          format: date-time
+          title: Start
+        end:
+          type: string
+          format: date-time
+          title: End
+        zoom:
+          type: string
+          enum:
+          - 5m
+          - 15m
+          - 1h
+          - 3h
+          - 1d
+          - 1w
+          title: Zoom
+      type: object
+      required:
+      - start
+      - end
+      - zoom
+      title: ScheduleStreamWindow
     ScheduleTemplateItem:
       properties:
         key:

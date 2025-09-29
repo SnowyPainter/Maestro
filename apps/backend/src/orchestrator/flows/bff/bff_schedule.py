@@ -13,11 +13,10 @@ from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.common.enums import ScheduleStatus
 from apps.backend.src.modules.scheduler.models import Schedule
 from apps.backend.src.modules.scheduler.registry import (
-    ScheduleTemplateKey,
-    ScheduleTemplateDefinition,
     list_schedule_templates,
-    TemplateVisibility
 )
+from apps.backend.src.modules.scheduler.schemas import ScheduleStreamQuery, ScheduleStreamResponse
+from apps.backend.src.modules.scheduler.service import get_schedule_stream
 from apps.backend.src.modules.users.models import User
 
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -199,6 +198,19 @@ async def op_list_schedule_templates(
 
     return ScheduleTemplateListResult(templates=template_items)
 
+@operator(
+    key="bff.schedule.get_schedule_stream",
+    title="Get Schedule Stream",
+    side_effect="read",
+)
+async def op_get_schedule_stream(
+    payload: ScheduleStreamQuery,
+    ctx: TaskContext,
+) -> ScheduleStreamResponse:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    payload.owner_user_id = user.id
+    return await get_schedule_stream(db, payload)
 
 @FLOWS.flow(
     key="bff.schedule.list_schedules",
@@ -227,6 +239,20 @@ def _flow_bff_list_schedules(builder: FlowBuilder):
 )
 def _flow_bff_list_templates(builder: FlowBuilder):
     task = builder.task("list_templates", "bff.schedule.list_templates")
+    builder.expect_terminal(task)
+
+@FLOWS.flow(
+    key="bff.schedule.get_schedule_stream",
+    title="Get Schedule Stream",
+    description="Get schedule stream for the authenticated user.",
+    input_model=ScheduleStreamQuery,
+    output_model=ScheduleStreamResponse,
+    method="get",
+    path="/schedule-stream",
+    tags=("bff", "schedule", "stream"),
+)
+def _flow_bff_get_schedule_stream(builder: FlowBuilder):
+    task = builder.task("get_schedule_stream", "bff.schedule.get_schedule_stream")
     builder.expect_terminal(task)
 
 __all__ = []

@@ -55,6 +55,15 @@ export interface BlockVideo {
   props: BlockVideoProps;
 }
 
+export type BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGetPersonaAccountIds = number[] | null;
+
+export type BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGetStatuses = string[] | null;
+
+export interface BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet {
+  persona_account_ids?: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGetPersonaAccountIds;
+  statuses?: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGetStatuses;
+}
+
 export type CampaignAggregationCommandCampaignId = number | null;
 
 export interface CampaignAggregationCommand {
@@ -1510,6 +1519,80 @@ export const ScheduleStatus = {
   cancelled: 'cancelled',
 } as const;
 
+export type ScheduleStreamBucketByStatus = {[key: string]: number};
+
+export interface ScheduleStreamBucket {
+  ts: string;
+  count: number;
+  by_status?: ScheduleStreamBucketByStatus;
+}
+
+export type ScheduleStreamItemPersonaId = number | null;
+
+export type ScheduleStreamItemContextAnyOf = { [key: string]: unknown };
+
+export type ScheduleStreamItemContext = ScheduleStreamItemContextAnyOf | null;
+
+/**
+ * 타임라인 한 칸(카드).
+ */
+export interface ScheduleStreamItem {
+  id: number;
+  t0: string;
+  /** @nullable */
+  t1?: string | null;
+  status: string;
+  /** @nullable */
+  label?: string | null;
+  /** @nullable */
+  template?: string | null;
+  /** @nullable */
+  queue?: string | null;
+  persona_account_id: number;
+  persona_id?: ScheduleStreamItemPersonaId;
+  context?: ScheduleStreamItemContext;
+}
+
+export type ScheduleStreamLaneMeta = { [key: string]: unknown };
+
+export type ScheduleStreamLaneBuckets = ScheduleStreamBucket[] | null;
+
+export interface ScheduleStreamLane {
+  key: string;
+  label: string;
+  /** @nullable */
+  avatar_url?: string | null;
+  meta?: ScheduleStreamLaneMeta;
+  items?: ScheduleStreamItem[];
+  buckets?: ScheduleStreamLaneBuckets;
+}
+
+export interface ScheduleStreamResponse {
+  window: ScheduleStreamWindow;
+  lanes: ScheduleStreamLane[];
+  /** @nullable */
+  next_page?: string | null;
+}
+
+export type ScheduleStreamWindowZoom = typeof ScheduleStreamWindowZoom[keyof typeof ScheduleStreamWindowZoom];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ScheduleStreamWindowZoom = {
+  '5m': '5m',
+  '15m': '15m',
+  '1h': '1h',
+  '3h': '3h',
+  '1d': '1d',
+  '1w': '1w',
+} as const;
+
+export interface ScheduleStreamWindow {
+  start: string;
+  end: string;
+  zoom: ScheduleStreamWindowZoom;
+}
+
 export interface ScheduleTemplateItem {
   key: string;
   title: string;
@@ -1791,6 +1874,46 @@ queue?: string | null;
 limit?: number;
 offset?: number;
 };
+
+export type BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams = {
+start: string;
+end: string;
+zoom?: BffScheduleGetScheduleStreamApiBffScheduleStreamGetZoom;
+group_by?: BffScheduleGetScheduleStreamApiBffScheduleStreamGetGroupBy;
+owner_user_id?: number | null;
+/**
+ * @nullable
+ */
+q?: string | null;
+page?: number;
+limit?: number;
+with_buckets?: boolean;
+};
+
+export type BffScheduleGetScheduleStreamApiBffScheduleStreamGetZoom = typeof BffScheduleGetScheduleStreamApiBffScheduleStreamGetZoom[keyof typeof BffScheduleGetScheduleStreamApiBffScheduleStreamGetZoom];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const BffScheduleGetScheduleStreamApiBffScheduleStreamGetZoom = {
+  '5m': '5m',
+  '15m': '15m',
+  '1h': '1h',
+  '3h': '3h',
+  '1d': '1d',
+  '1w': '1w',
+} as const;
+
+export type BffScheduleGetScheduleStreamApiBffScheduleStreamGetGroupBy = typeof BffScheduleGetScheduleStreamApiBffScheduleStreamGetGroupBy[keyof typeof BffScheduleGetScheduleStreamApiBffScheduleStreamGetGroupBy];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const BffScheduleGetScheduleStreamApiBffScheduleStreamGetGroupBy = {
+  persona_account: 'persona_account',
+  persona: 'persona',
+  template: 'template',
+  label: 'label',
+  queue: 'queue',
+} as const;
 
 export type BffTimelinePostPublicationsApiBffTimelinePostPublicationsGetParams = {
 persona_account_id: number;
@@ -4392,6 +4515,104 @@ export function useBffScheduleListTemplatesApiBffScheduleTemplatesGet<TData = Aw
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffScheduleListTemplatesApiBffScheduleTemplatesGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get schedule stream for the authenticated user.
+ * @summary Get Schedule Stream
+ */
+export const bffScheduleGetScheduleStreamApiBffScheduleStreamGet = (
+    bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,
+    params: BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ScheduleStreamResponse>(
+      {url: `/api/bff/schedule-stream`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryKey = (bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet?: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,
+    params?: BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams,) => {
+    return [`/api/bff/schedule-stream`, ...(params ? [params]: []), bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet] as const;
+    }
+
+    
+export const getBffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryOptions = <TData = Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError = HTTPValidationError>(bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,
+    params: BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryKey(bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>> = ({ signal }) => bffScheduleGetScheduleStreamApiBffScheduleStreamGet(bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>>
+export type BffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryError = HTTPValidationError
+
+
+export function useBffScheduleGetScheduleStreamApiBffScheduleStreamGet<TData = Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError = HTTPValidationError>(
+ bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,
+    params: BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffScheduleGetScheduleStreamApiBffScheduleStreamGet<TData = Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError = HTTPValidationError>(
+ bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,
+    params: BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffScheduleGetScheduleStreamApiBffScheduleStreamGet<TData = Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError = HTTPValidationError>(
+ bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,
+    params: BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Schedule Stream
+ */
+
+export function useBffScheduleGetScheduleStreamApiBffScheduleStreamGet<TData = Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError = HTTPValidationError>(
+ bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,
+    params: BffScheduleGetScheduleStreamApiBffScheduleStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleGetScheduleStreamApiBffScheduleStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryOptions(bodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

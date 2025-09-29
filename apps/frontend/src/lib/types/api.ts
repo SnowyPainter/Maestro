@@ -584,6 +584,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/schedule-stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Schedule Stream
+         * @description Get schedule stream for the authenticated user.
+         */
+        get: operations["bff_schedule_get_schedule_stream_api_bff_schedule_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/timeline/post-publications": {
         parameters: {
             query?: never;
@@ -1445,6 +1465,13 @@ export interface components {
             props: {
                 [key: string]: unknown;
             };
+        };
+        /** Body_bff_schedule_get_schedule_stream_api_bff_schedule_stream_get */
+        Body_bff_schedule_get_schedule_stream_api_bff_schedule_stream_get: {
+            /** Persona Account Ids */
+            persona_account_ids?: number[] | null;
+            /** Statuses */
+            statuses?: string[] | null;
         };
         /** CampaignAggregationCommand */
         CampaignAggregationCommand: {
@@ -3159,6 +3186,97 @@ export interface components {
          * @enum {string}
          */
         ScheduleStatus: "pending" | "enqueued" | "running" | "done" | "failed" | "cancelled";
+        /** ScheduleStreamBucket */
+        ScheduleStreamBucket: {
+            /**
+             * Ts
+             * Format: date-time
+             */
+            ts: string;
+            /** Count */
+            count: number;
+            /** By Status */
+            by_status?: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * ScheduleStreamItem
+         * @description 타임라인 한 칸(카드).
+         */
+        ScheduleStreamItem: {
+            /** Id */
+            id: number;
+            /**
+             * T0
+             * Format: date-time
+             */
+            t0: string;
+            /**
+             * T1
+             * Format: date-time
+             */
+            t1?: string | null;
+            /** Status */
+            status: string;
+            /** Label */
+            label?: string | null;
+            /** Template */
+            template?: string | null;
+            /** Queue */
+            queue?: string | null;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Context */
+            context?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** ScheduleStreamLane */
+        ScheduleStreamLane: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+            /** Items */
+            items?: components["schemas"]["ScheduleStreamItem"][];
+            /** Buckets */
+            buckets?: components["schemas"]["ScheduleStreamBucket"][] | null;
+        };
+        /** ScheduleStreamResponse */
+        ScheduleStreamResponse: {
+            window: components["schemas"]["ScheduleStreamWindow"];
+            /** Lanes */
+            lanes: components["schemas"]["ScheduleStreamLane"][];
+            /** Next Page */
+            next_page?: string | null;
+        };
+        /** ScheduleStreamWindow */
+        ScheduleStreamWindow: {
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /**
+             * Zoom
+             * @enum {string}
+             */
+            zoom: "5m" | "15m" | "1h" | "3h" | "1d" | "1w";
+        };
         /** ScheduleTemplateItem */
         ScheduleTemplateItem: {
             /** Key */
@@ -4321,6 +4439,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScheduleTemplateListResult"];
+                };
+            };
+        };
+    };
+    bff_schedule_get_schedule_stream_api_bff_schedule_stream_get: {
+        parameters: {
+            query: {
+                start: string;
+                end: string;
+                zoom?: "5m" | "15m" | "1h" | "3h" | "1d" | "1w";
+                group_by?: "persona_account" | "persona" | "template" | "label" | "queue";
+                owner_user_id?: number | null;
+                q?: string | null;
+                page?: number;
+                limit?: number;
+                with_buckets?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["Body_bff_schedule_get_schedule_stream_api_bff_schedule_stream_get"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleStreamResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

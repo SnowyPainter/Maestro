@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timezone
-from typing import Any, Dict, List, Optional, Annotated, Union, Literal
+from typing import Any, Dict, List, Optional, Annotated, Union, Literal, Sequence
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -338,6 +338,64 @@ class ScheduleDagBuilder:
 
 def _clean_dict(mapping: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in mapping.items() if v is not None}
+
+
+Zoom = Literal["5m", "15m", "1h", "3h", "1d", "1w"]
+GroupBy = Literal["persona_account", "persona", "template", "label", "queue"]
+
+class ScheduleStreamWindow(BaseModel):
+    start: datetime
+    end: datetime
+    zoom: Zoom
+
+class ScheduleStreamItem(BaseModel):
+    """타임라인 한 칸(카드)."""
+    id: int
+    t0: datetime                   # due_at
+    t1: Optional[datetime] = None  # (옵션) 종료시각이 있을 때 사용
+    status: str
+    label: Optional[str] = None              # derived_timeline_label = context.template | plan_title
+    template: Optional[str] = None           # context.template
+    queue: Optional[str] = None
+    persona_account_id: int
+    persona_id: Optional[int] = None
+    context: Optional[Dict[str, Any]] = None # 원본 context 일부(메타 확인용)
+
+class ScheduleStreamBucket(BaseModel):
+    ts: datetime
+    count: int
+    by_status: Dict[str, int] = Field(default_factory=dict)
+
+class ScheduleStreamLane(BaseModel):
+    key: str
+    label: str
+    avatar_url: Optional[str] = None
+    meta: Dict[str, Any] = Field(default_factory=dict)
+    items: List[ScheduleStreamItem] = Field(default_factory=list)
+    buckets: Optional[List[ScheduleStreamBucket]] = None
+
+class ScheduleStreamResponse(BaseModel):
+    window: ScheduleStreamWindow
+    lanes: List[ScheduleStreamLane]
+    next_page: Optional[str] = None
+
+class ScheduleStreamQuery(BaseModel):
+    start: datetime
+    end: datetime
+    zoom: Zoom = "1h"
+    group_by: GroupBy = "persona_account"
+    owner_user_id: Optional[int] = None
+    persona_account_ids: Optional[Sequence[int]] = None
+    statuses: Optional[Sequence[str]] = None
+    q: Optional[str] = None
+    page: int = 1
+    limit: int = 500
+    with_buckets: bool = False
+
+    @field_validator("limit")
+    @classmethod
+    def _cap_limit(cls, v: int) -> int:
+        return min(max(v, 1), 2000)
 
 
 __all__ = [

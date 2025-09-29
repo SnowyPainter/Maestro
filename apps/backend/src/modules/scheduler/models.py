@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, JSON, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, Index, text
 from sqlalchemy.orm import relationship
 
 from apps.backend.src.core.db import Base
@@ -50,33 +50,55 @@ class Schedule(Base):
 
     @property
     def timeline_label(self) -> str | None:
-        """Human-friendly identifier derived from dag_spec metadata.
+        """Human-friendly identifier derived from context metadata.
 
         Timeline views can call this helper to obtain a descriptive tag
         without hard-coding schedule IDs. To populate it, include a
-        top-level ``meta`` block or ``dag.meta`` block in dag_spec, e.g.
+        ``template`` field in context, e.g.
 
-        {"meta": {"label": "mail.compose"}, "dag": {...}}
+        {"template": "mail.trends_with_reply", "plan_title": "test", ...}
         """
 
-        if not isinstance(self.dag_spec, dict):
+        if not isinstance(self.context, dict):
             return None
 
-        meta = self.dag_spec.get("meta")
-        if isinstance(meta, dict):
-            label = meta.get("label") or meta.get("kind")
-            if isinstance(label, str):
-                return label
+        # context에서 template 필드 확인
+        template = self.context.get("template")
+        if isinstance(template, str):
+            return template
 
-        dag = self.dag_spec.get("dag") if isinstance(self.dag_spec, dict) else None
-        if isinstance(dag, dict):
-            dag_meta = dag.get("meta")
-            if isinstance(dag_meta, dict):
-                label = dag_meta.get("label") or dag_meta.get("kind")
-                if isinstance(label, str):
-                    return label
+        # plan_title도 대안으로 사용
+        plan_title = self.context.get("plan_title")
+        if isinstance(plan_title, str):
+            return plan_title
 
         return None
+    
+    @property
+    def derived_timeline_label(self) -> str | None:
+        """캐시된 timeline_label을 반환하거나 계산하여 반환합니다."""
+        # 이미 계산된 값이 있으면 반환
+        if hasattr(self, '_cached_timeline_label'):
+            return self._cached_timeline_label
+        
+        # timeline_label 계산 후 캐시
+        self._cached_timeline_label = self.timeline_label
+        return self._cached_timeline_label
+
+    __table_args__ = (
+        # 기본 인덱스들
+        Index('idx_schedules_due_at', 'due_at'),
+        Index('idx_schedules_status', 'status'),
+        Index('idx_schedules_persona_account_id', 'persona_account_id'),
+        
+        # PostgreSQL JSONB용 GIN 인덱스 (context 부분)
+        Index('idx_schedules_context', 'context', postgresql_using='gin', 
+              postgresql_ops={'context': 'jsonb_path_ops'}),
+        
+        # timeline_label 빠른 조회용 함수 기반 인덱스 (context의 template 필드)
+        Index('idx_schedules_timeline_label', 
+              text("((context->>'template'))")),
+    )
 
 
 class CoWorkerLease(Base):

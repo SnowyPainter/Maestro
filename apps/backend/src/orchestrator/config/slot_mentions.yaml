@@ -138,6 +138,7 @@ slots:
   value_type: string
   flows:
   - bff.campaigns.list_kpi_results
+  - bff.schedule.get_schedule_stream
 - name: end_at
   label: End At
   description: Filter by end at
@@ -178,6 +179,18 @@ slots:
   flows:
   - drafts.create
   - drafts.update_ir
+- name: group_by
+  label: Group By
+  description: Filter by group by
+  value_type: string
+  choices:
+  - persona_account
+  - persona
+  - template
+  - label
+  - queue
+  flows:
+  - bff.schedule.get_schedule_stream
 - name: handle
   label: Handle
   description: Filter by handle
@@ -213,6 +226,7 @@ slots:
   - bff.campaigns.list_campaigns
   - bff.campaigns.list_kpi_results
   - bff.drafts.list_drafts
+  - bff.schedule.get_schedule_stream
   - bff.schedule.list_schedules
   - bff.timeline.campaigns
   - bff.timeline.post_publications
@@ -278,7 +292,14 @@ slots:
   description: Target a specific owner user id
   value_type: integer
   flows:
+  - bff.schedule.get_schedule_stream
   - insights.ingest
+- name: page
+  label: Page
+  description: Filter by page
+  value_type: integer
+  flows:
+  - bff.schedule.get_schedule_stream
 - name: persona
   label: Persona
   description: Filter by persona
@@ -308,6 +329,7 @@ slots:
   value_type: integer_list
   flows:
   - action.coworker.update_my_coworker
+  - bff.schedule.get_schedule_stream
 - name: persona_id
   label: Persona Id
   description: Target a specific persona id
@@ -370,6 +392,7 @@ slots:
   value_type: string
   flows:
   - bff.campaigns.list_campaigns
+  - bff.schedule.get_schedule_stream
   - bff.trends.list_trends
 - name: queue
   label: Queue
@@ -462,6 +485,7 @@ slots:
   value_type: string
   flows:
   - bff.campaigns.list_kpi_results
+  - bff.schedule.get_schedule_stream
 - name: start_at
   label: Start At
   description: Filter by start at
@@ -479,6 +503,12 @@ slots:
   - bff.drafts.list_post_publications_by_status
   - bff.drafts.list_post_publications_enriched
   - bff.schedule.list_schedules
+- name: statuses
+  label: Statuses
+  description: Filter by statuses
+  value_type: string
+  flows:
+  - bff.schedule.get_schedule_stream
 - name: subject
   label: Subject
   description: Filter by subject
@@ -584,3 +614,22 @@ slots:
   value_type: string
   flows:
   - action.schedule.cancel_schedules
+- name: with_buckets
+  label: With Buckets
+  description: Filter by with buckets
+  value_type: boolean
+  flows:
+  - bff.schedule.get_schedule_stream
+- name: zoom
+  label: Zoom
+  description: Filter by zoom
+  value_type: string
+  choices:
+  - 5m
+  - 15m
+  - 1h
+  - 3h
+  - 1d
+  - 1w
+  flows:
+  - bff.schedule.get_schedule_stream

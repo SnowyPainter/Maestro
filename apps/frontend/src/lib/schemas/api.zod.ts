@@ -895,6 +895,62 @@ export const bffScheduleListTemplatesApiBffScheduleTemplatesGetResponse = zod.ob
 
 
 /**
+ * Get schedule stream for the authenticated user.
+ * @summary Get Schedule Stream
+ */
+export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryZoomDefault = "1h";export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryGroupByDefault = "persona_account";export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryPageDefault = 1;export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryLimitDefault = 500;export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryWithBucketsDefault = false;
+
+export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryParams = zod.object({
+  "start": zod.iso.datetime({}),
+  "end": zod.iso.datetime({}),
+  "zoom": zod.enum(['5m', '15m', '1h', '3h', '1d', '1w']).default(bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryZoomDefault),
+  "group_by": zod.enum(['persona_account', 'persona', 'template', 'label', 'queue']).default(bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryGroupByDefault),
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "q": zod.string().nullish(),
+  "page": zod.number().default(bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryPageDefault),
+  "limit": zod.number().default(bffScheduleGetScheduleStreamApiBffScheduleStreamGetQueryLimitDefault),
+  "with_buckets": zod.boolean().optional()
+})
+
+export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetBody = zod.object({
+  "persona_account_ids": zod.union([zod.array(zod.number()),zod.null()]).optional(),
+  "statuses": zod.union([zod.array(zod.string()),zod.null()]).optional()
+})
+
+export const bffScheduleGetScheduleStreamApiBffScheduleStreamGetResponse = zod.object({
+  "window": zod.object({
+  "start": zod.iso.datetime({}),
+  "end": zod.iso.datetime({}),
+  "zoom": zod.enum(['5m', '15m', '1h', '3h', '1d', '1w'])
+}),
+  "lanes": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "avatar_url": zod.string().nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "t0": zod.iso.datetime({}),
+  "t1": zod.iso.datetime({}).nullish(),
+  "status": zod.string(),
+  "label": zod.string().nullish(),
+  "template": zod.string().nullish(),
+  "queue": zod.string().nullish(),
+  "persona_account_id": zod.number(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "context": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional()
+}).describe('타임라인 한 칸(카드).')).optional(),
+  "buckets": zod.union([zod.array(zod.object({
+  "ts": zod.iso.datetime({}),
+  "count": zod.number(),
+  "by_status": zod.record(zod.string(), zod.number()).optional()
+})),zod.null()]).optional()
+})),
+  "next_page": zod.string().nullish()
+})
+
+
+/**
  * Get timeline events sourced from post publications
  * @summary Get Post Publication Timeline
  */
