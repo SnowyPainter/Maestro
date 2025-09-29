@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 from dataclasses import dataclass
 from typing import Any, Optional, TYPE_CHECKING
@@ -24,6 +24,11 @@ from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import ExecutionRuntime
 from apps.backend.src.orchestrator.dsl import parse_dag_spec
 from apps.backend.src.workers.CoWorker.runtime import ScheduleReschedule
+from apps.backend.src.modules.scheduler.events import (
+    ScheduleEvent,
+    ScheduleEventType,
+    publish_schedule_event,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +42,13 @@ def _get_loop():
         _loop = asyncio.new_event_loop()
         asyncio.set_event_loop(_loop)
     return _loop
+
+
+def _emit_schedule_event(event: ScheduleEvent) -> None:
+    try:
+        publish_schedule_event(event)
+    except Exception:
+        logger.exception("Failed to emit schedule event", extra={"event": event.to_dict()})
 
 @dataclass
 class ScheduleSnapshot:
@@ -109,6 +121,19 @@ async def _execute_due_schedules(owner_user_id: Optional[int], task) -> dict[str
             try:
                 repo.mark_running(session, schedule.id)
                 session.commit()
+                _emit_schedule_event(
+                    ScheduleEvent(
+                        id=schedule.id,
+                        status=ScheduleStatus.RUNNING.value,
+                        persona_account_id=snapshot.persona_account_id,
+                        queue=snapshot.queue,
+                        due_at=schedule.due_at,
+                        updated_at=datetime.utcnow().replace(tzinfo=timezone.utc),
+                        event_type=ScheduleEventType.RUNNING,
+                        payload={"idempotency_key": snapshot.idempotency_key},
+                        meta={"source": "coworker", "action": "mark_running"},
+                    )
+                )
             except Exception:
                 session.rollback()
                 logger.exception("Failed to mark schedule %s running", schedule.id)
@@ -119,6 +144,22 @@ async def _execute_due_schedules(owner_user_id: Optional[int], task) -> dict[str
                 repo.mark_done(session, schedule.id, context=exec_result.context)
                 session.commit()
                 processed += 1
+                _emit_schedule_event(
+                    ScheduleEvent(
+                        id=schedule.id,
+                        status=ScheduleStatus.DONE.value,
+                        persona_account_id=snapshot.persona_account_id,
+                        queue=snapshot.queue,
+                        due_at=schedule.due_at,
+                        updated_at=datetime.utcnow().replace(tzinfo=timezone.utc),
+                        event_type=ScheduleEventType.DONE,
+                        payload={
+                            "result_context": exec_result.context,
+                            "idempotency_key": snapshot.idempotency_key,
+                        },
+                        meta={"source": "coworker", "action": "mark_done"},
+                    )
+                )
             except ScheduleReschedule as suspend:
                 directive = suspend.directive
                 due_at = directive.effective_resume_at()
@@ -137,6 +178,23 @@ async def _execute_due_schedules(owner_user_id: Optional[int], task) -> dict[str
                 logger.info(
                     "schedule %s rescheduled to %s", schedule.id, due_at.isoformat()
                 )
+                _emit_schedule_event(
+                    ScheduleEvent(
+                        id=schedule.id,
+                        status=status.value,
+                        persona_account_id=snapshot.persona_account_id,
+                        queue=snapshot.queue,
+                        due_at=due_at,
+                        updated_at=datetime.utcnow().replace(tzinfo=timezone.utc),
+                        event_type=ScheduleEventType.RESCHEDULED,
+                        payload={
+                            "payload": new_payload,
+                            "context": new_context,
+                            "idempotency_key": snapshot.idempotency_key,
+                        },
+                        meta={"source": "coworker", "action": "mark_rescheduled"},
+                    )
+                )
             except Exception as exc:
                 session.rollback()
                 logger.exception("schedule %s failed", schedule.id)
@@ -144,6 +202,23 @@ async def _execute_due_schedules(owner_user_id: Optional[int], task) -> dict[str
                     failure_context = getattr(exc, "__schedule_context__", snapshot.context)
                     repo.mark_failed(session, schedule.id, error=str(exc), context=failure_context)
                     session.commit()
+                    _emit_schedule_event(
+                        ScheduleEvent(
+                            id=schedule.id,
+                            status=ScheduleStatus.FAILED.value,
+                            persona_account_id=snapshot.persona_account_id,
+                            queue=snapshot.queue,
+                        due_at=schedule.due_at,
+                        updated_at=datetime.utcnow().replace(tzinfo=timezone.utc),
+                            event_type=ScheduleEventType.FAILED,
+                            payload={
+                                "error": str(exc),
+                                "context": failure_context,
+                                "idempotency_key": snapshot.idempotency_key,
+                            },
+                            meta={"source": "coworker", "action": "mark_failed"},
+                        )
+                    )
                 except Exception:
                     session.rollback()
                     logger.exception("Failed to mark schedule %s as failed", schedule.id)

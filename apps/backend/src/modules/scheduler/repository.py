@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable, Optional, Sequence
 
 from sqlalchemy import func, select, update
@@ -27,6 +27,8 @@ def _json_safe(value: Any) -> Any:
         return [_json_safe(v) for v in value]
     return value
 
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 # Allow RUNNING to be picked for resume; idempotency is handled at operator level
 DEFAULT_DUE_STATUSES: tuple[str, ...] = (
@@ -84,6 +86,7 @@ def mark_running(session: Session, schedule_id: int):
             status=ScheduleStatus.RUNNING.value,
             attempts=Schedule.attempts + 1,
             last_error=None,
+            updated_at=_utc_now(),
         )
     )
 
@@ -95,6 +98,7 @@ def mark_done(session: Session, schedule_id: int, *, context: Optional[dict] = N
     }
     if context is not None:
         values["context"] = _json_safe(context)
+    values["updated_at"] = _utc_now()
     session.execute(
         update(Schedule)
         .where(Schedule.id == schedule_id)
@@ -109,6 +113,7 @@ def mark_failed(session: Session, schedule_id: int, *, error: str, context: Opti
     }
     if context is not None:
         values["context"] = _json_safe(context)
+    values["updated_at"] = _utc_now()
     session.execute(
         update(Schedule)
         .where(Schedule.id == schedule_id)
@@ -134,6 +139,7 @@ def mark_rescheduled(
         values["payload"] = _json_safe(payload)
     if context is not None:
         values["context"] = _json_safe(context)
+    values["updated_at"] = _utc_now()
     session.execute(
         update(Schedule)
         .where(Schedule.id == schedule_id)

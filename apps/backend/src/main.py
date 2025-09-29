@@ -7,6 +7,7 @@ from apps.backend.src.orchestrator.chat_router import router as orchestrator_cha
 from apps.backend.src.orchestrator.action_router import router as orchestrator_action_router
 from apps.backend.src.orchestrator.helper_router import router as orchestrator_helper_router
 from apps.backend.src.orchestrator.internal_router import router as orchestrator_internal_router
+from apps.backend.src.modules.scheduler.router import router as scheduler_stream_router
 from apps.backend.src.core.logging import setup_logging
 
 from apps.backend.src.core.config import settings
@@ -41,6 +42,8 @@ app.add_middleware(ContextMiddleware)
 
 # BFF 라우터(오케스트레이터 기반) 등록
 api.include_router(orchestrator_bff_router, prefix="/bff")
+# Scheduler SSE 라우터 등록
+api.include_router(scheduler_stream_router, prefix="/sse")
 # Action 라우터(오케스트레이터 기반) 등록
 api.include_router(orchestrator_action_router, prefix="/orchestrator")
 # Internal 라우터(오케스트레이터 기반) 등록 (절대로 하지마라잉!)

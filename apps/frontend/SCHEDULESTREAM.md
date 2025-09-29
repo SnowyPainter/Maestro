@@ -102,7 +102,7 @@
 
 # 5) 라이브 업데이트(SSE) 반영
 
-* 수신 이벤트: `schedule.created/updated/deleted`
+* 수신 이벤트: `/api/sse/schedules/events`
 * **created**: 해당 레인에 삽입 → 페이드인(120ms) + 경미한 스케일 업
 * **updated**: `status/x(=t0)` 변경 시 카드 위치·색 애니메이션(120–180ms), “pulse” 400ms
 * **deleted**: 페이드아웃(120ms) → 언마운트

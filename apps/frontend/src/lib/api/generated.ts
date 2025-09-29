@@ -5009,6 +5009,94 @@ export function useBffTrendsListTrendsApiBffTrendsGet<TData = Awaited<ReturnType
 
 
 /**
+ * @summary Scheduler:Sse
+ */
+export const schedulerSseApiSseSchedulesEventsGet = (
+    
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<null>(
+      {url: `/api/sse/schedules/events`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getSchedulerSseApiSseSchedulesEventsGetQueryKey = () => {
+    return [`/api/sse/schedules/events`] as const;
+    }
+
+    
+export const getSchedulerSseApiSseSchedulesEventsGetQueryOptions = <TData = Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSchedulerSseApiSseSchedulesEventsGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>> = ({ signal }) => schedulerSseApiSseSchedulesEventsGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SchedulerSseApiSseSchedulesEventsGetQueryResult = NonNullable<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>>
+export type SchedulerSseApiSseSchedulesEventsGetQueryError = unknown
+
+
+export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>,
+          TError,
+          Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>,
+          TError,
+          Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Scheduler:Sse
+ */
+
+export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof schedulerSseApiSseSchedulesEventsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSchedulerSseApiSseSchedulesEventsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Create a new platform account (social media, website, etc.) for the user
  * @summary Create New Platform Account
  */

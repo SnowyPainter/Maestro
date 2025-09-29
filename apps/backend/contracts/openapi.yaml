@@ -1447,6 +1447,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/sse/schedules/events:
+    get:
+      tags:
+      - schedules
+      - stream
+      summary: Scheduler:Sse
+      operationId: scheduler_sse_api_sse_schedules_events_get
+      responses:
+        '200':
+          description: Successful Response
   /api/orchestrator/accounts/platform:
     post:
       tags:
