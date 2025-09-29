@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
     useActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost, 
@@ -14,7 +15,7 @@ import {
 } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, Info, User, Mail, Calendar } from "lucide-react";
 import { BatchScheduleFormPart } from "./BatchScheduleFormPart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -46,6 +47,7 @@ function ScheduleSummary({ data }: { data: Partial<MailBatchRequest> }) {
 
 export function CreateTrendsMailScheduleForm({ onCreated }: { onCreated: (scheduleIds: number[]) => void }) {
     const { personaId, personaAccountId } = usePersonaContextStore();
+    const [currentStep, setCurrentStep] = useState(2); // Start from step 2 since step 1 is auto-selected
     const [isReady, setIsReady] = useState(false);
     const [formData, setFormData] = useState<Partial<MailBatchRequest>>({});
     const [errors, setErrors] = useState<any>({});
@@ -94,9 +96,21 @@ export function CreateTrendsMailScheduleForm({ onCreated }: { onCreated: (schedu
             return new_data;
         });
     };
-    
+
     const handleBatchDataChange = (batchData: Partial<Pick<MailBatchRequest, 'date_range' | 'weekmask' | 'segments'>>) => {
         setFormData(prev => ({ ...prev, ...batchData }));
+    };
+
+    const handleNext = () => {
+        if (currentStep < 3) {
+            setCurrentStep(prev => prev + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentStep > 2) { // Start from step 2
+            setCurrentStep(prev => prev - 1);
+        }
     };
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -112,7 +126,12 @@ export function CreateTrendsMailScheduleForm({ onCreated }: { onCreated: (schedu
     }
 
     const isEmailValid = formData.payload_template?.email_to && formData.payload_template.email_to.includes('@');
-    
+    const isStep1Valid = personaAccountId;
+    const isStep2Valid = formData.title && isEmailValid;
+    const isStep3Valid = formData.date_range && formData.weekmask && formData.segments;
+
+    const progressValue = ((currentStep - 1) / 2) * 100; // Adjusted for 2 steps instead of 3
+
     const batchData = {
         date_range: formData.date_range,
         weekmask: formData.weekmask,
@@ -121,61 +140,146 @@ export function CreateTrendsMailScheduleForm({ onCreated }: { onCreated: (schedu
     };
 
     return (
-        <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-2xl">
-            <CardHeader><CardTitle>New Trends Mail Schedule</CardTitle><CardDescription>Configure a recurring email schedule based on trend analysis.</CardDescription></CardHeader>
-            <form onSubmit={handleSubmit}>
-                <CardContent className="p-6">
-                    <Accordion type="multiple" defaultValue={["item-1", "item-2", "item-3"]} className="w-full">
-                        <AccordionItem value="item-1"><AccordionTrigger>1. Target Persona</AccordionTrigger>
-                            <AccordionContent className="pt-4">
-                                <ContextPersonaDisplay />
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="item-2"><AccordionTrigger>2. Mail Content & Recipient</AccordionTrigger>
-                            <AccordionContent className="pt-4 grid gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Schedule Title</Label>
-                                    <Input placeholder="e.g., Weekly US Trends Digest" value={formData.title || ''} onChange={e => handleFormChange('title', e.target.value)} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Recipient Email</Label>
-                                    <Input type="email" placeholder="recipient@example.com" value={formData.payload_template?.email_to || ''} onChange={e => handleFormChange('payload_template.email_to', e.target.value)} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label>Country</Label>
-                                        <Select value={formData.payload_template?.country || 'US'} onValueChange={v => handleFormChange('payload_template.country', v)}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="US">United States</SelectItem>
-                                                <SelectItem value="KR">South Korea</SelectItem>
-                                                <SelectItem value="JP">Japan</SelectItem>
-                                                <SelectItem value="GB">United Kingdom</SelectItem>
-                                                <SelectItem value="DE">Germany</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Limit</Label>
-                                        <Input type="number" value={formData.payload_template?.limit || 20} onChange={e => handleFormChange('payload_template.limit', parseInt(e.target.value, 10))} />
-                                    </div>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="item-3"><AccordionTrigger>3. Scheduling</AccordionTrigger>
-                            <AccordionContent className="pt-4">
-                                <BatchScheduleFormPart<MailBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                </CardContent>
-                <CardFooter className="px-6 py-4 border-t flex flex-col items-start gap-3">
-                    <ScheduleSummary data={formData} />
-                    <div className="w-full flex justify-end">
-                        <Button type="submit" disabled={createSchedule.isPending || !isReady || !isEmailValid}>{createSchedule.isPending ? "Creating..." : "Create Schedule"}</Button>
+        <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-4xl mx-auto">
+            <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-2xl">Schedule Trends Mail</CardTitle>
+                        <CardDescription className="text-base mt-1">
+                            Set up automated trend analysis emails
+                        </CardDescription>
                     </div>
-                </CardFooter>
-            </form>
+                    <Badge variant="outline" className="text-sm">
+                        Step {currentStep - 1} of 2
+                    </Badge>
+                </div>
+                <Progress value={progressValue} className="mt-4" />
+            </CardHeader>
+            <CardContent className="p-6">
+                {/* Auto-selected Persona Info */}
+                <div className="mb-6 p-4 bg-muted/20 rounded-lg border">
+                    <div className="flex items-center gap-3 mb-2">
+                        <User className="h-5 w-5 text-primary" />
+                        <Label className="text-sm font-medium">Active Persona</Label>
+                    </div>
+                    <ContextPersonaDisplay />
+                </div>
+
+                {currentStep === 2 && (
+                    /* Step 1: Mail Configuration */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <Mail className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Configure Mail</Label>
+                        </div>
+
+                        <div className="grid gap-6 max-w-2xl">
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium">Schedule Title</Label>
+                                <Input
+                                    placeholder="e.g., Weekly US Trends Digest"
+                                    value={formData.title || ''}
+                                    onChange={e => handleFormChange('title', e.target.value)}
+                                    className="text-base"
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium">Recipient Email</Label>
+                                <Input
+                                    type="email"
+                                    placeholder="recipient@example.com"
+                                    value={formData.payload_template?.email_to || ''}
+                                    onChange={e => handleFormChange('payload_template.email_to', e.target.value)}
+                                    className="text-base"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label className="text-sm font-medium">Country</Label>
+                                    <Select value={formData.payload_template?.country || 'US'} onValueChange={v => handleFormChange('payload_template.country', v)}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="US">United States</SelectItem>
+                                            <SelectItem value="KR">South Korea</SelectItem>
+                                            <SelectItem value="JP">Japan</SelectItem>
+                                            <SelectItem value="GB">United Kingdom</SelectItem>
+                                            <SelectItem value="DE">Germany</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label className="text-sm font-medium">Trend Limit</Label>
+                                    <Input
+                                        type="number"
+                                        value={formData.payload_template?.limit || 20}
+                                        onChange={e => handleFormChange('payload_template.limit', parseInt(e.target.value, 10))}
+                                        className="text-base"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {currentStep === 3 && (
+                    /* Step 2: Scheduling */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <Calendar className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Schedule Settings</Label>
+                        </div>
+
+                        <div className="max-w-2xl">
+                            <BatchScheduleFormPart<MailBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+            <CardFooter className="p-6 border-t bg-muted/20 flex justify-between">
+                <div className="flex gap-2">
+                    {currentStep > 1 && (
+                        <Button
+                            variant="outline"
+                            onClick={handlePrev}
+                            disabled={createSchedule.isPending}
+                        >
+                            Previous
+                        </Button>
+                    )}
+                </div>
+
+                <div className="flex gap-2">
+                    {currentStep < 3 && (
+                        <Button
+                            onClick={handleNext}
+                            disabled={createSchedule.isPending ||
+                                (currentStep === 2 && !isStep2Valid)
+                            }
+                        >
+                            Next
+                        </Button>
+                    )}
+
+                    {currentStep === 3 && (
+                        <Button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleSubmit(e as any);
+                            }}
+                            disabled={createSchedule.isPending || !isStep3Valid || !isReady || !isEmailValid}
+                            className="min-w-32"
+                        >
+                            {createSchedule.isPending ? "Creating..." : "Create Schedule"}
+                        </Button>
+                    )}
+                </div>
+            </CardFooter>
         </Card>
     );
 }

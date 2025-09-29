@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -19,7 +20,7 @@ import {
 } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, Info, User, Calendar, Target } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { BatchScheduleFormPart } from "./BatchScheduleFormPart";
 
@@ -53,6 +54,7 @@ function ScheduleSummary({ data }: { data: Partial<SyncMetricsBatchRequest> }) {
 
 export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (scheduleIds: number[]) => void }) {
     const { personaId, personaAccountId } = usePersonaContextStore();
+    const [currentStep, setCurrentStep] = useState(2); // Start from step 2 since step 1 is auto-selected
     const [isReady, setIsReady] = useState(false);
     const [formData, setFormData] = useState<Partial<SyncMetricsBatchRequest>>({});
     const [errors, setErrors] = useState<any>({});
@@ -150,6 +152,18 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
         setFormData(prev => ({ ...prev, ...batchData }));
     };
 
+    const handleNext = () => {
+        if (currentStep < 3) {
+            setCurrentStep(prev => prev + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentStep > 2) { // Start from step 2
+            setCurrentStep(prev => prev - 1);
+        }
+    };
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setErrors({});
@@ -162,7 +176,12 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
         }
     }
 
-    const isValid = formData.payload_template?.post_publication_id && formData.payload_template?.platform;
+    const isStep1Valid = personaAccountId;
+    const isStep2Valid = formData.payload_template?.platform && formData.payload_template?.post_publication_id;
+    const isStep3Valid = formData.date_range && formData.weekmask && formData.segments;
+    const isValid = isStep2Valid;
+
+    const progressValue = ((currentStep - 1) / 2) * 100; // Adjusted for 2 steps instead of 3
 
     const batchData = {
         date_range: formData.date_range,
@@ -173,150 +192,221 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
 
     return (
         <TooltipProvider>
-            <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-2xl">
-                <CardHeader><CardTitle>New Sync Metrics Schedule</CardTitle><CardDescription>Configure a recurring schedule to sync account metrics.</CardDescription></CardHeader>
-            <form onSubmit={handleSubmit}>
-                <CardContent className="p-6">
-                    <Accordion type="multiple" defaultValue={["item-1", "item-2"]} className="w-full">
-                        <AccordionItem value="item-1"><AccordionTrigger>1. Target Account & Publication</AccordionTrigger>
-                            <AccordionContent className="pt-4 space-y-4">
-                                <div className="grid gap-2"><Label>Persona Account</Label><ContextPersonaDisplay /></div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label>Platform</Label>
-                                        <Select value={formData.payload_template?.platform || ''} onValueChange={handlePlatformChange}>
-                                            <SelectTrigger><SelectValue placeholder="Select Platform..." /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="instagram">Instagram</SelectItem>
-                                                <SelectItem value="threads">Threads</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Post Publication</Label>
-                                        <Select 
-                                            value={formData.payload_template?.post_publication_id?.toString() || ''} 
-                                            onValueChange={v => handleFormChange('payload_template.post_publication_id', parseInt(v, 10))}
-                                            disabled={isLoadingPublications || !availablePublications || availablePublications.length === 0}
-                                        >
-                                            <SelectTrigger><SelectValue placeholder="Select Publication..." /></SelectTrigger>
-                                            <SelectContent>
-                                                {isLoadingPublications && <SelectItem value="loading" disabled>Loading...</SelectItem>}
-                                                {availablePublications && availablePublications.map((pub) => (
-                                                    <Tooltip key={pub.id}>
-                                                            <TooltipTrigger asChild>
-                                                                <SelectItem value={pub.id.toString()}>
-                                                                    {pub.title || `Publication #${pub.id}`}
-                                                                </SelectItem>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent side="right" className="max-w-sm">
-                                                                <div className="space-y-2">
+            <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-4xl mx-auto">
+                <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-2xl">Sync Account Metrics</CardTitle>
+                            <CardDescription className="text-base mt-1">
+                                Set up automated metrics synchronization
+                            </CardDescription>
+                        </div>
+                        <Badge variant="outline" className="text-sm">
+                            Step {currentStep - 1} of 2
+                        </Badge>
+                    </div>
+                    <Progress value={progressValue} className="mt-4" />
+                </CardHeader>
+            <CardContent className="p-6">
+                {/* Auto-selected Persona Info */}
+                <div className="mb-6 p-4 bg-muted/20 rounded-lg border">
+                    <div className="flex items-center gap-3 mb-2">
+                        <User className="h-5 w-5 text-primary" />
+                        <Label className="text-sm font-medium">Active Persona</Label>
+                    </div>
+                    <ContextPersonaDisplay />
+                </div>
+
+                {currentStep === 2 && (
+                    /* Step 2: Platform & Publication Selection */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <Target className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Choose Target</Label>
+                        </div>
+
+                        <div className="grid gap-6 max-w-2xl">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label className="text-sm font-medium">Platform</Label>
+                                    <Select value={formData.payload_template?.platform || ''} onValueChange={handlePlatformChange}>
+                                        <SelectTrigger><SelectValue placeholder="Select Platform..." /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="instagram">Instagram</SelectItem>
+                                            <SelectItem value="threads">Threads</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label className="text-sm font-medium">Post Publication</Label>
+                                    <Select
+                                        value={formData.payload_template?.post_publication_id?.toString() || ''}
+                                        onValueChange={v => handleFormChange('payload_template.post_publication_id', parseInt(v, 10))}
+                                        disabled={isLoadingPublications || !availablePublications || availablePublications.length === 0}
+                                    >
+                                        <SelectTrigger><SelectValue placeholder="Select Publication..." /></SelectTrigger>
+                                        <SelectContent>
+                                            {isLoadingPublications && <SelectItem value="loading" disabled>Loading...</SelectItem>}
+                                            {availablePublications && availablePublications.map((pub) => (
+                                                <Tooltip key={pub.id}>
+                                                        <TooltipTrigger asChild>
+                                                            <SelectItem value={pub.id.toString()}>
+                                                                {pub.title || `Publication #${pub.id}`}
+                                                            </SelectItem>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="right" className="max-w-sm">
+                                                            <div className="space-y-2">
+                                                                <div>
+                                                                    <p className="font-semibold text-sm">{pub.title || `Publication #${pub.id}`}</p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {pub.platform} • {pub.status}
+                                                                    </p>
+                                                                </div>
+
+                                                                {pub.variant_content && (
                                                                     <div>
-                                                                        <p className="font-semibold text-sm">{pub.title || `Publication #${pub.id}`}</p>
-                                                                        <p className="text-xs text-muted-foreground">
-                                                                            {pub.platform} • {pub.status}
+                                                                        <p className="text-xs font-medium">Content:</p>
+                                                                        <p className="text-xs text-muted-foreground line-clamp-3">
+                                                                            {pub.variant_content}
                                                                         </p>
                                                                     </div>
+                                                                )}
 
-                                                                    {pub.variant_content && (
-                                                                        <div>
-                                                                            <p className="text-xs font-medium">Content:</p>
-                                                                            <p className="text-xs text-muted-foreground line-clamp-3">
-                                                                                {pub.variant_content}
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
+                                                                {pub.scheduled_at && (
+                                                                    <div>
+                                                                        <p className="text-xs font-medium">Scheduled:</p>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {new Date(pub.scheduled_at).toLocaleString()}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
 
-                                                                    {pub.scheduled_at && (
-                                                                        <div>
-                                                                            <p className="text-xs font-medium">Scheduled:</p>
-                                                                            <p className="text-xs text-muted-foreground">
-                                                                                {new Date(pub.scheduled_at).toLocaleString()}
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
+                                                                {pub.published_at && (
+                                                                    <div>
+                                                                        <p className="text-xs font-medium">Published:</p>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {new Date(pub.published_at).toLocaleString()}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
 
-                                                                    {pub.published_at && (
-                                                                        <div>
-                                                                            <p className="text-xs font-medium">Published:</p>
-                                                                            <p className="text-xs text-muted-foreground">
-                                                                                {new Date(pub.published_at).toLocaleString()}
-                                                                            </p>
-                                                                        </div>
-                                                                    )}
+                                                                {pub.permalink && (
+                                                                    <div>
+                                                                        <p className="text-xs font-medium">Link:</p>
+                                                                        <a
+                                                                            href={pub.permalink}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="text-xs text-blue-500 hover:underline break-all"
+                                                                        >
+                                                                            View Post
+                                                                        </a>
+                                                                    </div>
+                                                                )}
 
-                                                                    {pub.permalink && (
-                                                                        <div>
-                                                                            <p className="text-xs font-medium">Link:</p>
-                                                                            <a
-                                                                                href={pub.permalink}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="text-xs text-blue-500 hover:underline break-all"
-                                                                            >
-                                                                                View Post
-                                                                            </a>
+                                                                {pub.tags && pub.tags.length > 0 && (
+                                                                    <div>
+                                                                        <p className="text-xs font-medium">Tags:</p>
+                                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                                            {pub.tags.slice(0, 3).map((tag, index) => (
+                                                                                <span
+                                                                                    key={index}
+                                                                                    className="text-xs bg-muted px-2 py-1 rounded"
+                                                                                >
+                                                                                    {tag}
+                                                                                </span>
+                                                                            ))}
+                                                                            {pub.tags.length > 3 && (
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    +{pub.tags.length - 3} more
+                                                                                </span>
+                                                                            )}
                                                                         </div>
-                                                                    )}
+                                                                    </div>
+                                                                )}
 
-                                                                    {pub.tags && pub.tags.length > 0 && (
-                                                                        <div>
-                                                                            <p className="text-xs font-medium">Tags:</p>
-                                                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                                                {pub.tags.slice(0, 3).map((tag, index) => (
-                                                                                    <span
-                                                                                        key={index}
-                                                                                        className="text-xs bg-muted px-2 py-1 rounded"
-                                                                                    >
-                                                                                        {tag}
-                                                                                    </span>
-                                                                                ))}
-                                                                                {pub.tags.length > 3 && (
-                                                                                    <span className="text-xs text-muted-foreground">
-                                                                                        +{pub.tags.length - 3} more
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-
-                                                                    {pub.errors && pub.errors.length > 0 && (
-                                                                        <div>
-                                                                            <p className="text-xs font-medium text-destructive">Errors:</p>
-                                                                            <ul className="text-xs text-destructive">
-                                                                                {pub.errors.slice(0, 2).map((error, index) => (
-                                                                                    <li key={index}>• {error}</li>
-                                                                                ))}
-                                                                                {pub.errors.length > 2 && (
-                                                                                    <li>• +{pub.errors.length - 2} more</li>
-                                                                                )}
-                                                                            </ul>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </TooltipContent>
-                                                    </Tooltip>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                                                {pub.errors && pub.errors.length > 0 && (
+                                                                    <div>
+                                                                        <p className="text-xs font-medium text-destructive">Errors:</p>
+                                                                        <ul className="text-xs text-destructive">
+                                                                            {pub.errors.slice(0, 2).map((error, index) => (
+                                                                                <li key={index}>• {error}</li>
+                                                                            ))}
+                                                                            {pub.errors.length > 2 && (
+                                                                                <li>• +{pub.errors.length - 2} more</li>
+                                                                            )}
+                                                                        </ul>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </TooltipContent>
+                                                </Tooltip>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="item-2"><AccordionTrigger>2. Scheduling</AccordionTrigger>
-                            <AccordionContent className="pt-4">
-                                <BatchScheduleFormPart<SyncMetricsBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                </CardContent>
-                <CardFooter className="px-6 py-4 border-t flex flex-col items-start gap-3">
-                    <ScheduleSummary data={formData} />
-                    <div className="w-full flex justify-end">
-                        <Button type="submit" disabled={createSchedule.isPending || !isReady || !isValid}>{createSchedule.isPending ? "Creating..." : "Create Schedule"}</Button>
+                            </div>
+                        </div>
                     </div>
-                </CardFooter>
-            </form>
+                )}
+
+                {currentStep === 3 && (
+                    /* Step 2: Scheduling */
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
+                                <Calendar className="h-4 w-4" />
+                            </div>
+                            <Label className="text-lg font-semibold">Schedule Settings</Label>
+                        </div>
+
+                        <div className="max-w-2xl">
+                            <BatchScheduleFormPart<SyncMetricsBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+            <CardFooter className="p-6 border-t bg-muted/20 flex justify-between">
+                <div className="flex gap-2">
+                    {currentStep > 1 && (
+                        <Button
+                            variant="outline"
+                            onClick={handlePrev}
+                            disabled={createSchedule.isPending}
+                        >
+                            Previous
+                        </Button>
+                    )}
+                </div>
+
+                <div className="flex gap-2">
+                    {currentStep < 3 && (
+                        <Button
+                            onClick={handleNext}
+                            disabled={createSchedule.isPending ||
+                                (currentStep === 2 && !isStep2Valid)
+                            }
+                        >
+                            Next
+                        </Button>
+                    )}
+
+                    {currentStep === 3 && (
+                        <Button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleSubmit(e as any);
+                            }}
+                            disabled={createSchedule.isPending || !isStep3Valid || !isReady || !isValid}
+                            className="min-w-32"
+                        >
+                            {createSchedule.isPending ? "Creating..." : "Create Schedule"}
+                        </Button>
+                    )}
+                </div>
+            </CardFooter>
         </Card>
         </TooltipProvider>
     );
