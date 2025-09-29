@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { DraftPostScheduleRequest, useBffDraftsListDraftsApiBffDraftsGet, useBff
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Instagram, Twitter, Facebook, Linkedin, Newspaper, CheckCircle2, ChevronLeft, ChevronRight, Clock, FileText, Eye, Calendar } from "lucide-react";
+import { Instagram, Twitter, Facebook, Linkedin, Newspaper, CheckCircle2, ChevronLeft, ChevronRight, Clock, FileText, Eye, Calendar, Search, Grid3X3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const platformIcons: { [key: string]: React.ReactNode } = {
@@ -69,6 +69,8 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
     const [selectedVariant, setSelectedVariant] = useState<DraftVariantRender | null>(null);
     const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
     const [time, setTime] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(0);
     const { personaAccountId } = usePersonaContextStore();
 
     const { data: drafts, isLoading: isLoadingDrafts } = useBffDraftsListDraftsApiBffDraftsGet();
@@ -78,11 +80,39 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
 
     const createScheduleMutation = useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost();
 
+    // Filter drafts based on search query
+    const filteredDrafts = useMemo(() => {
+        if (!drafts) return [];
+        if (!searchQuery.trim()) return drafts;
+
+        const query = searchQuery.toLowerCase();
+        return drafts.filter(draft =>
+            (draft.title?.toLowerCase().includes(query)) ||
+            (draft.goal?.toLowerCase().includes(query)) ||
+            draft.id.toString().includes(query)
+        );
+    }, [drafts, searchQuery]);
+
+    // Paginate filtered drafts (9 per page for 3x3 grid)
+    const draftsPerPage = 9;
+    const totalPages = Math.ceil(filteredDrafts.length / draftsPerPage);
+    const startIndex = currentPage * draftsPerPage;
+    const paginatedDrafts = filteredDrafts.slice(startIndex, startIndex + draftsPerPage);
+
     const handleDraftSelect = (id: number) => {
         setDraftId(id);
         setSelectedVariant(null);
         setCurrentVariantIndex(0);
         setCurrentStep(2);
+        setCurrentPage(0); // Reset pagination when selecting a draft
+    };
+
+    const handlePrevPage = () => {
+        setCurrentPage(prev => Math.max(0, prev - 1));
+    };
+
+    const handleNextPage = () => {
+        setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
     };
 
     const handleVariantSelect = (variant: DraftVariantRender) => {
@@ -143,8 +173,8 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
 
             <CardContent className="p-6">
                 {currentStep === 1 && (
-                    /* Step 1: Draft Selection */
-                    <div className="space-y-4">
+                    /* Step 1: Draft Selection with Search & Carousel */
+                    <div className="space-y-6">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
                                 <FileText className="h-4 w-4" />
@@ -152,42 +182,143 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                             <Label className="text-lg font-semibold">Choose a Draft</Label>
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                            {isLoadingDrafts && (
-                                <div className="col-span-full p-8 text-center text-muted-foreground">
-                                    <div className="animate-pulse">Loading drafts...</div>
-                                </div>
-                            )}
-
-                            {drafts?.map(draft => (
-                                <Card
-                                    key={draft.id}
-                                    className={cn(
-                                        "cursor-pointer transition-all hover:shadow-md",
-                                        draftId === draft.id
-                                            ? "ring-2 ring-primary bg-primary/5"
-                                            : "hover:bg-muted/50"
-                                    )}
-                                    onClick={() => handleDraftSelect(draft.id)}
-                                >
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-sm mb-1">
-                                                    {draft.title || `Draft #${draft.id}`}
-                                                </h3>
-                                                <p className="text-xs text-muted-foreground line-clamp-2">
-                                                    {draft.goal || "No goal specified"}
-                                                </p>
-                                            </div>
-                                            {draftId === draft.id && (
-                                                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 ml-2" />
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        {/* Search Bar */}
+                        <div className="relative max-w-md">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input
+                                placeholder="Search drafts by title, goal, or ID..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(0); // Reset to first page when searching
+                                }}
+                                className="pl-10"
+                            />
                         </div>
+
+                        {/* Results Summary */}
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <span>
+                                {isLoadingDrafts ? "Loading..." :
+                                 `${filteredDrafts.length} draft${filteredDrafts.length !== 1 ? 's' : ''} found`}
+                            </span>
+                            {filteredDrafts.length > 0 && (
+                                <span className="flex items-center gap-1">
+                                    <Grid3X3 className="h-4 w-4" />
+                                    Page {currentPage + 1} of {totalPages}
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Draft Grid Carousel */}
+                        {isLoadingDrafts && (
+                            <div className="grid grid-cols-3 gap-3">
+                                {Array.from({ length: 9 }).map((_, index) => (
+                                    <Card key={index} className="animate-pulse">
+                                        <CardContent className="p-4">
+                                            <div className="space-y-2">
+                                                <div className="h-4 bg-muted rounded"></div>
+                                                <div className="h-3 bg-muted rounded w-3/4"></div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+
+                        {!isLoadingDrafts && filteredDrafts.length > 0 && (
+                            <>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {paginatedDrafts.map(draft => (
+                                        <Card
+                                            key={draft.id}
+                                            className={cn(
+                                                "cursor-pointer transition-all hover:shadow-md",
+                                                draftId === draft.id
+                                                    ? "ring-2 ring-primary bg-primary/5"
+                                                    : "hover:bg-muted/50"
+                                            )}
+                                            onClick={() => handleDraftSelect(draft.id)}
+                                        >
+                                            <CardContent className="p-4">
+                                                <div className="space-y-2">
+                                                    <h3 className="font-semibold text-sm leading-tight line-clamp-2">
+                                                        {draft.title || `Draft #${draft.id}`}
+                                                    </h3>
+                                                    <p className="text-xs text-muted-foreground line-clamp-2">
+                                                        {draft.goal || "No goal specified"}
+                                                    </p>
+                                                    {draftId === draft.id && (
+                                                        <div className="flex justify-end">
+                                                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+
+                                    {/* Fill empty slots for consistent grid */}
+                                    {Array.from({ length: draftsPerPage - paginatedDrafts.length }).map((_, index) => (
+                                        <div key={`empty-${index}`} className="invisible"></div>
+                                    ))}
+                                </div>
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handlePrevPage}
+                                            disabled={currentPage === 0}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            Previous
+                                        </Button>
+
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                                                const pageIndex = Math.max(0, Math.min(totalPages - 5, currentPage - 2)) + index;
+                                                if (pageIndex >= totalPages) return null;
+
+                                                return (
+                                                    <Button
+                                                        key={pageIndex}
+                                                        variant={currentPage === pageIndex ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setCurrentPage(pageIndex)}
+                                                        className="w-8 h-8 p-0"
+                                                    >
+                                                        {pageIndex + 1}
+                                                    </Button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleNextPage}
+                                            disabled={currentPage === totalPages - 1}
+                                        >
+                                            Next
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {!isLoadingDrafts && filteredDrafts.length === 0 && (
+                            <div className="text-center py-8 text-muted-foreground">
+                                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                <p className="text-lg font-medium mb-2">No drafts found</p>
+                                <p className="text-sm">
+                                    {searchQuery ? "Try adjusting your search terms" : "Create your first draft to get started"}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 )}
 
