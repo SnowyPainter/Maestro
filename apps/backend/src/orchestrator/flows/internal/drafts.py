@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.models import PlatformAccount
+from apps.backend.src.modules.accounts.service import _load_platform_account
 from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS, PostStatus
 from apps.backend.src.modules.drafts.models import PostPublication
 from apps.backend.src.modules.drafts.service import (
@@ -85,9 +86,10 @@ async def op_publish_post(
         return PostPublicationOut.model_validate(publication)
 
     try:
-        persona_account = await _load_persona_account_for_user(
+        account = await _load_platform_account(
             db,
             persona_account_id=payload.persona_account_id,
+            platform=payload.platform,
             owner_user_id=owner_user_id,
         )
     except PermissionError as exc:
@@ -95,12 +97,6 @@ async def op_publish_post(
 
     meta = dict(publication.meta or {})
     try:
-        account = await db.get(PlatformAccount, persona_account.account_id)
-        if account is None:
-            raise HTTPException(status_code=404, detail="Platform account not found")
-        if account.platform != payload.platform:
-            raise HTTPException(status_code=400, detail="Persona account platform mismatch")
-
         if not variant.rendered_caption and not variant.rendered_blocks:
             raise HTTPException(status_code=409, detail="Variant has no rendered content")
 

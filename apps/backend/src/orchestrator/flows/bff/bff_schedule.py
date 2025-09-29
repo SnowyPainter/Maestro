@@ -12,6 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.common.enums import ScheduleStatus
 from apps.backend.src.modules.scheduler.models import Schedule
+from apps.backend.src.modules.scheduler.registry import (
+    ScheduleTemplateKey,
+    ScheduleTemplateDefinition,
+    list_schedule_templates,
+    TemplateVisibility
+)
 from apps.backend.src.modules.users.models import User
 
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -67,6 +73,20 @@ class ScheduleListResult(BaseModel):
     limit: int
     offset: int
 
+
+class ScheduleTemplateItem(BaseModel):
+    key: str
+    title: str
+    description: str
+    visibility: str
+    group: str
+
+
+class ScheduleTemplateListResult(BaseModel):
+    templates: list[ScheduleTemplateItem]
+
+class EmptyPayload(BaseModel):
+    pass
 
 def _base_schedule_query(user_id: int) -> Select[tuple[Schedule]]:
     return (
@@ -152,6 +172,34 @@ async def op_list_schedules(
     )
 
 
+@operator(
+    key="bff.schedule.list_templates",
+    title="List Available Schedule Templates",
+    side_effect="read",
+)
+async def op_list_schedule_templates(
+    payload: EmptyPayload,  # Empty payload for now
+    ctx: TaskContext,
+) -> ScheduleTemplateListResult:
+    # Get all available templates from registry
+    templates = list_schedule_templates()
+
+    # Convert to response format
+    template_items = []
+    for template in templates:
+        # Map visibility enum to string
+        visibility_str = template.visibility.value
+        template_items.append(ScheduleTemplateItem(
+            key=template.key.value,
+            title=template.title,
+            description=template.description,
+            visibility=visibility_str,
+            group=template.group,
+        ))
+
+    return ScheduleTemplateListResult(templates=template_items)
+
+
 @FLOWS.flow(
     key="bff.schedule.list_schedules",
     title="List Schedules",
@@ -164,6 +212,21 @@ async def op_list_schedules(
 )
 def _flow_bff_list_schedules(builder: FlowBuilder):
     task = builder.task("list", "bff.schedule.list_schedules")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.schedule.list_templates",
+    title="List Available Schedule Templates",
+    description="List all available schedule templates that can be used for creating new schedules.",
+    input_model=EmptyPayload,  # Empty payload
+    output_model=ScheduleTemplateListResult,
+    method="get",
+    path="/schedule-templates",
+    tags=("bff", "schedule", "templates"),
+)
+def _flow_bff_list_templates(builder: FlowBuilder):
+    task = builder.task("list_templates", "bff.schedule.list_templates")
     builder.expect_terminal(task)
 
 __all__ = []

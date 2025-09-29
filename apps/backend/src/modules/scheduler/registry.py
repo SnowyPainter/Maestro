@@ -28,7 +28,7 @@ class TemplateVisibility(str, Enum):
 class ScheduleTemplateKey(str, Enum):
     MAIL_TRENDS_WITH_REPLY = "mail.trends_with_reply"
     POST_PUBLISH = "post.publish"
-
+    INSIGHTS_SYNC_METRICS = "insights.sync_metrics"
 
 @dataclass(frozen=True)
 class ScheduleTemplateDefinition:
@@ -39,6 +39,7 @@ class ScheduleTemplateDefinition:
     description: str
     builder: Callable[["ScheduleCompileRequest"], "ScheduleDagSpec"]
     visibility: TemplateVisibility = TemplateVisibility.PUBLIC
+    group: str = "general"
 
 
 _TEMPLATES: Dict[ScheduleTemplateKey, ScheduleTemplateDefinition] = {}
@@ -167,6 +168,35 @@ def _build_post_publish_template(request: "ScheduleCompileRequest") -> "Schedule
     return builder.build_model()
 
 
+def _build_insights_sync_metrics_template(request: "ScheduleCompileRequest") -> "ScheduleDagSpec":
+    from .schemas import (
+        ScheduleDagBuilder,
+        payload_ref,
+    )
+
+    params = request.require_sync_metrics_params()
+    builder = ScheduleDagBuilder()
+    builder.meta(
+        label=ScheduleTemplateKey.INSIGHTS_SYNC_METRICS.value,
+        post_publication_id=str(params.post_publication_id),
+        persona_account_id=str(params.persona_account_id),
+        platform=params.platform.value,
+    )
+    builder.payload(
+        post_publication_id=params.post_publication_id,
+        persona_account_id=params.persona_account_id,
+        platform=params.platform.value,
+    )
+    builder.add_node(
+        "internal.insights.sync_metrics",
+        node_id="sync_metrics",
+        post_publication_id=payload_ref("post_publication_id"),
+        persona_account_id=payload_ref("persona_account_id"),
+        platform=payload_ref("platform"),
+    )
+    return builder.build_model()
+
+
 register_template(
     ScheduleTemplateDefinition(
         key=ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY,
@@ -174,6 +204,7 @@ register_template(
         description="Send persona-adapted trends email and await reply to ingest draft",
         builder=_build_mail_trends_with_reply,
         visibility=TemplateVisibility.PUBLIC,
+        group="monitoring",
     )
 )
 
@@ -183,7 +214,19 @@ register_template(
         title="Publish Draft Variant",
         description="Publish a compiled draft variant via platform adapter",
         builder=_build_post_publish_template,
-        visibility=TemplateVisibility.ADVANCED,
+        visibility=TemplateVisibility.PUBLIC,
+        group="publishing",
+    )
+)
+
+register_template(
+    ScheduleTemplateDefinition(
+        key=ScheduleTemplateKey.INSIGHTS_SYNC_METRICS,
+        title="Sync Metrics for Post",
+        description="Sync metrics data for a published post",
+        builder=_build_insights_sync_metrics_template,
+        visibility=TemplateVisibility.PUBLIC,
+        group="monitoring",
     )
 )
 

@@ -16,6 +16,7 @@ from apps.backend.src.modules.accounts.schemas import (
     PersonaAccountLinkCreate, RichPersonaAccountOut
 )
 from apps.backend.src.modules.common.enums import PlatformKind, Permission
+from fastapi import HTTPException
 
 
 # ------------------------
@@ -433,6 +434,36 @@ async def get_persona_account_by_persona_and_account(
     q = select(PersonaAccount).where(PersonaAccount.persona_id == persona_id, PersonaAccount.account_id == account_id)
     res = await db.execute(q)
     return res.scalar_one_or_none()
+
+async def _load_platform_account(
+    db: AsyncSession,
+    *,
+    persona_account_id: int,
+    platform: PlatformKind,
+    owner_user_id: int | None = None,
+) -> PlatformAccount:
+    """Load platform account by persona_account_id with platform validation"""
+    # Get PersonaAccount first
+    persona_account = await get_persona_account(db, persona_account_id=persona_account_id)
+    if persona_account is None:
+        raise HTTPException(status_code=404, detail="Persona account not found")
+
+    # Check ownership through PersonaAccount -> Persona relationship (if owner_user_id provided)
+    if owner_user_id is not None:
+        persona = await get_persona(db, persona_id=persona_account.persona_id, owner_user_id=owner_user_id)
+        if persona is None:
+            raise HTTPException(status_code=403, detail="Persona account access denied")
+
+    # Get PlatformAccount
+    account = await get_platform_account(db, account_id=persona_account.account_id, owner_user_id=owner_user_id)
+    if account is None:
+        raise HTTPException(status_code=404, detail="Platform account not found")
+
+    if account.platform != platform:
+        raise HTTPException(status_code=400, detail="Persona account platform mismatch")
+
+    return account
+
 
 async def list_persona_accounts_for_user(
     db: AsyncSession, *, owner_user_id: int

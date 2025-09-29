@@ -329,6 +329,7 @@ slots:
   - bff.timeline.post_publications
   - bff.timeline.trends
   - internal.drafts.publish
+  - internal.insights.sync_metrics
 - name: persona_account_ids
   label: Persona Account Ids
   description: Filter by persona account ids
@@ -368,6 +369,7 @@ slots:
   - bff.drafts.read_variant
   - insights.ingest
   - internal.drafts.publish
+  - internal.insights.sync_metrics
 - name: platform_post_id
   label: Platform Post Id
   description: Target a specific platform post id
@@ -381,6 +383,7 @@ slots:
   flows:
   - insights.ingest
   - internal.drafts.publish
+  - internal.insights.sync_metrics
 - name: post_publish
   label: Post Publish
   description: Filter by post publish
@@ -514,6 +517,12 @@ slots:
   flows:
   - internal.event.mail.ingest_draft_mail
   - internal.mail.compose_trends_email
+- name: sync_metrics
+  label: Sync Metrics
+  description: Filter by sync metrics
+  value_type: string
+  flows:
+  - action.schedule.compile_template
 - name: tags
   label: Tags
   description: Filter by tags
@@ -528,6 +537,7 @@ slots:
   choices:
   - mail.trends_with_reply
   - post.publish
+  - insights.sync_metrics
   flows:
   - action.schedule.compile_template
 - name: text

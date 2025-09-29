@@ -983,6 +983,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/schedule-templates:
+    get:
+      tags:
+      - bff
+      - bff
+      - schedule
+      - templates
+      summary: List Available Schedule Templates
+      description: List all available schedule templates that can be used for creating
+        new schedules.
+      operationId: bff_schedule_list_templates_api_bff_schedule_templates_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTemplateListResult'
   /api/bff/timeline/post-publications:
     get:
       tags:
@@ -1986,23 +2004,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/actions/schedules/templates:
-    get:
-      tags:
-      - action
-      - action
-      - schedule
-      - templates
-      summary: List Available Schedule Templates
-      description: Return metadata about available schedule templates
-      operationId: action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListScheduleTemplatesResult'
   /api/orchestrator/actions/schedules/create/raw:
     post:
       tags:
@@ -3853,17 +3854,6 @@ components:
       - ctr
       - engagement_rate
       title: KPIKey
-    ListScheduleTemplatesResult:
-      properties:
-        templates:
-          items:
-            $ref: '#/components/schemas/ScheduleTemplateSummary'
-          type: array
-          title: Templates
-      type: object
-      required:
-      - templates
-      title: ListScheduleTemplatesResult
     LoginRequest:
       properties:
         email:
@@ -4990,6 +4980,10 @@ components:
           anyOf:
           - $ref: '#/components/schemas/PostPublishTemplateParams'
           - type: 'null'
+        sync_metrics:
+          anyOf:
+          - $ref: '#/components/schemas/SyncMetricsTemplateParams'
+          - type: 'null'
       type: object
       required:
       - template
@@ -5295,16 +5289,11 @@ components:
       - failed
       - cancelled
       title: ScheduleStatus
-    ScheduleTemplateKey:
-      type: string
-      enum:
-      - mail.trends_with_reply
-      - post.publish
-      title: ScheduleTemplateKey
-    ScheduleTemplateSummary:
+    ScheduleTemplateItem:
       properties:
         key:
-          $ref: '#/components/schemas/ScheduleTemplateKey'
+          type: string
+          title: Key
         title:
           type: string
           title: Title
@@ -5312,14 +5301,37 @@ components:
           type: string
           title: Description
         visibility:
-          $ref: '#/components/schemas/TemplateVisibility'
+          type: string
+          title: Visibility
+        group:
+          type: string
+          title: Group
       type: object
       required:
       - key
       - title
       - description
       - visibility
-      title: ScheduleTemplateSummary
+      - group
+      title: ScheduleTemplateItem
+    ScheduleTemplateKey:
+      type: string
+      enum:
+      - mail.trends_with_reply
+      - post.publish
+      - insights.sync_metrics
+      title: ScheduleTemplateKey
+    ScheduleTemplateListResult:
+      properties:
+        templates:
+          items:
+            $ref: '#/components/schemas/ScheduleTemplateItem'
+          type: array
+          title: Templates
+      type: object
+      required:
+      - templates
+      title: ScheduleTemplateListResult
     SignupRequest:
       properties:
         email:
@@ -5376,13 +5388,23 @@ components:
       - name
       - label
       title: SlotHintItem
-    TemplateVisibility:
-      type: string
-      enum:
-      - public
-      - advanced
-      - system
-      title: TemplateVisibility
+    SyncMetricsTemplateParams:
+      properties:
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        post_publication_id:
+          type: integer
+          title: Post Publication Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+      type: object
+      required:
+      - persona_account_id
+      - post_publication_id
+      - platform
+      title: SyncMetricsTemplateParams
+      description: Parameters for syncing metrics for a post publication.
     TimelineEvent:
       properties:
         event_id:

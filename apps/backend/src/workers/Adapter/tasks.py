@@ -16,7 +16,7 @@ from apps.backend.src.modules.drafts.models import Draft, DraftVariant
 from apps.backend.src.modules.adapters.service import compile_variant
 from apps.backend.src.core.context import get_persona_account_id
 from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
-from apps.backend.src.modules.adapters.core.types import PublishResult, RenderedVariantBlocks
+from apps.backend.src.modules.adapters.core.types import PublishResult, RenderedVariantBlocks, MetricsResult
 
 _ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=_ENGINE, autocommit=False, autoflush=False)
@@ -141,9 +141,18 @@ async def publish_variant_with_adapter(
         options=options,
     )
 
+async def sync_metrics_with_adapter(
+    *,
+    platform: PlatformKind,
+    external_id: str,
+    credentials: dict,
+) -> MetricsResult:
+    adapter = ADAPTER_REGISTRY.create_instance(platform)
+    return await adapter.sync_metrics(external_id, credentials=credentials)
 
 __all__ = [
     "enqueue_variant_compile",
     "compile_draft_variant",
     "publish_variant_with_adapter",
+    "sync_metrics_with_adapter",
 ]

@@ -150,10 +150,19 @@ class PostPublishTemplateParams(BaseModel):
     platform: PlatformKind
 
 
+class SyncMetricsTemplateParams(BaseModel):
+    """Parameters for syncing metrics for a post publication."""
+
+    persona_account_id: int
+    post_publication_id: int
+    platform: PlatformKind
+
+
 class ScheduleCompileRequest(BaseModel):
     template: ScheduleTemplateKey
     mail: Optional[MailScheduleTemplateParams] = None
     post_publish: Optional[PostPublishTemplateParams] = None
+    sync_metrics: Optional[SyncMetricsTemplateParams] = None
 
     @model_validator(mode="after")
     def _ensure_params(self) -> "ScheduleCompileRequest":
@@ -163,6 +172,9 @@ class ScheduleCompileRequest(BaseModel):
         elif self.template == ScheduleTemplateKey.POST_PUBLISH:
             if self.post_publish is None:
                 raise ValueError("post_publish parameters are required for the selected template")
+        elif self.template == ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
+            if self.sync_metrics is None:
+                raise ValueError("sync_metrics parameters are required for the selected template")
         return self
 
     def require_mail_params(self) -> MailScheduleTemplateParams:
@@ -174,6 +186,11 @@ class ScheduleCompileRequest(BaseModel):
         if self.post_publish is None:
             raise ValueError("post_publish parameters not provided")
         return self.post_publish
+
+    def require_sync_metrics_params(self) -> SyncMetricsTemplateParams:
+        if self.sync_metrics is None:
+            raise ValueError("sync_metrics parameters not provided")
+        return self.sync_metrics
 
 
 class ScheduleCompileResult(BaseModel):
@@ -302,6 +319,7 @@ __all__ = [
     "MailScheduleBatchRequest",
     "MailSchedulePlanInstance",
     "PostPublishTemplateParams",
+    "SyncMetricsTemplateParams",
     "ScheduleCompileRequest",
     "ScheduleCompileResult",
     "ScheduleCreateFromRawDagRequest",

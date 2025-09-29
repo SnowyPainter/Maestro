@@ -524,6 +524,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/schedule-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Available Schedule Templates
+         * @description List all available schedule templates that can be used for creating new schedules.
+         */
+        get: operations["bff_schedule_list_templates_api_bff_schedule_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/timeline/post-publications": {
         parameters: {
             query?: never;
@@ -950,26 +970,6 @@ export interface paths {
          * @description Generate a schedule DAG specification from higher level template parameters
          */
         post: operations["action_schedule_compile_template_api_orchestrator_actions_schedules_compile_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orchestrator/actions/schedules/templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Available Schedule Templates
-         * @description Return metadata about available schedule templates
-         */
-        get: operations["action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2082,11 +2082,6 @@ export interface components {
          * @enum {string}
          */
         KPIKey: "reach" | "impressions" | "likes" | "comments" | "shares" | "saves" | "follows" | "link_clicks" | "profile_visits" | "ctr" | "engagement_rate";
-        /** ListScheduleTemplatesResult */
-        ListScheduleTemplatesResult: {
-            /** Templates */
-            templates: components["schemas"]["ScheduleTemplateSummary"][];
-        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -2765,6 +2760,7 @@ export interface components {
             template: components["schemas"]["ScheduleTemplateKey"];
             mail?: components["schemas"]["MailScheduleTemplateParams"] | null;
             post_publish?: components["schemas"]["PostPublishTemplateParams"] | null;
+            sync_metrics?: components["schemas"]["SyncMetricsTemplateParams"] | null;
         };
         /** ScheduleCompileResult */
         ScheduleCompileResult: {
@@ -2969,19 +2965,28 @@ export interface components {
          * @enum {string}
          */
         ScheduleStatus: "pending" | "enqueued" | "running" | "done" | "failed" | "cancelled";
-        /**
-         * ScheduleTemplateKey
-         * @enum {string}
-         */
-        ScheduleTemplateKey: "mail.trends_with_reply" | "post.publish";
-        /** ScheduleTemplateSummary */
-        ScheduleTemplateSummary: {
-            key: components["schemas"]["ScheduleTemplateKey"];
+        /** ScheduleTemplateItem */
+        ScheduleTemplateItem: {
+            /** Key */
+            key: string;
             /** Title */
             title: string;
             /** Description */
             description: string;
-            visibility: components["schemas"]["TemplateVisibility"];
+            /** Visibility */
+            visibility: string;
+            /** Group */
+            group: string;
+        };
+        /**
+         * ScheduleTemplateKey
+         * @enum {string}
+         */
+        ScheduleTemplateKey: "mail.trends_with_reply" | "post.publish" | "insights.sync_metrics";
+        /** ScheduleTemplateListResult */
+        ScheduleTemplateListResult: {
+            /** Templates */
+            templates: components["schemas"]["ScheduleTemplateItem"][];
         };
         /** SignupRequest */
         SignupRequest: {
@@ -3019,10 +3024,16 @@ export interface components {
             flows?: string[];
         };
         /**
-         * TemplateVisibility
-         * @enum {string}
+         * SyncMetricsTemplateParams
+         * @description Parameters for syncing metrics for a post publication.
          */
-        TemplateVisibility: "public" | "advanced" | "system";
+        SyncMetricsTemplateParams: {
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Post Publication Id */
+            post_publication_id: number;
+            platform: components["schemas"]["PlatformKind"];
+        };
         /**
          * TimelineEvent
          * @description Normalized representation for a single timeline datapoint.
@@ -4007,6 +4018,26 @@ export interface operations {
             };
         };
     };
+    bff_schedule_list_templates_api_bff_schedule_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleTemplateListResult"];
+                };
+            };
+        };
+    };
     bff_timeline_post_publications_api_bff_timeline_post_publications_get: {
         parameters: {
             query: {
@@ -4820,26 +4851,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    action_schedule_list_templates_api_orchestrator_actions_schedules_templates_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListScheduleTemplatesResult"];
                 };
             };
         };

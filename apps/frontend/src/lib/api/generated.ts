@@ -645,10 +645,6 @@ export const KPIKey = {
   engagement_rate: 'engagement_rate',
 } as const;
 
-export interface ListScheduleTemplatesResult {
-  templates: ScheduleTemplateSummary[];
-}
-
 export interface LoginRequest {
   email: string;
   password: string;
@@ -1238,10 +1234,13 @@ export type ScheduleCompileRequestMail = MailScheduleTemplateParams | null;
 
 export type ScheduleCompileRequestPostPublish = PostPublishTemplateParams | null;
 
+export type ScheduleCompileRequestSyncMetrics = SyncMetricsTemplateParams | null;
+
 export interface ScheduleCompileRequest {
   template: ScheduleTemplateKey;
   mail?: ScheduleCompileRequestMail;
   post_publish?: ScheduleCompileRequestPostPublish;
+  sync_metrics?: ScheduleCompileRequestSyncMetrics;
 }
 
 export interface ScheduleCompileResult {
@@ -1419,6 +1418,14 @@ export const ScheduleStatus = {
   cancelled: 'cancelled',
 } as const;
 
+export interface ScheduleTemplateItem {
+  key: string;
+  title: string;
+  description: string;
+  visibility: string;
+  group: string;
+}
+
 export type ScheduleTemplateKey = typeof ScheduleTemplateKey[keyof typeof ScheduleTemplateKey];
 
 
@@ -1426,13 +1433,11 @@ export type ScheduleTemplateKey = typeof ScheduleTemplateKey[keyof typeof Schedu
 export const ScheduleTemplateKey = {
   mailtrends_with_reply: 'mail.trends_with_reply',
   postpublish: 'post.publish',
+  insightssync_metrics: 'insights.sync_metrics',
 } as const;
 
-export interface ScheduleTemplateSummary {
-  key: ScheduleTemplateKey;
-  title: string;
-  description: string;
-  visibility: TemplateVisibility;
+export interface ScheduleTemplateListResult {
+  templates: ScheduleTemplateItem[];
 }
 
 export interface SignupRequest {
@@ -1456,15 +1461,14 @@ export interface SlotHintItem {
   flows?: string[];
 }
 
-export type TemplateVisibility = typeof TemplateVisibility[keyof typeof TemplateVisibility];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TemplateVisibility = {
-  public: 'public',
-  advanced: 'advanced',
-  system: 'system',
-} as const;
+/**
+ * Parameters for syncing metrics for a post publication.
+ */
+export interface SyncMetricsTemplateParams {
+  persona_account_id: number;
+  post_publication_id: number;
+  platform: PlatformKind;
+}
 
 export type TimelineEventPayload = { [key: string]: unknown };
 
@@ -4067,6 +4071,95 @@ export function useBffScheduleListSchedulesApiBffSchedulesGet<TData = Awaited<Re
 
 
 /**
+ * List all available schedule templates that can be used for creating new schedules.
+ * @summary List Available Schedule Templates
+ */
+export const bffScheduleListTemplatesApiBffScheduleTemplatesGet = (
+    
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ScheduleTemplateListResult>(
+      {url: `/api/bff/schedule-templates`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffScheduleListTemplatesApiBffScheduleTemplatesGetQueryKey = () => {
+    return [`/api/bff/schedule-templates`] as const;
+    }
+
+    
+export const getBffScheduleListTemplatesApiBffScheduleTemplatesGetQueryOptions = <TData = Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffScheduleListTemplatesApiBffScheduleTemplatesGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>> = ({ signal }) => bffScheduleListTemplatesApiBffScheduleTemplatesGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffScheduleListTemplatesApiBffScheduleTemplatesGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>>
+export type BffScheduleListTemplatesApiBffScheduleTemplatesGetQueryError = unknown
+
+
+export function useBffScheduleListTemplatesApiBffScheduleTemplatesGet<TData = Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffScheduleListTemplatesApiBffScheduleTemplatesGet<TData = Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffScheduleListTemplatesApiBffScheduleTemplatesGet<TData = Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Available Schedule Templates
+ */
+
+export function useBffScheduleListTemplatesApiBffScheduleTemplatesGet<TData = Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffScheduleListTemplatesApiBffScheduleTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffScheduleListTemplatesApiBffScheduleTemplatesGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Get timeline events sourced from post publications
  * @summary Get Post Publication Timeline
  */
@@ -5760,95 +5853,6 @@ export const useActionScheduleCompileTemplateApiOrchestratorActionsSchedulesComp
       return useMutation(mutationOptions , queryClient);
     }
     
-/**
- * Return metadata about available schedule templates
- * @summary List Available Schedule Templates
- */
-export const actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet = (
-    
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<ListScheduleTemplatesResult>(
-      {url: `/api/orchestrator/actions/schedules/templates`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-export const getActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetQueryKey = () => {
-    return [`/api/orchestrator/actions/schedules/templates`] as const;
-    }
-
-    
-export const getActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetQueryOptions = <TData = Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>> = ({ signal }) => actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet(requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetQueryResult = NonNullable<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>>
-export type ActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetQueryError = unknown
-
-
-export function useActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet<TData = Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>,
-          TError,
-          Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet<TData = Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>,
-          TError,
-          Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet<TData = Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List Available Schedule Templates
- */
-
-export function useActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet<TData = Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getActionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
 /**
  * Persist one or multiple schedules using a provided DAG specification
  * @summary Create Schedule(s) From DAG

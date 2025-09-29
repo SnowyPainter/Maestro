@@ -120,44 +120,6 @@ def _flow_compile_schedule(builder: FlowBuilder):
     task = builder.task("compile_template", "action.schedule.compile_template")
     builder.expect_terminal(task)
 
-
-@operator(
-    key="action.schedule.list_templates",
-    title="List Schedule Templates",
-    side_effect="read",
-)
-async def op_list_schedule_templates(
-    payload: _EmptyPayload,
-    ctx: TaskContext,
-) -> ListScheduleTemplatesResult:
-    definitions: List[ScheduleTemplateDefinition] = list_schedule_templates()
-    summaries = [
-        ScheduleTemplateSummary(
-            key=definition.key,
-            title=definition.title,
-            description=definition.description,
-            visibility=definition.visibility,
-        )
-        for definition in definitions
-    ]
-    return ListScheduleTemplatesResult(templates=summaries)
-
-
-@FLOWS.flow(
-    key="action.schedule.list_templates",
-    title="List Available Schedule Templates",
-    description="Return metadata about available schedule templates",
-    input_model=_EmptyPayload,
-    output_model=ListScheduleTemplatesResult,
-    method="get",
-    path="/actions/schedules/templates",
-    tags=("action", "schedule", "templates"),
-)
-def _flow_list_templates(builder: FlowBuilder):
-    task = builder.task("list_templates", "action.schedule.list_templates")
-    builder.expect_terminal(task)
-
-
 @operator(
     key="action.schedule.create_from_raw_dag",
     title="Create Schedule(s) From DAG",

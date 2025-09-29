@@ -525,8 +525,15 @@ export function useChatPageEvents() {
         removeMessagesByComponent(ScheduleToolCard);
         addCardMessage(() => (
           <ScheduleToolCard
-            onNewPostSchedule={handleNewPostSchedule}
-            onNewMailSchedule={handleNewMailSchedule}
+            onScheduleAction={(template) => {
+              if (template.key.startsWith('mail.')) {
+                handleNewMailSchedule();
+              } else if (template.key.startsWith('post.')) {
+                handleNewPostSchedule();
+              } else {
+                console.log('Unknown template:', template.key);
+              }
+            }}
             onNewRawSchedule={handleNewRawSchedule}
             onCancel={handleCancelSchedule}
           />

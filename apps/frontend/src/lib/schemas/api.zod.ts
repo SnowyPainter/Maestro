@@ -807,6 +807,21 @@ export const bffScheduleListSchedulesApiBffSchedulesGetResponse = zod.object({
 
 
 /**
+ * List all available schedule templates that can be used for creating new schedules.
+ * @summary List Available Schedule Templates
+ */
+export const bffScheduleListTemplatesApiBffScheduleTemplatesGetResponse = zod.object({
+  "templates": zod.array(zod.object({
+  "key": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "visibility": zod.string(),
+  "group": zod.string()
+}))
+})
+
+
+/**
  * Get timeline events sourced from post publications
  * @summary Get Post Publication Timeline
  */
@@ -1641,7 +1656,7 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
 export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailCountryDefault = "US";export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailLimitDefault = 20;export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailWaitTimeoutSDefault = 604800;
 
 export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBody = zod.object({
-  "template": zod.enum(['mail.trends_with_reply', 'post.publish']),
+  "template": zod.enum(['mail.trends_with_reply', 'post.publish', 'insights.sync_metrics']),
   "mail": zod.union([zod.object({
   "persona_id": zod.number(),
   "persona_account_id": zod.number(),
@@ -1657,7 +1672,12 @@ export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompile
   "variant_id": zod.number(),
   "draft_id": zod.number(),
   "platform": zod.enum(['instagram', 'threads'])
-}).describe('Parameters for publishing a compiled draft variant.'),zod.null()]).optional()
+}).describe('Parameters for publishing a compiled draft variant.'),zod.null()]).optional(),
+  "sync_metrics": zod.union([zod.object({
+  "persona_account_id": zod.number(),
+  "post_publication_id": zod.number(),
+  "platform": zod.enum(['instagram', 'threads'])
+}).describe('Parameters for syncing metrics for a post publication.'),zod.null()]).optional()
 })
 
 export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostResponse = zod.object({
@@ -1676,20 +1696,6 @@ export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompile
   "payload": zod.record(zod.string(), zod.any()).optional(),
   "meta": zod.record(zod.string(), zod.any()).optional()
 }).describe('Full DAG specification including optional schedule payload and metadata.')
-})
-
-
-/**
- * Return metadata about available schedule templates
- * @summary List Available Schedule Templates
- */
-export const actionScheduleListTemplatesApiOrchestratorActionsSchedulesTemplatesGetResponse = zod.object({
-  "templates": zod.array(zod.object({
-  "key": zod.enum(['mail.trends_with_reply', 'post.publish']),
-  "title": zod.string(),
-  "description": zod.string(),
-  "visibility": zod.enum(['public', 'advanced', 'system'])
-}))
 })
 
 
