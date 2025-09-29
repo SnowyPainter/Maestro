@@ -28,6 +28,7 @@ from apps.backend.src.modules.scheduler.schemas import (
     CancelSchedulesCommand,
     RawDagScheduleInstance,
     SchedulePlanInstance,
+    ScheduleDagSpec,
 )
 from apps.backend.src.modules.scheduler.planner import normalize_due_at, plan_schedule_instances
 from apps.backend.src.orchestrator.flows.action.drafts import MessageOut
@@ -79,7 +80,7 @@ class ScheduleCreateResult(BaseModel):
 
 
 class SchedulePlanBatchResult(BaseModel):
-    dag_spec: Dict[str, Any]
+    dag_spec: ScheduleDagSpec
     instances: List[SchedulePlanInstance]
 
 class _EmptyPayload(BaseModel):
@@ -233,9 +234,7 @@ async def op_plan_schedule_batch(
             status_code=400,
             detail="no schedule instances could be generated for the provided window",
         )
-
     return SchedulePlanBatchResult(dag_spec=compile_result.dag_spec, instances=planned_instances)
-
 
 @operator(
     key="action.schedule.create_from_raw_dag",

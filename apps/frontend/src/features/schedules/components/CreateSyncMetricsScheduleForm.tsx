@@ -10,13 +10,12 @@ import {
     SyncMetricsBatchRequest,
     SyncMetricsTemplateParams,
     useActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost,
-    // Assuming these are generated based on user request
     useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost,
     PlatformKind,
-    PostPublicationOut,
     DraftPostPublicationsEnrichedPayload,
     DraftEnrichedPostPublicationsList,
     PostStatus,
+    ScheduleTemplateKey,
 } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
@@ -111,6 +110,7 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
             date_range: { start: toYYYYMMDD(startDate), end: toYYYYMMDD(endDate) },
             weekmask: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
             segments: [{ id: `default`, start: "00:00:00", end: "23:59:59", count_per_day: 1 }],
+            template: ScheduleTemplateKey.insightssync_metrics,
             payload_template: initialPayload as SyncMetricsTemplateParams,
         };
         
@@ -168,6 +168,7 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
         date_range: formData.date_range,
         weekmask: formData.weekmask,
         segments: formData.segments,
+        template: formData.template,
     };
 
     return (

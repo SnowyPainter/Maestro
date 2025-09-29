@@ -9,7 +9,8 @@ import {
     useActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost, 
     useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet, 
     MailBatchRequest, 
-    MailScheduleTemplateParams
+    MailScheduleTemplateParams,
+    ScheduleTemplateKey
 } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
@@ -76,6 +77,7 @@ export function CreateTrendsMailScheduleForm({ onCreated }: { onCreated: (schedu
             date_range: { start: toYYYYMMDD(startDate), end: toYYYYMMDD(endDate) },
             weekmask: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
             segments: [{ id: `default`, start: "09:00:00", end: "17:00:00", count_per_day: 1 }],
+            template: ScheduleTemplateKey.mailtrends_with_reply,
             payload_template: initialPayload as MailScheduleTemplateParams,
         };
         
@@ -115,6 +117,7 @@ export function CreateTrendsMailScheduleForm({ onCreated }: { onCreated: (schedu
         date_range: formData.date_range,
         weekmask: formData.weekmask,
         segments: formData.segments,
+        template: formData.template,
     };
 
     return (
