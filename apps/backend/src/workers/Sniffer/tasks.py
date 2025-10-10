@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
 from apps.backend.src.core.config import settings
+from apps.backend.src.services.storage import store_remote_asset
 
 # 동기 엔진/세션 (Celery 워커는 sync 접근이 단순)
 _engine = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
@@ -26,7 +27,20 @@ from apps.backend.src.modules.scheduler.models import Schedule, ScheduleStatus
 from apps.backend.src.modules.trends.schemas import TrendItem
 from apps.backend.src.modules.trends import trends_google, trends_external
 
+def _store_trend_picture(url: str | None, prefix: str) -> str | None:
+    if not url:
+        return None
+    stored = store_remote_asset(
+        url,
+        bucket=settings.MINIO_BUCKET_TRENDS,
+        prefix=prefix,
+        timeout=10.0,
+    )
+    return stored or url
+
+
 def _save_one(session, country: str, ti: TrendItem):
+    picture_url = _store_trend_picture(ti.picture, prefix=f"trends/{country.lower()}")
     trend = Trend(
          country=country,
          rank=ti.rank,
@@ -35,18 +49,22 @@ def _save_one(session, country: str, ti: TrendItem):
          approx_traffic=ti.approx_traffic,
          link=ti.link,
          pub_date=ti.pub_date,
-         picture=ti.picture,
-         picture_source=ti.picture_source,
+         picture=picture_url or ti.picture,
+         picture_source=ti.picture_source or ti.picture,
          news_item_raw=ti.news_item or None,
          title_embedding=None,  # 임베딩은 비동기로 처리
      )
     if ti.news_items:
         for ni in ti.news_items:
+            news_picture = _store_trend_picture(
+                ni.news_item_picture,
+                prefix=f"trends/{country.lower()}/news",
+            )
             trend.news_items.append(
                 NewsItem(
                     title=ni.news_item_title,
                     url=ni.news_item_url,
-                    picture=ni.news_item_picture,
+                    picture=news_picture or ni.news_item_picture,
                     source=ni.news_item_source,
                 )
             )

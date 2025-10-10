@@ -41,6 +41,15 @@ class Settings(BaseSettings):
     EMBED_DIM: int = 1024  # bge-m3=1024, e5/multilingual-base=768, MiniLM=384
     EMBED_NORMALIZE: bool = True
 
+    # ----- Object storage / MinIO -----
+    MINIO_ENDPOINT: str = "localhost:9000"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
+    MINIO_REGION: Optional[str] = "us-east-1"
+    MINIO_SECURE: bool = False
+    MINIO_PUBLIC_ENDPOINT: Optional[str] = None
+    MINIO_BUCKET_TRENDS: str = "maestro-trends"
+
     # 내부적으로 sync URL도 필요할 수 있음 (예: Alembic 마이그레이션)
     _ASYNC_DRIVER: str = "postgresql+asyncpg"
     _SYNC_DRIVER: str = "postgresql+psycopg2"
@@ -94,6 +103,15 @@ class Settings(BaseSettings):
             f"{self._SYNC_DRIVER}://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def MINIO_PUBLIC_BASE(self) -> str:
+        base = self.MINIO_PUBLIC_ENDPOINT
+        if base:
+            return base.rstrip("/")
+        scheme = "https" if self.MINIO_SECURE else "http"
+        return f"{scheme}://{self.MINIO_ENDPOINT}".rstrip("/")
 
     class Config:
         env_file = BACKEND_DIR / ".env"

@@ -4,6 +4,10 @@
     "stop:infra": "docker-compose -f infra/docker-compose.yml down",
     "destroy:infra": "docker-compose -f infra/docker-compose.yml down -v",
 
+    "redis:start": "docker-compose -f infra/docker-compose.redis.yml up -d",
+    "redis:stop": "docker-compose -f infra/docker-compose.redis.yml down -v",
+    "redis:restart": "pnpm redis:stop && pnpm redis:start",
+
     "dev:backend": "uvicorn apps.backend.src.main:app --reload --host 0.0.0.0 --port 8000",
     "dev:frontend": "pnpm --filter ./apps/frontend dev:with-api",
     "dev:backend:and:frontend": "concurrently -n API,FE \"pnpm dev:backend\" \"pnpm dev:frontend\"",
@@ -13,11 +17,11 @@
     "dev:celery:beat": "celery -A apps.backend.src.core.celery_app:celery_app beat -l info",
     "dev:celery": "concurrently -n WRK,BEAT \"pnpm dev:celery:worker\" \"pnpm dev:celery:beat\"",
     
-    "celery:stop": "pkill -f \"celery.*apps\\.backend\\.src\\.core\\.celery_app:celery_app\" || true",
-    "celery:start": "pnpm dev:celery",
+    "celery:stop": "pkill -f \"celery.*apps\\.backend\\.src\\.core\\.celery_app:celery_app\" || true; pnpm redis:stop",
+    "celery:start": "pnpm redis:restart && pnpm dev:celery",
     "celery:restart": "pnpm celery:stop && pnpm celery:start",
 
-    "dev:all": "pnpm dev:infra && concurrently --no-auto-exit -n APP,CELERY \"pnpm dev:backend:and:frontend\" \"pnpm dev:celery\""
+    "dev:all": "pnpm dev:infra && concurrently --no-auto-exit -n APP,CELERY \"pnpm dev:backend:and:frontend\" \"pnpm celery:start\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -2,7 +2,8 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, Index, text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Index, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from apps.backend.src.core.db import Base
@@ -24,16 +25,16 @@ class Schedule(Base):
 
     due_at = Column(DateTime, nullable=False, index=True)
     queue = Column(String, nullable=True, index=True)
-    dag_spec = Column(JSON, nullable=False)
-    payload = Column(JSON, nullable=True)               # platform, variant, media refs, etc.
-    context = Column(JSON, nullable=True)
+    dag_spec = Column(JSONB, nullable=False)
+    payload = Column(JSONB, nullable=True)               # platform, variant, media refs, etc.
+    context = Column(JSONB, nullable=True)
 
     # 시스템 수정
     status = Column(String, default=ScheduleStatus.PENDING.value, index=True)  # ScheduleStatus
     attempts = Column(Integer, default=0)
     max_attempts = Column(Integer, default=3)
     last_error = Column(String, nullable=True)
-    errors = Column(JSON, nullable=True)
+    errors = Column(JSONB, nullable=True)
     idempotency_key = Column(String, nullable=True, unique=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
@@ -106,7 +107,7 @@ class CoWorkerLease(Base):
 
     id = Column(Integer, primary_key=True)
     owner_user_id = Column(Integer, nullable=False, unique=True, index=True)
-    persona_account_ids = Column(JSON, nullable=False, default=list)
+    persona_account_ids = Column(JSONB, nullable=False, default=list)
     interval_seconds = Column(Integer, nullable=False, default=30)
     active = Column(Boolean, nullable=False, default=True)
     task_id = Column(String, nullable=True)

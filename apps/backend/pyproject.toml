@@ -16,6 +16,7 @@ dependencies = [
   "passlib[bcrypt]>=1.7",
   "python-jose[cryptography]>=3.3",
   "python-multipart>=0.0.9",     # 폼 파서 (선택)
+  "minio>=7.2",
 ]
 
 [tool.pytest.ini_options]
@@ -27,3 +28,4 @@ celery = {extras = ["redis"], version = "^5.4.0"}
 redis = "^5.0.0"
 httpx = "^0.27.0"
 pydantic-settings = "^2.5.0"
+minio = "^7.2.7"

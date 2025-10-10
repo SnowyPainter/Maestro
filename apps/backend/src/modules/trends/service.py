@@ -5,8 +5,9 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.services.embeddings import embed_texts
 from .repository import vector_search_trends, latest_trends, range_trends, date_trends
+from apps.backend.src.core.config import settings
 
-REDIS_URL = os.getenv("REDIS_URL")
+REDIS_URL = os.getenv("REDIS_URL", settings.CELERY_BROKER_URL)
 rds = redis.Redis.from_url(REDIS_URL, decode_responses=True) if REDIS_URL else None
 
 async def query_trends(
