@@ -97,8 +97,10 @@ class PreparedTrendsEmail(BaseModel):
 
 
 class AwaitReplyPayload(BaseModel):
-    pipeline_id: str
+    pipeline_id: str | None = None
     timeout_s: int | None = None
+    should_wait: bool = True
+    reason: str | None = None
 
 
 def _merge_trend_items(items: Iterable[TrendItem]) -> List[TrendItem]:
@@ -387,10 +389,34 @@ async def op_await_mail_reply(
     payload: AwaitReplyPayload,
     ctx: TaskContext,
 ) -> AwaitReplyPayload:
-    pipeline_id = payload.pipeline_id
-    if not pipeline_id:
-        schedule_context = ctx.optional(dict, name="schedule_context") or {}
-        pipeline_id = schedule_context.get("pipeline_id")
+    schedule_context = ctx.optional(dict, name="schedule_context") or {}
+    pipeline_id = payload.pipeline_id or schedule_context.get("pipeline_id")
+
+    should_wait = payload.should_wait or (payload.reason == "already_sent")
+    if payload.reason == "no_similar_trends":
+        should_wait = False
+
+    if not should_wait:
+        dag_state = schedule_context.setdefault("_dag", {})
+        skip_nodes = set()
+        existing = dag_state.get("skip_nodes")
+        if isinstance(existing, list):
+            skip_nodes.update(str(node_id) for node_id in existing)
+        skip_nodes.update(str(node_id) for node_id in ctx.task.downstream)
+        dag_state["skip_nodes"] = sorted(skip_nodes)
+        # preserve pipeline identifier if already available for downstream diagnostics
+        if pipeline_id:
+            schedule_context["pipeline_id"] = pipeline_id
+        dag_state.pop("waiting_node", None)
+        dag_state.pop("resume_next", None)
+        dag_state.pop("wait_started_at", None)
+        return AwaitReplyPayload(
+            pipeline_id=pipeline_id,
+            timeout_s=payload.timeout_s,
+            should_wait=False,
+            reason=payload.reason,
+        )
+
     if not pipeline_id:
         raise RuntimeError("Missing pipeline_id; cannot await reply")
 
@@ -398,7 +424,6 @@ async def op_await_mail_reply(
     delay = timedelta(seconds=timeout)
 
     schedule_id = ctx.require(int, name="schedule_id")
-    schedule_context = dict(ctx.optional(dict, name="schedule_context") or {})
     schedule_context.update(
         {
             "pipeline_id": pipeline_id,

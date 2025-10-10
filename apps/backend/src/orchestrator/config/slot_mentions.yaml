@@ -407,6 +407,12 @@ slots:
   value_type: string
   flows:
   - insights.ingest
+- name: reason
+  label: Reason
+  description: Filter by reason
+  value_type: string
+  flows:
+  - internal.mail.await_reply
 - name: remove_persona_account_ids
   label: Remove Persona Account Ids
   description: Filter by remove persona account ids
@@ -454,6 +460,12 @@ slots:
   value_type: string
   flows:
   - internal.event.mail.ingest_draft_mail
+- name: should_wait
+  label: Should Wait
+  description: Filter by should wait
+  value_type: boolean
+  flows:
+  - internal.mail.await_reply
 - name: since
   label: Since
   description: Set a since date

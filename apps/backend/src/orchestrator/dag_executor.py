@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, Iterable, Literal, Mapping, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, Literal, Mapping, Optional, Sequence, Set
 
 from pydantic import BaseModel
 
@@ -69,6 +69,12 @@ class DagExecutor:
             self.completed = set(str(item) for item in completed)
         else:
             self.completed = set()
+        skip_nodes_raw = self.dag_state.get("skip_nodes", [])
+        if isinstance(skip_nodes_raw, list):
+            self.skip_nodes: Set[str] = {str(item) for item in skip_nodes_raw}
+            self.completed.update(self.skip_nodes)
+        else:
+            self.skip_nodes = set()
 
     async def run(self) -> ExecutionResult:
         """Execute nodes sequentially until completion or suspension."""
@@ -101,6 +107,13 @@ class DagExecutor:
 
         for idx in range(start_index, len(order)):
             node_id = order[idx]
+            skip_nodes_raw = self.dag_state.get("skip_nodes", [])
+            if isinstance(skip_nodes_raw, list):
+                self.skip_nodes.update(str(item) for item in skip_nodes_raw)
+            if node_id in self.skip_nodes:
+                self.completed.add(node_id)
+                self._update_dag_state()
+                continue
             if node_id in self.completed:
                 continue
 
@@ -231,6 +244,8 @@ class DagExecutor:
     def _update_dag_state(self) -> None:
         self.dag_state["completed"] = sorted(self.completed)
         self.dag_state["results"] = self.node_results
+        if self.skip_nodes:
+            self.dag_state["skip_nodes"] = sorted(self.skip_nodes)
 
 
 def _model_to_dict(model: BaseModel) -> Dict[str, Any]:

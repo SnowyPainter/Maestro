@@ -22,7 +22,7 @@ import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
 import { AlertTriangle, Info, User, Calendar, Target } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { BatchScheduleFormPart } from "./BatchScheduleFormPart";
+import { ScheduleBuilder } from "./ScheduleBuilder";
 
 const useCreateSyncMetricsSchedule = useActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost;
 
@@ -363,7 +363,7 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
                         </div>
 
                         <div className="max-w-2xl">
-                            <BatchScheduleFormPart<SyncMetricsBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
+                            <ScheduleBuilder<SyncMetricsBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
                         </div>
                     </div>
                 )}

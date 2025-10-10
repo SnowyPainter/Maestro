@@ -16,7 +16,7 @@ import {
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
 import { AlertTriangle, Info, User, Mail, Calendar } from "lucide-react";
-import { BatchScheduleFormPart } from "./BatchScheduleFormPart";
+import { ScheduleBuilder } from "./ScheduleBuilder";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function toYYYYMMDD(date: Date): string {
@@ -236,7 +236,7 @@ export function CreateTrendsMailScheduleForm({ onCreated }: { onCreated: (schedu
                         </div>
 
                         <div className="max-w-2xl">
-                            <BatchScheduleFormPart<MailBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
+                            <ScheduleBuilder<MailBatchRequest> value={batchData} onChange={handleBatchDataChange} errors={errors} />
                         </div>
                     </div>
                 )}

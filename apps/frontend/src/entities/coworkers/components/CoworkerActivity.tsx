@@ -159,9 +159,10 @@ const WorklogItem = ({ item, onShowDetails }: { item: ScheduleListItem, onShowDe
 export const CoworkerActivity = ({ personaAccountIds }: { personaAccountIds: number[] }) => {
     const [detailedItem, setDetailedItem] = useState<ScheduleListItem | null>(null);
     const scheduleQueries = useQueries({
-        queries: (personaAccountIds || []).map(id => 
-            getBffScheduleListSchedulesApiBffSchedulesGetQueryOptions({ persona_account_id: id, limit: 50 })
-        ),
+        queries: (personaAccountIds || []).map(id => ({
+            ...getBffScheduleListSchedulesApiBffSchedulesGetQueryOptions({ persona_account_id: id, limit: 50 }),
+            refetchInterval: 30000, // 30초마다 자동으로 refetch
+        })),
     });
 
     const isLoading = scheduleQueries.some(q => q.isLoading);

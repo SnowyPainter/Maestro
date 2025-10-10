@@ -113,6 +113,8 @@ def _build_mail_trends_with_reply(request: "ScheduleCompileRequest") -> "Schedul
         node_id="wait_reply",
         pipeline_id=node_ref(compose_id, "pipeline_id"),
         timeout_s=payload_ref("wait_timeout_s"),
+        should_wait=node_ref(compose_id, "sent"),
+        reason=node_ref(compose_id, "reason"),
     )
 
     builder.add_node(
