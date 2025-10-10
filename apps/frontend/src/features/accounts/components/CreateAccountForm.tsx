@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost, PlatformAccountOut, PlatformKind } from "@/lib/api/generated";
 import { Button } from "@/components/ui/button";
 import AvatarSelector from "@/components/ui/AvatarSelector";
@@ -13,12 +13,6 @@ export function CreateAccountForm({ onSuccess }: { onSuccess?: (account: Platfor
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
-
-  const topFocusTrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    topFocusTrapRef.current?.focus();
-  }, []);
 
   const { mutate: createAccount, isPending, error } = useAccountsPlatformCreateApiOrchestratorAccountsPlatformPost({
     mutation: {
@@ -49,13 +43,7 @@ export function CreateAccountForm({ onSuccess }: { onSuccess?: (account: Platfor
         <CardTitle>Create New Account</CardTitle>
         <CardDescription>Add a new platform account to manage.</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit} onMouseDown={() => topFocusTrapRef.current?.focus()}>
-        <div
-          ref={topFocusTrapRef}
-          tabIndex={-1}
-          aria-hidden="true"
-          className="pointer-events-none h-0 w-0 overflow-hidden"
-        />
+      <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="handle">Handle</label>
