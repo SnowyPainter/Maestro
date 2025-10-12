@@ -82,12 +82,6 @@ slots:
   - unknown
   flows:
   - insights.ingest
-- name: context
-  label: Context
-  description: Filter by context
-  value_type: string
-  flows:
-  - internal.llm.invoke
 - name: country
   label: Country
   description: Filter by country
@@ -395,17 +389,6 @@ slots:
   value_type: string
   flows:
   - action.schedule.compile_template
-- name: prompt_key
-  label: Prompt Key
-  description: Filter by prompt key
-  value_type: enum
-  choices:
-  - hashtag.from_trend
-  - guidance.from_trend
-  - draft.from_trend
-  - draft.from_comment
-  flows:
-  - internal.llm.invoke
 - name: q
   label: Q
   description: Set a keyword search term
@@ -628,18 +611,6 @@ slots:
   - bff.drafts.list_post_publications_enriched
   - bff.drafts.read_variant_by_id
   - internal.drafts.publish
-- name: vars
-  label: Vars
-  description: Filter by vars
-  value_type: string
-  flows:
-  - internal.llm.invoke
-- name: version
-  label: Version
-  description: Filter by version
-  value_type: string
-  flows:
-  - internal.llm.invoke
 - name: warnings
   label: Warnings
   description: Filter by warnings

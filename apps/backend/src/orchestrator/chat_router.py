@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import heapq
+import inspect
 from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple
 
 from fastapi import APIRouter, Depends
@@ -300,8 +301,8 @@ def _build_plan_spec(
 
 def _wrap_payload_builder(
     payload: Dict[str, Any],
-    builder: Optional[Callable[[Mapping[str, Any]], Dict[str, Any]]],
-) -> Optional[Callable[[Mapping[str, Any]], Dict[str, Any]]]:
+    builder: Optional[Callable[[Mapping[str, Any]], Any]],
+) -> Optional[Callable[[Mapping[str, Any]], Any]]:
     if builder is None:
         return None
 
@@ -310,10 +311,18 @@ def _wrap_payload_builder(
     def wrapper(
         results: Mapping[str, Any],
         *,
-        _builder: Callable[[Mapping[str, Any]], Dict[str, Any]] = builder,
+        _builder: Callable[[Mapping[str, Any]], Any] = builder,
         _base: Dict[str, Any] = base_payload,
-    ) -> Dict[str, Any]:
+    ) -> Any:
         candidate = _builder(results)
+        if inspect.isawaitable(candidate):
+            async def _await_candidate() -> Dict[str, Any]:
+                resolved = await candidate  # type: ignore[arg-type]
+                if resolved is None:
+                    return dict(_base)
+                return resolved
+
+            return _await_candidate()  # type: ignore[return-value]
         if candidate is None:
             return dict(_base)
         return candidate

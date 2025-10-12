@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+import inspect
 from typing import Any, Callable, Dict, Iterable, Literal, Mapping, Optional, Sequence, Set
 
 from pydantic import BaseModel
@@ -127,7 +128,7 @@ class DagExecutor:
 
             node = self.spec.nodes[node_id]
             try:
-                payload_model = self._build_inputs(node)
+                payload_model = await self._build_inputs(node)
             except Exception as exc:
                 if self.on_error:
                     self.on_error(node_id, exc, "prepare")
@@ -175,13 +176,18 @@ class DagExecutor:
         if suspend.directive.context is None:
             suspend.directive.context = self.context
 
-    def _build_inputs(self, node: DagNode) -> BaseModel:
+    async def _build_inputs(self, node: DagNode) -> BaseModel:
         if node.payload_builder is not None:
             raw_inputs = node.payload_builder(self.raw_results)
+            if inspect.isawaitable(raw_inputs):
+                raw_inputs = await raw_inputs
         else:
             raw_inputs = {
                 key: self._materialize(value) for key, value in node.inputs.items()
             }
+
+        if raw_inputs is None:
+            raw_inputs = {}
 
         if isinstance(raw_inputs, BaseModel):
             if hasattr(raw_inputs, "model_dump"):

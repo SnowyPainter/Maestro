@@ -10,6 +10,7 @@ from apps.backend.src.modules.timeline.schemas import (
     TimelineEventCollection,
     TimelineEventCollectionOut,
 )
+from apps.backend.src.modules.drafts.schemas import DraftIR
 
 
 def safe_datetime_to_date(dt: Optional[datetime]) -> Optional[date]:
@@ -90,6 +91,20 @@ def _coerce_timeline_collection(value: Any) -> TimelineEventCollection:
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
+def _ensure_draft_ir_props(value: DraftIR) -> DraftIR:
+    # Normalize props for each block
+    for block in value.blocks:
+        if block.type == "text" and hasattr(block, "props") and isinstance(block.props, dict):
+            # If any key like "text", replace with "markdown"
+            keys_to_replace = [k for k in block.props if k == "text"]
+            for k in keys_to_replace:
+                block.props["markdown"] = block.props[k]
+                del block.props[k]
+            # Remove any keys with None value
+            block.props = {k: v for k, v in block.props.items() if v is not None}
+    return value
+
+
 __all__ = [
     "safe_datetime_to_date",    
     "to_aware_utc",
@@ -97,4 +112,5 @@ __all__ = [
     "_ensure_trends_model",
     "_coerce_timeline_event",
     "_coerce_timeline_collection",
+    "_ensure_draft_ir",
 ]

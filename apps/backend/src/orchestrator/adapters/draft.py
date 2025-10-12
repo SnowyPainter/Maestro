@@ -1,75 +1,158 @@
 """Draft-related adapters for flow chaining."""
 
-from typing import Any, Dict, List, Mapping
+from __future__ import annotations
 
-from apps.backend.src.modules.drafts.schemas import DraftSaveRequest
+from typing import Any, Dict, Mapping, Optional
+
+from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
+from apps.backend.src.modules.llm.schemas import DraftFromTrendOutput, LlmResult, PromptKey, PromptVars
+from apps.backend.src.modules.llm.service import LLMService
 from apps.backend.src.modules.trends.schemas import TrendItem, TrendsListResponse
-from apps.backend.src.modules.llm.schemas import LlmInvokeContext, LlmResult, PromptKey, PromptVars
-from apps.backend.src.orchestrator.adapters.utils import _ensure_trends_model
-from apps.backend.src.orchestrator.flows.internal.llm import LlmInvokePayload
+from apps.backend.src.orchestrator.adapters.utils import _ensure_trends_model, _ensure_draft_ir_props
 
+from apps.backend.src.core.logging import setup_logging
+setup_logging()
+import logging
+logger = logging.getLogger(__name__)
 
-def trends_to_draft_adapter(source: Any, base_payload: Dict[str, Any]) -> DraftSaveRequest:
-    """Convert trend research output into a draft payload."""
+def trends_to_draft_adapter(source: Any, base_payload: Dict[str, Any]) -> Any:
+    """Convert trend research output into a draft payload, leveraging LLM when possible."""
 
     trends: TrendsListResponse = _ensure_trends_model(source)
+    payload = _normalize_payload(base_payload)
+    use_llm = payload.pop("_use_llm", True)
 
+    logger.info(f"use_llm: {use_llm}")
+
+    if use_llm:
+        async def _invoke() -> DraftSaveRequest:
+            llm_payload = await _draft_from_trends_llm(trends, payload)
+            if llm_payload is not None:
+                return llm_payload
+            return _draft_from_trends_static(trends, payload)
+
+        return _invoke()
+
+    return _draft_from_trends_static(trends, payload)
+
+
+def _normalize_payload(base_payload: Any) -> Dict[str, Any]:
+    if base_payload is None:
+        return {}
+    if isinstance(base_payload, Mapping):
+        return dict(base_payload)
+    if hasattr(base_payload, "model_dump"):
+        return base_payload.model_dump()  # type: ignore[attr-defined]
+    if hasattr(base_payload, "dict"):
+        return base_payload.dict()  # type: ignore[attr-defined]
+    return dict(base_payload)
+
+
+async def _draft_from_trends_llm(trends: TrendsListResponse, payload: Dict[str, Any]) -> Optional[DraftSaveRequest]:
+    items = list(trends.items or [])
+    if not items:
+        return None
+
+    prompt_vars = PromptVars(
+        trend_data=items,
+        product_name=payload.get("product_name", "not specified"),
+        audience=payload.get("audience", "general"),
+        tone=payload.get("tone", "casual"),
+        goal=payload.get("goal", "social"),
+        text=payload.get("text", "think hard about the best way to write this content"),
+    )
+
+    try:
+        result_dict = await LLMService.instance().ainvoke(PromptKey.DRAFT_FROM_TREND, prompt_vars)
+    except Exception as e:
+        logger.info(f"Exception: {e}")
+        return None
+
+    if isinstance(result_dict, dict) and result_dict.get("error"):
+        return None
+    
+    try:
+        llm_result = LlmResult.model_validate(result_dict)
+        logger.info(f"llm_result: {llm_result}")
+        output = DraftFromTrendOutput.model_validate(llm_result.data)
+        output.draft_ir = _ensure_draft_ir_props(output.draft_ir)
+    except Exception as e:
+        logger.info(f"Exception: {e}")
+        return None
+
+    logger.info(f"output: {output}")
+
+    draft_ir = output.draft_ir
+    final_payload: Dict[str, Any] = {}
+    for key in ("campaign_id", "title", "tags", "goal"):
+        if key in payload:
+            final_payload[key] = payload[key]
+
+    if not final_payload.get("title"):
+        final_payload["title"] = _default_trend_title(trends)
+
+    final_payload["ir"] = draft_ir.model_dump(mode="json")
+    return DraftSaveRequest.model_validate(final_payload)
+
+
+def _draft_from_trends_static(trends: TrendsListResponse, payload: Dict[str, Any]) -> DraftSaveRequest:
     items = list(trends.items or [])[:5]
     if not items:
         raise ValueError("No trend items available to build draft content")
 
-    payload = dict(base_payload)
-    payload["title"] = f"{trends.country} trend recap"
+    final_payload: Dict[str, Any] = {}
+    for key in ("campaign_id", "title", "tags", "goal"):
+        if key in payload:
+            final_payload[key] = payload[key]
+
+    final_payload["title"] = final_payload.get("title") or _default_trend_title(trends)
 
     blocks = []
-
-    # 각 트렌드 아이템에 대해 블록 생성
     for idx, trend in enumerate(items, 1):
-        # 트렌드 텍스트 블록 추가
         trend_lines = _format_trend_line(idx, trend)
-        markdown = "\n".join(trend_lines)
-        blocks.append({
-            "type": "text",
-            "props": {
-                "markdown": markdown,
-            },
-        })
+        blocks.append(
+            {
+                "type": "text",
+                "props": {"markdown": "\n".join(trend_lines)},
+            }
+        )
 
-        # 트렌드에 대표 이미지가 있으면 이미지 블록 추가
         if trend.picture:
-            blocks.append({
-                "type": "image",
-                "props": {
-                    "url": trend.picture,
-                    "alt": f"{trend.title} trend image",
-                },
-            })
-
-        # 뉴스 아이템이 있고 이미지가 있으면 추가 이미지 블록
-        news_items = trend.news_items or []
-        for news in news_items[:1]:  # 최대 1개의 뉴스 이미지만
-            if news.news_item_picture:
-                blocks.append({
+            blocks.append(
+                {
                     "type": "image",
                     "props": {
-                        "url": news.news_item_picture,
-                        "alt": news.news_item_title or f"News image for {trend.title}",
+                        "url": trend.picture,
+                        "alt": f"{trend.title} trend image",
                     },
-                })
+                }
+            )
 
-    payload["ir"] = {
-        "blocks": blocks,
-        "options": {},
-    }
+        news_items = trend.news_items or []
+        for news in news_items[:1]:
+            if news.news_item_picture:
+                blocks.append(
+                    {
+                        "type": "image",
+                        "props": {
+                            "url": news.news_item_picture,
+                            "alt": news.news_item_title or f"News image for {trend.title}",
+                        },
+                    }
+                )
 
-    # Validate payload through the target schema to ensure shape correctness.
-    DraftSaveRequest.model_validate(payload)
-    return payload
+    final_payload["ir"] = DraftIR(blocks=blocks, options={}).model_dump(mode="json")
+    return DraftSaveRequest.model_validate(final_payload)
+
+
+def _default_trend_title(trends: TrendsListResponse) -> str:
+    suffix = trends.country.upper() if trends.country else "global"
+    return f"{suffix} trend recap"
 
 
 def _format_trend_line(idx: int, trend: TrendItem) -> list[str]:
     line = f"{idx}. {trend.title}"
-    details = []
+    details: list[str] = []
     if trend.approx_traffic:
         details.append(f"traffic {trend.approx_traffic}")
     if trend.pub_date:
@@ -86,86 +169,3 @@ def _format_trend_line(idx: int, trend: TrendItem) -> list[str]:
 
 
 __all__ = ["trends_to_draft_adapter"]
-
-
-def _ensure_llm_result(value: Any) -> LlmResult:
-    if isinstance(value, LlmResult):
-        return value
-    if isinstance(value, Mapping):
-        return LlmResult.model_validate(value)
-    raise TypeError("Unsupported LLM result payload")
-
-
-def llm_result_to_draft_adapter(source: Any, base_payload: Dict[str, Any]) -> DraftSaveRequest:
-    """Convert an LLM response into a draft creation payload."""
-
-    result = _ensure_llm_result(source)
-    draft_data = result.data.get("draft_ir") if isinstance(result.data, dict) else None
-    if not draft_data:
-        raise ValueError("LLM 응답에 draft_ir 데이터가 포함되어 있지 않습니다.")
-
-    payload = dict(base_payload or {})
-    payload["ir"] = draft_data
-    return DraftSaveRequest.model_validate(payload)
-
-
-__all__.append("llm_result_to_draft_adapter")
-
-
-def _coerce_prompt_key(value: Any, *, default: PromptKey) -> PromptKey:
-    if isinstance(value, PromptKey):
-        return value
-    if isinstance(value, str):
-        try:
-            return PromptKey(value)
-        except ValueError as exc:
-            raise ValueError(f"Unsupported prompt key '{value}'") from exc
-    return default
-
-
-def _prepare_trend_data(trends: TrendsListResponse) -> list[dict]:
-    prepared: list[dict] = []
-    for item in trends.items or []:
-        prepared.append(item.model_dump(mode="json"))
-    return prepared
-
-
-def trends_to_prompt_adapter(source: Any, base_payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Convert a trend listing into an LLM invoke payload."""
-
-    trends: TrendsListResponse = _ensure_trends_model(source)
-    if not trends.items:
-        raise ValueError("트렌드 데이터가 비어 있어 LLM 입력을 생성할 수 없습니다.")
-
-    payload = dict(base_payload or {})
-    prompt_key = _coerce_prompt_key(payload.get("prompt_key"), default=PromptKey.DRAFT_FROM_TREND)
-
-    vars_payload = dict(payload.get("vars") or {})
-    if "trend_data" not in vars_payload:
-        vars_payload["trend_data"] = _prepare_trend_data(trends)
-
-    for key in ("product_name", "audience", "tone", "goal", "text"):
-        if key not in vars_payload and key in payload:
-            vars_payload[key] = payload[key]
-
-    prompt_vars = PromptVars.model_validate(vars_payload)
-
-    context_payload = payload.get("context")
-    invoke_context = None
-    if context_payload:
-        invoke_context = (
-            context_payload
-            if isinstance(context_payload, LlmInvokeContext)
-            else LlmInvokeContext.model_validate(context_payload)
-        )
-
-    invoke_payload = LlmInvokePayload(
-        prompt_key=prompt_key,
-        vars=prompt_vars,
-        version=payload.get("version"),
-        context=invoke_context,
-    )
-    return invoke_payload.model_dump(exclude_none=True)
-
-
-__all__.append("trends_to_prompt_adapter")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import logging
 import math
 import re
@@ -93,7 +94,7 @@ class PlanExecutionStep:
     id: Optional[str]
     kind: Literal["flow", "dynamic"]
     payload: Dict[str, Any] = field(default_factory=dict)
-    payload_builder: Optional[Callable[[Mapping[str, Any]], Dict[str, Any]]] = None
+    payload_builder: Optional[Callable[[Mapping[str, Any]], Any]] = None
     depends_on: Tuple[str, ...] = field(default_factory=tuple)
     flow_key: Optional[str] = None
     flow: Optional[FlowDefinition] = None
@@ -419,7 +420,7 @@ class FlowPlanner:
                 _to=current.flow_key,
                 _prev_id=prev_id,
                 _base=base_payload,
-            ) -> Dict[str, Any]:
+            ) -> Any:
                 if _prev_id not in result_map:
                     raise KeyError(f"Missing result for step '{_prev_id}'")
                 source = result_map[_prev_id]
@@ -428,7 +429,12 @@ class FlowPlanner:
                 if adapter is None:
                     raise LookupError(f"No adapter resolved for from={_from!r} to={_to!r} with source={type(source).__name__}")
 
-                return adapter(source, dict(_base))
+                result = adapter(source, dict(_base))
+                if inspect.isawaitable(result):
+                    return result
+                if result is None:
+                    return dict(_base)
+                return result
 
             current.payload_builder = builder
             current.depends_on = tuple(sorted(set(current.depends_on + (prev_id,))))
@@ -539,9 +545,15 @@ class FlowPlanner:
         
         # 최종 모델 검증(여기서 한 번 더 안전망)
         try:
-            model_cls(**data)
+            if hasattr(model_cls, "model_validate"):
+                model_cls.model_validate(data)  # type: ignore[attr-defined]
+            else:
+                model_cls(**data)
         except ValidationError:
             logger.info(f"ValidationError: {data}")
+            return None
+        except TypeError:
+            logger.info("TypeError during payload validation; falling back to None")
             return None
         return data
 

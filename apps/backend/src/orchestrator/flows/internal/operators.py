@@ -271,10 +271,11 @@ async def op_prepare_trends_email(
         items=items,
     )
     query_payload = TrendsQueryPayload(country=payload.country, limit=len(items))
-    draft_payload = trends_to_draft_adapter(
-        trends_response,
-        query_payload.model_dump() if hasattr(query_payload, "model_dump") else query_payload.dict(),
+    base_payload = (
+        query_payload.model_dump() if hasattr(query_payload, "model_dump") else query_payload.dict()
     )
+    base_payload["_use_llm"] = False
+    draft_payload = trends_to_draft_adapter(trends_response, base_payload)
     draft_ir: Any = draft_payload["ir"] if isinstance(draft_payload, dict) else draft_payload.ir  # type: ignore[attr-defined]
 
     subject = payload.subject or f"Here's new trends for {payload.persona_name or 'you'}"
