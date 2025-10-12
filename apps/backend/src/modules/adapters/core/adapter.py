@@ -123,7 +123,26 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
                 warnings=[],
                 errors=[f"{self.platform.value} metrics not supported"],
             )
-        return await self._metrics.fetch_metrics(external_id, credentials=credentials)
+        metrics = await self._metrics.fetch_metrics(external_id, credentials=credentials)
+
+        if self._comment_reader:
+            try:
+                comment_result = await self._comment_reader.list_comments(
+                    external_id,
+                    credentials=credentials,
+                    options=None,
+                )
+            except Exception as exc:  # pragma: no cover - defensive guard
+                metrics.comment_errors.append(str(exc))
+            else:
+                metrics.comment_warnings.extend(comment_result.warnings)
+                if comment_result.ok:
+                    metrics.comments = comment_result.comments
+                    metrics.comments_next_cursor = comment_result.next_cursor
+                else:
+                    metrics.comment_errors.extend(comment_result.errors)
+
+        return metrics
 
     # Convenience ---------------------------------------------------------------------------------
     def supports(self) -> CapabilitySupport:

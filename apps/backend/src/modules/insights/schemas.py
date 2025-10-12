@@ -1,9 +1,7 @@
 # src/modules/insights/schemas.py
 from __future__ import annotations
 from datetime import datetime
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from apps.backend.src.modules.common.enums import PlatformKind, KPIKey, MetricsScope, ContentKind, InsightSource
 
@@ -65,3 +63,32 @@ class InsightOut(InsightIn):
     model_config = ConfigDict(from_attributes=True)
     id: int
     ingested_at: datetime
+
+
+class InsightCommentIn(BaseModel):
+    owner_user_id: Optional[int] = None
+    post_publication_id: Optional[int] = None
+    platform: PlatformKind
+    platform_post_id: Optional[str] = None
+    account_persona_id: Optional[int] = None
+    comment_external_id: str
+    parent_external_id: Optional[str] = None
+    author_id: Optional[str] = None
+    author_username: Optional[str] = None
+    text: Optional[str] = None
+    permalink: Optional[str] = None
+    comment_created_at: Optional[datetime] = None
+    metrics: Dict[str, float] = Field(default_factory=dict)
+    raw: Dict[str, Any] = Field(default_factory=dict)
+
+
+class InsightCommentOut(InsightCommentIn):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    ingested_at: datetime
+
+
+class InsightCommentList(BaseModel):
+    comments: List[InsightCommentOut]
+    total: int
+    has_more: bool = False

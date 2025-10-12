@@ -78,6 +78,12 @@ class Settings(BaseSettings):
     THREADS_CLIENT_ID: str = ""
     THREADS_CLIENT_SECRET: str = ""
 
+    # ----- LLM -----
+    LLM_PRIMARY_MODEL: str = "gemini-2.0-flash-lite"
+    GEMINI_API_KEY: Optional[str] = None
+    COST_PER_1K_PROMPT: float = 0.03
+    COST_PER_1K_COMPLETION: float = 0.06
+
     @model_validator(mode="after")
     def _fill_database_urls(self) -> "Settings":
         # DATABASE_URL이 주어지지 않았다면 POSTGRES_*로 async URL 생성

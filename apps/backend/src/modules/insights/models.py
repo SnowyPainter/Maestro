@@ -5,7 +5,15 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import (
-    Integer, String, DateTime, Enum, JSON, ForeignKey, Index, UniqueConstraint
+    Integer,
+    String,
+    DateTime,
+    Enum,
+    JSON,
+    ForeignKey,
+    Index,
+    Text,
+    UniqueConstraint,
 )
 from apps.backend.src.core.db import Base
 from apps.backend.src.modules.common.enums import PlatformKind, InsightSource, MetricsScope, ContentKind
@@ -57,4 +65,48 @@ class InsightSample(Base):
         Index("ix_insight_platform_post_ts", "platform", "platform_post_id", "ts"),
         Index("ix_insight_scope_ts", "scope", "ts"),
         Index("ix_insight_kind_ts", "content_kind", "ts"),
+    )
+
+
+
+class InsightComment(Base):
+    """
+    게시물 댓글 스냅샷
+    - 플랫폼 댓글 ID 기준으로 멱등 저장
+    - 동일 댓글 재수집 시 최신 메타데이터로 덮어쓰기
+    """
+
+    __tablename__ = "insight_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    owner_user_id: Mapped[Optional[int]] = mapped_column(Integer, index=True, nullable=True)
+
+    post_publication_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("post_publications.id", ondelete="SET NULL"), index=True, nullable=True
+    )
+    platform: Mapped[PlatformKind] = mapped_column(Enum(PlatformKind), index=True)
+    platform_post_id: Mapped[Optional[str]] = mapped_column(String(128), index=True)
+
+    account_persona_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("persona_accounts.id", ondelete="SET NULL"), index=True, nullable=True
+    )
+
+    comment_external_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    parent_external_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    author_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    author_username: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    permalink: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+
+    comment_created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+
+    metrics: Mapped[dict] = mapped_column(JSON, default=dict)
+    raw: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    __table_args__ = (
+        UniqueConstraint("platform", "comment_external_id", name="uq_insight_comment_external"),
+        Index("ix_insight_comment_post_created", "post_publication_id", "comment_created_at"),
+        Index("ix_insight_comment_platform_post", "platform", "platform_post_id"),
     )

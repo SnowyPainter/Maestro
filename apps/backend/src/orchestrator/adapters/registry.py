@@ -8,7 +8,8 @@ from dataclasses import dataclass
 import fnmatch
 
 
-from .draft import trends_to_draft_adapter
+from .draft import llm_result_to_draft_adapter, trends_to_draft_adapter, trends_to_prompt_adapter
+from .comment import comments_to_prompt_adapter
 from .timeline import timeline_result_adapter
 
 
@@ -93,6 +94,9 @@ class AdapterRegistry:
 ADAPTERS = AdapterRegistry()
 
 ADAPTERS.register("bff.trends.list_trends", "drafts.create", trends_to_draft_adapter, priority=10)
+ADAPTERS.register("bff.trends.list_trends", "internal.llm.invoke", trends_to_prompt_adapter, priority=8)
+ADAPTERS.register("internal.insights.list_comments", "internal.llm.invoke", comments_to_prompt_adapter, priority=10)
+ADAPTERS.register("internal.llm.invoke", "drafts.create", llm_result_to_draft_adapter, priority=10)
 ADAPTERS.register("bff.timeline.*", "bff.timeline.*", timeline_result_adapter, priority=5)
 
 

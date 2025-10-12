@@ -585,7 +585,7 @@ class ThreadsAPI:
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {
-            "fields": "id,parent_id,text,created_time,permalink,from{id,username}",
+            "fields": "id,parent_id,text,created_time,permalink,like_count,reply_count,from{id,username}",
         }
         if limit is not None:
             params["limit"] = str(limit)
@@ -856,6 +856,20 @@ def parse_comment_node(
     created_at = parse_iso_datetime(node.get("created_time"))
     permalink = node.get("permalink") if isinstance(node.get("permalink"), str) else None
 
+    metrics: Dict[str, float] = {}
+    like_count = node.get("like_count")
+    if isinstance(like_count, (int, float)):
+        try:
+            metrics["likes"] = float(like_count)
+        except (TypeError, ValueError):
+            pass
+    reply_count = node.get("reply_count")
+    if isinstance(reply_count, (int, float)):
+        try:
+            metrics["replies"] = float(reply_count)
+        except (TypeError, ValueError):
+            pass
+
     comment = Comment(
         external_id=comment_id,
         parent_external_id=parent_id,
@@ -865,6 +879,7 @@ def parse_comment_node(
         created_at=created_at,
         permalink=permalink,
         raw=node,
+        metrics=metrics,
     )
 
     return comment, warnings

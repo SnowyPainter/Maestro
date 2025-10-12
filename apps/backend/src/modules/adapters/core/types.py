@@ -1,7 +1,7 @@
 # apps/backend/src/modules/adapters/core/types.py
 from __future__ import annotations
 from typing import Protocol, Optional, Dict, Any, List, Literal, TypedDict, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from apps.backend.src.modules.common.enums import ContentKind, PlatformKind, VariantStatus, MetricsScope
@@ -70,6 +70,7 @@ class Comment:
     created_at: Optional[datetime]
     permalink: Optional[str]
     raw: Dict[str, Any]
+    metrics: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -97,6 +98,10 @@ class MetricsResult:
     raw: Dict[str, Any]
     warnings: list[str]
     errors: list[str]
+    comments: List[Comment] = field(default_factory=list)
+    comments_next_cursor: Optional[str] = None
+    comment_warnings: list[str] = field(default_factory=list)
+    comment_errors: list[str] = field(default_factory=list)
 
 def _coerce_str(values: Mapping[str, Any], keys: List[str]) -> Optional[str]:
     for key in keys:
