@@ -1,34 +1,12 @@
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect } from "react";
 import { AlertTriangle, Loader2, RefreshCw, FileWarning, CheckCircle2, Clock, X, CheckCircle } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
-import {
-  useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet,
-  RenderedVariantBlocks,
-  PlatformKind,
-  PostPublicationOut,
-} from "@/lib/api/generated";
+import { useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet, RenderedVariantBlocks, PlatformKind } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import {
-  ensurePlatformKind,
-  formatCompiledAt,
-  platformPresentation,
-  countListItems,
-  DraftVariantRender,
-} from "../draftVariant";
+import { ensurePlatformKind, formatCompiledAt, platformPresentation, countListItems, DraftVariantRender } from "../draftVariant";
 
 const STATUS_BADGES: Record<string, string> = {
   valid: "bg-emerald-100 text-emerald-800",
@@ -38,33 +16,6 @@ const STATUS_BADGES: Record<string, string> = {
 };
 
 
-function toLocalInputValue(value?: string | null): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 16);
-}
-
-function fromLocalInputValue(value: string): string {
-  const date = new Date(value);
-  return date.toISOString();
-}
-
-function defaultScheduleLocal(): string {
-  const next = new Date();
-  next.setMinutes(next.getMinutes() + 10);
-  next.setSeconds(0, 0);
-  const local = new Date(next.getTime() - next.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 16);
-}
-
-function formatScheduleDisplay(value?: string | null): string {
-  if (!value) return "Not scheduled";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-}
 
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && error !== null) {
@@ -83,67 +34,6 @@ function getErrorMessage(error: unknown): string {
   return "Failed to update ready state";
 }
 
-interface ScheduleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  variant: DraftVariantRender;
-  currentSchedule: string;
-  onScheduleChange: (value: string) => void;
-  onSave: () => void;
-  isSaving: boolean;
-  platformLabel: string;
-}
-
-function ScheduleDialog({
-  open,
-  onOpenChange,
-  variant,
-  currentSchedule,
-  onScheduleChange,
-  onSave,
-  isSaving,
-  platformLabel,
-}: ScheduleDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Schedule Post</DialogTitle>
-          <DialogDescription>
-            Set a schedule time for your {platformLabel} post.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="schedule-time" className="text-right text-sm font-medium">
-              Time
-            </label>
-            <Input
-              id="schedule-time"
-              type="datetime-local"
-              value={currentSchedule}
-              onChange={(e) => onScheduleChange(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
-          {variant.post_publication_scheduled_at && (
-            <div className="text-sm text-muted-foreground">
-              Currently scheduled: {formatScheduleDisplay(variant.post_publication_scheduled_at)}
-            </div>
-          )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={onSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Schedule"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 
 function mediaSummary(blocks: RenderedVariantBlocks | null | undefined) {
@@ -183,7 +73,6 @@ export function DraftVariantList({
   onSelect?: (variant: DraftVariantRender) => void;
   compact?: boolean;
 }) {
-  const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet(draftId || 0, {
     query: {
       enabled: draftId !== undefined && draftId !== null && !providedVariants,
@@ -191,103 +80,9 @@ export function DraftVariantList({
   });
 
   const variants = useMemo(() => providedVariants ?? data ?? [], [providedVariants, data]);
-  const [scheduleInputs, setScheduleInputs] = useState<Record<number, string>>({});
-  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
-  const [selectedVariantForSchedule, setSelectedVariantForSchedule] = useState<DraftVariantRender | null>(null);
 
   const hasDraftContext = typeof draftId === "number" && !Number.isNaN(draftId);
   const isMutating = false;
-
-  useEffect(() => {
-    setScheduleInputs((prev) => {
-      const next = { ...prev };
-      variants.forEach((variant) => {
-        if (next[variant.variant_id] === undefined && variant.post_publication_scheduled_at) {
-          next[variant.variant_id] = toLocalInputValue(variant.post_publication_scheduled_at);
-        }
-      });
-      return next;
-    });
-  }, [variants]);
-
-  const getScheduleInputValue = useCallback(
-    (variant: DraftVariantRender) => {
-      const stored = scheduleInputs[variant.variant_id];
-      if (stored !== undefined) {
-        return stored;
-      }
-      return toLocalInputValue(variant.post_publication_scheduled_at);
-    },
-    [scheduleInputs],
-  );
-
-  const setScheduleInputValue = useCallback((variantId: number, value: string) => {
-    setScheduleInputs((prev) => ({ ...prev, [variantId]: value }));
-  }, []);
-
-  const openScheduleDialog = useCallback((variant: DraftVariantRender) => {
-    setSelectedVariantForSchedule(variant);
-    // Set default schedule value if not already set
-    if (!scheduleInputs[variant.variant_id]) {
-      setScheduleInputValue(variant.variant_id, defaultScheduleLocal());
-    }
-    setScheduleDialogOpen(true);
-  }, [scheduleInputs, setScheduleInputValue]);
-
-  const closeScheduleDialog = useCallback(() => {
-    setScheduleDialogOpen(false);
-    setSelectedVariantForSchedule(null);
-  }, []);
-
-  const invalidateVariantQueries = useCallback(
-    async (platform: string) => {
-      if (!hasDraftContext) {
-        return;
-      }
-      const baseKey = [`/api/bff/drafts/${draftId}/variants`];
-      const platformKey = [`/api/bff/drafts/${draftId}/variants/${platform}`];
-      await Promise.allSettled([
-        queryClient.invalidateQueries({ queryKey: baseKey }),
-        queryClient.invalidateQueries({ queryKey: platformKey }),
-      ]);
-      await refetch();
-    },
-    [hasDraftContext, draftId, queryClient, refetch],
-  );
-
-  const handleScheduleDialogSave = useCallback(async () => {
-    if (!selectedVariantForSchedule) return;
-
-    const scheduleLocal = getScheduleInputValue(selectedVariantForSchedule);
-    if (!scheduleLocal) {
-      toast.error("Select a scheduled time.");
-      return;
-    }
-
-    // TODO: Implement scheduling API call
-    toast.error("Scheduling feature is temporarily disabled.");
-    closeScheduleDialog();
-  }, [selectedVariantForSchedule, getScheduleInputValue, closeScheduleDialog]);
-
-
-  const handleScheduleSave = useCallback(
-    async (variant: DraftVariantRender) => {
-      if (!hasDraftContext) {
-        toast.error("Draft context is required to schedule publishing.");
-        return;
-      }
-
-      const scheduleLocal = getScheduleInputValue(variant);
-      if (!scheduleLocal) {
-        toast.error("Select a scheduled time.");
-        return;
-      }
-
-      // TODO: Implement scheduling API call
-      toast.error("Scheduling feature is temporarily disabled.");
-    },
-    [getScheduleInputValue, hasDraftContext],
-  );
 
   // 컴파일 중인 variants가 있으면 자동 갱신
   const hasPendingVariants = variants.some(variant => variant.status.toLowerCase() === 'pending');
@@ -393,40 +188,6 @@ export function DraftVariantList({
                   {mediaSummary(variant.rendered_blocks ?? undefined)}
                 </div>
 
-                {hasDraftContext && (
-                  <div className="flex items-center justify-between mt-3 pt-2 border-t">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={!hasDraftContext || isLocked || isMutating}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (!isLocked && !isMutating) {
-                            openScheduleDialog(variant);
-                          }
-                        }}
-                        className="text-xs h-7"
-                      >
-                        {isActiveReady ? "Reschedule Post" : "Schedule Post"}
-                      </Button>
-                    </div>
-                    {isActiveReady && (
-                      <button
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (!isLocked && !isMutating) {
-                            openScheduleDialog(variant);
-                          }
-                        }}
-                        disabled={isLocked || isMutating}
-                      >
-                        {formatScheduleDisplay(variant.post_publication_scheduled_at)}
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}
@@ -519,44 +280,6 @@ export function DraftVariantList({
                 </div>
               ) : null}
 
-              <div className="border-t pt-3 mt-2 space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!hasDraftContext || isLocked || isMutating}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (!isLocked && !isMutating) {
-                          openScheduleDialog(variant);
-                        }
-                      }}
-                    >
-                      {isActiveReady ? "Reschedule Post" : "Schedule Post"}
-                    </Button>
-                    {isActiveReady && publicationStatus && (
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {publicationStatus}
-                      </Badge>
-                    )}
-                  </div>
-                  {isActiveReady && (
-                    <button
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (!isLocked && !isMutating) {
-                          openScheduleDialog(variant);
-                        }
-                      }}
-                      disabled={isLocked || isMutating}
-                    >
-                      {formatScheduleDisplay(variant.post_publication_scheduled_at)}
-                    </button>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         );
@@ -564,18 +287,6 @@ export function DraftVariantList({
         </div>
       )}
 
-      {selectedVariantForSchedule && scheduleDialogOpen && (
-        <ScheduleDialog
-          open={scheduleDialogOpen}
-          onOpenChange={setScheduleDialogOpen}
-          variant={selectedVariantForSchedule!}
-          currentSchedule={getScheduleInputValue(selectedVariantForSchedule!)}
-          onScheduleChange={(value) => setScheduleInputValue(selectedVariantForSchedule!.variant_id, value)}
-          onSave={handleScheduleDialogSave}
-          isSaving={isMutating}
-          platformLabel={platformPresentation[ensurePlatformKind(selectedVariantForSchedule!.platform) ?? PlatformKind.instagram]?.label ?? selectedVariantForSchedule!.platform}
-        />
-      )}
     </>
   );
 }
