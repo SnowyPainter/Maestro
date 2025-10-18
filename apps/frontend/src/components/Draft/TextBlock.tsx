@@ -61,6 +61,7 @@ export function TextBlock({
                 onKeyDown={handleKeyDown}
                 onPaste={onPaste}
                 onBlur={onBlur}
+                data-block-id={blockId} // Add this line
                 className="p-3 min-h-20 resize-none border-0 bg-transparent focus:ring-0 text-sm"
             />
         );

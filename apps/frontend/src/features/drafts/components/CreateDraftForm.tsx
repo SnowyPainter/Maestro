@@ -75,9 +75,13 @@ export function CreateDraftForm({ onSuccess }: { onSuccess: (draftId: number) =>
         <Input
           id="title"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => setTitle(e.target.value.slice(0, 140))}
           placeholder="e.g. My new blog post"
+          maxLength={140}
         />
+        <div className="text-sm text-gray-500">
+          {title.length}/140 characters
+        </div>
       </div>
       <div className="grid gap-2">
         <label htmlFor="text">Content</label>

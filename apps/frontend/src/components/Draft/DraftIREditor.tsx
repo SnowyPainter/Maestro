@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Type, Image as ImageIcon } from "lucide-react";
 import { DraftIR } from "@/lib/api/generated";
@@ -182,6 +182,7 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
     };
 
     const handleBlockBlur = (blockId: string) => {
+        if ((window as any).isGeneratingText) return;
         updateBlock(blockId, { expanded: false });
     };
 
@@ -197,6 +198,21 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
     const handleVideoRatioChange = (blockId: string, value: string) => {
         updateBlockProps(blockId, { ratio: value });
     };
+
+    useEffect(() => {
+        const handleExpand = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const { blockId } = customEvent.detail;
+            if (blocks.some(b => b.id === blockId)) {
+                updateBlock(blockId, { expanded: true });
+            }
+        };
+
+        window.addEventListener('expand-text-block', handleExpand);
+        return () => {
+            window.removeEventListener('expand-text-block', handleExpand);
+        };
+    }, [blocks]);
 
 
     return (

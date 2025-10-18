@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Dict, Optional, Tuple, Any
+import threading
+from typing import Any, Dict, Optional, Tuple
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from apps.backend.src.core.celery_app import celery_app
 from apps.backend.src.core.context import (
@@ -16,14 +17,42 @@ from apps.backend.src.core.context import (
     get_request_id,
     get_user_id,
 )
-from apps.backend.src.core.db import SessionLocal as AsyncSessionLocal
+from apps.backend.src.core.config import settings
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.campaigns.models import Campaign
 from apps.backend.src.modules.llm.schemas import LlmInvokeContext, PromptKey, PromptVars
 from apps.backend.src.modules.llm.service import LLMService
-from apps.backend.src.modules.playbooks import service as playbook_service
+from apps.backend.src.modules.playbooks.models import Playbook, PlaybookLog
 
 logger = logging.getLogger(__name__)
+ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
+_LOOP: Optional[asyncio.AbstractEventLoop] = None
+_LOOP_THREAD: Optional[threading.Thread] = None
+_LOOP_LOCK = threading.Lock()
+
+
+def _loop_runner(loop: asyncio.AbstractEventLoop) -> None:
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+
+
+def _ensure_loop() -> asyncio.AbstractEventLoop:
+    global _LOOP, _LOOP_THREAD
+    with _LOOP_LOCK:
+        needs_start = False
+        if _LOOP is None or _LOOP.is_closed():
+            _LOOP = asyncio.new_event_loop()
+            needs_start = True
+        if needs_start or _LOOP_THREAD is None or not _LOOP_THREAD.is_alive():
+            _LOOP_THREAD = threading.Thread(
+                target=_loop_runner,
+                name="coworker-generate-loop",
+                args=(_LOOP,),
+                daemon=True,
+            )
+            _LOOP_THREAD.start()
+    return _LOOP  # type: ignore[return-value]
 
 
 def _parse_int(value: Optional[str]) -> Optional[int]:
@@ -42,25 +71,36 @@ def _iso(dt) -> Optional[str]:
         return None
 
 
-async def _load_persona_scope(
-    session: AsyncSession, persona_account_id: Optional[int]
+def _gather_context(
+    persona_account_id: Optional[int],
+    campaign_id: Optional[int],
+) -> Tuple[Optional[Persona], Optional[Campaign], Optional[Dict[str, Any]]]:
+    with SessionLocal() as session:
+        persona, _ = _load_persona_scope(session, persona_account_id)
+        campaign = _load_campaign(session, campaign_id, persona)
+        playbook_summary = _load_playbook_summary(session, persona, campaign)
+    return persona, campaign, playbook_summary
+
+
+def _load_persona_scope(
+    session: Session, persona_account_id: Optional[int]
 ) -> Tuple[Optional[Persona], Optional[PersonaAccount]]:
     if persona_account_id is None:
         return None, None
-    acct = await session.get(PersonaAccount, persona_account_id)
+    acct = session.get(PersonaAccount, persona_account_id)
     if acct is None:
         return None, None
-    persona = await session.get(Persona, acct.persona_id)
+    persona = session.get(Persona, acct.persona_id)
     return persona, acct
 
 
-async def _load_campaign(
-    session: AsyncSession,
+def _load_campaign(
+    session: Session,
     campaign_id: Optional[int],
     persona: Optional[Persona] = None,
 ) -> Optional[Campaign]:
     if campaign_id is not None:
-        return await session.get(Campaign, campaign_id)
+        return session.get(Campaign, campaign_id)
     if persona is None:
         return None
     stmt = (
@@ -69,11 +109,11 @@ async def _load_campaign(
         .order_by(Campaign.created_at.desc())
         .limit(1)
     )
-    return (await session.execute(stmt)).scalar_one_or_none()
+    return session.execute(stmt).scalar_one_or_none()
 
 
-async def _load_playbook_summary(
-    session: AsyncSession,
+def _load_playbook_summary(
+    session: Session,
     persona: Optional[Persona],
     campaign: Optional[Campaign],
     *,
@@ -81,19 +121,24 @@ async def _load_playbook_summary(
 ) -> Optional[Dict[str, Any]]:
     if persona is None or campaign is None:
         return None
-    playbook = await playbook_service.find_playbook(
-        session,
-        persona_id=persona.id,
-        campaign_id=campaign.id,
+    playbook_stmt = (
+        select(Playbook)
+        .where(
+            Playbook.persona_id == persona.id,
+            Playbook.campaign_id == campaign.id,
+        )
+        .limit(1)
     )
+    playbook = session.execute(playbook_stmt).scalar_one_or_none()
     if playbook is None:
         return None
-    logs, _ = await playbook_service.list_logs(
-        session,
-        playbook_id=playbook.id,
-        limit=log_limit,
-        offset=0,
+    logs_stmt = (
+        select(PlaybookLog)
+        .where(PlaybookLog.playbook_id == playbook.id)
+        .order_by(PlaybookLog.timestamp.desc())
+        .limit(log_limit)
     )
+    logs = session.execute(logs_stmt).scalars().all()
     return {
         "id": playbook.id,
         "aggregate_kpi": playbook.aggregate_kpi,
@@ -155,37 +200,33 @@ def _build_llm_context(persona_account_id: Optional[int]) -> LlmInvokeContext:
     )
 
 
-async def _run_generation(prompt_text: str) -> str:
+async def _invoke_llm(
+    prompt_text: str,
+    *,
+    persona_account_id: Optional[int],
+    persona_brief: Optional[Dict[str, Any]],
+    campaign_brief: Optional[Dict[str, Any]],
+    playbook_summary: Optional[Dict[str, Any]],
+) -> str:
     service = LLMService.instance()
-    persona_account_id = _parse_int(get_persona_account_id())
-    campaign_id = _parse_int(get_campaign_id())
-
-    async with AsyncSessionLocal() as session:  # type: ignore[assignment]
-        persona, _ = await _load_persona_scope(session, persona_account_id)
-        campaign = await _load_campaign(session, campaign_id, persona)
-        playbook_summary = await _load_playbook_summary(session, persona, campaign)
-
-        persona_brief = _persona_to_brief(persona)
-        campaign_brief = _campaign_to_brief(campaign)
-
-        prompt_vars = PromptVars(
-            text=prompt_text,
-            tone=persona_brief.get("tone") if persona_brief else None,
-            persona_brief=persona_brief,
-            campaign_brief=campaign_brief,
-            playbook_summary=playbook_summary,
-        )
-        ctx = _build_llm_context(persona_account_id)
-        result = await service.ainvoke(
-            PromptKey.COWORKER_CONTEXTUAL_WRITE,
-            prompt_vars,
-            ctx=ctx,
-            session=session,
-        )
+    prompt_vars = PromptVars(
+        text=prompt_text,
+        tone=persona_brief.get("tone") if persona_brief else None,
+        persona_brief=persona_brief,
+        campaign_brief=campaign_brief,
+        playbook_summary=playbook_summary,
+    )
+    ctx = _build_llm_context(persona_account_id)
+    result = await service.ainvoke(
+        PromptKey.COWORKER_CONTEXTUAL_WRITE,
+        prompt_vars,
+        ctx=ctx,
+    )
 
     data = result.get("data") or {}
     text = data.get("text")
     if not text:
+        logger.error("LLM response missing 'text' field", extra={"result": result})
         raise ValueError("LLM response did not include 'text' field")
     return text
 
@@ -201,12 +242,28 @@ def generate_contextual_text(self, prompt_text: str) -> str:
     """
     Generate brand-aware copy from a single user prompt.
     """
+    persona_account_id = _parse_int(get_persona_account_id())
+    campaign_id = _parse_int(get_campaign_id())
+    persona, campaign, playbook_summary = _gather_context(
+        persona_account_id,
+        campaign_id,
+    )
+    persona_brief = _persona_to_brief(persona)
+    campaign_brief = _campaign_to_brief(campaign)
 
     async def _execute() -> str:
-        return await _run_generation(prompt_text)
+        return await _invoke_llm(
+            prompt_text,
+            persona_account_id=persona_account_id,
+            persona_brief=persona_brief,
+            campaign_brief=campaign_brief,
+            playbook_summary=playbook_summary,
+        )
 
+    loop = _ensure_loop()
+    future = asyncio.run_coroutine_threadsafe(_execute(), loop)
     try:
-        return asyncio.run(_execute())
+        return future.result()
     except Exception as exc:
         logger.exception("generate_contextual_text failed")
         if self.request.retries < self.max_retries:

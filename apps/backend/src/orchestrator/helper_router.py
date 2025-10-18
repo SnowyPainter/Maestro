@@ -60,16 +60,25 @@ class GenerateTextResponse(BaseModel):
 
 @router.post("/coworker/generate-text", response_model=GenerateTextResponse)
 async def coworker_generate_text(payload: GenerateTextRequest) -> GenerateTextResponse:
+    print(f"DEBUG: Received generate-text request with payload: {payload}")
+    print(f"DEBUG: payload.text = {payload.text!r}")
+    print(f"DEBUG: payload.timeout = {payload.timeout}")
+
     task = generate_contextual_text.delay(payload.text)
+    print(f"DEBUG: Created Celery task with ID: {task.id}")
 
     loop = asyncio.get_running_loop()
     try:
+        print(f"DEBUG: Waiting for task completion with timeout {payload.timeout}s...")
         text: str = await loop.run_in_executor(
             None, lambda: task.get(timeout=payload.timeout)
         )
+        print(f"DEBUG: Task completed successfully, generated text length: {len(text)}")
     except TimeoutError as exc:
+        print(f"DEBUG: Task timed out after {payload.timeout}s")
         raise HTTPException(status_code=504, detail="Generation timed out") from exc
     except Exception as exc:  # pragma: no cover
+        print(f"DEBUG: Task failed with exception: {exc}")
         raise HTTPException(status_code=500, detail="Generation failed") from exc
 
     return GenerateTextResponse(task_id=task.id, text=text)

@@ -20,8 +20,8 @@ def _validate_template_vars(template_vars: Set[str], provided_vars: Dict[str, An
     """템플릿 변수 검증"""
     all_allowed_vars = metadata.required_vars | metadata.optional_vars | {"extra"} | _INTERNAL_TEMPLATE_VARS
 
-    # 허용되지 않은 변수가 있는지 확인
-    provided_keys = set(provided_vars.keys())
+    # 허용되지 않은 변수가 있는지 확인 (None이 아닌 값만 고려)
+    provided_keys = set(key for key, value in provided_vars.items() if value is not None)
     provided_keys.update(_INTERNAL_TEMPLATE_VARS)
     extra_vars = provided_keys - all_allowed_vars
     if extra_vars:
@@ -33,7 +33,10 @@ def _validate_template_vars(template_vars: Set[str], provided_vars: Dict[str, An
         raise ValueError(f"프롬프트 '{metadata.key.value}'에 필수 변수들 누락: {missing_required}")
 
     # 템플릿에 필요한 변수들이 제공되었는지 확인 (템플릿 변수 검증)
-    template_missing = template_vars - provided_keys
+    # None 값 변수들도 템플릿에서 사용할 수 있으므로 모두 포함
+    all_provided_keys = set(provided_vars.keys())
+    all_provided_keys.update(_INTERNAL_TEMPLATE_VARS)
+    template_missing = template_vars - all_provided_keys
     if template_missing:
         raise ValueError(f"템플릿에 필요한 변수들 누락: {template_missing}")
 
@@ -161,7 +164,7 @@ Instructions:
 - Keep it under 200 words, actionable, and ready to publish as-is.
 - Avoid markdown unless the context explicitly requests formatting.
 
-Return ONLY JSON with a single field `text` containing the final copy. No explanations.
+Return ONLY JSON with structure {"text": "..."}. No explanations.
 """,
 }
 
@@ -183,7 +186,7 @@ class PromptRegistry:
     def validate_vars(self, key: PromptKey, vars: PromptVars) -> None:
         """변수 검증 수행"""
         metadata = self.get_metadata(key)
-        vars_dict = vars.model_dump(mode="json", exclude_none=True)
+        vars_dict = vars.model_dump(mode="json")
 
         # 템플릿에서 사용하는 변수들 추출 (간단한 정규식으로 {{ var }} 패턴 찾기)
         template_name = key.value
@@ -207,7 +210,7 @@ class PromptRegistry:
         template = _env.get_template(template_name)
 
         # 변수에 json_schema 추가
-        render_vars = vars.model_dump(mode="json", exclude_none=True)
+        render_vars = vars.model_dump(mode="json")
         render_vars["json_schema"] = json_schema
 
         return template.render(**render_vars)
