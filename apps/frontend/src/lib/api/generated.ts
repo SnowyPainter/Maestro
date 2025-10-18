@@ -616,6 +616,22 @@ export interface FlowMatchSummary {
   tags?: string[];
 }
 
+export interface GenerateTextRequest {
+  /** User prompt to transform into brand-aware copy */
+  text: string;
+  /**
+   * Seconds to wait for the generation result
+   * @minimum 5
+   * @maximum 300
+   */
+  timeout?: number;
+}
+
+export interface GenerateTextResponse {
+  task_id: string;
+  text: string;
+}
+
 export interface HTTPValidationError {
   detail?: ValidationError[];
 }
@@ -7761,6 +7777,71 @@ export function useListSlotHintsApiOrchestratorHelpersSlotHintsGet<TData = Await
 
 
 
+/**
+ * @summary Coworker Generate Text
+ */
+export const coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost = (
+    generateTextRequest: GenerateTextRequest,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GenerateTextResponse>(
+      {url: `/api/orchestrator/helpers/coworker/generate-text`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: generateTextRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCoworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost>>, TError,{data: GenerateTextRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost>>, TError,{data: GenerateTextRequest}, TContext> => {
+
+const mutationKey = ['coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost>>, {data: GenerateTextRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CoworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostMutationResult = NonNullable<Awaited<ReturnType<typeof coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost>>>
+    export type CoworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostMutationBody = GenerateTextRequest
+    export type CoworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Coworker Generate Text
+ */
+export const useCoworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost>>, TError,{data: GenerateTextRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPost>>,
+        TError,
+        {data: GenerateTextRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCoworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 /**
  * @summary Health
  */

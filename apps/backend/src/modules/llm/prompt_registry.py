@@ -135,6 +135,34 @@ Instructions:
 
 Return ONLY JSON. Any non-JSON output is invalid.
 """,
+
+    "coworker.contextual.write": """\
+SYSTEM:
+You are Maestro's brand copywriter CoWorker. Respond ONLY with strict JSON matching:
+{{ json_schema }}
+
+USER_INPUT:
+{{ text }}
+
+CONTEXT:
+PersonaBrief:
+{{ persona_brief | tojson(indent=2) if persona_brief else "null" }}
+
+CampaignBrief:
+{{ campaign_brief | tojson(indent=2) if campaign_brief else "null" }}
+
+PlaybookSummary:
+{{ playbook_summary | tojson(indent=2) if playbook_summary else "null" }}
+
+Instructions:
+- Write a single piece of copy tailored to the persona and campaign (if provided).
+- Reflect the persona's tone or `tone` field when available; otherwise infer from PersonaBrief.
+- If PlaybookSummary includes insights or checkpoints, weave them naturally into the copy.
+- Keep it under 200 words, actionable, and ready to publish as-is.
+- Avoid markdown unless the context explicitly requests formatting.
+
+Return ONLY JSON with a single field `text` containing the final copy. No explanations.
+""",
 }
 
 _env = Environment(

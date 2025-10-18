@@ -2813,6 +2813,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/helpers/coworker/generate-text:
+    post:
+      tags:
+      - helpers
+      summary: Coworker Generate Text
+      operationId: coworker_generate_text_api_orchestrator_helpers_coworker_generate_text_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateTextRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateTextResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/health:
     get:
       summary: Health
@@ -4059,6 +4084,36 @@ components:
       - score
       - strategy
       title: FlowMatchSummary
+    GenerateTextRequest:
+      properties:
+        text:
+          type: string
+          title: Text
+          description: User prompt to transform into brand-aware copy
+        timeout:
+          type: integer
+          maximum: 300.0
+          minimum: 5.0
+          title: Timeout
+          description: Seconds to wait for the generation result
+          default: 60
+      type: object
+      required:
+      - text
+      title: GenerateTextRequest
+    GenerateTextResponse:
+      properties:
+        task_id:
+          type: string
+          title: Task Id
+        text:
+          type: string
+          title: Text
+      type: object
+      required:
+      - task_id
+      - text
+      title: GenerateTextResponse
     HTTPValidationError:
       properties:
         detail:

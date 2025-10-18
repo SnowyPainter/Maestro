@@ -1421,6 +1421,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/helpers/coworker/generate-text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Coworker Generate Text */
+        post: operations["coworker_generate_text_api_orchestrator_helpers_coworker_generate_text_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -2150,6 +2167,27 @@ export interface components {
             description?: string | null;
             /** Tags */
             tags?: string[];
+        };
+        /** GenerateTextRequest */
+        GenerateTextRequest: {
+            /**
+             * Text
+             * @description User prompt to transform into brand-aware copy
+             */
+            text: string;
+            /**
+             * Timeout
+             * @description Seconds to wait for the generation result
+             * @default 60
+             */
+            timeout: number;
+        };
+        /** GenerateTextResponse */
+        GenerateTextResponse: {
+            /** Task Id */
+            task_id: string;
+            /** Text */
+            text: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -5941,6 +5979,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SlotHintItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coworker_generate_text_api_orchestrator_helpers_coworker_generate_text_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateTextRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerateTextResponse"];
                 };
             };
             /** @description Validation Error */

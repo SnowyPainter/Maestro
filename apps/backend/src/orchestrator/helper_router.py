@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import List, Optional
 
-from fastapi import APIRouter, Query
+from celery.exceptions import TimeoutError
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from .slot_mentions import SlotHint, filter_slot_hints
+from apps.backend.src.workers.CoWorker import generate_contextual_text
 
 
 router = APIRouter(prefix="/helpers", tags=["helpers"])
@@ -43,6 +46,33 @@ async def list_slot_hints(
 ) -> List[SlotHintItem]:
     hints = filter_slot_hints(query=query, flow=flow, limit=limit)
     return [SlotHintItem.from_hint(hint) for hint in hints]
+
+
+class GenerateTextRequest(BaseModel):
+    text: str = Field(..., description="User prompt to transform into brand-aware copy")
+    timeout: int = Field(60, ge=5, le=300, description="Seconds to wait for the generation result")
+
+
+class GenerateTextResponse(BaseModel):
+    task_id: str
+    text: str
+
+
+@router.post("/coworker/generate-text", response_model=GenerateTextResponse)
+async def coworker_generate_text(payload: GenerateTextRequest) -> GenerateTextResponse:
+    task = generate_contextual_text.delay(payload.text)
+
+    loop = asyncio.get_running_loop()
+    try:
+        text: str = await loop.run_in_executor(
+            None, lambda: task.get(timeout=payload.timeout)
+        )
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail="Generation timed out") from exc
+    except Exception as exc:  # pragma: no cover
+        raise HTTPException(status_code=500, detail="Generation failed") from exc
+
+    return GenerateTextResponse(task_id=task.id, text=text)
 
 
 __all__ = ["router"]

@@ -2468,6 +2468,26 @@ export const listSlotHintsApiOrchestratorHelpersSlotHintsGetResponse = zod.array
 
 
 /**
+ * @summary Coworker Generate Text
+ */
+export const coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostBodyTimeoutDefault = 60;
+export const coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostBodyTimeoutMin = 5;
+
+export const coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostBodyTimeoutMax = 300;
+
+
+export const coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostBody = zod.object({
+  "text": zod.string().describe('User prompt to transform into brand-aware copy'),
+  "timeout": zod.number().min(coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostBodyTimeoutMin).max(coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostBodyTimeoutMax).default(coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostBodyTimeoutDefault).describe('Seconds to wait for the generation result')
+})
+
+export const coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostResponse = zod.object({
+  "task_id": zod.string(),
+  "text": zod.string()
+})
+
+
+/**
  * @summary Health
  */
 export const healthApiHealthGetResponse = zod.any()

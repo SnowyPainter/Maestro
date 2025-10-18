@@ -22,6 +22,11 @@ from apps.backend.src.core.logging import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
+def _safe_get(payload: Dict[str, Any], key: str, default: Any = "") -> Any:
+    if payload.get(key, default) is None:
+        return default
+    return payload.get(key, default)
+
 async def ingest_draft_mail(payload: Dict[str, Any], runtime: ExecutionRuntime | None = None) -> Dict[str, Any]:
     """Process inbound email and create draft.
 
@@ -32,19 +37,19 @@ async def ingest_draft_mail(payload: Dict[str, Any], runtime: ExecutionRuntime |
         Processing result with draft information
     """
     # Extract email information
-    subject = payload.get("subject", "").strip()
+    subject = _safe_get(payload, "subject", "").strip()
     from_email = (
-        payload.get("from") or
-        payload.get("sender") or
-        payload.get("envelope", {}).get("from")
+        _safe_get(payload, "from") or
+        _safe_get(payload, "sender") or
+        _safe_get(payload, "envelope", {}).get("from", "")
     )
     if not from_email:
         raise ValueError("Sender email not found")
 
     body_text = (
-        payload.get("text") or
-        payload.get("body") or
-        payload.get("text/plain") or
+        _safe_get(payload, "text", "") or
+        _safe_get(payload, "body", "") or
+        _safe_get(payload, "text/plain", "") or
         ""
     ).strip()
 

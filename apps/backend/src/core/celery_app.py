@@ -16,6 +16,7 @@ celery_app = Celery(
         "apps.backend.src.workers.Synchro.tasks",
         "apps.backend.src.workers.Adapter.tasks",
         "apps.backend.src.workers.CoWorker.execute_due_schedules",
+        "apps.backend.src.workers.CoWorker.generate_texts",
     ],
 )
 

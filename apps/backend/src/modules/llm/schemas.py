@@ -14,6 +14,7 @@ class PromptKey(str, Enum):
     GUIDANCE_FROM_TREND = "guidance.from_trend" # 트렌드데이터를 바탕으로 글 작성 지침 추천
     DRAFT_FROM_TREND = "draft.from_trend" # 트렌드데이터를 바탕으로 글 작성
     DRAFT_FROM_COMMENT = "draft.from_comment" # 댓글데이터를 바탕으로 글 작성
+    COWORKER_CONTEXTUAL_WRITE = "coworker.contextual.write"
 
 
 class PromptVars(BaseModel):
@@ -24,6 +25,9 @@ class PromptVars(BaseModel):
     tone: Optional[str] = None
     goal: Optional[str] = None #플랫폼에 따라 goal 지정
     text: Optional[str] = None #세부적인 지침
+    persona_brief: Optional[Dict[str, Any]] = None
+    campaign_brief: Optional[Dict[str, Any]] = None
+    playbook_summary: Optional[Dict[str, Any]] = None
 
 class PromptMetadata(BaseModel):
     """프롬프트 템플릿의 메타데이터"""
@@ -63,11 +67,15 @@ class DraftFromTrendOutput(BaseModel):
 class DraftFromCommentOutput(BaseModel):
     draft_ir: DraftIR
 
+class CoworkerContextualWriteOutput(BaseModel):
+    text: str
+
 PROMPT_OUTPUT_SCHEMA: Dict[PromptKey, Type[BaseModel]] = {
     PromptKey.HASHTAG_FROM_TREND: HashtagFromTrendOutput,
     PromptKey.GUIDANCE_FROM_TREND: GuidanceFromTrendOutput,
     PromptKey.DRAFT_FROM_TREND: DraftFromTrendOutput,
     PromptKey.DRAFT_FROM_COMMENT: DraftFromCommentOutput,
+    PromptKey.COWORKER_CONTEXTUAL_WRITE: CoworkerContextualWriteOutput,
 }
 
 # 프롬프트 메타데이터 레지스트리
@@ -99,6 +107,13 @@ PROMPT_METADATA_REGISTRY: Dict[PromptKey, PromptMetadata] = {
         optional_vars={"product_name", "audience", "tone", "goal", "text"},
         output_schema=DraftFromCommentOutput,
         description="댓글데이터를 바탕으로 글 작성"
+    ),
+    PromptKey.COWORKER_CONTEXTUAL_WRITE: PromptMetadata(
+        key=PromptKey.COWORKER_CONTEXTUAL_WRITE,
+        required_vars={"text"},
+        optional_vars={"persona_brief", "campaign_brief", "playbook_summary", "tone", "goal"},
+        output_schema=CoworkerContextualWriteOutput,
+        description="컨텍스트(페르소나/캠페인/플레이북)를 반영한 카피 작성"
     ),
 }
 
