@@ -1,7 +1,7 @@
 # apps/backend/src/modules/accounts/services.py
 from __future__ import annotations
 from typing import Iterable, Optional, Sequence
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from sqlalchemy import select, and_, or_, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +17,8 @@ from apps.backend.src.modules.accounts.schemas import (
 )
 from apps.backend.src.modules.common.enums import PlatformKind, Permission
 from fastapi import HTTPException
+from apps.backend.src.core.config import settings
+from apps.backend.src.services.oauth_threads import ThreadsOAuthProvider
 
 
 # ------------------------
@@ -24,6 +26,23 @@ from fastapi import HTTPException
 # ------------------------
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+_THREADS_OAUTH_PROVIDER: ThreadsOAuthProvider | None = None
+
+
+def _get_threads_oauth_provider() -> ThreadsOAuthProvider | None:
+    global _THREADS_OAUTH_PROVIDER
+    if _THREADS_OAUTH_PROVIDER is not None:
+        return _THREADS_OAUTH_PROVIDER
+    try:
+        _THREADS_OAUTH_PROVIDER = ThreadsOAuthProvider(
+            client_id=settings.THREADS_CLIENT_ID,
+            client_secret=settings.THREADS_CLIENT_SECRET,
+        )
+    except RuntimeError:
+        return None
+    return _THREADS_OAUTH_PROVIDER
 
 
 # ------------------------
@@ -109,6 +128,53 @@ async def is_valid_platform_account(
         return False
     
     return True
+
+
+async def ensure_platform_account_credentials(
+    db: AsyncSession,
+    *,
+    account: PlatformAccount,
+    safety_margin_seconds: int = 300,
+) -> PlatformAccount:
+    """Ensure the platform account has a fresh access token (auto-refresh when possible)."""
+    expires_at = account.token_expires_at
+    refresh_token = (account.refresh_token or "").strip()
+    if expires_at is None or not refresh_token:
+        return account
+
+    now = _utcnow()
+    margin = timedelta(seconds=max(safety_margin_seconds, 0))
+    if expires_at - margin > now:
+        return account
+
+    provider: ThreadsOAuthProvider | None = None
+    if account.platform == PlatformKind.THREADS:
+        provider = _get_threads_oauth_provider()
+
+    if provider is None:
+        account.last_checked_at = now
+        account.last_error = "oauth refresh provider not configured"
+        return account
+
+    try:
+        token = await provider.refresh_access_token(refresh_token=refresh_token)
+    except ValueError as exc:
+        account.last_checked_at = now
+        account.last_error = f"token refresh failed: {exc}"
+        return account
+
+    account.access_token = token.access_token
+    account.refresh_token = token.refresh_token or refresh_token
+    account.token_expires_at = token.expires_at
+    account.scopes = token.scopes
+    account.updated_at = now
+    account.last_checked_at = now
+    account.last_error = None
+    db.add(account)
+    await db.flush()
+    await db.refresh(account)
+    await db.commit()
+    return account
 
 async def list_platform_accounts(
     db: AsyncSession,
@@ -522,4 +588,3 @@ async def list_persona_accounts_for_user(
         ))
 
     return result
-

@@ -89,17 +89,35 @@ class BaseOAuthProvider(abc.ABC):
             "code": code,
             "grant_type": "authorization_code",
         }
+        payload = await self._request_token(data, error_context="token exchange")
+        return self._parse_access_token_payload(payload)
+
+    async def refresh_access_token(self, *, refresh_token: str) -> OAuthAccessToken:
+        data = {
+            "client_id": self._client_id,
+            "client_secret": self._client_secret,
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token",
+        }
+        payload = await self._request_token(data, error_context="token refresh")
+        return self._parse_access_token_payload(payload)
+
+    async def _request_token(self, data: Dict[str, Any], *, error_context: str) -> Dict[str, Any]:
         try:
             response = await self._http.post(self.config.token_url, data=data)
             response.raise_for_status()
         except httpx.HTTPStatusError as exc:  # pragma: no cover - propagated to caller
             raise ValueError(
-                f"{self.provider_name} token exchange failed: HTTP {exc.response.status_code}"
+                f"{self.provider_name} {error_context} failed: HTTP {exc.response.status_code}"
             ) from exc
         except httpx.HTTPError as exc:  # pragma: no cover - propagated to caller
-            raise ValueError(f"{self.provider_name} token exchange failed: {exc}") from exc
+            raise ValueError(f"{self.provider_name} {error_context} failed: {exc}") from exc
         payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError(f"{self.provider_name} {error_context} failed: invalid token payload")
+        return payload
 
+    def _parse_access_token_payload(self, payload: Dict[str, Any]) -> OAuthAccessToken:
         access_token = payload.get("access_token")
         if not access_token:
             raise ValueError(f"{self.provider_name} oauth missing access_token")

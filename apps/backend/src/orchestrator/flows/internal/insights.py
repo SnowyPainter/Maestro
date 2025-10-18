@@ -7,7 +7,10 @@ from apps.backend.src.modules.insights.service import ingest_insight_sample, lis
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.workers.Adapter.tasks import sync_metrics_with_adapter
 from apps.backend.src.modules.common.enums import PlatformKind
-from apps.backend.src.modules.accounts.service import _load_platform_account
+from apps.backend.src.modules.accounts.service import (
+    _load_platform_account,
+    ensure_platform_account_credentials,
+)
 from apps.backend.src.modules.drafts.service import _load_post_publication
 from apps.backend.src.orchestrator.flows.internal.drafts import _build_adapter_credentials
 from apps.backend.src.modules.adapters.core.types import MetricsResult
@@ -40,6 +43,7 @@ async def op_sync_metrics(
         platform=payload.platform,
         owner_user_id=user.id if user else None,
     )
+    platform_account = await ensure_platform_account_credentials(db, account=platform_account)
     credentials = _build_adapter_credentials(platform_account)
     post_publication = await _load_post_publication(db, post_publication_id=payload.post_publication_id, persona_account_id=payload.persona_account_id)
 

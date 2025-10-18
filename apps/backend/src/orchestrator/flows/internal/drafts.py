@@ -5,7 +5,10 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.models import PlatformAccount
-from apps.backend.src.modules.accounts.service import _load_platform_account
+from apps.backend.src.modules.accounts.service import (
+    _load_platform_account,
+    ensure_platform_account_credentials,
+)
 from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS, PostStatus
 from apps.backend.src.modules.drafts.models import PostPublication
 from apps.backend.src.modules.drafts.service import (
@@ -92,6 +95,7 @@ async def op_publish_post(
             platform=payload.platform,
             owner_user_id=owner_user_id,
         )
+        account = await ensure_platform_account_credentials(db, account=account)
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
 
