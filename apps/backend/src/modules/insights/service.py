@@ -6,10 +6,20 @@ from typing import Any, Dict, List, Tuple
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.insights.models import InsightComment, InsightSample
+from apps.backend.src.modules.drafts.models import PostPublication
 from apps.backend.src.modules.insights.schemas import InsightCommentIn, InsightIn, InsightCommentList, InsightCommentOut
 from apps.backend.src.modules.common.enums import PlatformKind
 
 async def ingest_insight_sample(db: AsyncSession, payload: InsightIn) -> InsightSample:
+    # post_publication_id로 draft 정보 가져오기
+    draft_id = None
+    variant_id = None
+    if payload.post_publication_id:
+        publication = await db.get(PostPublication, payload.post_publication_id)
+        if publication:
+            variant_id = publication.variant_id
+            draft_id = publication.variant.draft_id if publication.variant else None
+
     # 1) ingest_key 우선 멱등화
     if payload.ingest_key:
         exist = (await db.execute(
@@ -23,6 +33,8 @@ async def ingest_insight_sample(db: AsyncSession, payload: InsightIn) -> Insight
             exist.account_persona_id = payload.account_persona_id
             exist.platform_post_id = payload.platform_post_id
             exist.source = payload.source
+            exist.draft_id = draft_id
+            exist.variant_id = variant_id
             if payload.ingest_key:
                 exist.ingest_key = payload.ingest_key
             await db.flush(); await db.commit()
@@ -43,12 +55,16 @@ async def ingest_insight_sample(db: AsyncSession, payload: InsightIn) -> Insight
             exist.content_kind = payload.content_kind
             exist.account_persona_id = payload.account_persona_id
             exist.source = payload.source
+            exist.draft_id = draft_id
+            exist.variant_id = variant_id
             await db.flush(); await db.commit()
             return exist
 
     row = InsightSample(
         owner_user_id=payload.owner_user_id,
         post_publication_id=payload.post_publication_id,
+        draft_id=draft_id,
+        variant_id=variant_id,
         platform=payload.platform,
         platform_post_id=payload.platform_post_id,
         account_persona_id=payload.account_persona_id,
@@ -101,6 +117,7 @@ async def upsert_insight_comments(db: AsyncSession, items: List[InsightCommentIn
                 text=item.text,
                 permalink=item.permalink,
                 comment_created_at=item.comment_created_at,
+                is_owned_by_me=item.is_owned_by_me,
                 metrics=_normalize_metrics(item.metrics),
                 raw=item.raw or {},
             )
@@ -147,6 +164,7 @@ async def upsert_insight_comments(db: AsyncSession, items: List[InsightCommentIn
                 text=payload.text,
                 permalink=payload.permalink,
                 comment_created_at=payload.comment_created_at,
+                is_owned_by_me=payload.is_owned_by_me,
                 metrics=payload.metrics,
                 raw=payload.raw,
             )
@@ -160,6 +178,7 @@ async def upsert_insight_comments(db: AsyncSession, items: List[InsightCommentIn
             row.parent_external_id = payload.parent_external_id
             row.author_id = payload.author_id
             row.author_username = payload.author_username
+            row.is_owned_by_me = payload.is_owned_by_me
             row.text = payload.text
             row.permalink = payload.permalink
             row.comment_created_at = payload.comment_created_at

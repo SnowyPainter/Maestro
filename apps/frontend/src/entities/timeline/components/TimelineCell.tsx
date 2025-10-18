@@ -39,6 +39,9 @@ const getEventTitle = (event: TimelineEventType) => {
     if (event.source === 'trends') {
         return event.payload.trend_data?.title || 'Trend event';
     }
+    if (event.source === 'playbook') {
+        return `Playbook: ${event.payload.playbook_log.event}`;
+    }
     return event.kind;
 };
 

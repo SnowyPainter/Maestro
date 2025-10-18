@@ -13,6 +13,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Text,
+    Boolean,
     UniqueConstraint,
 )
 from apps.backend.src.core.db import Base
@@ -101,6 +102,9 @@ class InsightComment(Base):
 
     comment_created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+
+    # 자신이 쓴 댓글인지 구분 (플랫폼별로 다르게 표현될 수 있음)
+    is_owned_by_me: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True, index=True)
 
     metrics: Mapped[dict] = mapped_column(JSON, default=dict)
     raw: Mapped[dict] = mapped_column(JSON, default=dict)

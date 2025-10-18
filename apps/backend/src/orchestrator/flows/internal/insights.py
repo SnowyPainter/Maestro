@@ -108,6 +108,7 @@ async def op_sync_metrics(
                     text=comment.text,
                     permalink=comment.permalink,
                     comment_created_at=comment.created_at,
+                    is_owned_by_me=comment.is_owned_by_me,
                     metrics=comment.metrics,
                     raw=comment.raw or {},
                 )

@@ -18,6 +18,7 @@ THREADS_OAUTH_CONFIG = OAuthProviderConfig(
     profile_url="https://graph.threads.net/me",
     default_scopes=[
         "threads_basic",
+        "threads_read_replies",
         "threads_content_publish",
         "threads_delete",
         "threads_manage_insights",

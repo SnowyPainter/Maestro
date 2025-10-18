@@ -78,6 +78,7 @@ class InsightCommentIn(BaseModel):
     text: Optional[str] = None
     permalink: Optional[str] = None
     comment_created_at: Optional[datetime] = None
+    is_owned_by_me: Optional[bool] = None
     metrics: Dict[str, float] = Field(default_factory=dict)
     raw: Dict[str, Any] = Field(default_factory=dict)
 

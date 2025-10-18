@@ -23,6 +23,14 @@ export type TimelineEvent = BaseTimelineEvent & (
       };
     }
   | {
+      source: 'playbook';
+      payload: PlaybookPayload;
+      correlation_keys: {
+        playbook_id: string;
+        [key: string]: string;
+      };
+    }
+  | {
       source: 'kpis' | 'unknown'; // etc.
       payload: GenericPayload;
       correlation_keys: Record<string, string>;
@@ -62,6 +70,36 @@ export interface TrendPayload {
   source_type: 'db' | 'live';
   trend_data: TrendItem;
   phase: 'queried';
+}
+
+/**
+ * A log entry from a playbook execution.
+ */
+export interface PlaybookLog {
+  id: number;
+  playbook_id: number;
+  event: string;
+  timestamp: string;
+  draft_id: number | null;
+  schedule_id: number | null;
+  abtest_id: number | null;
+  ref_id: string | null;
+  persona_snapshot: any | null;
+  trend_snapshot: any | null;
+  llm_input: string | null;
+  llm_output: string | null;
+  kpi_snapshot: any | null;
+  meta: { [key: string]: any } | null;
+  message: string | null;
+  created_at: string;
+}
+
+/**
+ * Payload for playbook events.
+ */
+export interface PlaybookPayload {
+  phase_source: 'playbook_log';
+  playbook_log: PlaybookLog;
 }
 
 /**

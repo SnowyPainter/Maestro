@@ -73,6 +73,7 @@ class Comment:
     permalink: Optional[str]
     raw: Dict[str, Any]
     metrics: Dict[str, float] = field(default_factory=dict)
+    is_owned_by_me: Optional[bool] = None
 
 
 @dataclass

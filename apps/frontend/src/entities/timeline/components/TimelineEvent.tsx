@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TimelinePostEvent } from './TimelinePostEvent';
 import { TimelineTrendEvent } from './TimelineTrendEvent';
 import { format } from 'date-fns';
+import { TimelinePlaybookLogEvent } from './TimelinePlaybookLogEvent';
 
 interface TimelineEventProps {
   event: TimelineEventType;
@@ -16,17 +17,22 @@ const renderEventDetails = (event: TimelineEventType) => {
       return <TimelinePostEvent event={event} />;
     case 'trends':
       return <TimelineTrendEvent event={event} />;
+    case 'playbook':
+      return <TimelinePlaybookLogEvent event={event} />;  
     default:
       return <p>No details available for this event type.</p>;
   }
 };
 
 export const TimelineEvent: React.FC<TimelineEventProps> = ({ event }) => {
-  const title = event.source === 'post_publication' 
-    ? `Post ${event.payload.phase}` 
-    : event.source === 'trends'
-    ? event.payload.trend_data.title
-    : event.kind;
+  const title =
+    event.source === 'post_publication'
+      ? `Post ${event.payload.phase}`
+      : event.source === 'trends'
+      ? event.payload.trend_data.title
+      : event.source === 'playbook'
+      ? `Playbook: ${event.payload.playbook_log.event}`
+      : event.kind;
 
   return (
     <Popover>

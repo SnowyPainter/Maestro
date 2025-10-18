@@ -10,7 +10,7 @@ from __future__ import annotations
 from alembic import op
 import sqlalchemy as sa
 
-from apps.backend.src.modules.common.enums import PlatformKind
+from src.modules.common.enums import PlatformKind
 
 
 # revision identifiers, used by Alembic.
@@ -21,8 +21,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    platform_enum = sa.Enum(PlatformKind, name="platformkind")
-
+    # Use varchar instead of enum to avoid duplicate creation issues
     op.create_table(
         "insight_comments",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
@@ -33,7 +32,7 @@ def upgrade() -> None:
             sa.ForeignKey("post_publications.id", ondelete="SET NULL"),
             nullable=True,
         ),
-        sa.Column("platform", platform_enum, nullable=False),
+        sa.Column("platform", sa.String(length=32), nullable=False),
         sa.Column("platform_post_id", sa.String(length=128), nullable=True),
         sa.Column(
             "account_persona_id",

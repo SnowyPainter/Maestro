@@ -582,7 +582,7 @@ class ThreadsAPI:
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {
-            "fields": "id,parent_id,text,created_time,permalink,like_count,reply_count,from{id,username}",
+            "fields": "id,parent_id,text,created_time,permalink,like_count,reply_count,from{id,username},is_reply_owned_by_me",
         }
         if limit is not None:
             params["limit"] = str(limit)
@@ -867,6 +867,11 @@ def parse_comment_node(
         except (TypeError, ValueError):
             pass
 
+    # 자신이 쓴 댓글인지 구분
+    is_owned_by_me = node.get("is_reply_owned_by_me")
+    if not isinstance(is_owned_by_me, bool):
+        is_owned_by_me = None
+
     comment = Comment(
         external_id=comment_id,
         parent_external_id=parent_id,
@@ -877,6 +882,7 @@ def parse_comment_node(
         permalink=permalink,
         raw=node,
         metrics=metrics,
+        is_owned_by_me=is_owned_by_me,
     )
 
     return comment, warnings
