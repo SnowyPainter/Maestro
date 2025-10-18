@@ -18,7 +18,11 @@ async def ingest_insight_sample(db: AsyncSession, payload: InsightIn) -> Insight
         publication = await db.get(PostPublication, payload.post_publication_id)
         if publication:
             variant_id = publication.variant_id
-            draft_id = publication.variant.draft_id if publication.variant else None
+            # variant 관계 대신 variant_id로 직접 DraftVariant 쿼리하여 draft_id 획득
+            if variant_id:
+                from apps.backend.src.modules.drafts.models import DraftVariant
+                variant = await db.get(DraftVariant, variant_id)
+                draft_id = variant.draft_id if variant else None
 
     # 1) ingest_key 우선 멱등화
     if payload.ingest_key:
