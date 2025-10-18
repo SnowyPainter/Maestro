@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from apps.backend.src.modules.adapters.core.types import CompileResult
 from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
@@ -40,7 +40,12 @@ async def _load_owned_draft(
     variant_id: int,
     owner_user_id: int,
 ) -> DraftVariant:
-    variant: DraftVariant | None = await db.get(DraftVariant, variant_id)
+    stmt = (
+        select(DraftVariant)
+        .options(joinedload(DraftVariant.draft))
+        .where(DraftVariant.id == variant_id)
+    )
+    variant = await db.scalar(stmt)
     if variant is None:
         raise HTTPException(status_code=404, detail="Variant not found")
 

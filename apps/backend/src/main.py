@@ -70,7 +70,8 @@ async def reset_db():
         """
         #await conn.execute(text("DROP TABLE IF EXISTS coworker_leases CASCADE"))
         await conn.execute(text("DELETE FROM schedules"))
-
+        await conn.execute(text("DELETE FROM post_publications"))
+        
         await conn.run_sync(Base.metadata.create_all)
         
     return {"ok": True}

@@ -206,11 +206,13 @@ async def op_publish_post(
         publication.published_at = _now()
         publication.scheduled_at = None
         publication.external_id = result.external_id
+        publication.permalink = result.permalink
         publication.errors = None
         meta_payload = {
             key: value
             for key, value in {
                 "external_id": result.external_id,
+                "permalink": result.permalink,
                 "platform": payload.platform.value if hasattr(payload.platform, "value") else str(payload.platform),
             }.items()
             if value

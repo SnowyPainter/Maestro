@@ -194,7 +194,6 @@ def _as_int(value: Any) -> Optional[int]:
     except (TypeError, ValueError):
         return None
 
-
 async def record_playbook_event(
     db: AsyncSession,
     *,
@@ -218,6 +217,13 @@ async def record_playbook_event(
     kpi_snapshot: Optional[dict] = None,
     aggregate_patch: Optional[PlaybookAggregatePatch] = None,
 ) -> Optional[PlaybookLog]:
+
+    def _as_int(v):
+        try:
+            return int(v) if v is not None else None
+        except Exception:
+            return None
+
     persona_id = _as_int(persona_id)
     persona_account_id = _as_int(persona_account_id)
     campaign_id = _as_int(campaign_id)
@@ -231,66 +237,56 @@ async def record_playbook_event(
     if schedule_obj is None and schedule_id is not None:
         schedule_obj = await db.get(Schedule, schedule_id)
 
+    # --- schedule 정보에서 추론
     if schedule_obj is not None:
         if persona_account_id is None:
             persona_account_id = schedule_obj.persona_account_id
-        if persona_id is None and schedule_obj.persona_account is not None:
-            persona_id = schedule_obj.persona_account.persona_id
+
         payload_data = schedule_obj.payload if isinstance(schedule_obj.payload, dict) else {}
         if isinstance(payload_data, dict):
-            if persona_id is None:
-                persona_id = _as_int(payload_data.get("persona_id"))
-            if campaign_id is None:
-                campaign_id = _as_int(payload_data.get("campaign_id"))
-            if draft_id is None:
-                draft_id = _as_int(payload_data.get("draft_id"))
-            if variant_id is None:
-                variant_id = _as_int(payload_data.get("variant_id"))
-            if post_publication_id is None:
-                post_publication_id = _as_int(payload_data.get("post_publication_id"))
+            persona_id = persona_id or _as_int(payload_data.get("persona_id"))
+            campaign_id = campaign_id or _as_int(payload_data.get("campaign_id"))
+            draft_id = draft_id or _as_int(payload_data.get("draft_id"))
+            variant_id = variant_id or _as_int(payload_data.get("variant_id"))
+            post_publication_id = post_publication_id or _as_int(payload_data.get("post_publication_id"))
 
-    if persona_account_id is not None and persona_id is None:
-        persona_account = await db.get(PersonaAccount, persona_account_id)
-        if persona_account is not None:
-            persona_id = persona_account.persona_id
+        context_data = schedule_obj.context if isinstance(schedule_obj.context, dict) else {}
+        if isinstance(context_data, dict):
+            persona_id = persona_id or _as_int(context_data.get("persona_id"))
+            campaign_id = campaign_id or _as_int(context_data.get("campaign_id"))
 
-    publication: PostPublication | None = None
+    # --- PostPublication
     if post_publication_id is not None:
         publication = await db.get(PostPublication, post_publication_id)
-        if publication is not None:
-            if persona_account_id is None:
-                persona_account_id = publication.account_persona_id
-            if persona_id is None and publication.persona_account is not None:
-                persona_id = publication.persona_account.persona_id
-            if variant_id is None:
-                variant_id = publication.variant_id
-            if draft_id is None and publication.variant is not None:
-                draft_id = publication.variant.draft_id
-            if (
-                campaign_id is None
-                and publication.variant is not None
-                and publication.variant.draft is not None
-            ):
-                campaign_id = publication.variant.draft.campaign_id
+        if publication:
+            persona_account_id = persona_account_id or publication.account_persona_id
+            variant_id = variant_id or publication.variant_id
 
-    variant: DraftVariant | None = None
+    # --- DraftVariant
     if variant_id is not None:
-        variant = await db.get(DraftVariant, variant_id)
-        if variant is not None:
-            if draft_id is None:
-                draft_id = variant.draft_id
-            if campaign_id is None:
-                campaign_id = variant.draft.campaign_id if variant.draft is not None else None
+        variant_row = await db.execute(
+            select(DraftVariant.draft_id).where(DraftVariant.id == variant_id)
+        )
+        draft_id = draft_id or variant_row.scalar()
+        if draft_id and campaign_id is None:
+            campaign_id = await db.scalar(
+                select(Draft.campaign_id).where(Draft.id == draft_id)
+            )
 
-    draft: Draft | None = None
+    # --- Draft 직접 확인
     if draft_id is not None and campaign_id is None:
-        draft = await db.get(Draft, draft_id)
-        if draft is not None:
-            campaign_id = draft.campaign_id
+        campaign_id = await db.scalar(
+            select(Draft.campaign_id).where(Draft.id == draft_id)
+        )
 
-    if persona_id is None:
-        return None
-    if campaign_id is None:
+    # --- PersonaAccount → Persona
+    if persona_account_id is not None and persona_id is None:
+        persona_id = await db.scalar(
+            select(PersonaAccount.persona_id).where(PersonaAccount.id == persona_account_id)
+        )
+
+    # --- 필수 정보 확인
+    if persona_id is None or campaign_id is None:
         return None
 
     payload = PlaybookLogCreate(
@@ -310,6 +306,7 @@ async def record_playbook_event(
         message=message,
         aggregate_patch=aggregate_patch,
     )
+
     return await record_event(db, payload)
 
 

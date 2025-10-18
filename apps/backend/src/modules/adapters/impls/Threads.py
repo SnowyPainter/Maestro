@@ -242,10 +242,8 @@ class ThreadsPublishingCapability(ThreadsCapabilityBase, PublishingCapability):
             warnings.append(f"failed to fetch thread permalink: {exc.as_message()}")
         else:
             permalink = (details or {}).get("permalink")
-            if permalink:
-                external_id = permalink
-
-        return PublishResult(ok=True, external_id=external_id, errors=[], warnings=warnings)
+            
+        return PublishResult(ok=True, external_id=external_id, permalink=permalink, errors=[], warnings=warnings)
 
 
 # Delete ----------------------------------------------------------------------------------------
@@ -435,12 +433,11 @@ class ThreadsCommentCreateCapability(ThreadsCapabilityBase, CommentCreateCapabil
             warnings.append(f"failed to fetch comment permalink: {exc.as_message()}")
         else:
             permalink = (details or {}).get("permalink")
-            if permalink:
-                external_id = permalink
 
         return CommentCreateResult(
             ok=True,
             external_id=external_id,
+            permalink=permalink,
             errors=[],
             warnings=warnings,
         )

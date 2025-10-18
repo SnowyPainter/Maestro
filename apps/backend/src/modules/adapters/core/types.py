@@ -47,7 +47,8 @@ class CompileResult:
 @dataclass
 class PublishResult:
     ok: bool
-    external_id: Optional[str]  # 플랫폼 포스트 ID/URL
+    external_id: Optional[str]  # 플랫폼 포스트 ID
+    permalink: Optional[str]
     errors: List[str]
     warnings: List[str]
 
@@ -56,6 +57,7 @@ class PublishResult:
 class CommentCreateResult:
     ok: bool
     external_id: Optional[str]
+    permalink: Optional[str]
     errors: List[str]
     warnings: List[str]
 
