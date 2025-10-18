@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.models import PlatformAccount
 from apps.backend.src.modules.accounts.service import (
+    TokenRefreshError,
     _load_platform_account,
     ensure_platform_account_credentials,
 )
@@ -40,6 +41,25 @@ def _build_adapter_credentials(account: PlatformAccount) -> dict:
     if account.scopes:
         credentials["scopes"] = account.scopes
     return credentials
+
+
+_TOKEN_EXPIRED_MARKERS = (
+    "session has expired",
+    "code=190",
+    "token has expired",
+    "expired token",
+    "invalid oauth access token",
+)
+
+
+def _should_retry_with_refresh(errors: list[str] | None) -> bool:
+    if not errors:
+        return False
+    for error in errors:
+        lowered = error.lower()
+        if any(marker in lowered for marker in _TOKEN_EXPIRED_MARKERS):
+            return True
+    return False
 
 
 def _strip_schedule_meta(meta: dict | None) -> dict | None:
@@ -131,6 +151,38 @@ async def op_publish_post(
             credentials=credentials,
             options=publish_options,
         )
+        if not result.ok and _should_retry_with_refresh(result.errors):
+            account = await ensure_platform_account_credentials(
+                db,
+                account=account,
+                force_refresh=True,
+                raise_on_failure=True,
+            )
+            credentials = _build_adapter_credentials(account)
+            result = await publish_variant_with_adapter(
+                platform=payload.platform,
+                rendered_blocks=variant.rendered_blocks,
+                caption=variant.rendered_caption,
+                credentials=credentials,
+                options=publish_options,
+            )
+    except TokenRefreshError as exc:
+        publication.status = PostStatus.FAILED
+        publication.errors = [str(exc)]
+        publication.warnings = None
+        publication.published_at = None
+        publication.meta = _strip_schedule_meta(meta)
+        publication.updated_at = _now()
+        db.add(publication)
+        await db.flush()
+        await db.commit()
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "message": "Token refresh required",
+                "errors": publication.errors,
+            },
+        ) from exc
     except Exception as exc:  # pragma: no cover - defensive fallback
         publication.status = PostStatus.FAILED
         publication.errors = [f"adapter error: {exc}"]

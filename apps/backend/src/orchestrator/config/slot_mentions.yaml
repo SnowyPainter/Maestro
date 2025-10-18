@@ -69,6 +69,13 @@ slots:
   - campaigns.upsert_kpi_defs
   - drafts.create
   - drafts.update_ir
+- name: constraints
+  label: Constraints
+  description: Filter by constraints
+  value_type: string
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: content_kind
   label: Content Kind
   description: Filter by content kind
@@ -102,6 +109,13 @@ slots:
   flows:
   - accounts.persona.update
   - accounts.platform.update
+- name: date_range
+  label: Date Range
+  description: Filter by date range
+  value_type: string
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: defs
   label: Defs
   description: Filter by defs
@@ -115,6 +129,13 @@ slots:
   flows:
   - campaigns.create_campaign
   - campaigns.update_campaign
+- name: distribution
+  label: Distribution
+  description: Filter by distribution
+  value_type: string
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: draft_id
   label: Draft Id
   description: Target a specific draft id
@@ -160,6 +181,13 @@ slots:
   - bff.timeline.campaigns
   - bff.timeline.post_publications
   - bff.timeline.trends
+- name: exdates
+  label: Exdates
+  description: Filter by exdates
+  value_type: string_list
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: force_restart
   label: Force Restart
   description: Filter by force restart
@@ -301,6 +329,13 @@ slots:
   value_type: integer
   flows:
   - bff.schedule.get_schedule_stream
+- name: payload_template
+  label: Payload Template
+  description: Filter by payload template
+  value_type: string
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: persona
   label: Persona
   description: Filter by persona
@@ -403,6 +438,8 @@ slots:
   value_type: string
   flows:
   - action.schedule.create_from_raw_dag
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
   - bff.schedule.list_schedules
 - name: raw
   label: Raw
@@ -457,6 +494,13 @@ slots:
   - interval
   flows:
   - insights.ingest
+- name: segments
+  label: Segments
+  description: Filter by segments
+  value_type: string_list
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: sender
   label: Sender
   description: Filter by sender
@@ -554,6 +598,8 @@ slots:
   - insights.sync_metrics
   flows:
   - action.schedule.compile_template
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: text
   label: Text
   description: Filter by text
@@ -572,11 +618,20 @@ slots:
   value_type: string
   flows:
   - internal.mail.await_reply
+- name: timezone
+  label: Timezone
+  description: Filter by timezone
+  value_type: string
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: title
   label: Title
   description: Filter by title
   value_type: string
   flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
   - drafts.create
   - drafts.update_ir
 - name: ts
@@ -617,6 +672,13 @@ slots:
   value_type: string_list
   flows:
   - insights.ingest
+- name: weekmask
+  label: Weekmask
+  description: Filter by weekmask
+  value_type: string_list
+  flows:
+  - action.schedule.create_sync_metrics_schedule
+  - action.schedule.create_trends_mail_schedule
 - name: window_end
   label: Window End
   description: Filter by window end

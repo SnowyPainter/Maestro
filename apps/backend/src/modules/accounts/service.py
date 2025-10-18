@@ -45,6 +45,14 @@ def _get_threads_oauth_provider() -> ThreadsOAuthProvider | None:
     return _THREADS_OAUTH_PROVIDER
 
 
+class TokenRefreshError(RuntimeError):
+    """Raised when an automatic token refresh cannot be completed."""
+
+    def __init__(self, message: str, *, platform: PlatformKind | None = None) -> None:
+        super().__init__(message)
+        self.platform = platform
+
+
 # ------------------------
 # PlatformAccount services
 # ------------------------
@@ -114,6 +122,21 @@ async def is_valid_platform_account(
     if not external_id:
         return False
 
+    try:
+        if not (account.access_token or "").strip() or (
+            account.token_expires_at is not None and account.token_expires_at <= _utcnow()
+        ):
+            account = await ensure_platform_account_credentials(
+                db,
+                account=account,
+                force_refresh=True,
+            )
+        else:
+            account = await ensure_platform_account_credentials(db, account=account)
+    except TokenRefreshError:
+        # refresh helper already recorded the failure on the account
+        pass
+
     access_token = (account.access_token or "").strip()
 
     if not access_token:
@@ -135,16 +158,32 @@ async def ensure_platform_account_credentials(
     *,
     account: PlatformAccount,
     safety_margin_seconds: int = 300,
+    force_refresh: bool = False,
+    raise_on_failure: bool = False,
 ) -> PlatformAccount:
     """Ensure the platform account has a fresh access token (auto-refresh when possible)."""
+    now = _utcnow()
     expires_at = account.token_expires_at
     refresh_token = (account.refresh_token or "").strip()
-    if expires_at is None or not refresh_token:
-        return account
 
-    now = _utcnow()
-    margin = timedelta(seconds=max(safety_margin_seconds, 0))
-    if expires_at - margin > now:
+    should_refresh = force_refresh
+    if not should_refresh:
+        if expires_at is None:
+            return account
+        margin = timedelta(seconds=max(safety_margin_seconds, 0))
+        should_refresh = expires_at - margin <= now
+        if not should_refresh:
+            return account
+
+    if not refresh_token:
+        message = "refresh token missing for platform account"
+        account.last_checked_at = now
+        account.last_error = message
+        db.add(account)
+        await db.flush()
+        await db.commit()
+        if raise_on_failure:
+            raise TokenRefreshError(message, platform=account.platform)
         return account
 
     provider: ThreadsOAuthProvider | None = None
@@ -152,15 +191,27 @@ async def ensure_platform_account_credentials(
         provider = _get_threads_oauth_provider()
 
     if provider is None:
+        message = "oauth refresh provider not configured"
         account.last_checked_at = now
-        account.last_error = "oauth refresh provider not configured"
+        account.last_error = message
+        db.add(account)
+        await db.flush()
+        await db.commit()
+        if raise_on_failure:
+            raise TokenRefreshError(message, platform=account.platform)
         return account
 
     try:
         token = await provider.refresh_access_token(refresh_token=refresh_token)
     except ValueError as exc:
+        message = f"token refresh failed: {exc}"
         account.last_checked_at = now
-        account.last_error = f"token refresh failed: {exc}"
+        account.last_error = message
+        db.add(account)
+        await db.flush()
+        await db.commit()
+        if raise_on_failure:
+            raise TokenRefreshError(message, platform=account.platform) from exc
         return account
 
     account.access_token = token.access_token

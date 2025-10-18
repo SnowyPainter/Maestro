@@ -2357,8 +2357,8 @@ export interface components {
             /** Queue */
             queue?: string | null;
             /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
+             * Template
+             * @constant
              */
             template: "mail.trends_with_reply";
             payload_template: components["schemas"]["MailScheduleTemplateParams"];
@@ -2855,33 +2855,6 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
-        };
-        /** PostPublishBatchRequest */
-        PostPublishBatchRequest: {
-            /** Title */
-            title?: string | null;
-            /**
-             * Timezone
-             * @default UTC
-             */
-            timezone: string;
-            date_range: components["schemas"]["DateRange"];
-            /** Weekmask */
-            weekmask?: string[];
-            /** Exdates */
-            exdates?: string[];
-            /** Segments */
-            segments: components["schemas"]["ScheduleSegment"][];
-            distribution?: components["schemas"]["ScheduleDistribution"];
-            constraints?: components["schemas"]["ScheduleConstraints"];
-            /** Queue */
-            queue?: string | null;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            template: "post.publish";
-            payload_template: components["schemas"]["PostPublishTemplateParams"];
         };
         /**
          * PostPublishTemplateParams
@@ -3411,8 +3384,8 @@ export interface components {
             /** Queue */
             queue?: string | null;
             /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
+             * Template
+             * @constant
              */
             template: "insights.sync_metrics";
             payload_template: components["schemas"]["SyncMetricsTemplateParams"];
@@ -5484,7 +5457,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MailBatchRequest"] | components["schemas"]["PostPublishBatchRequest"] | components["schemas"]["SyncMetricsBatchRequest"];
+                "application/json": components["schemas"]["MailBatchRequest"];
             };
         };
         responses: {
@@ -5517,7 +5490,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["MailBatchRequest"] | components["schemas"]["PostPublishBatchRequest"] | components["schemas"]["SyncMetricsBatchRequest"];
+                "application/json": components["schemas"]["SyncMetricsBatchRequest"];
             };
         };
         responses: {

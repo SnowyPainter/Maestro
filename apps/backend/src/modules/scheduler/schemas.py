@@ -230,17 +230,17 @@ class BatchCommon(BaseModel):
 
 
 class MailBatchRequest(BatchCommon):
-    template: Literal[ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY]
+    template: Literal[ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY.value]
     payload_template: MailScheduleTemplateParams
 
 
 class PostPublishBatchRequest(BatchCommon):
-    template: Literal[ScheduleTemplateKey.POST_PUBLISH]
+    template: Literal[ScheduleTemplateKey.POST_PUBLISH.value]
     payload_template: PostPublishTemplateParams
 
 
 class SyncMetricsBatchRequest(BatchCommon):
-    template: Literal[ScheduleTemplateKey.INSIGHTS_SYNC_METRICS]
+    template: Literal[ScheduleTemplateKey.INSIGHTS_SYNC_METRICS.value]
     payload_template: SyncMetricsTemplateParams
 
 

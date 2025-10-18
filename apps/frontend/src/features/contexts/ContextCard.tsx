@@ -129,16 +129,27 @@ export function ContextCard({
                                 )}
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
-                                {isValid === false && onReconnect && (
+                                {onReconnect && (
                                     <Button
-                                        variant="destructive"
+                                        variant="outline"
                                         size="sm"
                                         className="h-6 text-xs px-2"
                                         onClick={onReconnect}
                                         disabled={isReconnecting}
                                     >
-                                        <RefreshCw className={cn("h-3 w-3", isReconnecting && "animate-spin")} />
-                                        <span className="hidden sm:inline">{isReconnecting ? "..." : "Fix"}</span>
+                                        <RefreshCw
+                                            className={cn(
+                                                "h-3 w-3",
+                                                isReconnecting && "animate-spin",
+                                            )}
+                                        />
+                                        <span className="hidden sm:inline">
+                                            {isReconnecting
+                                                ? "..."
+                                                : isValid === false
+                                                    ? "Fix"
+                                                    : "Refresh"}
+                                        </span>
                                     </Button>
                                 )}
                                 {onClear && (

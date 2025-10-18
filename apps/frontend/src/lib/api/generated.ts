@@ -1218,22 +1218,6 @@ export interface PostPublicationOut {
   updated_at: string;
 }
 
-export interface PostPublishBatchRequest {
-  /** @nullable */
-  title?: string | null;
-  timezone?: string;
-  date_range: DateRange;
-  weekmask?: string[];
-  exdates?: string[];
-  segments: ScheduleSegment[];
-  distribution?: ScheduleDistribution;
-  constraints?: ScheduleConstraints;
-  /** @nullable */
-  queue?: string | null;
-  template: 'post.publish';
-  payload_template: PostPublishTemplateParams;
-}
-
 /**
  * Parameters for publishing a compiled draft variant.
  */
@@ -2000,10 +1984,6 @@ until?: string | null;
 export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams = {
 soft?: boolean;
 };
-
-export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody = MailBatchRequest | PostPublishBatchRequest | SyncMetricsBatchRequest;
-
-export type ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody = MailBatchRequest | PostPublishBatchRequest | SyncMetricsBatchRequest;
 
 export type OauthStartApiOrchestratorAuthOauthPlatformStartGetParams = {
 /**
@@ -6625,7 +6605,7 @@ export const useActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSched
  * @summary Create Trends similar to persona Mail Schedule
  */
 export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost = (
-    actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody: ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody,
+    mailBatchRequest: MailBatchRequest,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
@@ -6633,7 +6613,7 @@ export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedul
       return apiFetch<ScheduleCreateResult>(
       {url: `/api/orchestrator/actions/schedules/mail/create`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody, signal
+      data: mailBatchRequest, signal
     },
       options);
     }
@@ -6641,8 +6621,8 @@ export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedul
 
 
 export const getActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailBatchRequest}, TContext> => {
 
 const mutationKey = ['actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -6654,7 +6634,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, {data: ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, {data: MailBatchRequest}> = (props) => {
           const {data} = props ?? {};
 
           return  actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost(data,requestOptions)
@@ -6666,18 +6646,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>>
-    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationBody = ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody
+    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationBody = MailBatchRequest
     export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationError = HTTPValidationError
 
     /**
  * @summary Create Trends similar to persona Mail Schedule
  */
 export const useActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>,
         TError,
-        {data: ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody},
+        {data: MailBatchRequest},
         TContext
       > => {
 
@@ -6691,7 +6671,7 @@ export const useActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSche
  * @summary Create Sync Metrics Schedule
  */
 export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost = (
-    actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody: ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody,
+    syncMetricsBatchRequest: SyncMetricsBatchRequest,
  options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
 ) => {
       
@@ -6699,7 +6679,7 @@ export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedu
       return apiFetch<ScheduleCreateResult>(
       {url: `/api/orchestrator/actions/schedules/sync_metrics/create`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody, signal
+      data: syncMetricsBatchRequest, signal
     },
       options);
     }
@@ -6707,8 +6687,8 @@ export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedu
 
 
 export const getActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, TError,{data: ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, TError,{data: ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, TError,{data: SyncMetricsBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, TError,{data: SyncMetricsBatchRequest}, TContext> => {
 
 const mutationKey = ['actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -6720,7 +6700,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, {data: ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, {data: SyncMetricsBatchRequest}> = (props) => {
           const {data} = props ?? {};
 
           return  actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost(data,requestOptions)
@@ -6732,18 +6712,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>>
-    export type ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostMutationBody = ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody
+    export type ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostMutationBody = SyncMetricsBatchRequest
     export type ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostMutationError = HTTPValidationError
 
     /**
  * @summary Create Sync Metrics Schedule
  */
 export const useActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, TError,{data: ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody}, TContext>, request?: SecondParameter<typeof apiFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>, TError,{data: SyncMetricsBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePost>>,
         TError,
-        {data: ActionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody},
+        {data: SyncMetricsBatchRequest},
         TContext
       > => {
 

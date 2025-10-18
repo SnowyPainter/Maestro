@@ -2293,17 +2293,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/MailBatchRequest'
-              - $ref: '#/components/schemas/PostPublishBatchRequest'
-              - $ref: '#/components/schemas/SyncMetricsBatchRequest'
-              title: Payload
-              discriminator:
-                propertyName: template
-                mapping:
-                  mail.trends_with_reply: '#/components/schemas/MailBatchRequest'
-                  post.publish: '#/components/schemas/PostPublishBatchRequest'
-                  insights.sync_metrics: '#/components/schemas/SyncMetricsBatchRequest'
+              $ref: '#/components/schemas/MailBatchRequest'
         required: true
       responses:
         '200':
@@ -2332,17 +2322,7 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-              - $ref: '#/components/schemas/MailBatchRequest'
-              - $ref: '#/components/schemas/PostPublishBatchRequest'
-              - $ref: '#/components/schemas/SyncMetricsBatchRequest'
-              title: Payload
-              discriminator:
-                propertyName: template
-                mapping:
-                  mail.trends_with_reply: '#/components/schemas/MailBatchRequest'
-                  post.publish: '#/components/schemas/PostPublishBatchRequest'
-                  insights.sync_metrics: '#/components/schemas/SyncMetricsBatchRequest'
+              $ref: '#/components/schemas/SyncMetricsBatchRequest'
         required: true
       responses:
         '200':
@@ -5227,55 +5207,6 @@ components:
       - created_at
       - updated_at
       title: PostPublicationOut
-    PostPublishBatchRequest:
-      properties:
-        title:
-          title: Title
-          type: string
-          nullable: true
-        timezone:
-          type: string
-          title: Timezone
-          default: UTC
-        date_range:
-          $ref: '#/components/schemas/DateRange'
-        weekmask:
-          items:
-            type: string
-          type: array
-          title: Weekmask
-        exdates:
-          items:
-            type: string
-            format: date
-          type: array
-          title: Exdates
-        segments:
-          items:
-            $ref: '#/components/schemas/ScheduleSegment'
-          type: array
-          title: Segments
-        distribution:
-          $ref: '#/components/schemas/ScheduleDistribution'
-        constraints:
-          $ref: '#/components/schemas/ScheduleConstraints'
-        queue:
-          title: Queue
-          type: string
-          nullable: true
-        template:
-          type: string
-          const: post.publish
-          title: Template
-        payload_template:
-          $ref: '#/components/schemas/PostPublishTemplateParams'
-      type: object
-      required:
-      - date_range
-      - segments
-      - template
-      - payload_template
-      title: PostPublishBatchRequest
     PostPublishTemplateParams:
       properties:
         post_publication_id:

@@ -11,14 +11,9 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.scheduler.models import Schedule
+from apps.backend.src.modules.scheduler.schemas import MailBatchRequest, SyncMetricsBatchRequest
 from apps.backend.src.modules.common.enums import ScheduleStatus
-from apps.backend.src.modules.scheduler.registry import (
-    ScheduleTemplateDefinition,
-    ScheduleTemplateKey,
-    TemplateVisibility,
-    compile_schedule_template,
-    list_schedule_templates,
-)
+from apps.backend.src.modules.scheduler.registry import ScheduleTemplateKey, TemplateVisibility, compile_schedule_template
 from apps.backend.src.modules.scheduler.schemas import (
     ScheduleCompileRequest,
     ScheduleCompileResult,
@@ -200,12 +195,17 @@ def _iter_plan_instances(instances: Iterable[SchedulePlanInstance]) -> Iterable[
 
 
 def _compile_request_for_batch(payload: ScheduleBatchRequest) -> ScheduleCompileRequest:
-    compile_kwargs: Dict[str, Any] = {"template": payload.template}
-    if payload.template == ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
+    try:
+        template_key = ScheduleTemplateKey(payload.template)
+    except ValueError as exc:  # pragma: no cover - defensive guard
+        raise HTTPException(status_code=400, detail="unsupported schedule template") from exc
+
+    compile_kwargs: Dict[str, Any] = {"template": template_key}
+    if template_key == ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
         compile_kwargs["mail"] = payload.payload_template
-    elif payload.template == ScheduleTemplateKey.POST_PUBLISH:
+    elif template_key == ScheduleTemplateKey.POST_PUBLISH:
         compile_kwargs["post_publish"] = payload.payload_template
-    elif payload.template == ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
+    elif template_key == ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
         compile_kwargs["sync_metrics"] = payload.payload_template
     else:
         raise HTTPException(status_code=400, detail="unsupported schedule template")
@@ -444,13 +444,18 @@ async def _cancel_post_publish_schedule(
     side_effect="write",
 )
 async def op_create_trends_mail_schedule(
-    payload: ScheduleBatchRequest,
+    payload: MailBatchRequest,
     ctx: TaskContext,
 ) -> ScheduleCreateResult:
     db: AsyncSession = ctx.require(AsyncSession)
     user: Optional[User] = ctx.optional(User)
 
-    if payload.template != ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
+    try:
+        template_key = ScheduleTemplateKey(payload.template)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="unsupported schedule template") from exc
+
+    if template_key != ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
         raise HTTPException(status_code=400, detail="mail schedule template expected")
 
     plan_result = await op_plan_schedule_batch(payload, ctx)
@@ -500,13 +505,18 @@ async def op_create_trends_mail_schedule(
     side_effect="write",
 )
 async def op_create_sync_metrics_schedule(
-    payload: ScheduleBatchRequest,
+    payload: SyncMetricsBatchRequest,
     ctx: TaskContext,
 ) -> ScheduleCreateResult:
     db: AsyncSession = ctx.require(AsyncSession)
     user: Optional[User] = ctx.optional(User)
 
-    if payload.template != ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
+    try:
+        template_key = ScheduleTemplateKey(payload.template)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="unsupported schedule template") from exc
+
+    if template_key != ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
         raise HTTPException(status_code=400, detail="sync metrics template expected")
 
     plan_result = await op_plan_schedule_batch(payload, ctx)
@@ -698,7 +708,7 @@ def _flow_cancel_draft_post_schedule(builder: FlowBuilder):
     key="action.schedule.create_trends_mail_schedule",
     title="Create Trends similar to persona Mail Schedule",
     description="Create or update a mail publication schedule for the given draft variant",
-    input_model=ScheduleBatchRequest,
+    input_model=MailBatchRequest,
     output_model=ScheduleCreateResult,
     method="post",
     path="/actions/schedules/mail/create",
@@ -716,7 +726,7 @@ def _flow_create_trends_mail_schedule(builder: FlowBuilder):
     key="action.schedule.create_sync_metrics_schedule",
     title="Create Sync Metrics Schedule",
     description="Create or update sync metrics schedules for publications",
-    input_model=ScheduleBatchRequest,
+    input_model=SyncMetricsBatchRequest,
     output_model=ScheduleCreateResult,
     method="post",
     path="/actions/schedules/sync_metrics/create",

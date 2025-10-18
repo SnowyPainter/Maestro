@@ -1900,17 +1900,9 @@ export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedul
 export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMin = 0;
 export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefault = "even";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesDefault = 0;
 export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMin = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefault = 1;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateCountryDefault = "US";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateLimitDefault = 20;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateWaitTimeoutSDefault = 604800;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefaultOne = "UTC";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefaultOne = 1;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMinOne = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefaultOne = "even";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesDefaultOne = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMinOne = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefaultThree = 1;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefaultTwo = "UTC";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefaultTwo = 1;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMinTwo = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefaultTwo = "even";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesDefaultTwo = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMinTwo = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefaultSix = 1;
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefault = 1;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateCountryDefault = "US";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateLimitDefault = 20;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateWaitTimeoutSDefault = 604800;
 
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody = zod.union([zod.object({
+export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody = zod.object({
   "title": zod.string().nullish(),
   "timezone": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefault),
   "date_range": zod.object({
@@ -1950,81 +1942,7 @@ export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedul
   "wait_timeout_s": zod.number().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateWaitTimeoutSDefault),
   "pipeline_id": zod.string().nullish()
 }).describe('Parameters for the mail trends + reply template.')
-}),zod.object({
-  "title": zod.string().nullish(),
-  "timezone": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefaultOne),
-  "date_range": zod.object({
-  "start": zod.iso.date(),
-  "end": zod.iso.date()
-}),
-  "weekmask": zod.array(zod.string()).optional(),
-  "exdates": zod.array(zod.iso.date()).optional(),
-  "segments": zod.array(zod.object({
-  "id": zod.string(),
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({}),
-  "count_per_day": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMinOne).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefaultOne)
-})),
-  "distribution": zod.object({
-  "mode": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefaultOne),
-  "fixed_times": zod.record(zod.string(), zod.array(zod.iso.time({}))).optional(),
-  "weights": zod.record(zod.string(), zod.number()).optional()
-}).optional(),
-  "constraints": zod.object({
-  "min_gap_minutes": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMinOne).optional(),
-  "max_per_day": zod.union([zod.number(),zod.null()]).optional(),
-  "max_parallel": zod.union([zod.number().min(1),zod.null()]).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefaultThree),
-  "blackouts": zod.array(zod.object({
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({})
-})).optional()
-}).optional(),
-  "queue": zod.string().nullish(),
-  "template": zod.literal("post.publish"),
-  "payload_template": zod.object({
-  "post_publication_id": zod.number(),
-  "persona_account_id": zod.number(),
-  "variant_id": zod.number(),
-  "draft_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads'])
-}).describe('Parameters for publishing a compiled draft variant.')
-}),zod.object({
-  "title": zod.string().nullish(),
-  "timezone": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefaultTwo),
-  "date_range": zod.object({
-  "start": zod.iso.date(),
-  "end": zod.iso.date()
-}),
-  "weekmask": zod.array(zod.string()).optional(),
-  "exdates": zod.array(zod.iso.date()).optional(),
-  "segments": zod.array(zod.object({
-  "id": zod.string(),
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({}),
-  "count_per_day": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMinTwo).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefaultTwo)
-})),
-  "distribution": zod.object({
-  "mode": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefaultTwo),
-  "fixed_times": zod.record(zod.string(), zod.array(zod.iso.time({}))).optional(),
-  "weights": zod.record(zod.string(), zod.number()).optional()
-}).optional(),
-  "constraints": zod.object({
-  "min_gap_minutes": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMinTwo).optional(),
-  "max_per_day": zod.union([zod.number(),zod.null()]).optional(),
-  "max_parallel": zod.union([zod.number().min(1),zod.null()]).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefaultSix),
-  "blackouts": zod.array(zod.object({
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({})
-})).optional()
-}).optional(),
-  "queue": zod.string().nullish(),
-  "template": zod.literal("insights.sync_metrics"),
-  "payload_template": zod.object({
-  "persona_account_id": zod.number(),
-  "post_publication_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads'])
-}).describe('Parameters for syncing metrics for a post publication.')
-})])
+})
 
 export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostResponse = zod.object({
   "schedule_ids": zod.array(zod.number())
@@ -2039,17 +1957,9 @@ export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedu
 export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayMin = 0;
 export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyDistributionModeDefault = "even";export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesDefault = 0;
 export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesMin = 0;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMaxParallelDefault = 1;export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyPayloadTemplateCountryDefault = "US";export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyPayloadTemplateLimitDefault = 20;export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyPayloadTemplateWaitTimeoutSDefault = 604800;export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyTimezoneDefaultOne = "UTC";export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayDefaultOne = 1;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayMinOne = 0;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyDistributionModeDefaultOne = "even";export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesDefaultOne = 0;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesMinOne = 0;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMaxParallelDefaultThree = 1;export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyTimezoneDefaultTwo = "UTC";export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayDefaultTwo = 1;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayMinTwo = 0;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyDistributionModeDefaultTwo = "even";export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesDefaultTwo = 0;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesMinTwo = 0;
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMaxParallelDefaultSix = 1;
+export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMaxParallelDefault = 1;
 
-export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody = zod.union([zod.object({
+export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBody = zod.object({
   "title": zod.string().nullish(),
   "timezone": zod.string().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyTimezoneDefault),
   "date_range": zod.object({
@@ -2079,91 +1989,13 @@ export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedu
 })).optional()
 }).optional(),
   "queue": zod.string().nullish(),
-  "template": zod.literal("mail.trends_with_reply"),
-  "payload_template": zod.object({
-  "persona_id": zod.number(),
-  "persona_account_id": zod.number(),
-  "email_to": zod.string(),
-  "country": zod.string().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyPayloadTemplateCountryDefault),
-  "limit": zod.number().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyPayloadTemplateLimitDefault),
-  "wait_timeout_s": zod.number().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyPayloadTemplateWaitTimeoutSDefault),
-  "pipeline_id": zod.string().nullish()
-}).describe('Parameters for the mail trends + reply template.')
-}),zod.object({
-  "title": zod.string().nullish(),
-  "timezone": zod.string().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyTimezoneDefaultOne),
-  "date_range": zod.object({
-  "start": zod.iso.date(),
-  "end": zod.iso.date()
-}),
-  "weekmask": zod.array(zod.string()).optional(),
-  "exdates": zod.array(zod.iso.date()).optional(),
-  "segments": zod.array(zod.object({
-  "id": zod.string(),
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({}),
-  "count_per_day": zod.number().min(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayMinOne).default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayDefaultOne)
-})),
-  "distribution": zod.object({
-  "mode": zod.string().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyDistributionModeDefaultOne),
-  "fixed_times": zod.record(zod.string(), zod.array(zod.iso.time({}))).optional(),
-  "weights": zod.record(zod.string(), zod.number()).optional()
-}).optional(),
-  "constraints": zod.object({
-  "min_gap_minutes": zod.number().min(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesMinOne).optional(),
-  "max_per_day": zod.union([zod.number(),zod.null()]).optional(),
-  "max_parallel": zod.union([zod.number().min(1),zod.null()]).default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMaxParallelDefaultThree),
-  "blackouts": zod.array(zod.object({
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({})
-})).optional()
-}).optional(),
-  "queue": zod.string().nullish(),
-  "template": zod.literal("post.publish"),
-  "payload_template": zod.object({
-  "post_publication_id": zod.number(),
-  "persona_account_id": zod.number(),
-  "variant_id": zod.number(),
-  "draft_id": zod.number(),
-  "platform": zod.enum(['instagram', 'threads'])
-}).describe('Parameters for publishing a compiled draft variant.')
-}),zod.object({
-  "title": zod.string().nullish(),
-  "timezone": zod.string().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyTimezoneDefaultTwo),
-  "date_range": zod.object({
-  "start": zod.iso.date(),
-  "end": zod.iso.date()
-}),
-  "weekmask": zod.array(zod.string()).optional(),
-  "exdates": zod.array(zod.iso.date()).optional(),
-  "segments": zod.array(zod.object({
-  "id": zod.string(),
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({}),
-  "count_per_day": zod.number().min(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayMinTwo).default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodySegmentsItemCountPerDayDefaultTwo)
-})),
-  "distribution": zod.object({
-  "mode": zod.string().default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyDistributionModeDefaultTwo),
-  "fixed_times": zod.record(zod.string(), zod.array(zod.iso.time({}))).optional(),
-  "weights": zod.record(zod.string(), zod.number()).optional()
-}).optional(),
-  "constraints": zod.object({
-  "min_gap_minutes": zod.number().min(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMinGapMinutesMinTwo).optional(),
-  "max_per_day": zod.union([zod.number(),zod.null()]).optional(),
-  "max_parallel": zod.union([zod.number().min(1),zod.null()]).default(actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostBodyConstraintsMaxParallelDefaultSix),
-  "blackouts": zod.array(zod.object({
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({})
-})).optional()
-}).optional(),
-  "queue": zod.string().nullish(),
   "template": zod.literal("insights.sync_metrics"),
   "payload_template": zod.object({
   "persona_account_id": zod.number(),
   "post_publication_id": zod.number(),
   "platform": zod.enum(['instagram', 'threads'])
 }).describe('Parameters for syncing metrics for a post publication.')
-})])
+})
 
 export const actionScheduleCreateSyncMetricsScheduleApiOrchestratorActionsSchedulesSyncMetricsCreatePostResponse = zod.object({
   "schedule_ids": zod.array(zod.number())

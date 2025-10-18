@@ -8,11 +8,15 @@ from apps.backend.src.modules.users.models import User
 from apps.backend.src.workers.Adapter.tasks import sync_metrics_with_adapter
 from apps.backend.src.modules.common.enums import PlatformKind
 from apps.backend.src.modules.accounts.service import (
+    TokenRefreshError,
     _load_platform_account,
     ensure_platform_account_credentials,
 )
 from apps.backend.src.modules.drafts.service import _load_post_publication
-from apps.backend.src.orchestrator.flows.internal.drafts import _build_adapter_credentials
+from apps.backend.src.orchestrator.flows.internal.drafts import (
+    _build_adapter_credentials,
+    _should_retry_with_refresh,
+)
 from apps.backend.src.modules.adapters.core.types import MetricsResult
 from apps.backend.src.modules.insights.schemas import InsightIn, InsightSource
 import uuid
@@ -54,11 +58,36 @@ async def op_sync_metrics(
     if payload.platform != post_publication.platform:
         raise HTTPException(status_code=404, detail="Publication not found")
 
-    metrics: MetricsResult = await sync_metrics_with_adapter(
-        platform=payload.platform,
-        external_id=external_id,
-        credentials=credentials,
-    )
+    try:
+        metrics: MetricsResult = await sync_metrics_with_adapter(
+            platform=payload.platform,
+            external_id=external_id,
+            credentials=credentials,
+        )
+        if not metrics.ok and _should_retry_with_refresh(metrics.errors):
+            platform_account = await ensure_platform_account_credentials(
+                db,
+                account=platform_account,
+                force_refresh=True,
+                raise_on_failure=True,
+            )
+            credentials = _build_adapter_credentials(platform_account)
+            metrics = await sync_metrics_with_adapter(
+                platform=payload.platform,
+                external_id=external_id,
+                credentials=credentials,
+            )
+    except TokenRefreshError as exc:
+        raise HTTPException(
+            status_code=401,
+            detail={"message": "Token refresh required", "errors": [str(exc)]},
+        ) from exc
+
+    if not metrics.ok:
+        raise HTTPException(
+            status_code=502,
+            detail={"message": "Metrics sync failed", "errors": metrics.errors},
+        )
 
     comment_payloads: list[InsightCommentIn] = []
     if metrics.comments:

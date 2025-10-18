@@ -56,7 +56,7 @@ async def _load_post_publication(
     post_publication_id: int,
     persona_account_id: int,
 ) -> PostPublication:
-    publication = await db.get(PostPublication, post_publication_id).where(PostPublication.account_persona_id == persona_account_id)
+    publication = await db.get(PostPublication, post_publication_id)
     if publication is None or publication.account_persona_id != persona_account_id:
         raise HTTPException(status_code=404, detail="Publication not found")
     return publication
