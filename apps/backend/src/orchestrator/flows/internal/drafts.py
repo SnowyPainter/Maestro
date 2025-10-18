@@ -23,6 +23,7 @@ from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 from apps.backend.src.modules.scheduler.schemas import PostPublishTemplateParams
 from apps.backend.src.workers.Adapter.tasks import publish_variant_with_adapter
+from apps.backend.src.modules.playbooks.service import record_playbook_event
 
 def _build_adapter_credentials(account: PlatformAccount) -> dict:
     credentials: dict[str, object] = {}
@@ -83,6 +84,7 @@ async def op_publish_post(
     db: AsyncSession = ctx.require(AsyncSession)
     user: User | None = ctx.optional(User)
     schedule_context = ctx.optional(dict, name="schedule_context") or {}
+    schedule_id = ctx.optional(int, name="schedule_id")
 
     owner_user_id = user.id if user else schedule_context.get("user_id")
     try:
@@ -205,6 +207,24 @@ async def op_publish_post(
         publication.scheduled_at = None
         publication.external_id = result.external_id
         publication.errors = None
+        meta_payload = {
+            key: value
+            for key, value in {
+                "external_id": result.external_id,
+                "platform": payload.platform.value if hasattr(payload.platform, "value") else str(payload.platform),
+            }.items()
+            if value
+        }
+        await record_playbook_event(
+            db,
+            event="post.published",
+            persona_account_id=payload.persona_account_id,
+            draft_id=variant.draft_id,
+            variant_id=variant.id,
+            post_publication_id=publication.id,
+            schedule_id=schedule_id,
+            meta=meta_payload or None,
+        )
     else:
         publication.status = PostStatus.FAILED
         publication.errors = result.errors or ["publish failed"]

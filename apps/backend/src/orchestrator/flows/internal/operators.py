@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class ComposeTrendsEmailPayload(BaseModel):
     persona_id: int
+    persona_account_id: int | None = None
     email_to: EmailStr
     country: str = "US"
     limit: int = 20
@@ -76,6 +77,7 @@ class PrepareTrendsEmailPayload(BaseModel):
     subject: str | None = None
     pipeline_id: str | None = None
     persona_id: int
+    persona_account_id: int | None = None
     persona_name: str | None = None
     country: str
     items: List[TrendItem] = Field(default_factory=list)
@@ -89,6 +91,7 @@ class PreparedTrendsEmail(BaseModel):
     should_send: bool
     total: int
     persona_name: str | None = None
+    persona_account_id: int | None = None
     pipeline_id: str | None = None
     subject: str | None = None
     email_to: EmailStr | None = None
@@ -245,6 +248,7 @@ async def op_prepare_trends_email(
             should_send=False,
             total=payload.total,
             persona_name=payload.persona_name,
+            persona_account_id=payload.persona_account_id,
             pipeline_id=pipeline_id,
             subject=payload.subject,
             email_to=payload.email_to,
@@ -258,6 +262,7 @@ async def op_prepare_trends_email(
             should_send=False,
             total=0,
             persona_name=payload.persona_name,
+            persona_account_id=payload.persona_account_id,
             pipeline_id=pipeline_id,
             subject=payload.subject,
             email_to=payload.email_to,
@@ -283,6 +288,8 @@ async def op_prepare_trends_email(
         draft_ir,
         pipeline_id=pipeline_id,
         name=payload.persona_name or "",
+        persona_id=payload.persona_id,
+        persona_account_id=payload.persona_account_id,
     )
 
     return PreparedTrendsEmail(
@@ -290,6 +297,7 @@ async def op_prepare_trends_email(
         should_send=True,
         total=len(items),
         persona_name=payload.persona_name,
+        persona_account_id=payload.persona_account_id,
         pipeline_id=pipeline_id,
         subject=subject,
         email_to=payload.email_to,
@@ -464,6 +472,7 @@ async def op_compose_trends_email(
         subject=payload.subject,
         pipeline_id=payload.pipeline_id,
         persona_id=trends.persona_id,
+        persona_account_id=payload.persona_account_id,
         persona_name=trends.persona_name,
         country=payload.country,
         items=trends.items,

@@ -836,6 +836,38 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
 
 
 /**
+ * List my playbooks with optional filtering.
+ * @summary List Playbooks
+ */
+export const bffPlaybookListPlaybooksApiBffPlaybooksGetQueryLimitDefault = 20;export const bffPlaybookListPlaybooksApiBffPlaybooksGetQueryOffsetDefault = 0;
+
+export const bffPlaybookListPlaybooksApiBffPlaybooksGetQueryParams = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "limit": zod.number().default(bffPlaybookListPlaybooksApiBffPlaybooksGetQueryLimitDefault),
+  "offset": zod.number().optional()
+})
+
+export const bffPlaybookListPlaybooksApiBffPlaybooksGetResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "aggregate_kpi": zod.union([zod.record(zod.string(), zod.number()),zod.null()]).optional(),
+  "best_time_window": zod.string().nullish(),
+  "best_tone": zod.string().nullish(),
+  "top_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "last_updated": zod.iso.datetime({}),
+  "created_at": zod.iso.datetime({})
+})),
+  "total": zod.number(),
+  "limit": zod.number(),
+  "offset": zod.number()
+})
+
+
+/**
  * List schedules for the authenticated user with optional persona filtering and meta information.
  * @summary List Schedules
  */
@@ -1027,6 +1059,53 @@ export const bffTimelineCampaignsApiBffTimelineCampaignsGetBody = zod.union([zod
 }).describe('Container returned by source-specific timeline operators.'),zod.null()])
 
 export const bffTimelineCampaignsApiBffTimelineCampaignsGetResponse = zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional(),
+  "payload": zod.record(zod.string(), zod.any()).optional()
+}).describe('Flow result that preserves payload info and emits merged events.')
+
+
+/**
+ * Get timeline events sourced from playbook logs
+ * @summary Get Playbook Timeline
+ */
+export const bffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryLimitDefault = 200;
+
+export const bffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryParams = zod.object({
+  "persona_account_id": zod.number(),
+  "since": zod.iso.datetime({}).nullish(),
+  "until": zod.iso.datetime({}).nullish(),
+  "limit": zod.union([zod.number(),zod.null()]).default(bffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryLimitDefault)
+})
+
+export const bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody = zod.union([zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).describe('Container returned by source-specific timeline operators.'),zod.null()])
+
+export const bffTimelinePlaybooksApiBffTimelinePlaybooksGetResponse = zod.object({
   "source": zod.string(),
   "events": zod.array(zod.object({
   "event_id": zod.string(),

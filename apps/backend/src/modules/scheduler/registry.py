@@ -102,6 +102,7 @@ def _build_mail_trends_with_reply(request: "ScheduleCompileRequest") -> "Schedul
         "internal.mail.compose_trends_email",
         node_id="compose",
         persona_id=payload_ref("persona_id"),
+        persona_account_id=payload_ref("persona_account_id"),
         email_to=payload_ref("email_to"),
         country=payload_ref("country"),
         limit=payload_ref("limit"),

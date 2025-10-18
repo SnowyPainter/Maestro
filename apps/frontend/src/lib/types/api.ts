@@ -544,6 +544,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/playbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Playbooks
+         * @description List my playbooks with optional filtering.
+         */
+        get: operations["bff_playbook_list_playbooks_api_bff_playbooks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/schedules": {
         parameters: {
             query?: never;
@@ -636,6 +656,26 @@ export interface paths {
          * @description Get timeline events sourced from campaign KPI results
          */
         get: operations["bff_timeline_campaigns_api_bff_timeline_campaigns_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/timeline/playbooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Playbook Timeline
+         * @description Get timeline events sourced from playbook logs
+         */
+        get: operations["bff_timeline_playbooks_api_bff_timeline_playbooks_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2791,6 +2831,48 @@ export interface components {
          * @enum {string}
          */
         PlatformKind: "instagram" | "threads";
+        /** PlaybookListResponse */
+        PlaybookListResponse: {
+            /** Items */
+            items: components["schemas"]["PlaybookOut"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /** PlaybookOut */
+        PlaybookOut: {
+            /** Id */
+            id: number;
+            /** Persona Id */
+            persona_id: number;
+            /** Campaign Id */
+            campaign_id: number;
+            /** Aggregate Kpi */
+            aggregate_kpi?: {
+                [key: string]: number;
+            } | null;
+            /** Best Time Window */
+            best_time_window?: string | null;
+            /** Best Tone */
+            best_tone?: string | null;
+            /** Top Hashtags */
+            top_hashtags?: string[] | null;
+            /** Last Event */
+            last_event?: string | null;
+            /**
+             * Last Updated
+             * Format: date-time
+             */
+            last_updated: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** PostPublicationOut */
         PostPublicationOut: {
             /** Id */
@@ -4416,6 +4498,40 @@ export interface operations {
             };
         };
     };
+    bff_playbook_list_playbooks_api_bff_playbooks_get: {
+        parameters: {
+            query?: {
+                persona_id?: number | null;
+                campaign_id?: number | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaybookListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_schedule_list_schedules_api_bff_schedules_get: {
         parameters: {
             query?: {
@@ -4553,6 +4669,44 @@ export interface operations {
         };
     };
     bff_timeline_campaigns_api_bff_timeline_campaigns_get: {
+        parameters: {
+            query: {
+                persona_account_id: number;
+                since?: string | null;
+                until?: string | null;
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TimelineEventCollection"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineEventCollectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_timeline_playbooks_api_bff_timeline_playbooks_get: {
         parameters: {
             query: {
                 persona_account_id: number;

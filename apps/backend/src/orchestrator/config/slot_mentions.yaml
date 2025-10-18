@@ -62,6 +62,7 @@ slots:
   - bff.campaigns.list_kpi_results
   - bff.campaigns.read_campaign
   - bff.drafts.list_drafts
+  - bff.playbook.list_playbooks
   - campaigns.aggregate_kpis
   - campaigns.delete_campaign
   - campaigns.record_kpi_result
@@ -179,6 +180,7 @@ slots:
   value_type: string
   flows:
   - bff.timeline.campaigns
+  - bff.timeline.playbooks
   - bff.timeline.post_publications
   - bff.timeline.trends
 - name: exdates
@@ -254,9 +256,11 @@ slots:
   - bff.campaigns.list_campaigns
   - bff.campaigns.list_kpi_results
   - bff.drafts.list_drafts
+  - bff.playbook.list_playbooks
   - bff.schedule.get_schedule_stream
   - bff.schedule.list_schedules
   - bff.timeline.campaigns
+  - bff.timeline.playbooks
   - bff.timeline.post_publications
   - bff.timeline.trends
   - bff.trends.list_trends
@@ -309,6 +313,7 @@ slots:
   - bff.accounts.list_platform_accounts
   - bff.campaigns.list_campaigns
   - bff.drafts.list_drafts
+  - bff.playbook.list_playbooks
   - bff.schedule.list_schedules
 - name: on_date
   label: On Date
@@ -355,11 +360,13 @@ slots:
   - bff.contexts.current_persona_account
   - bff.schedule.list_schedules
   - bff.timeline.campaigns
+  - bff.timeline.playbooks
   - bff.timeline.post_publications
   - bff.timeline.trends
   - internal.drafts.publish
   - internal.insights.list_comments
   - internal.insights.sync_metrics
+  - internal.mail.compose_trends_email
 - name: persona_account_ids
   label: Persona Account Ids
   description: Filter by persona account ids
@@ -378,6 +385,7 @@ slots:
   - accounts.persona.update
   - bff.accounts.list_accounts_for_persona
   - bff.accounts.read_persona
+  - bff.playbook.list_playbooks
   - internal.mail.compose_trends_email
 - name: pipeline_id
   label: Pipeline Id
@@ -519,6 +527,7 @@ slots:
   value_type: date
   flows:
   - bff.timeline.campaigns
+  - bff.timeline.playbooks
   - bff.timeline.post_publications
   - bff.timeline.trends
   - bff.trends.list_trends
@@ -646,6 +655,7 @@ slots:
   value_type: date
   flows:
   - bff.timeline.campaigns
+  - bff.timeline.playbooks
   - bff.timeline.post_publications
   - bff.timeline.trends
   - bff.trends.list_trends

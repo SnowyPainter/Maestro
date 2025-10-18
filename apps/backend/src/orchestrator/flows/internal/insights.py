@@ -23,6 +23,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.scheduler.schemas import SyncMetricsTemplateParams
+from apps.backend.src.modules.playbooks.service import record_playbook_event
 
 
 """
@@ -40,6 +41,7 @@ async def op_sync_metrics(
 ) -> InsightOut:
     db: AsyncSession = ctx.require(AsyncSession)
     user: User | None = ctx.optional(User)
+    schedule_id = ctx.optional(int, name="schedule_id")
 
     platform_account = await _load_platform_account(
         db,
@@ -117,6 +119,25 @@ async def op_sync_metrics(
         combined_warnings.extend(metrics.comment_warnings)
     if metrics.comment_errors:
         combined_warnings.extend([f"comment_error:{msg}" for msg in metrics.comment_errors])
+
+    if metrics.ok:
+        meta_payload = {}
+        if metrics.warnings:
+            meta_payload["warnings"] = metrics.warnings
+        if metrics.errors:
+            meta_payload["errors"] = metrics.errors
+        if metrics.comment_warnings:
+            meta_payload["comment_warnings"] = metrics.comment_warnings
+        if metrics.comment_errors:
+            meta_payload["comment_errors"] = metrics.comment_errors
+        await record_playbook_event(
+            db,
+            event="sync.metrics",
+            persona_account_id=payload.persona_account_id,
+            post_publication_id=payload.post_publication_id,
+            schedule_id=schedule_id,
+            meta=meta_payload or None,
+        )
 
     raw_payload = dict(metrics.raw or {})
     if metrics.comments_next_cursor:

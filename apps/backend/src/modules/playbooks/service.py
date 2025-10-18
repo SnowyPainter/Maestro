@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, List, Optional, Tuple, TYPE_CHECKING
 
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,9 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.playbooks.models import Playbook, PlaybookLog
 from apps.backend.src.modules.playbooks.schemas import (
     PlaybookAggregatePatch,
-    PlaybookEnsureRequest,
     PlaybookLogCreate,
 )
+from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
+from apps.backend.src.modules.scheduler.models import Schedule
 
 if TYPE_CHECKING:
     from apps.backend.src.modules.abtests.models import ABTest
@@ -71,12 +73,15 @@ async def get_playbook(db: AsyncSession, playbook_id: int) -> Optional[Playbook]
 async def list_playbooks(
     db: AsyncSession,
     *,
+    owner_user_id: Optional[int] = None,
     persona_id: Optional[int] = None,
     campaign_id: Optional[int] = None,
     limit: int = 20,
     offset: int = 0,
 ) -> Tuple[List[Playbook], int]:
     stmt: Select = select(Playbook)
+    if owner_user_id is not None:
+        stmt = stmt.join(Playbook.persona).where(Persona.owner_user_id == owner_user_id)
     if persona_id is not None:
         stmt = stmt.where(Playbook.persona_id == persona_id)
     if campaign_id is not None:
@@ -172,6 +177,171 @@ async def list_logs(
     rows = (
         await db.execute(
             stmt.order_by(PlaybookLog.timestamp.desc()).limit(limit).offset(offset)
+        )
+    ).scalars().all()
+    return rows, total
+
+
+def _as_int(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, bool):
+        return int(value)
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+async def record_playbook_event(
+    db: AsyncSession,
+    *,
+    event: str,
+    timestamp: Optional[datetime] = None,
+    persona_id: Optional[int] = None,
+    persona_account_id: Optional[int] = None,
+    campaign_id: Optional[int] = None,
+    draft_id: Optional[int] = None,
+    variant_id: Optional[int] = None,
+    post_publication_id: Optional[int] = None,
+    schedule_id: Optional[int] = None,
+    ref_id: Optional[int] = None,
+    schedule: Optional[Schedule] = None,
+    message: Optional[str] = None,
+    meta: Optional[dict] = None,
+    persona_snapshot: Optional[dict] = None,
+    trend_snapshot: Optional[dict] = None,
+    llm_input: Optional[dict] = None,
+    llm_output: Optional[dict] = None,
+    kpi_snapshot: Optional[dict] = None,
+    aggregate_patch: Optional[PlaybookAggregatePatch] = None,
+) -> Optional[PlaybookLog]:
+    persona_id = _as_int(persona_id)
+    persona_account_id = _as_int(persona_account_id)
+    campaign_id = _as_int(campaign_id)
+    draft_id = _as_int(draft_id)
+    variant_id = _as_int(variant_id)
+    post_publication_id = _as_int(post_publication_id)
+    schedule_id = _as_int(schedule_id)
+    ref_id = _as_int(ref_id)
+
+    schedule_obj = schedule
+    if schedule_obj is None and schedule_id is not None:
+        schedule_obj = await db.get(Schedule, schedule_id)
+
+    if schedule_obj is not None:
+        if persona_account_id is None:
+            persona_account_id = schedule_obj.persona_account_id
+        if persona_id is None and schedule_obj.persona_account is not None:
+            persona_id = schedule_obj.persona_account.persona_id
+        payload_data = schedule_obj.payload if isinstance(schedule_obj.payload, dict) else {}
+        if isinstance(payload_data, dict):
+            if persona_id is None:
+                persona_id = _as_int(payload_data.get("persona_id"))
+            if campaign_id is None:
+                campaign_id = _as_int(payload_data.get("campaign_id"))
+            if draft_id is None:
+                draft_id = _as_int(payload_data.get("draft_id"))
+            if variant_id is None:
+                variant_id = _as_int(payload_data.get("variant_id"))
+            if post_publication_id is None:
+                post_publication_id = _as_int(payload_data.get("post_publication_id"))
+
+    if persona_account_id is not None and persona_id is None:
+        persona_account = await db.get(PersonaAccount, persona_account_id)
+        if persona_account is not None:
+            persona_id = persona_account.persona_id
+
+    publication: PostPublication | None = None
+    if post_publication_id is not None:
+        publication = await db.get(PostPublication, post_publication_id)
+        if publication is not None:
+            if persona_account_id is None:
+                persona_account_id = publication.account_persona_id
+            if persona_id is None and publication.persona_account is not None:
+                persona_id = publication.persona_account.persona_id
+            if variant_id is None:
+                variant_id = publication.variant_id
+            if draft_id is None and publication.variant is not None:
+                draft_id = publication.variant.draft_id
+            if (
+                campaign_id is None
+                and publication.variant is not None
+                and publication.variant.draft is not None
+            ):
+                campaign_id = publication.variant.draft.campaign_id
+
+    variant: DraftVariant | None = None
+    if variant_id is not None:
+        variant = await db.get(DraftVariant, variant_id)
+        if variant is not None:
+            if draft_id is None:
+                draft_id = variant.draft_id
+            if campaign_id is None:
+                campaign_id = variant.draft.campaign_id if variant.draft is not None else None
+
+    draft: Draft | None = None
+    if draft_id is not None and campaign_id is None:
+        draft = await db.get(Draft, draft_id)
+        if draft is not None:
+            campaign_id = draft.campaign_id
+
+    if persona_id is None:
+        return None
+    if campaign_id is None:
+        return None
+
+    payload = PlaybookLogCreate(
+        persona_id=persona_id,
+        campaign_id=campaign_id,
+        event=event,
+        timestamp=timestamp,
+        draft_id=draft_id,
+        schedule_id=schedule_id,
+        ref_id=ref_id,
+        persona_snapshot=persona_snapshot,
+        trend_snapshot=trend_snapshot,
+        llm_input=llm_input,
+        llm_output=llm_output,
+        kpi_snapshot=kpi_snapshot,
+        meta=meta,
+        message=message,
+        aggregate_patch=aggregate_patch,
+    )
+    return await record_event(db, payload)
+
+
+async def list_logs_for_persona(
+    db: AsyncSession,
+    *,
+    persona_id: int,
+    campaign_id: Optional[int] = None,
+    since: Optional[datetime] = None,
+    until: Optional[datetime] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> Tuple[List[PlaybookLog], int]:
+    stmt = (
+        select(PlaybookLog)
+        .join(Playbook, Playbook.id == PlaybookLog.playbook_id)
+        .where(Playbook.persona_id == persona_id)
+    )
+    if campaign_id is not None:
+        stmt = stmt.where(Playbook.campaign_id == campaign_id)
+    if since is not None:
+        stmt = stmt.where(PlaybookLog.timestamp >= since)
+    if until is not None:
+        stmt = stmt.where(PlaybookLog.timestamp <= until)
+
+    total_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(total_stmt)).scalar_one()
+    rows = (
+        await db.execute(
+            stmt.order_by(PlaybookLog.timestamp.desc(), PlaybookLog.id.desc())
+            .limit(limit)
+            .offset(offset)
         )
     ).scalars().all()
     return rows, total

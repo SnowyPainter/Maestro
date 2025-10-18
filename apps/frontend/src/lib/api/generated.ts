@@ -1181,6 +1181,35 @@ export const PlatformKind = {
   threads: 'threads',
 } as const;
 
+export interface PlaybookListResponse {
+  items: PlaybookOut[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export type PlaybookOutAggregateKpiAnyOf = {[key: string]: number};
+
+export type PlaybookOutAggregateKpi = PlaybookOutAggregateKpiAnyOf | null;
+
+export type PlaybookOutTopHashtags = string[] | null;
+
+export interface PlaybookOut {
+  id: number;
+  persona_id: number;
+  campaign_id: number;
+  aggregate_kpi?: PlaybookOutAggregateKpi;
+  /** @nullable */
+  best_time_window?: string | null;
+  /** @nullable */
+  best_tone?: string | null;
+  top_hashtags?: PlaybookOutTopHashtags;
+  /** @nullable */
+  last_event?: string | null;
+  last_updated: string;
+  created_at: string;
+}
+
 export type PostPublicationOutErrors = string[] | null;
 
 export type PostPublicationOutWarnings = string[] | null;
@@ -1864,6 +1893,13 @@ limit?: number;
 offset?: number;
 };
 
+export type BffPlaybookListPlaybooksApiBffPlaybooksGetParams = {
+persona_id?: number | null;
+campaign_id?: number | null;
+limit?: number;
+offset?: number;
+};
+
 export type BffScheduleListSchedulesApiBffSchedulesGetParams = {
 persona_account_id?: number | null;
 status?: ScheduleStatus | null;
@@ -1944,6 +1980,21 @@ limit?: number | null;
 };
 
 export type BffTimelineCampaignsApiBffTimelineCampaignsGetBody = TimelineEventCollection | null;
+
+export type BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams = {
+persona_account_id: number;
+/**
+ * @nullable
+ */
+since?: string | null;
+/**
+ * @nullable
+ */
+until?: string | null;
+limit?: number | null;
+};
+
+export type BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody = TimelineEventCollection | null;
 
 export type BffTimelineTrendsApiBffTimelineTrendsGetParams = {
 persona_account_id: number;
@@ -4344,6 +4395,96 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
 
 
 /**
+ * List my playbooks with optional filtering.
+ * @summary List Playbooks
+ */
+export const bffPlaybookListPlaybooksApiBffPlaybooksGet = (
+    params?: BffPlaybookListPlaybooksApiBffPlaybooksGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PlaybookListResponse>(
+      {url: `/api/bff/playbooks`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookListPlaybooksApiBffPlaybooksGetQueryKey = (params?: BffPlaybookListPlaybooksApiBffPlaybooksGetParams,) => {
+    return [`/api/bff/playbooks`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookListPlaybooksApiBffPlaybooksGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError = HTTPValidationError>(params?: BffPlaybookListPlaybooksApiBffPlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookListPlaybooksApiBffPlaybooksGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>> = ({ signal }) => bffPlaybookListPlaybooksApiBffPlaybooksGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookListPlaybooksApiBffPlaybooksGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>>
+export type BffPlaybookListPlaybooksApiBffPlaybooksGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookListPlaybooksApiBffPlaybooksGet<TData = Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookListPlaybooksApiBffPlaybooksGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookListPlaybooksApiBffPlaybooksGet<TData = Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookListPlaybooksApiBffPlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookListPlaybooksApiBffPlaybooksGet<TData = Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookListPlaybooksApiBffPlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Playbooks
+ */
+
+export function useBffPlaybookListPlaybooksApiBffPlaybooksGet<TData = Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookListPlaybooksApiBffPlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookListPlaybooksApiBffPlaybooksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookListPlaybooksApiBffPlaybooksGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * List schedules for the authenticated user with optional persona filtering and meta information.
  * @summary List Schedules
  */
@@ -4805,6 +4946,104 @@ export function useBffTimelineCampaignsApiBffTimelineCampaignsGet<TData = Awaite
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffTimelineCampaignsApiBffTimelineCampaignsGetQueryOptions(bffTimelineCampaignsApiBffTimelineCampaignsGetBody,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get timeline events sourced from playbook logs
+ * @summary Get Playbook Timeline
+ */
+export const bffTimelinePlaybooksApiBffTimelinePlaybooksGet = (
+    bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody: BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,
+    params: BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TimelineEventCollectionOut>(
+      {url: `/api/bff/timeline/playbooks`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryKey = (bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody?: BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,
+    params?: BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams,) => {
+    return [`/api/bff/timeline/playbooks`, ...(params ? [params]: []), bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody] as const;
+    }
+
+    
+export const getBffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError = HTTPValidationError>(bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody: BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,
+    params: BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryKey(bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>> = ({ signal }) => bffTimelinePlaybooksApiBffTimelinePlaybooksGet(bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>>
+export type BffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryError = HTTPValidationError
+
+
+export function useBffTimelinePlaybooksApiBffTimelinePlaybooksGet<TData = Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError = HTTPValidationError>(
+ bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody: BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,
+    params: BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelinePlaybooksApiBffTimelinePlaybooksGet<TData = Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError = HTTPValidationError>(
+ bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody: BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,
+    params: BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelinePlaybooksApiBffTimelinePlaybooksGet<TData = Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError = HTTPValidationError>(
+ bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody: BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,
+    params: BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Playbook Timeline
+ */
+
+export function useBffTimelinePlaybooksApiBffTimelinePlaybooksGet<TData = Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError = HTTPValidationError>(
+ bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody: BffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,
+    params: BffTimelinePlaybooksApiBffTimelinePlaybooksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelinePlaybooksApiBffTimelinePlaybooksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffTimelinePlaybooksApiBffTimelinePlaybooksGetQueryOptions(bffTimelinePlaybooksApiBffTimelinePlaybooksGetBody,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

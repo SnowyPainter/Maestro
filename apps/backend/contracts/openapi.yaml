@@ -986,6 +986,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+  /api/bff/playbooks:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - read
+      - ui
+      summary: List Playbooks
+      description: List my playbooks with optional filtering.
+      operationId: bff_playbook_list_playbooks_api_bff_playbooks_get
+      parameters:
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybookListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/schedules:
     get:
       tags:
@@ -1252,6 +1307,71 @@ paths:
       summary: Get Campaign KPI Timeline
       description: Get timeline events sourced from campaign KPI results
       operationId: bff_timeline_campaigns_api_bff_timeline_campaigns_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Persona Account Id
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date-time
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date-time
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 200
+          title: Limit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/TimelineEventCollection'
+              - type: 'null'
+              title: Events
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEventCollectionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/timeline/playbooks:
+    get:
+      tags:
+      - bff
+      - bff
+      - timeline
+      - playbooks
+      - logs
+      - read
+      summary: Get Playbook Timeline
+      description: Get timeline events sourced from playbook logs
+      operationId: bff_timeline_playbooks_api_bff_timeline_playbooks_get
       parameters:
       - name: persona_account_id
         in: query
@@ -5114,6 +5234,82 @@ components:
       - instagram
       - threads
       title: PlatformKind
+    PlaybookListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PlaybookOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+        limit:
+          type: integer
+          title: Limit
+        offset:
+          type: integer
+          title: Offset
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      title: PlaybookListResponse
+    PlaybookOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        persona_id:
+          type: integer
+          title: Persona Id
+        campaign_id:
+          type: integer
+          title: Campaign Id
+        aggregate_kpi:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Aggregate Kpi
+        best_time_window:
+          title: Best Time Window
+          type: string
+          nullable: true
+        best_tone:
+          title: Best Tone
+          type: string
+          nullable: true
+        top_hashtags:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Top Hashtags
+        last_event:
+          title: Last Event
+          type: string
+          nullable: true
+        last_updated:
+          type: string
+          format: date-time
+          title: Last Updated
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - persona_id
+      - campaign_id
+      - last_updated
+      - created_at
+      title: PlaybookOut
     PostPublicationOut:
       properties:
         id:

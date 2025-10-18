@@ -5,10 +5,12 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 from apps.backend.src.modules.mail.service import ingest_draft_mail
 from . import operators as mail_ops
+from apps.backend.src.modules.playbooks.service import record_playbook_event
 
 
 class EmailInboundPayload(BaseModel):
@@ -39,6 +41,8 @@ class EmailInboundResult(BaseModel):
 )
 async def op_ingest_draft_mail(payload: EmailInboundPayload, ctx: TaskContext) -> EmailInboundResult:
     """Ingest draft mail and create draft."""
+    db: AsyncSession = ctx.require(AsyncSession)
+    schedule_id = ctx.optional(int, name="schedule_id")
     # Convert payload to dict format expected by ingest_draft_mail
     email_payload = {
         "subject": payload.subject,
@@ -51,6 +55,23 @@ async def op_ingest_draft_mail(payload: EmailInboundPayload, ctx: TaskContext) -
     }
 
     result = await ingest_draft_mail(email_payload, ctx.runtime)
+
+    settings = result.get("settings") or {}
+    await record_playbook_event(
+        db,
+        event="email.replied",
+        persona_id=settings.get("persona_id"),
+        persona_account_id=settings.get("persona_account_id"),
+        campaign_id=settings.get("campaign_id"),
+        draft_id=result.get("draft_id"),
+        schedule_id=schedule_id,
+        ref_id=settings.get("pipeline_id") or result.get("pipeline_id"),
+        meta={
+            "pipeline_id": result.get("pipeline_id"),
+            "from_email": payload.from_email,
+        },
+        message=result.get("title"),
+    )
     return EmailInboundResult(
         ok=result["ok"],
         pipeline_id=result["pipeline_id"],

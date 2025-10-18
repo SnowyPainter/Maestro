@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional
+from fastapi import HTTPException
 from apps.backend.src.core.logging import setup_logging
 setup_logging()
 import logging
@@ -16,6 +17,7 @@ from apps.backend.src.modules.common.enums import PostStatus
 from apps.backend.src.modules.drafts.schemas import PostPublicationOut
 from apps.backend.src.modules.campaigns.service import list_kpi_results
 from apps.backend.src.modules.trends.service import query_trends
+from apps.backend.src.modules.accounts.models import PersonaAccount
 from apps.backend.src.orchestrator.adapters.timeline import (
     compose_timeline_collections,
 )
@@ -27,6 +29,8 @@ from apps.backend.src.orchestrator.adapters.utils import (
 from apps.backend.src.modules.drafts.service import (
     list_post_publications_by_account_persona,
 )
+from apps.backend.src.modules.playbooks.schemas import PlaybookLogOut
+from apps.backend.src.modules.playbooks.service import list_logs_for_persona
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 from apps.backend.src.modules.timeline.schemas import (
@@ -103,6 +107,39 @@ def _post_publication_events(publication: PostPublicationOut) -> List[TimelineEv
     if terminal_status in {PostStatus.CANCELLED.value, PostStatus.FAILED.value}:
         _add(terminal_status, publication.updated_at, status=terminal_status)
 
+    return events
+
+
+async def _resolve_persona_id_for_account(db: AsyncSession, persona_account_id: int) -> int:
+    persona_account = await db.get(PersonaAccount, persona_account_id)
+    if persona_account is None:
+        raise HTTPException(status_code=404, detail="Persona account not found")
+    return persona_account.persona_id
+
+
+def _playbook_log_events(logs: Iterable[PlaybookLogOut], persona_account_id: int) -> List[TimelineEvent]:
+    events: List[TimelineEvent] = []
+    for log in logs:
+        log_payload = log.model_dump()
+        event = TimelineEvent(
+            event_id=f"playbook_log:{log.id}",
+            timestamp=log.timestamp,
+            status=log.event,
+            persona_account_id=persona_account_id,
+            source="playbook",
+            kind="playbook.event",
+            payload={
+                "phase_source": "playbook_log",
+                "playbook_log": log_payload,
+            },
+            operators=("bff.timeline.playbooks",),
+            correlation_keys={
+                "playbook_id": str(log.playbook_id),
+                "event": log.event,
+            },
+            origin_flow="bff.timeline.playbooks",
+        )
+        events.append(event)
     return events
 
 
@@ -313,6 +350,40 @@ async def op_timeline_post_publications(
         events=combined.events,
     )
 
+
+@operator(
+    key="bff.timeline.playbooks",
+    title="Timeline Events for Playbook Logs",
+    side_effect="read",
+)
+async def op_timeline_playbooks(
+    payload: TimelineQueryPayload,
+    _ctx: TaskContext,
+    db: AsyncSession,
+) -> TimelineEventCollectionOut:
+    persona_id = await _resolve_persona_id_for_account(db, payload.persona_account_id)
+    rows, _ = await list_logs_for_persona(
+        db,
+        persona_id=persona_id,
+        since=payload.since,
+        until=payload.until,
+        limit=payload.limit or 200,
+        offset=0,
+    )
+    logs = [PlaybookLogOut.model_validate(row) for row in rows]
+    events = _playbook_log_events(logs, payload.persona_account_id)
+    filtered = _filter_by_range(events, since=payload.since, until=payload.until)
+    combined = compose_timeline_collections([
+        payload.events,
+        TimelineEventCollection(source="playbooks", events=filtered),
+    ])
+
+    return TimelineEventCollectionOut(
+        source=combined.source,
+        payload=payload.model_dump(),
+        events=combined.events,
+    )
+
 @FLOWS.flow(
     key="bff.timeline.post_publications",
     title="Get Post Publication Timeline",
@@ -344,6 +415,21 @@ def _flow_bff_campaigns(builder: FlowBuilder) -> None:
 
 
 @FLOWS.flow(
+    key="bff.timeline.playbooks",
+    title="Get Playbook Timeline",
+    description="Get timeline events sourced from playbook logs",
+    input_model=TimelineQueryPayload,
+    output_model=TimelineEventCollectionOut,
+    method="get",
+    path="/timeline/playbooks",
+    tags=("bff", "timeline", "playbooks", "logs", "read"),
+)
+def _flow_bff_playbooks(builder: FlowBuilder) -> None:
+    playbooks = builder.task("playbooks", "bff.timeline.playbooks")
+    builder.expect_terminal(playbooks)
+
+
+@FLOWS.flow(
     key="bff.timeline.trends",
     title="Get Trends Timeline",
     description="Get timeline events sourced from trends data",
@@ -358,4 +444,9 @@ def _flow_bff_trends(builder: FlowBuilder) -> None:
     builder.expect_terminal(trends)
 
 
-__all__ = []
+__all__ = [
+    "op_timeline_post_publications",
+    "op_timeline_campaigns",
+    "op_timeline_trends",
+    "op_timeline_playbooks",
+]

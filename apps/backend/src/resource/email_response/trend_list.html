@@ -135,7 +135,7 @@
         {% endif %}
 
         {% if pipeline_id %}
-        {{ components.pipeline_config(pipeline_id) }}
+        {{ components.pipeline_config(pipeline_id, metadata_tokens or {}) }}
         {% endif %}
 
         <div class="content">

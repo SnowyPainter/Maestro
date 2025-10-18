@@ -29,6 +29,7 @@ from apps.backend.src.modules.scheduler.schemas import (
     ScheduleCompileRequest,
     ScheduleTemplateKey,
 )
+from apps.backend.src.modules.playbooks.service import record_playbook_event
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -415,6 +416,14 @@ async def cancel_post_publication(
     publication.updated_at = _now()
     db.add(publication)
     await db.flush()
+    await record_playbook_event(
+         db,
+         event="post.deleted",
+         persona_account_id=persona_account_id,
+         draft_id=variant.draft_id,
+         variant_id=variant.id,
+         post_publication_id=publication.id,
+     )
     return publication
 
 async def ensure_publication_schedule(
@@ -460,6 +469,18 @@ async def ensure_publication_schedule(
         )
         db.add(schedule)
         await db.flush()
+        await record_playbook_event(
+            db,
+            event="schedule.created",
+            schedule_id=schedule.id,
+            schedule=schedule,
+            persona_account_id=persona_account_id,
+            draft_id=variant.draft_id,
+            variant_id=variant.id,
+            post_publication_id=publication.id,
+            campaign_id=variant.draft.campaign_id if variant.draft is not None else None,
+            meta={"template": ScheduleTemplateKey.POST_PUBLISH.value},
+        )
     else:
         schedule.persona_account_id = persona_account_id
         schedule.dag_spec = dag_dict

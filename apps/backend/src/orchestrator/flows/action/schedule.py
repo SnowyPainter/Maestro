@@ -38,6 +38,7 @@ from apps.backend.src.modules.drafts.service import (
     ensure_publication_schedule,
 )
 from apps.backend.src.modules.drafts.models import PostPublication
+from apps.backend.src.modules.playbooks.service import record_playbook_event
 
 # ---- 공통 유틸: DB가 TIMESTAMP WITHOUT TIME ZONE이면 모든 dt를 UTC-naive로 강제 ----
 def to_utc_naive(dt: datetime) -> datetime:
@@ -162,6 +163,12 @@ async def _persist_schedules(
     base_context: Optional[Dict[str, Any]] = None,
 ) -> List[int]:
     schedule_ids: List[int] = []
+    if isinstance(payload, BaseModel):
+        payload_data = payload.model_dump()
+    elif isinstance(payload, dict):
+        payload_data = payload
+    else:
+        payload_data = {}
     for due_at, ctx_extra in due_times:
         context = dict(base_context or {})
         context.update(ctx_extra)
@@ -175,6 +182,29 @@ async def _persist_schedules(
             context=context,
         )
         await db.flush()
+        meta_payload = {
+            key: value
+            for key, value in {
+                "template": context.get("template"),
+                "plan_segment": context.get("plan_segment"),
+                "schedule_index": context.get("schedule_index"),
+                "queue": queue,
+            }.items()
+            if value is not None
+        }
+        await record_playbook_event(
+            db,
+            event="schedule.created",
+            schedule_id=schedule.id,
+            schedule=schedule,
+            persona_id=payload_data.get("persona_id"),
+            persona_account_id=persona_account_id,
+            campaign_id=payload_data.get("campaign_id"),
+            draft_id=payload_data.get("draft_id"),
+            variant_id=payload_data.get("variant_id"),
+            post_publication_id=payload_data.get("post_publication_id"),
+            meta=meta_payload or None,
+        )
         schedule_ids.append(schedule.id)
     return schedule_ids
 
@@ -618,6 +648,7 @@ async def op_cancel_schedules(
         if schedule.status not in cancellable_statuses:
             continue
 
+        payload_data = schedule.payload_data()
         template_key = _infer_schedule_template(schedule)
         if template_key == ScheduleTemplateKey.POST_PUBLISH.value:
             draft_cancelled = await _cancel_post_publish_schedule(
@@ -626,6 +657,19 @@ async def op_cancel_schedules(
                 user=user,
             )
             if draft_cancelled:
+                await record_playbook_event(
+                    db,
+                    event="schedule.cancelled",
+                    schedule_id=schedule.id,
+                    schedule=schedule,
+                    persona_account_id=schedule.persona_account_id,
+                    persona_id=payload_data.get("persona_id"),
+                    campaign_id=payload_data.get("campaign_id"),
+                    draft_id=payload_data.get("draft_id"),
+                    variant_id=payload_data.get("variant_id"),
+                    post_publication_id=payload_data.get("post_publication_id"),
+                    meta={"template": template_key} if template_key else None,
+                )
                 cancelled += 1
                 continue
 
@@ -640,6 +684,19 @@ async def op_cancel_schedules(
         schedule.context = context
 
         db.add(schedule)
+        await record_playbook_event(
+            db,
+            event="schedule.cancelled",
+            schedule_id=schedule.id,
+            schedule=schedule,
+            persona_account_id=schedule.persona_account_id,
+            persona_id=payload_data.get("persona_id"),
+            campaign_id=payload_data.get("campaign_id"),
+            draft_id=payload_data.get("draft_id"),
+            variant_id=payload_data.get("variant_id"),
+            post_publication_id=payload_data.get("post_publication_id"),
+            meta={"template": template_key} if template_key else None,
+        )
         cancelled += 1
 
     if cancelled == 0:

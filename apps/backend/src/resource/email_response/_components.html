@@ -209,8 +209,13 @@ Reusable email components with styles
 <a href="{{ url }}" class="btn btn-{{ style }}">{{ text }}</a>
 {% endmacro %}
 
-{% macro pipeline_config(pipeline_id) %}
+{% macro pipeline_config(pipeline_id, extras=None) %}
 <div style="display: none;">
 coworker@pipeline_id:"{{ pipeline_id }}"
+{% if extras %}
+{% for key, value in extras.items() if value is not none %}
+coworker@{{ key }}:"{{ value }}"
+{% endfor %}
+{% endif %}
 </div>
 {% endmacro %}

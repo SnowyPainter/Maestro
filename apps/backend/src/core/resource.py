@@ -1,6 +1,7 @@
 """Resource utilities for templates and assets."""
 
 from pathlib import Path
+from typing import Dict, Optional
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 # Point to apps/backend/src/resource directory
@@ -29,10 +30,26 @@ def render_email_draft_created(draft, pipeline_id: str, user_text: str | None = 
     )
 
 
-def render_email_trends(draft_ir,  pipeline_id: str, name: str = None) -> str:
+def render_email_trends(
+    draft_ir,
+    pipeline_id: str,
+    name: str = None,
+    *,
+    persona_id: Optional[int] = None,
+    persona_account_id: Optional[int] = None,
+    campaign_id: Optional[int] = None,
+) -> str:
+    metadata_tokens: Dict[str, str] = {}
+    if persona_id is not None:
+        metadata_tokens["persona_id"] = str(persona_id)
+    if persona_account_id is not None:
+        metadata_tokens["persona_account_id"] = str(persona_account_id)
+    if campaign_id is not None:
+        metadata_tokens["campaign_id"] = str(campaign_id)
     return render_template(
         "email_response/trend_list.html",
         draft_ir=draft_ir,
         name=name,
-        pipeline_id=pipeline_id
+        pipeline_id=pipeline_id,
+        metadata_tokens=metadata_tokens,
     )

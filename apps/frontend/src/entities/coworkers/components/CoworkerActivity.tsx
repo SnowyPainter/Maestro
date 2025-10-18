@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { formatDistanceToNow, isPast, isToday, isFuture } from 'date-fns';
 import { 
@@ -48,10 +48,11 @@ const KeyValueRow = ({ label, value }: { label: string; value: React.ReactNode }
     </div>
 );
 
-const ScheduleMetaDetails = ({ meta }: { meta: any }) => {
+const ScheduleMetaDetails = ({ meta, schedule }: { meta: any, schedule: ScheduleListItem }) => {
     if (!meta) return <p className="text-sm text-muted-foreground">No metadata available.</p>;
 
     const { label, dag_meta, context, payload } = meta;
+    const { status, due_at, created_at, updated_at, last_error } = schedule;
     const dagResults = context?._dag?.results;
 
     return (
@@ -66,14 +67,11 @@ const ScheduleMetaDetails = ({ meta }: { meta: any }) => {
                 </dl>
             </div>
 
-            {/* DAG Status */}
-            {context?._dag && (
-                 <div>
-                    <h4 className="font-semibold mb-2 text-foreground">Automation Status</h4>
-                    <dl className="space-y-1">
-                        {context._dag.waiting_node && <KeyValueRow label="Current Step" value={<Badge variant="secondary">{context._dag.waiting_node}</Badge>} />}
-                        {context._dag.resume_next && <KeyValueRow label="Next Step(s)" value={context._dag.resume_next.join(', ')} />}
-                    </dl>
+            {/* Last Error */}
+            {last_error && (
+                <div>
+                    <h4 className="font-semibold mb-2 text-foreground">Last Error</h4>
+                    <p className="text-sm text-muted-foreground">{last_error}</p>
                 </div>
             )}
 
@@ -83,8 +81,31 @@ const ScheduleMetaDetails = ({ meta }: { meta: any }) => {
                     <h4 className="font-semibold mb-2 text-foreground">Parameters</h4>
                     <dl className="space-y-1">
                         {Object.entries(payload).map(([key, value]) => (
-                             <KeyValueRow key={key} label={key} value={String(value)} />
+                            <KeyValueRow key={key} label={key} value={String(value)} />
                         ))}
+                    </dl>
+                </div>
+            )}
+
+            {/* Context */}
+            {context && (
+                <div>
+                    <h4 className="font-semibold mb-2 text-foreground">Context</h4>
+                    <dl className="space-y-1">
+                        {Object.entries(context).map(([key, value]) => (
+                            <KeyValueRow key={key} label={key} value={String(value)} />
+                        ))}
+                    </dl>
+                </div>
+            )}
+
+            {/* DAG Status */}
+            {context?._dag && (
+                 <div>
+                    <h4 className="font-semibold mb-2 text-foreground">Automation Status</h4>
+                    <dl className="space-y-1">
+                        {context._dag.waiting_node && <KeyValueRow label="Current Step" value={<Badge variant="secondary">{context._dag.waiting_node}</Badge>} />}
+                        {context._dag.resume_next && <KeyValueRow label="Next Step(s)" value={context._dag.resume_next.join(', ')} />}
                     </dl>
                 </div>
             )}
@@ -130,7 +151,7 @@ const ScheduleMetaDetails = ({ meta }: { meta: any }) => {
 const WorklogItem = ({ item, onShowDetails }: { item: ScheduleListItem, onShowDetails: () => void }) => {
     const updatedAt = parseUtcDate(item.updated_at);
     const hasMeta = item.meta && Object.keys(item.meta).length > 0;
-
+    const scheduledAt = parseUtcDate(item.due_at);
     return (
         <div className="flex items-start gap-3 py-2.5 px-2 hover:bg-muted/50 rounded-lg cursor-pointer" onClick={hasMeta ? onShowDetails : undefined}>
             <div className="w-24 flex-shrink-0 pt-0.5">
@@ -146,11 +167,19 @@ const WorklogItem = ({ item, onShowDetails }: { item: ScheduleListItem, onShowDe
                 {hasMeta && (
                     <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 )}
-                {updatedAt && (
-                    <p className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(updatedAt, { addSuffix: true })}
-                    </p>
-                )}
+                {(() => {
+                    const isPendingExecution = item.status === 'pending' || item.status === 'enqueued';
+                    const referenceDate = isPendingExecution ? scheduledAt : updatedAt;
+
+                    if (referenceDate) {
+                        return (
+                            <p className="text-xs text-muted-foreground whitespace-nowrap">
+                                {formatDistanceToNow(referenceDate, { addSuffix: true })}
+                            </p>
+                        );
+                    }
+                    return null;
+                })()}
             </div>
         </div>
     )
@@ -207,13 +236,17 @@ export const CoworkerActivity = ({ personaAccountIds }: { personaAccountIds: num
         };
     }, [scheduleQueries, isLoading]);
 
+    const handleShowDetails = useCallback((item: ScheduleListItem) => {
+        setDetailedItem(item);
+    }, []);
+
     const renderList = (items: ScheduleListItem[]) => (
         <ScrollArea className="h-72">
             <div className="flow-root pr-4">
                 <ul className="-my-1 divide-y divide-border">
                     {items.map(item => (
                         <li key={item.id}>
-                            <WorklogItem item={item} onShowDetails={() => setDetailedItem(item)} />
+                            <WorklogItem item={item} onShowDetails={() => handleShowDetails(item)} />
                         </li>
                     ))}
                 </ul>
@@ -281,7 +314,7 @@ export const CoworkerActivity = ({ personaAccountIds }: { personaAccountIds: num
                     </DialogHeader>
                     {detailedItem && (
                         <div className="py-4 max-h-[70vh] overflow-y-auto pr-4">
-                           <ScheduleMetaDetails meta={detailedItem.meta} />
+                           <ScheduleMetaDetails meta={detailedItem.meta} schedule={detailedItem} />
                         </div>
                     )}
                 </DialogContent>
