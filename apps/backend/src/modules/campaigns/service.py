@@ -2,19 +2,19 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Iterable, Optional, Dict, List, Tuple
 
-from sqlalchemy import select, func, update, delete, text
+from sqlalchemy import select, func, and_, delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.campaigns.models import (
     Campaign, CampaignKPIDef, CampaignKPIResult
 )
+from apps.backend.src.modules.drafts.models import PostPublication
+from apps.backend.src.modules.insights.models import InsightSample
 from apps.backend.src.modules.campaigns.schemas import (
     CampaignCreate, CampaignUpdate,
     CampaignKPIDefUpsert
 )
 from apps.backend.src.modules.common.enums import KPIKey, Aggregation, PlatformKind
-
-
 # ------------------------------
 # Campaign CRUD
 # ------------------------------
@@ -168,38 +168,56 @@ async def list_kpi_results(
 # ------------------------------
 # Aggregation from InsightSample
 # ------------------------------
-# ---- 유틸: 캠페인에 속한 드래프트 id 목록
-async def _campaign_draft_ids(db: AsyncSession, campaign_id: int) -> List[int]:
-    rows = await db.execute(
-        text("SELECT id FROM drafts WHERE campaign_id = :cid"),
-        {"cid": campaign_id},
-    )
-    return list(rows.scalars().all())
+# ---- 유틸: 캠페인에 속한 포스트 퍼블리케이션 id 목록
+async def _campaign_post_publication_ids(db: AsyncSession, campaign_id: int) -> List[int]:
+    query = """
+        SELECT pp.id
+        FROM post_publications pp
+        JOIN draft_variants dv ON pp.variant_id = dv.id
+        JOIN drafts d ON dv.draft_id = d.id
+        WHERE d.campaign_id = :campaign_id
+    """
 
-# ---- 유틸: 드래프트별 최신 샘플(metrics) 스냅샷 {draft_id: (ts, metrics)}
-async def _latest_metrics_per_draft(
-    db: AsyncSession, draft_ids: List[int], as_of: datetime
+    try:
+        result = await db.execute(text(query), {"campaign_id": campaign_id})
+        ppids = list(result.scalars().all())
+        return ppids
+    except Exception as e:
+        return []
+
+# ---- 유틸: 포스트 퍼블리케이션별 최신 샘플(metrics) 스냅샷 {post_publication_id: (ts, metrics)}
+async def _latest_metrics_per_post_publication(
+    db: AsyncSession, post_publication_ids: List[int], as_of: datetime
 ) -> Dict[int, Tuple[datetime, Dict[str, float]]]:
-    if not draft_ids:
+    if not post_publication_ids:
         return {}
-    rows = await db.execute(
-        text("""
-            WITH latest AS (
-              SELECT draft_id, MAX(ts) AS ts
-              FROM insight_samples
-              WHERE draft_id = ANY(:dids) AND ts <= :as_of
-              GROUP BY draft_id
-            )
-            SELECT s.draft_id, s.ts, s.metrics
-            FROM insight_samples s
-            JOIN latest l
-              ON s.draft_id = l.draft_id AND s.ts = l.ts
-        """),
-        {"dids": draft_ids, "as_of": as_of},
-    )
+
+    # timezone-aware datetime으로 변환
+    from datetime import timezone
+    if as_of.tzinfo is None:
+        as_of_aware = as_of.replace(tzinfo=timezone.utc)
+    else:
+        as_of_aware = as_of
+
+    # 각 post_publication_id별로 최신 레코드 조회
     snap: Dict[int, Tuple[datetime, Dict[str, float]]] = {}
-    for r in rows.mappings():
-        snap[int(r["draft_id"])] = (r["ts"], r["metrics"] or {})
+
+    for ppid in post_publication_ids:
+        stmt = (
+            select(InsightSample.ts, InsightSample.metrics)
+            .where(
+                (InsightSample.post_publication_id == ppid) &
+                (InsightSample.ts <= as_of_aware)
+            )
+            .order_by(InsightSample.ts.desc())
+            .limit(1)
+        )
+
+        result = await db.execute(stmt)
+        row = result.first()
+        if row:
+            snap[ppid] = (row.ts, row.metrics or {})
+
     return snap
 
 # ---- 메인: Aggregation을 존중하는 집계
@@ -218,9 +236,9 @@ async def aggregate_campaign_kpis_respecting_defs(
         db.add(row); await db.flush(); await db.commit()
         return row
 
-    # 2) 스냅샷 구축(드래프트별 최신 샘플)
-    dids = await _campaign_draft_ids(db, campaign_id)
-    snap = await _latest_metrics_per_draft(db, dids, as_of)
+    # 2) 스냅샷 구축(포스트 퍼블리케이션별 최신 샘플)
+    ppids = await _campaign_post_publication_ids(db, campaign_id)
+    snap = await _latest_metrics_per_post_publication(db, ppids, as_of)
 
     # 3) Aggregation별 계산
     values: Dict[str, float] = {}
@@ -238,7 +256,7 @@ async def aggregate_campaign_kpis_respecting_defs(
     # LAST 계산을 위해 캠페인에서 가장 최신(ts)도 추적
     global_latest_ts: Optional[datetime] = None
     global_latest_metrics: Dict[str, float] = {}
-    for _did, (ts, met) in snap.items():
+    for _ppid, (ts, met) in snap.items():
         if global_latest_ts is None or ts > global_latest_ts:
             global_latest_ts = ts
             global_latest_metrics = met or {}
@@ -247,9 +265,9 @@ async def aggregate_campaign_kpis_respecting_defs(
         key = d.key.value
         agg = d.aggregation
 
-        # per-draft 최신 값 모으기
+        # per-post-publication 최신 값 모으기
         series: List[float] = []
-        for _did, (_ts, met) in snap.items():
+        for _ppid, (_ts, met) in snap.items():
             val = met.get(key)
             if val is not None:
                 try:
