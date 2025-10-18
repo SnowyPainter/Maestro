@@ -424,9 +424,20 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                             <Card>
                                 <CardContent className="p-6 space-y-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="schedule-time" className="text-sm font-medium">
-                                            Publication Time
-                                        </Label>
+                                        <div className="flex justify-between items-center">
+                                            <Label htmlFor="schedule-time" className="text-sm font-medium">
+                                                Publication Time
+                                            </Label>
+                                            <Button variant="link" size="sm" onClick={() => {
+                                                const now = new Date();
+                                                now.setMinutes(now.getMinutes() + 10);
+                                                now.setSeconds(0, 0);
+                                                const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+                                                setTime(local.toISOString().slice(0, 16));
+                                            }} className="p-0 h-auto" type="button">
+                                                Now
+                                            </Button>
+                                        </div>
                                         <Input
                                             id="schedule-time"
                                             type="datetime-local"
