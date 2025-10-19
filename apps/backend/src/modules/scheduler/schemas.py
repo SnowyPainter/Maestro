@@ -139,11 +139,58 @@ class SyncMetricsTemplateParams(BaseModel):
     platform: PlatformKind
 
 
+class ABTestScheduleVariantParams(BaseModel):
+    label: str = Field(max_length=20)
+    post_publication_id: int
+    persona_account_id: int
+    variant_id: int
+    draft_id: int
+    platform: PlatformKind
+
+
+class ABTestScheduleTemplateParams(BaseModel):
+    abtest_id: int
+    persona_id: int
+    campaign_id: int
+    persona_account_id: int
+    variant_a: ABTestScheduleVariantParams
+    variant_b: ABTestScheduleVariantParams
+
+    @model_validator(mode="after")
+    def _validate_variants(self) -> "ABTestScheduleTemplateParams":
+        if self.variant_a.label == self.variant_b.label:
+            raise ValueError("variant labels must be distinct")
+        if self.variant_a.post_publication_id == self.variant_b.post_publication_id:
+            raise ValueError("post_publication_id must differ between variants")
+        if self.variant_a.persona_account_id != self.persona_account_id:
+            raise ValueError("variant_a persona account mismatch")
+        if self.variant_b.persona_account_id != self.persona_account_id:
+            raise ValueError("variant_b persona account mismatch")
+        return self
+
+
+class ABTestCompleteTemplateParams(BaseModel):
+    abtest_id: int
+    persona_id: int
+    campaign_id: int
+    persona_account_id: int
+    publish_schedule_id: int
+    post_publication_ids: List[int]
+
+    @model_validator(mode="after")
+    def _validate_publications(self) -> "ABTestCompleteTemplateParams":
+        if not self.post_publication_ids:
+            raise ValueError("post_publication_ids must not be empty")
+        return self
+
+
 class ScheduleCompileRequest(BaseModel):
     template: ScheduleTemplateKey
     mail: Optional[MailScheduleTemplateParams] = None
     post_publish: Optional[PostPublishTemplateParams] = None
     sync_metrics: Optional[SyncMetricsTemplateParams] = None
+    abtest_schedule: Optional[ABTestScheduleTemplateParams] = None
+    abtest_complete: Optional[ABTestCompleteTemplateParams] = None
 
     @model_validator(mode="after")
     def _ensure_params(self) -> "ScheduleCompileRequest":
@@ -156,6 +203,12 @@ class ScheduleCompileRequest(BaseModel):
         elif self.template == ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
             if self.sync_metrics is None:
                 raise ValueError("sync_metrics parameters are required for the selected template")
+        elif self.template == ScheduleTemplateKey.SCHEDULE_AB_TEST:
+            if self.abtest_schedule is None:
+                raise ValueError("abtest_schedule parameters are required for the selected template")
+        elif self.template == ScheduleTemplateKey.COMPLETE_AB_TEST:
+            if self.abtest_complete is None:
+                raise ValueError("abtest_complete parameters are required for the selected template")
         return self
 
     def require_mail_params(self) -> MailScheduleTemplateParams:
@@ -172,6 +225,16 @@ class ScheduleCompileRequest(BaseModel):
         if self.sync_metrics is None:
             raise ValueError("sync_metrics parameters not provided")
         return self.sync_metrics
+
+    def require_abtest_schedule_params(self) -> ABTestScheduleTemplateParams:
+        if self.abtest_schedule is None:
+            raise ValueError("abtest_schedule parameters not provided")
+        return self.abtest_schedule
+
+    def require_abtest_complete_params(self) -> ABTestCompleteTemplateParams:
+        if self.abtest_complete is None:
+            raise ValueError("abtest_complete parameters not provided")
+        return self.abtest_complete
 
 
 class ScheduleCompileResult(BaseModel):

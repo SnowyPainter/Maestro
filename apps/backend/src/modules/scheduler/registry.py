@@ -29,6 +29,8 @@ class ScheduleTemplateKey(str, Enum):
     MAIL_TRENDS_WITH_REPLY = "mail.trends_with_reply"
     POST_PUBLISH = "post.publish"
     INSIGHTS_SYNC_METRICS = "insights.sync_metrics"
+    SCHEDULE_AB_TEST = "abtest.schedule_ab_test"
+    COMPLETE_AB_TEST = "abtest.complete_ab_test"
 
 @dataclass(frozen=True)
 class ScheduleTemplateDefinition:
@@ -200,6 +202,90 @@ def _build_insights_sync_metrics_template(request: "ScheduleCompileRequest") -> 
     return builder.build_model()
 
 
+def _build_schedule_abtest_template(request: "ScheduleCompileRequest") -> "ScheduleDagSpec":
+    from .schemas import (
+        ABTestScheduleTemplateParams,
+        ScheduleDagBuilder,
+        payload_ref,
+    )
+
+    params: ABTestScheduleTemplateParams = request.require_abtest_schedule_params()
+    builder = ScheduleDagBuilder()
+    builder.meta(
+        label=ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+        abtest_id=str(params.abtest_id),
+        persona_account_id=str(params.persona_account_id),
+        campaign_id=str(params.campaign_id),
+        variant_a_label=params.variant_a.label,
+        variant_b_label=params.variant_b.label,
+    )
+    builder.payload(
+        abtest_id=params.abtest_id,
+        persona_id=params.persona_id,
+        campaign_id=params.campaign_id,
+        persona_account_id=params.persona_account_id,
+        variant_a=params.variant_a.model_dump(mode="json"),
+        variant_b=params.variant_b.model_dump(mode="json"),
+    )
+    publish_a = builder.add_node(
+        "internal.drafts.publish",
+        node_id="publish_variant_a",
+        post_publication_id=payload_ref("variant_a.post_publication_id"),
+        persona_account_id=payload_ref("variant_a.persona_account_id"),
+        variant_id=payload_ref("variant_a.variant_id"),
+        draft_id=payload_ref("variant_a.draft_id"),
+        platform=payload_ref("variant_a.platform"),
+    )
+    publish_b = builder.add_node(
+        "internal.drafts.publish",
+        node_id="publish_variant_b",
+        post_publication_id=payload_ref("variant_b.post_publication_id"),
+        persona_account_id=payload_ref("variant_b.persona_account_id"),
+        variant_id=payload_ref("variant_b.variant_id"),
+        draft_id=payload_ref("variant_b.draft_id"),
+        platform=payload_ref("variant_b.platform"),
+    )
+    builder.connect(publish_a, publish_b)
+    return builder.build_model()
+
+
+def _build_complete_abtest_template(request: "ScheduleCompileRequest") -> "ScheduleDagSpec":
+    from .schemas import (
+        ABTestCompleteTemplateParams,
+        ScheduleDagBuilder,
+        payload_ref,
+    )
+
+    params: ABTestCompleteTemplateParams = request.require_abtest_complete_params()
+    builder = ScheduleDagBuilder()
+    builder.meta(
+        label=ScheduleTemplateKey.COMPLETE_AB_TEST.value,
+        abtest_id=str(params.abtest_id),
+        persona_account_id=str(params.persona_account_id),
+        campaign_id=str(params.campaign_id),
+        publish_schedule_id=str(params.publish_schedule_id),
+    )
+    builder.payload(
+        abtest_id=params.abtest_id,
+        persona_id=params.persona_id,
+        campaign_id=params.campaign_id,
+        persona_account_id=params.persona_account_id,
+        publish_schedule_id=params.publish_schedule_id,
+        post_publication_ids=params.post_publication_ids,
+    )
+    builder.add_node(
+        "abtests.evaluate_ready",
+        node_id="mark_ready",
+        abtest_id=payload_ref("abtest_id"),
+        persona_id=payload_ref("persona_id"),
+        campaign_id=payload_ref("campaign_id"),
+        persona_account_id=payload_ref("persona_account_id"),
+        publish_schedule_id=payload_ref("publish_schedule_id"),
+        post_publication_ids=payload_ref("post_publication_ids"),
+    )
+    return builder.build_model()
+
+
 register_template(
     ScheduleTemplateDefinition(
         key=ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY,
@@ -230,6 +316,28 @@ register_template(
         builder=_build_insights_sync_metrics_template,
         visibility=TemplateVisibility.PUBLIC,
         group="monitoring",
+    )
+)
+
+register_template(
+    ScheduleTemplateDefinition(
+        key=ScheduleTemplateKey.SCHEDULE_AB_TEST,
+        title="Schedule AB Test Variants",
+        description="Publish both variants of an AB test during a single scheduled run",
+        builder=_build_schedule_abtest_template,
+        visibility=TemplateVisibility.ADVANCED,
+        group="abtests",
+    )
+)
+
+register_template(
+    ScheduleTemplateDefinition(
+        key=ScheduleTemplateKey.COMPLETE_AB_TEST,
+        title="Complete AB Test",
+        description="Trigger post-run workflows to evaluate and close an AB test",
+        builder=_build_complete_abtest_template,
+        visibility=TemplateVisibility.SYSTEM,
+        group="abtests",
     )
 )
 
