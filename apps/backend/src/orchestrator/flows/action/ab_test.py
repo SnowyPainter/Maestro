@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from fastapi import HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.abtests.schemas import ABTestCreate, ABTestOut
 from apps.backend.src.modules.abtests.service import (
-    ABTestScheduleArtifacts,
     create_abtest,
     get_abtest,
-    schedule_abtest as service_schedule_abtest,
 )
 from apps.backend.src.modules.accounts.service import get_persona
 from apps.backend.src.modules.campaigns.service import get_campaign
@@ -33,29 +30,6 @@ class ABTestCreateCommand(ABTestCreate):
     pass
 
 
-class ABTestScheduleCommand(BaseModel):
-    abtest_id: Optional[int] = Field(
-        default=None,
-        description="Identifier of the AB test to schedule (injected from path)",
-    )
-    persona_account_id: int = Field(..., description="Persona account to publish through")
-    run_at: datetime = Field(..., description="UTC timestamp for publishing both variants")
-    complete_at: Optional[datetime] = Field(
-        default=None,
-        description="Optional UTC timestamp to trigger completion workflows",
-    )
-
-
-class ABTestScheduleResult(BaseModel):
-    abtest_id: int
-    persona_account_id: int
-    schedule_id: int
-    completion_schedule_id: Optional[int] = None
-    post_publication_ids: List[int]
-    run_at: datetime
-    complete_at: Optional[datetime] = None
-
-
 class ABTestEvaluateReadyPayload(BaseModel):
     abtest_id: int
     persona_id: int
@@ -63,12 +37,6 @@ class ABTestEvaluateReadyPayload(BaseModel):
     persona_account_id: int
     publish_schedule_id: int
     post_publication_ids: List[int]
-
-
-def _require_identifier(value: Optional[int], name: str) -> int:
-    if value is None:
-        raise HTTPException(status_code=422, detail=f"{name} is required")
-    return value
 
 
 @operator(
@@ -128,48 +96,6 @@ async def op_create_abtest(payload: ABTestCreateCommand, ctx: TaskContext) -> AB
 
 
 @operator(
-    key="abtests.schedule",
-    title="Schedule AB Test Run",
-    side_effect="write",
-)
-async def op_schedule_abtest(
-    payload: ABTestScheduleCommand,
-    ctx: TaskContext,
-) -> ABTestScheduleResult:
-    db: AsyncSession = ctx.require(AsyncSession)
-    user: User = ctx.require(User)
-    abtest_id = _require_identifier(payload.abtest_id, "abtest_id")
-
-    try:
-        artifacts: ABTestScheduleArtifacts = await service_schedule_abtest(
-            db,
-            abtest_id=abtest_id,
-            persona_account_id=payload.persona_account_id,
-            run_at=payload.run_at,
-            owner_user_id=user.id,
-            complete_at=payload.complete_at,
-        )
-    except PermissionError as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    publication_ids = [artifacts.publications[0].id, artifacts.publications[1].id]
-
-    return ABTestScheduleResult(
-        abtest_id=abtest_id,
-        persona_account_id=payload.persona_account_id,
-        schedule_id=artifacts.publish_schedule.id,
-        completion_schedule_id=(
-            artifacts.completion_schedule.id if artifacts.completion_schedule else None
-        ),
-        post_publication_ids=publication_ids,
-        run_at=payload.run_at,
-        complete_at=payload.complete_at,
-    )
-
-
-@operator(
     key="abtests.evaluate_ready",
     title="Mark AB Test Ready for Completion",
     side_effect="write",
@@ -219,27 +145,9 @@ def _flow_create_abtest(builder: FlowBuilder) -> None:
     builder.expect_terminal(task)
 
 
-@FLOWS.flow(
-    key="abtests.schedule_abtest",
-    title="Schedule AB Test Variants",
-    description="Schedule both variants of an AB test to publish simultaneously",
-    input_model=ABTestScheduleCommand,
-    output_model=ABTestScheduleResult,
-    method="post",
-    path="/abtests/{abtest_id}/schedule",
-    tags=("action", "abtests", "schedule"),
-)
-def _flow_schedule_abtest(builder: FlowBuilder) -> None:
-    task = builder.task("schedule_abtest", "abtests.schedule")
-    builder.expect_terminal(task)
-
-
 __all__ = [
     "ABTestCreateCommand",
-    "ABTestScheduleCommand",
-    "ABTestScheduleResult",
     "ABTestEvaluateReadyPayload",
     "op_create_abtest",
-    "op_schedule_abtest",
     "op_abtest_evaluate_ready",
 ]

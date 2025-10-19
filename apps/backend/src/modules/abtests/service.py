@@ -16,22 +16,18 @@ from apps.backend.src.modules.abtests.schemas import (
     ABTestCreate,
     ABTestFilter,
 )
-from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS, ScheduleStatus
+from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.drafts.service import (
     get_draft_variant,
     upsert_post_publication_schedule,
 )
 from apps.backend.src.modules.playbooks import service as playbook_service
-from apps.backend.src.modules.scheduler.models import Schedule
-from apps.backend.src.modules.scheduler.planner import normalize_due_at
-from apps.backend.src.modules.scheduler.registry import ScheduleTemplateKey, compile_schedule_template
+from apps.backend.src.modules.scheduler.registry import ScheduleTemplateKey
 from apps.backend.src.modules.scheduler.schemas import (
-    ABTestCompleteTemplateParams,
     ABTestScheduleTemplateParams,
     ABTestScheduleVariantParams,
     ScheduleCompileRequest,
-    ScheduleDagSpec,
 )
 
 
@@ -150,10 +146,16 @@ async def _load_persona_account_for_abtest(
 
 
 @dataclass
-class ABTestScheduleArtifacts:
-    publish_schedule: Schedule
-    completion_schedule: Schedule | None
+class ABTestSchedulePlan:
+    abtest: ABTest
+    persona_account_id: int
+    variant_a: ABTestScheduleVariantParams
+    variant_b: ABTestScheduleVariantParams
+    publish_request: ScheduleCompileRequest
+    completion_params: Optional[Dict[str, object]]
     publications: tuple[PostPublication, PostPublication]
+    run_at: datetime
+    complete_at: Optional[datetime]
 
 
 async def create_abtest(
@@ -284,7 +286,7 @@ async def schedule_abtest(
     run_at: datetime,
     owner_user_id: int,
     complete_at: Optional[datetime] = None,
-) -> ABTestScheduleArtifacts:
+) -> ABTestSchedulePlan:
     abtest = await db.get(ABTest, abtest_id)
     if abtest is None:
         raise ValueError("abtest not found")
@@ -391,128 +393,25 @@ async def schedule_abtest(
         template=ScheduleTemplateKey.SCHEDULE_AB_TEST,
         abtest_schedule=schedule_request,
     )
-    schedule_spec: ScheduleDagSpec = compile_schedule_template(schedule_compile_request).dag_spec
-    schedule_dict = schedule_spec.model_dump(by_alias=True, exclude_none=True)
-
-    due_at_naive = normalize_due_at(run_at_utc)
-    scheduled_iso = due_at_naive.replace(tzinfo=timezone.utc).isoformat()
-
-    schedule = Schedule(
-        persona_account_id=persona_account.id,
-        dag_spec=schedule_dict,
-        payload=schedule_spec.payload,
-        context={
-            "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+    completion_payload: Optional[Dict[str, object]] = None
+    if completion_at_utc is not None:
+        completion_payload = {
             "abtest_id": abtest.id,
             "persona_id": abtest.persona_id,
             "campaign_id": abtest.campaign_id,
             "persona_account_id": persona_account.id,
             "post_publication_ids": [publication_a.id, publication_b.id],
-            "scheduled_for": scheduled_iso,
-        },
-        status=ScheduleStatus.PENDING.value,
-        due_at=due_at_naive,
-        queue="coworker",
-        idempotency_key=f"abtest:{abtest.id}:persona_account:{persona_account.id}:run:{scheduled_iso}",
-    )
-    db.add(schedule)
-    await db.flush()
-
-    publications_with_labels = [("A", publication_a), ("B", publication_b)]
-    timestamp = datetime.now(timezone.utc)
-    base_meta = {
-        "schedule_label": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
-        "schedule_id": schedule.id,
-        "scheduled_at": scheduled_iso,
-        "abtest_id": abtest.id,
-        "persona_account_id": persona_account.id,
-    }
-    for label, publication in publications_with_labels:
-        meta = dict(publication.meta or {})
-        meta.update(base_meta)
-        meta["abtest_variant"] = label
-        publication.meta = meta
-        publication.updated_at = timestamp
-        db.add(publication)
-
-    completion_schedule: Schedule | None = None
-    completion_iso: Optional[str] = None
-    if completion_at_utc is not None:
-        completion_request = ScheduleCompileRequest(
-            template=ScheduleTemplateKey.COMPLETE_AB_TEST,
-            abtest_complete=ABTestCompleteTemplateParams(
-                abtest_id=abtest.id,
-                persona_id=abtest.persona_id,
-                campaign_id=abtest.campaign_id,
-                persona_account_id=persona_account.id,
-                publish_schedule_id=schedule.id,
-                post_publication_ids=[publication_a.id, publication_b.id],
-            ),
-        )
-        completion_spec: ScheduleDagSpec = compile_schedule_template(completion_request).dag_spec
-        completion_dict = completion_spec.model_dump(by_alias=True, exclude_none=True)
-        completion_due = normalize_due_at(completion_at_utc)
-        completion_iso = completion_due.replace(tzinfo=timezone.utc).isoformat()
-
-        completion_schedule = Schedule(
-            persona_account_id=persona_account.id,
-            dag_spec=completion_dict,
-            payload=completion_spec.payload,
-            context={
-                "template": ScheduleTemplateKey.COMPLETE_AB_TEST.value,
-                "abtest_id": abtest.id,
-                "persona_id": abtest.persona_id,
-                "campaign_id": abtest.campaign_id,
-                "publish_schedule_id": schedule.id,
-                "scheduled_for": completion_iso,
-            },
-            status=ScheduleStatus.PENDING.value,
-            due_at=completion_due,
-            queue="coworker",
-            idempotency_key=f"abtest:{abtest.id}:complete:{completion_iso}",
-        )
-        db.add(completion_schedule)
-        await db.flush()
-
-        completion_meta = {
-            "completion_schedule_id": completion_schedule.id,
-            "completion_scheduled_at": completion_iso,
         }
-        for _, publication in publications_with_labels:
-            meta = dict(publication.meta or {})
-            meta.update(completion_meta)
-            publication.meta = meta
-            publication.updated_at = timestamp
-            db.add(publication)
 
-    meta_payload = {
-        key: value
-        for key, value in {
-            "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
-            "persona_account_id": persona_account.id,
-            "post_publication_ids": [publication_a.id, publication_b.id],
-            "completion_schedule_id": completion_schedule.id if completion_schedule else None,
-            "run_at": scheduled_iso,
-            "complete_at": completion_iso,
-        }.items()
-        if value is not None
-    }
-
-    await playbook_service.record_playbook_event(
-        db,
-        event="abtest.scheduled",
-        schedule_id=schedule.id,
-        schedule=schedule,
-        persona_id=abtest.persona_id,
+    await db.flush()
+    return ABTestSchedulePlan(
+        abtest=abtest,
         persona_account_id=persona_account.id,
-        campaign_id=abtest.campaign_id,
-        abtest_id=abtest.id,
-        meta=meta_payload,
-    )
-
-    await db.commit()
-    return ABTestScheduleArtifacts(
-        publish_schedule=schedule,
-        completion_schedule=completion_schedule,
+        variant_a=variant_a_params,
+        variant_b=variant_b_params,
+        publish_request=schedule_compile_request,
+        completion_params=completion_payload,
         publications=(publication_a, publication_b),
+        run_at=run_at_utc,
+        complete_at=completion_at_utc,
     )

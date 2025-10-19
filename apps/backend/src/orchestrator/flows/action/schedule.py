@@ -24,12 +24,17 @@ from apps.backend.src.modules.scheduler.schemas import (
     RawDagScheduleInstance,
     SchedulePlanInstance,
     ScheduleDagSpec,
+    ABTestCompleteTemplateParams,
 )
 from apps.backend.src.modules.scheduler.planner import normalize_due_at, plan_schedule_instances
 from apps.backend.src.orchestrator.flows.action.drafts import MessageOut
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
+from apps.backend.src.modules.abtests.service import (
+    ABTestSchedulePlan,
+    schedule_abtest as service_schedule_abtest,
+)
 from apps.backend.src.modules.drafts.service import (
     cancel_post_publication,
     _load_owned_draft,
@@ -52,6 +57,11 @@ def to_utc_naive(dt: datetime) -> datetime:
 
 def opt_to_utc_naive(dt: Optional[datetime]) -> Optional[datetime]:
     return None if dt is None else to_utc_naive(dt)
+
+def _require_identifier(value: Optional[int], name: str) -> int:
+    if value is None:
+        raise HTTPException(status_code=422, detail=f"{name} is required")
+    return value
 
 # ---- 오퍼레이터 ----
 
@@ -87,6 +97,23 @@ class DraftPostScheduleRequest(BaseModel):
     persona_account_id: int
     variant_id: int
     run_at: datetime
+
+
+class ABTestScheduleCommand(BaseModel):
+    abtest_id: Optional[int] = None
+    persona_account_id: int
+    run_at: datetime
+    complete_at: Optional[datetime] = None
+
+
+class ABTestScheduleResult(BaseModel):
+    abtest_id: int
+    persona_account_id: int
+    schedule_id: int
+    completion_schedule_id: Optional[int] = None
+    post_publication_ids: List[int]
+    run_at: datetime
+    complete_at: Optional[datetime] = None
 
 
 
@@ -589,6 +616,169 @@ async def op_create_sync_metrics_schedule(
     await db.commit()
     return ScheduleCreateResult(schedule_ids=schedule_ids)
 
+
+# ---------------------------------------------------------------------------
+# AB test scheduling flows
+# ---------------------------------------------------------------------------
+
+
+@operator(
+    key="abtests.schedule",
+    title="Schedule AB Test Run",
+    side_effect="write",
+)
+async def op_schedule_abtest(
+    payload: ABTestScheduleCommand,
+    ctx: TaskContext,
+) -> ABTestScheduleResult:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    abtest_id = _require_identifier(payload.abtest_id, "abtest_id")
+
+    try:
+        plan: ABTestSchedulePlan = await service_schedule_abtest(
+            db,
+            abtest_id=abtest_id,
+            persona_account_id=payload.persona_account_id,
+            run_at=payload.run_at,
+            owner_user_id=user.id,
+            complete_at=payload.complete_at,
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    publish_result = compile_schedule_template(plan.publish_request)
+    publish_spec = publish_result.dag_spec
+    publish_dag = publish_spec.model_dump(by_alias=True, exclude_none=True)
+    scheduled_iso = plan.run_at.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+
+    publication_ids = [pub.id for pub in plan.publications]
+    base_context: Dict[str, Any] = {
+        "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+        "abtest_id": plan.abtest.id,
+        "persona_id": plan.abtest.persona_id,
+        "campaign_id": plan.abtest.campaign_id,
+        "persona_account_id": plan.persona_account_id,
+        "post_publication_ids": publication_ids,
+        "scheduled_for": scheduled_iso,
+    }
+
+    publish_schedule = _persist_schedule(
+        db,
+        persona_account_id=plan.persona_account_id,
+        dag_spec=publish_dag,
+        payload=publish_spec.payload,
+        due_at=plan.run_at,
+        queue="coworker",
+        context=base_context,
+    )
+    await db.flush()
+
+    timestamp = datetime.now(timezone.utc)
+    publications_with_labels = [
+        (plan.variant_a.label, plan.publications[0]),
+        (plan.variant_b.label, plan.publications[1]),
+    ]
+    for label, publication in publications_with_labels:
+        meta = dict(publication.meta or {})
+        meta.update(
+            {
+                "schedule_label": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+                "schedule_id": publish_schedule.id,
+                "scheduled_at": scheduled_iso,
+                "abtest_id": plan.abtest.id,
+                "persona_account_id": plan.persona_account_id,
+                "abtest_variant": label,
+            }
+        )
+        publication.meta = meta
+        publication.updated_at = timestamp
+        db.add(publication)
+
+    completion_schedule = None
+    completion_iso: Optional[str] = None
+    if plan.complete_at is not None and plan.completion_params is not None:
+        completion_iso = plan.complete_at.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+        completion_params = ABTestCompleteTemplateParams(
+            **plan.completion_params,
+            publish_schedule_id=publish_schedule.id,
+        )
+        completion_request = ScheduleCompileRequest(
+            template=ScheduleTemplateKey.COMPLETE_AB_TEST,
+            abtest_complete=completion_params,
+        )
+        completion_result = compile_schedule_template(completion_request)
+        completion_spec = completion_result.dag_spec
+        completion_dag = completion_spec.model_dump(by_alias=True, exclude_none=True)
+        completion_context = {
+            "template": ScheduleTemplateKey.COMPLETE_AB_TEST.value,
+            "abtest_id": plan.abtest.id,
+            "persona_id": plan.abtest.persona_id,
+            "campaign_id": plan.abtest.campaign_id,
+            "publish_schedule_id": publish_schedule.id,
+            "scheduled_for": completion_iso,
+        }
+        completion_schedule = _persist_schedule(
+            db,
+            persona_account_id=plan.persona_account_id,
+            dag_spec=completion_dag,
+            payload=completion_spec.payload,
+            due_at=plan.complete_at,
+            queue="coworker",
+            context=completion_context,
+        )
+        await db.flush()
+
+        completion_meta = {
+            "completion_schedule_id": completion_schedule.id,
+            "completion_scheduled_at": completion_iso,
+        }
+        for _, publication in publications_with_labels:
+            meta = dict(publication.meta or {})
+            meta.update(completion_meta)
+            publication.meta = meta
+            publication.updated_at = timestamp
+            db.add(publication)
+
+    await db.flush()
+    meta_payload = {
+        key: value
+        for key, value in {
+            "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+            "persona_account_id": plan.persona_account_id,
+            "post_publication_ids": publication_ids,
+            "completion_schedule_id": completion_schedule.id if completion_schedule else None,
+            "run_at": scheduled_iso,
+            "complete_at": completion_iso,
+        }.items()
+        if value is not None
+    }
+
+    await record_playbook_event(
+        db,
+        event="abtest.scheduled",
+        schedule_id=publish_schedule.id,
+        schedule=publish_schedule,
+        persona_id=plan.abtest.persona_id,
+        persona_account_id=plan.persona_account_id,
+        campaign_id=plan.abtest.campaign_id,
+        abtest_id=plan.abtest.id,
+        meta=meta_payload,
+    )
+
+    await db.commit()
+    return ABTestScheduleResult(
+        abtest_id=abtest_id,
+        persona_account_id=plan.persona_account_id,
+        schedule_id=publish_schedule.id,
+        completion_schedule_id=completion_schedule.id if completion_schedule else None,
+        post_publication_ids=publication_ids,
+        run_at=plan.run_at,
+        complete_at=plan.complete_at,
+    )
+
 @operator(
     key="action.schedule.cancel_schedules",
     title="Cancel Schedules",
@@ -810,5 +1000,21 @@ def _flow_create_sync_metrics_schedule(builder: FlowBuilder):
 def _flow_cancel_schedules(builder: FlowBuilder):
     task = builder.task("cancel_schedules", "action.schedule.cancel_schedules")
     builder.expect_terminal(task)
+
+@FLOWS.flow(
+    key="abtests.schedule_abtest",
+    title="Schedule AB Test Variants",
+    description="Schedule both variants of an AB test to publish simultaneously",
+    input_model=ABTestScheduleCommand,
+    output_model=ABTestScheduleResult,
+    method="post",
+    path="/actions/abtests/{abtest_id}/schedule",
+    tags=("action", "abtests", "schedule"),
+)
+def _flow_schedule_abtest(builder: FlowBuilder) -> None:
+    task = builder.task("schedule_abtest", "abtests.schedule")
+    builder.expect_terminal(task)
+
+
 
 __all__ = []
