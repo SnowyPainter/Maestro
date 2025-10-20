@@ -116,10 +116,11 @@ export function GenerateTextDialog() {
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
-      form.reset();
+      const promptPrefix = title ? `Write ${title.toLowerCase()} about ` : '';
+      form.reset({ prompt: promptPrefix });
       setError(null); // Clear error when dialog opens
     }
-  }, [isOpen, form]);
+  }, [isOpen, form, title]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>

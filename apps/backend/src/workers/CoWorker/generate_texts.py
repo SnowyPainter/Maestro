@@ -18,11 +18,13 @@ from apps.backend.src.core.context import (
     get_user_id,
 )
 from apps.backend.src.core.config import settings
-from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
+from apps.backend.src.modules.accounts.models import Persona, PersonaAccount, PlatformAccount
 from apps.backend.src.modules.campaigns.models import Campaign
 from apps.backend.src.modules.llm.schemas import LlmInvokeContext, PromptKey, PromptVars
 from apps.backend.src.modules.llm.service import LLMService
 from apps.backend.src.modules.playbooks.models import Playbook, PlaybookLog
+from apps.backend.src.modules.llm.style_composer import StyleComposer
+from apps.backend.src.modules.common.enums import PlatformKind
 
 logger = logging.getLogger(__name__)
 ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
@@ -74,12 +76,13 @@ def _iso(dt) -> Optional[str]:
 def _gather_context(
     persona_account_id: Optional[int],
     campaign_id: Optional[int],
-) -> Tuple[Optional[Persona], Optional[Campaign], Optional[Dict[str, Any]]]:
+) -> Tuple[Optional[Persona], Optional[Campaign], Optional[Dict[str, Any]], Optional[PlatformKind]]:
     with SessionLocal() as session:
         persona, _ = _load_persona_scope(session, persona_account_id)
         campaign = _load_campaign(session, campaign_id, persona)
         playbook_summary = _load_playbook_summary(session, persona, campaign)
-    return persona, campaign, playbook_summary
+        platform = _load_platform(session, persona_account_id)
+    return persona, campaign, playbook_summary, platform
 
 
 def _load_persona_scope(
@@ -158,6 +161,16 @@ def _load_playbook_summary(
         ],
     }
 
+def _load_platform(session: Session, persona_account_id: Optional[int]) -> Optional[PlatformKind]:
+    if persona_account_id is None:
+        return None
+    persona_account = session.get(PersonaAccount, persona_account_id)
+    if persona_account is None:
+        return None
+    account = session.get(PlatformAccount, persona_account.account_id)
+    if account is None:
+        return None
+    return account.platform
 
 def _persona_to_brief(persona: Optional[Persona]) -> Optional[Dict[str, Any]]:
     if persona is None:
@@ -189,7 +202,6 @@ def _campaign_to_brief(campaign: Optional[Campaign]) -> Optional[Dict[str, Any]]
         "end_at": _iso(campaign.end_at),
     }
 
-
 def _build_llm_context(persona_account_id: Optional[int]) -> LlmInvokeContext:
     return LlmInvokeContext(
         request_id=get_request_id(),
@@ -204,14 +216,20 @@ async def _invoke_llm(
     prompt_text: str,
     *,
     persona_account_id: Optional[int],
-    persona_brief: Optional[Dict[str, Any]],
-    campaign_brief: Optional[Dict[str, Any]],
+    persona: Optional[Persona],
+    campaign: Optional[Campaign],
     playbook_summary: Optional[Dict[str, Any]],
+    platform: Optional[PlatformKind],
 ) -> str:
+    persona_brief = _persona_to_brief(persona)
+    campaign_brief = _campaign_to_brief(campaign)
     service = LLMService.instance()
+
+    style_composer = StyleComposer(persona, platform)
+    style_prompt = style_composer.compose(prompt_text)
+
     prompt_vars = PromptVars(
-        text=prompt_text,
-        tone=persona_brief.get("tone") if persona_brief else None,
+        text=style_prompt,
         persona_brief=persona_brief,
         campaign_brief=campaign_brief,
         playbook_summary=playbook_summary,
@@ -244,20 +262,19 @@ def generate_contextual_text(self, prompt_text: str) -> str:
     """
     persona_account_id = _parse_int(get_persona_account_id())
     campaign_id = _parse_int(get_campaign_id())
-    persona, campaign, playbook_summary = _gather_context(
+    persona, campaign, playbook_summary, platform = _gather_context(
         persona_account_id,
         campaign_id,
     )
-    persona_brief = _persona_to_brief(persona)
-    campaign_brief = _campaign_to_brief(campaign)
 
     async def _execute() -> str:
         return await _invoke_llm(
             prompt_text,
             persona_account_id=persona_account_id,
-            persona_brief=persona_brief,
-            campaign_brief=campaign_brief,
+            persona=persona,
+            campaign=campaign,
             playbook_summary=playbook_summary,
+            platform=platform,
         )
 
     loop = _ensure_loop()

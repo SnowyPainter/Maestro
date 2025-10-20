@@ -1577,6 +1577,35 @@ paths:
       responses:
         '200':
           description: Successful Response
+  /api/orchestrator/abtests:
+    post:
+      tags:
+      - action
+      - action
+      - abtests
+      - create
+      summary: Create AB Test
+      description: Create a new AB test pairing two drafts under a persona and campaign
+      operationId: abtests_create_abtest_api_orchestrator_abtests_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ABTestCreateCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/accounts/platform:
     post:
       tags:
@@ -2486,6 +2515,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/actions/abtests/{abtest_id}/schedule:
+    post:
+      tags:
+      - action
+      - action
+      - abtests
+      - schedule
+      summary: Schedule AB Test Variants
+      description: Schedule both variants of an AB test to publish simultaneously
+      operationId: abtests_schedule_abtest_api_orchestrator_actions_abtests__abtest_id__schedule_post
+      parameters:
+      - name: abtest_id
+        in: path
+        required: true
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Abtest Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ABTestScheduleCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestScheduleResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/actions/schedules/start_my_coworker:
     post:
       tags:
@@ -2950,6 +3017,262 @@ paths:
               schema: {}
 components:
   schemas:
+    ABTestCompleteTemplateParams:
+      properties:
+        abtest_id:
+          type: integer
+          title: Abtest Id
+        persona_id:
+          type: integer
+          title: Persona Id
+        campaign_id:
+          type: integer
+          title: Campaign Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        publish_schedule_id:
+          type: integer
+          title: Publish Schedule Id
+        post_publication_ids:
+          items:
+            type: integer
+          type: array
+          title: Post Publication Ids
+      type: object
+      required:
+      - abtest_id
+      - persona_id
+      - campaign_id
+      - persona_account_id
+      - publish_schedule_id
+      - post_publication_ids
+      title: ABTestCompleteTemplateParams
+    ABTestCreateCommand:
+      properties:
+        persona_id:
+          type: integer
+          title: Persona Id
+        campaign_id:
+          type: integer
+          title: Campaign Id
+        variable:
+          type: string
+          maxLength: 50
+          title: Variable
+        hypothesis:
+          title: Hypothesis
+          maxLength: 255
+          type: string
+          nullable: true
+        variant_a_id:
+          type: integer
+          title: Variant A Id
+        variant_b_id:
+          type: integer
+          title: Variant B Id
+        started_at:
+          title: Started At
+          format: date-time
+          type: string
+          nullable: true
+        notes:
+          title: Notes
+          maxLength: 500
+          type: string
+          nullable: true
+      type: object
+      required:
+      - persona_id
+      - campaign_id
+      - variable
+      - variant_a_id
+      - variant_b_id
+      title: ABTestCreateCommand
+    ABTestOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        persona_id:
+          type: integer
+          title: Persona Id
+        campaign_id:
+          type: integer
+          title: Campaign Id
+        variable:
+          type: string
+          title: Variable
+        hypothesis:
+          title: Hypothesis
+          type: string
+          nullable: true
+        variant_a_id:
+          type: integer
+          title: Variant A Id
+        variant_b_id:
+          type: integer
+          title: Variant B Id
+        started_at:
+          type: string
+          format: date-time
+          title: Started At
+        finished_at:
+          title: Finished At
+          format: date-time
+          type: string
+          nullable: true
+        winner_variant:
+          title: Winner Variant
+          type: string
+          nullable: true
+        uplift_percentage:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Uplift Percentage
+        notes:
+          title: Notes
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - persona_id
+      - campaign_id
+      - variable
+      - variant_a_id
+      - variant_b_id
+      - started_at
+      - created_at
+      - updated_at
+      title: ABTestOut
+    ABTestScheduleCommand:
+      properties:
+        abtest_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Abtest Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        run_at:
+          type: string
+          format: date-time
+          title: Run At
+        complete_at:
+          title: Complete At
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+      required:
+      - persona_account_id
+      - run_at
+      title: ABTestScheduleCommand
+    ABTestScheduleResult:
+      properties:
+        abtest_id:
+          type: integer
+          title: Abtest Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        schedule_id:
+          type: integer
+          title: Schedule Id
+        completion_schedule_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Completion Schedule Id
+        post_publication_ids:
+          items:
+            type: integer
+          type: array
+          title: Post Publication Ids
+        run_at:
+          type: string
+          format: date-time
+          title: Run At
+        complete_at:
+          title: Complete At
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+      required:
+      - abtest_id
+      - persona_account_id
+      - schedule_id
+      - post_publication_ids
+      - run_at
+      title: ABTestScheduleResult
+    ABTestScheduleTemplateParams:
+      properties:
+        abtest_id:
+          type: integer
+          title: Abtest Id
+        persona_id:
+          type: integer
+          title: Persona Id
+        campaign_id:
+          type: integer
+          title: Campaign Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        variant_a:
+          $ref: '#/components/schemas/ABTestScheduleVariantParams'
+        variant_b:
+          $ref: '#/components/schemas/ABTestScheduleVariantParams'
+      type: object
+      required:
+      - abtest_id
+      - persona_id
+      - campaign_id
+      - persona_account_id
+      - variant_a
+      - variant_b
+      title: ABTestScheduleTemplateParams
+    ABTestScheduleVariantParams:
+      properties:
+        label:
+          type: string
+          maxLength: 20
+          title: Label
+        post_publication_id:
+          type: integer
+          title: Post Publication Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+        variant_id:
+          type: integer
+          title: Variant Id
+        draft_id:
+          type: integer
+          title: Draft Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+      type: object
+      required:
+      - label
+      - post_publication_id
+      - persona_account_id
+      - variant_id
+      - draft_id
+      - platform
+      title: ABTestScheduleVariantParams
     Aggregation:
       type: string
       enum:
@@ -5572,6 +5895,14 @@ components:
           anyOf:
           - $ref: '#/components/schemas/SyncMetricsTemplateParams'
           - type: 'null'
+        abtest_schedule:
+          anyOf:
+          - $ref: '#/components/schemas/ABTestScheduleTemplateParams'
+          - type: 'null'
+        abtest_complete:
+          anyOf:
+          - $ref: '#/components/schemas/ABTestCompleteTemplateParams'
+          - type: 'null'
       type: object
       required:
       - template
@@ -6127,6 +6458,8 @@ components:
       - mail.trends_with_reply
       - post.publish
       - insights.sync_metrics
+      - abtest.schedule_ab_test
+      - abtest.complete_ab_test
       title: ScheduleTemplateKey
     ScheduleTemplateListResult:
       properties:

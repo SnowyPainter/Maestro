@@ -741,6 +741,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/abtests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create AB Test
+         * @description Create a new AB test pairing two drafts under a persona and campaign
+         */
+        post: operations["abtests_create_abtest_api_orchestrator_abtests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/accounts/platform": {
         parameters: {
             query?: never;
@@ -1213,6 +1233,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/actions/abtests/{abtest_id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Schedule AB Test Variants
+         * @description Schedule both variants of an AB test to publish simultaneously
+         */
+        post: operations["abtests_schedule_abtest_api_orchestrator_actions_abtests__abtest_id__schedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/actions/schedules/start_my_coworker": {
         parameters: {
             query?: never;
@@ -1499,6 +1539,153 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ABTestCompleteTemplateParams */
+        ABTestCompleteTemplateParams: {
+            /** Abtest Id */
+            abtest_id: number;
+            /** Persona Id */
+            persona_id: number;
+            /** Campaign Id */
+            campaign_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Publish Schedule Id */
+            publish_schedule_id: number;
+            /** Post Publication Ids */
+            post_publication_ids: number[];
+        };
+        /** ABTestCreateCommand */
+        ABTestCreateCommand: {
+            /** Persona Id */
+            persona_id: number;
+            /** Campaign Id */
+            campaign_id: number;
+            /** Variable */
+            variable: string;
+            /** Hypothesis */
+            hypothesis?: string | null;
+            /** Variant A Id */
+            variant_a_id: number;
+            /** Variant B Id */
+            variant_b_id: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ABTestOut */
+        ABTestOut: {
+            /** Id */
+            id: number;
+            /** Persona Id */
+            persona_id: number;
+            /** Campaign Id */
+            campaign_id: number;
+            /** Variable */
+            variable: string;
+            /** Hypothesis */
+            hypothesis?: string | null;
+            /** Variant A Id */
+            variant_a_id: number;
+            /** Variant B Id */
+            variant_b_id: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /**
+             * Finished At
+             * Format: date-time
+             */
+            finished_at?: string | null;
+            /** Winner Variant */
+            winner_variant?: string | null;
+            /** Uplift Percentage */
+            uplift_percentage?: number | null;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ABTestScheduleCommand */
+        ABTestScheduleCommand: {
+            /** Abtest Id */
+            abtest_id?: number | null;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /**
+             * Run At
+             * Format: date-time
+             */
+            run_at: string;
+            /**
+             * Complete At
+             * Format: date-time
+             */
+            complete_at?: string | null;
+        };
+        /** ABTestScheduleResult */
+        ABTestScheduleResult: {
+            /** Abtest Id */
+            abtest_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Schedule Id */
+            schedule_id: number;
+            /** Completion Schedule Id */
+            completion_schedule_id?: number | null;
+            /** Post Publication Ids */
+            post_publication_ids: number[];
+            /**
+             * Run At
+             * Format: date-time
+             */
+            run_at: string;
+            /**
+             * Complete At
+             * Format: date-time
+             */
+            complete_at?: string | null;
+        };
+        /** ABTestScheduleTemplateParams */
+        ABTestScheduleTemplateParams: {
+            /** Abtest Id */
+            abtest_id: number;
+            /** Persona Id */
+            persona_id: number;
+            /** Campaign Id */
+            campaign_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+            variant_a: components["schemas"]["ABTestScheduleVariantParams"];
+            variant_b: components["schemas"]["ABTestScheduleVariantParams"];
+        };
+        /** ABTestScheduleVariantParams */
+        ABTestScheduleVariantParams: {
+            /** Label */
+            label: string;
+            /** Post Publication Id */
+            post_publication_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+            /** Variant Id */
+            variant_id: number;
+            /** Draft Id */
+            draft_id: number;
+            platform: components["schemas"]["PlatformKind"];
+        };
         /**
          * Aggregation
          * @enum {string}
@@ -3039,6 +3226,8 @@ export interface components {
             mail?: components["schemas"]["MailScheduleTemplateParams"] | null;
             post_publish?: components["schemas"]["PostPublishTemplateParams"] | null;
             sync_metrics?: components["schemas"]["SyncMetricsTemplateParams"] | null;
+            abtest_schedule?: components["schemas"]["ABTestScheduleTemplateParams"] | null;
+            abtest_complete?: components["schemas"]["ABTestCompleteTemplateParams"] | null;
         };
         /** ScheduleCompileResult */
         ScheduleCompileResult: {
@@ -3404,7 +3593,7 @@ export interface components {
          * ScheduleTemplateKey
          * @enum {string}
          */
-        ScheduleTemplateKey: "mail.trends_with_reply" | "post.publish" | "insights.sync_metrics";
+        ScheduleTemplateKey: "mail.trends_with_reply" | "post.publish" | "insights.sync_metrics" | "abtest.schedule_ab_test" | "abtest.complete_ab_test";
         /** ScheduleTemplateListResult */
         ScheduleTemplateListResult: {
             /** Templates */
@@ -4836,6 +5025,39 @@ export interface operations {
             };
         };
     };
+    abtests_create_abtest_api_orchestrator_abtests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ABTestCreateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     accounts_platform_create_api_orchestrator_accounts_platform_post: {
         parameters: {
             query?: never;
@@ -5688,6 +5910,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abtests_schedule_abtest_api_orchestrator_actions_abtests__abtest_id__schedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                abtest_id: number | null;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ABTestScheduleCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestScheduleResult"];
                 };
             };
             /** @description Validation Error */

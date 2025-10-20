@@ -1210,6 +1210,44 @@ export const bffTrendsListTrendsApiBffTrendsGetResponse = zod.object({
 
 
 /**
+ * Create a new AB test pairing two drafts under a persona and campaign
+ * @summary Create AB Test
+ */
+export const abtestsCreateAbtestApiOrchestratorAbtestsPostBodyVariableMax = 50;
+export const abtestsCreateAbtestApiOrchestratorAbtestsPostBodyHypothesisMax = 255;
+export const abtestsCreateAbtestApiOrchestratorAbtestsPostBodyNotesMax = 500;
+
+
+export const abtestsCreateAbtestApiOrchestratorAbtestsPostBody = zod.object({
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "variable": zod.string().max(abtestsCreateAbtestApiOrchestratorAbtestsPostBodyVariableMax),
+  "hypothesis": zod.string().max(abtestsCreateAbtestApiOrchestratorAbtestsPostBodyHypothesisMax).nullish(),
+  "variant_a_id": zod.number(),
+  "variant_b_id": zod.number(),
+  "started_at": zod.iso.datetime({}).nullish(),
+  "notes": zod.string().max(abtestsCreateAbtestApiOrchestratorAbtestsPostBodyNotesMax).nullish()
+})
+
+export const abtestsCreateAbtestApiOrchestratorAbtestsPostResponse = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "variable": zod.string(),
+  "hypothesis": zod.string().nullish(),
+  "variant_a_id": zod.number(),
+  "variant_b_id": zod.number(),
+  "started_at": zod.iso.datetime({}),
+  "finished_at": zod.iso.datetime({}).nullish(),
+  "winner_variant": zod.string().nullish(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
+  "notes": zod.string().nullish(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
  * Create a new platform account (social media, website, etc.) for the user
  * @summary Create New Platform Account
  */
@@ -1861,10 +1899,12 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
  * Generate a schedule DAG specification from higher level template parameters
  * @summary Compile Schedule DAG
  */
-export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailCountryDefault = "US";export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailLimitDefault = 20;export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailWaitTimeoutSDefault = 604800;
+export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailCountryDefault = "US";export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailLimitDefault = 20;export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailWaitTimeoutSDefault = 604800;export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyAbtestScheduleVariantALabelMax = 20;
+export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyAbtestScheduleVariantBLabelMax = 20;
+
 
 export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBody = zod.object({
-  "template": zod.enum(['mail.trends_with_reply', 'post.publish', 'insights.sync_metrics']),
+  "template": zod.enum(['mail.trends_with_reply', 'post.publish', 'insights.sync_metrics', 'abtest.schedule_ab_test', 'abtest.complete_ab_test']),
   "mail": zod.union([zod.object({
   "persona_id": zod.number(),
   "persona_account_id": zod.number(),
@@ -1885,7 +1925,37 @@ export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompile
   "persona_account_id": zod.number(),
   "post_publication_id": zod.number(),
   "platform": zod.enum(['instagram', 'threads'])
-}).describe('Parameters for syncing metrics for a post publication.'),zod.null()]).optional()
+}).describe('Parameters for syncing metrics for a post publication.'),zod.null()]).optional(),
+  "abtest_schedule": zod.union([zod.object({
+  "abtest_id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "variant_a": zod.object({
+  "label": zod.string().max(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyAbtestScheduleVariantALabelMax),
+  "post_publication_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.enum(['instagram', 'threads'])
+}),
+  "variant_b": zod.object({
+  "label": zod.string().max(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyAbtestScheduleVariantBLabelMax),
+  "post_publication_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "variant_id": zod.number(),
+  "draft_id": zod.number(),
+  "platform": zod.enum(['instagram', 'threads'])
+})
+}),zod.null()]).optional(),
+  "abtest_complete": zod.union([zod.object({
+  "abtest_id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "publish_schedule_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number())
+}),zod.null()]).optional()
 })
 
 export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostResponse = zod.object({
@@ -2095,6 +2165,32 @@ export const actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelP
 
 export const actionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostResponse = zod.object({
   "message": zod.string()
+})
+
+
+/**
+ * Schedule both variants of an AB test to publish simultaneously
+ * @summary Schedule AB Test Variants
+ */
+export const abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostParams = zod.object({
+  "abtest_id": zod.union([zod.number(),zod.null()])
+})
+
+export const abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostBody = zod.object({
+  "abtest_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_account_id": zod.number(),
+  "run_at": zod.iso.datetime({}),
+  "complete_at": zod.iso.datetime({}).nullish()
+})
+
+export const abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostResponse = zod.object({
+  "abtest_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "schedule_id": zod.number(),
+  "completion_schedule_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_ids": zod.array(zod.number()),
+  "run_at": zod.iso.datetime({}),
+  "complete_at": zod.iso.datetime({}).nullish()
 })
 
 

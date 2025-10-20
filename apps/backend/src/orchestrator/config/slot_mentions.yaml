@@ -1,4 +1,22 @@
 slots:
+- name: abtest_complete
+  label: Abtest Complete
+  description: Filter by abtest complete
+  value_type: string
+  flows:
+  - action.schedule.compile_template
+- name: abtest_id
+  label: Abtest Id
+  description: Target a specific abtest id
+  value_type: integer
+  flows:
+  - abtests.schedule_abtest
+- name: abtest_schedule
+  label: Abtest Schedule
+  description: Filter by abtest schedule
+  value_type: string
+  flows:
+  - action.schedule.compile_template
 - name: account
   label: Account
   description: Filter by account
@@ -58,6 +76,7 @@ slots:
   description: Target a specific campaign id
   value_type: integer
   flows:
+  - abtests.create_abtest
   - bff.campaigns.list_kpi_defs
   - bff.campaigns.list_kpi_results
   - bff.campaigns.read_campaign
@@ -70,6 +89,12 @@ slots:
   - campaigns.upsert_kpi_defs
   - drafts.create
   - drafts.update_ir
+- name: complete_at
+  label: Complete At
+  description: Filter by complete at
+  value_type: string
+  flows:
+  - abtests.schedule_abtest
 - name: constraints
   label: Constraints
   description: Filter by constraints
@@ -227,6 +252,12 @@ slots:
   value_type: string
   flows:
   - bff.accounts.list_platform_accounts
+- name: hypothesis
+  label: Hypothesis
+  description: Filter by hypothesis
+  value_type: string
+  flows:
+  - abtests.create_abtest
 - name: ingest_key
   label: Ingest Key
   description: Filter by ingest key
@@ -304,6 +335,12 @@ slots:
   - bff.accounts.list_personas
   - campaigns.create_campaign
   - campaigns.update_campaign
+- name: notes
+  label: Notes
+  description: Filter by notes
+  value_type: string
+  flows:
+  - abtests.create_abtest
 - name: offset
   label: Offset
   description: Filter by offset
@@ -352,6 +389,7 @@ slots:
   description: Target a specific persona account id
   value_type: integer
   flows:
+  - abtests.schedule_abtest
   - action.schedule.cancel_draft_post_schedule
   - action.schedule.cancel_schedules
   - action.schedule.create_draft_post_schedule
@@ -379,6 +417,7 @@ slots:
   description: Target a specific persona id
   value_type: integer
   flows:
+  - abtests.create_abtest
   - accounts.link.delete
   - accounts.persona.delete
   - accounts.persona.restore
@@ -484,6 +523,7 @@ slots:
   description: Filter by run at
   value_type: string
   flows:
+  - abtests.schedule_abtest
   - action.schedule.create_draft_post_schedule
   - action.schedule.create_from_raw_dag
 - name: schedule_ids
@@ -561,6 +601,12 @@ slots:
   flows:
   - campaigns.create_campaign
   - campaigns.update_campaign
+- name: started_at
+  label: Started At
+  description: Filter by started at
+  value_type: string
+  flows:
+  - abtests.create_abtest
 - name: status
   label: Status
   description: Filter by status
@@ -605,6 +651,8 @@ slots:
   - mail.trends_with_reply
   - post.publish
   - insights.sync_metrics
+  - abtest.schedule_ab_test
+  - abtest.complete_ab_test
   flows:
   - action.schedule.compile_template
   - action.schedule.create_sync_metrics_schedule
@@ -665,6 +713,24 @@ slots:
   value_type: string
   flows:
   - campaigns.record_kpi_result
+- name: variable
+  label: Variable
+  description: Filter by variable
+  value_type: string
+  flows:
+  - abtests.create_abtest
+- name: variant_a_id
+  label: Variant A Id
+  description: Target a specific variant a id
+  value_type: integer
+  flows:
+  - abtests.create_abtest
+- name: variant_b_id
+  label: Variant B Id
+  description: Target a specific variant b id
+  value_type: integer
+  flows:
+  - abtests.create_abtest
 - name: variant_id
   label: Variant Id
   description: Target a specific variant id

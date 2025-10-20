@@ -24,6 +24,101 @@ import type {
 } from '@tanstack/react-query';
 
 import { apiFetch } from './fetcher';
+export interface ABTestCompleteTemplateParams {
+  abtest_id: number;
+  persona_id: number;
+  campaign_id: number;
+  persona_account_id: number;
+  publish_schedule_id: number;
+  post_publication_ids: number[];
+}
+
+export interface ABTestCreateCommand {
+  persona_id: number;
+  campaign_id: number;
+  /** @maxLength 50 */
+  variable: string;
+  /**
+   * @maxLength 255
+   * @nullable
+   */
+  hypothesis?: string | null;
+  variant_a_id: number;
+  variant_b_id: number;
+  /** @nullable */
+  started_at?: string | null;
+  /**
+   * @maxLength 500
+   * @nullable
+   */
+  notes?: string | null;
+}
+
+export type ABTestOutUpliftPercentage = number | null;
+
+export interface ABTestOut {
+  id: number;
+  persona_id: number;
+  campaign_id: number;
+  variable: string;
+  /** @nullable */
+  hypothesis?: string | null;
+  variant_a_id: number;
+  variant_b_id: number;
+  started_at: string;
+  /** @nullable */
+  finished_at?: string | null;
+  /** @nullable */
+  winner_variant?: string | null;
+  uplift_percentage?: ABTestOutUpliftPercentage;
+  /** @nullable */
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ABTestScheduleCommandAbtestId = number | null;
+
+export interface ABTestScheduleCommand {
+  abtest_id?: ABTestScheduleCommandAbtestId;
+  persona_account_id: number;
+  run_at: string;
+  /** @nullable */
+  complete_at?: string | null;
+}
+
+export type ABTestScheduleResultCompletionScheduleId = number | null;
+
+export interface ABTestScheduleResult {
+  abtest_id: number;
+  persona_account_id: number;
+  schedule_id: number;
+  completion_schedule_id?: ABTestScheduleResultCompletionScheduleId;
+  post_publication_ids: number[];
+  run_at: string;
+  /** @nullable */
+  complete_at?: string | null;
+}
+
+export interface ABTestScheduleTemplateParams {
+  abtest_id: number;
+  persona_id: number;
+  campaign_id: number;
+  persona_account_id: number;
+  variant_a: ABTestScheduleVariantParams;
+  variant_b: ABTestScheduleVariantParams;
+}
+
+export interface ABTestScheduleVariantParams {
+  /** @maxLength 20 */
+  label: string;
+  post_publication_id: number;
+  persona_account_id: number;
+  variant_id: number;
+  draft_id: number;
+  platform: PlatformKind;
+}
+
 export type Aggregation = typeof Aggregation[keyof typeof Aggregation];
 
 
@@ -1336,11 +1431,17 @@ export type ScheduleCompileRequestPostPublish = PostPublishTemplateParams | null
 
 export type ScheduleCompileRequestSyncMetrics = SyncMetricsTemplateParams | null;
 
+export type ScheduleCompileRequestAbtestSchedule = ABTestScheduleTemplateParams | null;
+
+export type ScheduleCompileRequestAbtestComplete = ABTestCompleteTemplateParams | null;
+
 export interface ScheduleCompileRequest {
   template: ScheduleTemplateKey;
   mail?: ScheduleCompileRequestMail;
   post_publish?: ScheduleCompileRequestPostPublish;
   sync_metrics?: ScheduleCompileRequestSyncMetrics;
+  abtest_schedule?: ScheduleCompileRequestAbtestSchedule;
+  abtest_complete?: ScheduleCompileRequestAbtestComplete;
 }
 
 export interface ScheduleCompileResult {
@@ -1638,6 +1739,8 @@ export const ScheduleTemplateKey = {
   mailtrends_with_reply: 'mail.trends_with_reply',
   postpublish: 'post.publish',
   insightssync_metrics: 'insights.sync_metrics',
+  abtestschedule_ab_test: 'abtest.schedule_ab_test',
+  abtestcomplete_ab_test: 'abtest.complete_ab_test',
 } as const;
 
 export interface ScheduleTemplateListResult {
@@ -5332,6 +5435,72 @@ export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnTy
 
 
 /**
+ * Create a new AB test pairing two drafts under a persona and campaign
+ * @summary Create AB Test
+ */
+export const abtestsCreateAbtestApiOrchestratorAbtestsPost = (
+    aBTestCreateCommand: ABTestCreateCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ABTestOut>(
+      {url: `/api/orchestrator/abtests`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: aBTestCreateCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getAbtestsCreateAbtestApiOrchestratorAbtestsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsCreateAbtestApiOrchestratorAbtestsPost>>, TError,{data: ABTestCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof abtestsCreateAbtestApiOrchestratorAbtestsPost>>, TError,{data: ABTestCreateCommand}, TContext> => {
+
+const mutationKey = ['abtestsCreateAbtestApiOrchestratorAbtestsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abtestsCreateAbtestApiOrchestratorAbtestsPost>>, {data: ABTestCreateCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  abtestsCreateAbtestApiOrchestratorAbtestsPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AbtestsCreateAbtestApiOrchestratorAbtestsPostMutationResult = NonNullable<Awaited<ReturnType<typeof abtestsCreateAbtestApiOrchestratorAbtestsPost>>>
+    export type AbtestsCreateAbtestApiOrchestratorAbtestsPostMutationBody = ABTestCreateCommand
+    export type AbtestsCreateAbtestApiOrchestratorAbtestsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create AB Test
+ */
+export const useAbtestsCreateAbtestApiOrchestratorAbtestsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsCreateAbtestApiOrchestratorAbtestsPost>>, TError,{data: ABTestCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof abtestsCreateAbtestApiOrchestratorAbtestsPost>>,
+        TError,
+        {data: ABTestCreateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAbtestsCreateAbtestApiOrchestratorAbtestsPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * Create a new platform account (social media, website, etc.) for the user
  * @summary Create New Platform Account
  */
@@ -7033,6 +7202,73 @@ export const useActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCanc
       > => {
 
       const mutationOptions = getActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Schedule both variants of an AB test to publish simultaneously
+ * @summary Schedule AB Test Variants
+ */
+export const abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost = (
+    abtestId: number | null,
+    aBTestScheduleCommand: ABTestScheduleCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ABTestScheduleResult>(
+      {url: `/api/orchestrator/actions/abtests/${abtestId}/schedule`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: aBTestScheduleCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getAbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost>>, TError,{abtestId: number | null;data: ABTestScheduleCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost>>, TError,{abtestId: number | null;data: ABTestScheduleCommand}, TContext> => {
+
+const mutationKey = ['abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost>>, {abtestId: number | null;data: ABTestScheduleCommand}> = (props) => {
+          const {abtestId,data} = props ?? {};
+
+          return  abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost(abtestId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostMutationResult = NonNullable<Awaited<ReturnType<typeof abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost>>>
+    export type AbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostMutationBody = ABTestScheduleCommand
+    export type AbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Schedule AB Test Variants
+ */
+export const useAbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost>>, TError,{abtestId: number | null;data: ABTestScheduleCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost>>,
+        TError,
+        {abtestId: number | null;data: ABTestScheduleCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }
