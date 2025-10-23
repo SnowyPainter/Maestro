@@ -7,6 +7,7 @@ import { TimelineTrendEvent } from './TimelineTrendEvent';
 import { format } from 'date-fns';
 import { TimelinePlaybookLogEvent } from './TimelinePlaybookLogEvent';
 import { TimelineCampaignKPIResultEvent } from './TimelineCampaignKPIResultEvent';
+import { TimelineAbTestEvent } from './TimelineAbTestEvent';
 
 interface TimelineEventProps {
   event: TimelineEventType;
@@ -20,8 +21,10 @@ const renderEventDetails = (event: TimelineEventType) => {
       return <TimelineTrendEvent event={event} />;
     case 'campaign_kpi':
       return <TimelineCampaignKPIResultEvent event={event} />;
+    case 'abtest':
+      return <TimelineAbTestEvent event={event} />;
     case 'playbook':
-      return <TimelinePlaybookLogEvent event={event} />;
+      return <TimelinePlaybookLogEvent event={event} />;  
     default:
       return <p>No details available for this event type.</p>;
   }
@@ -35,6 +38,8 @@ export const TimelineEvent: React.FC<TimelineEventProps> = ({ event }) => {
       ? event.payload.trend_data.title
       : event.source === 'campaign_kpi'
       ? `Campaign KPI #${event.payload.kpi_result.campaign_id}`
+      : event.source === 'abtest'
+      ? `${event.payload.abtest.variable || 'AB Test'} (${event.payload.phase})`
       : event.source === 'playbook'
       ? event.payload.summary?.title ||
         event.payload.playbook_log.summary?.title ||

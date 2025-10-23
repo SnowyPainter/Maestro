@@ -43,6 +43,11 @@ const getEventTitle = (event: TimelineEventType) => {
     if (event.source === 'trends') {
         return event.payload.trend_data?.title || 'Trend event';
     }
+    if (event.source === 'abtest') {
+        const { abtest, phase } = event.payload;
+        const base = abtest?.variable ? `AB Test: ${abtest.variable}` : 'AB Test';
+        return `${base} (${phase})`;
+    }
     if (event.source === 'playbook') {
         const summaryTitle =
           event.payload.summary?.title ||

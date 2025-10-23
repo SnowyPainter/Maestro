@@ -10,8 +10,12 @@ slots:
   description: Target a specific abtest id
   value_type: integer
   flows:
+  - abtests.complete_abtest
+  - abtests.delete_abtest
   - abtests.evaluate_ready
   - abtests.schedule_abtest
+  - abtests.update_abtest
+  - bff.abtests.read
 - name: abtest_schedule
   label: Abtest Schedule
   description: Filter by abtest schedule
@@ -53,6 +57,12 @@ slots:
   value_type: boolean
   flows:
   - action.coworker.update_my_coworker
+- name: active_only
+  label: Active Only
+  description: Filter by active only
+  value_type: boolean
+  flows:
+  - bff.abtests.list
 - name: add_persona_account_ids
   label: Add Persona Account Ids
   description: Filter by add persona account ids
@@ -79,6 +89,7 @@ slots:
   flows:
   - abtests.create_abtest
   - abtests.evaluate_ready
+  - bff.abtests.list
   - bff.campaigns.list_kpi_defs
   - bff.campaigns.list_kpi_results
   - bff.campaigns.read_campaign
@@ -206,6 +217,7 @@ slots:
   description: Filter by events
   value_type: string
   flows:
+  - bff.timeline.abtests
   - bff.timeline.campaigns
   - bff.timeline.playbooks
   - bff.timeline.post_publications
@@ -217,6 +229,12 @@ slots:
   flows:
   - action.schedule.create_sync_metrics_schedule
   - action.schedule.create_trends_mail_schedule
+- name: finished_at
+  label: Finished At
+  description: Filter by finished at
+  value_type: string
+  flows:
+  - abtests.complete_abtest
 - name: force_restart
   label: Force Restart
   description: Filter by force restart
@@ -260,12 +278,19 @@ slots:
   value_type: string
   flows:
   - abtests.create_abtest
+  - abtests.update_abtest
 - name: ingest_key
   label: Ingest Key
   description: Filter by ingest key
   value_type: string
   flows:
   - insights.ingest
+- name: insight_note
+  label: Insight Note
+  description: Filter by insight note
+  value_type: string
+  flows:
+  - abtests.complete_abtest
 - name: interval_seconds
   label: Interval Seconds
   description: Filter by interval seconds
@@ -284,6 +309,7 @@ slots:
   description: Limit the number of results
   value_type: integer
   flows:
+  - bff.abtests.list
   - bff.accounts.list_personas
   - bff.accounts.list_platform_accounts
   - bff.campaigns.list_campaigns
@@ -292,6 +318,7 @@ slots:
   - bff.playbook.list_playbooks
   - bff.schedule.get_schedule_stream
   - bff.schedule.list_schedules
+  - bff.timeline.abtests
   - bff.timeline.campaigns
   - bff.timeline.playbooks
   - bff.timeline.post_publications
@@ -343,11 +370,13 @@ slots:
   value_type: string
   flows:
   - abtests.create_abtest
+  - abtests.update_abtest
 - name: offset
   label: Offset
   description: Filter by offset
   value_type: integer
   flows:
+  - bff.abtests.list
   - bff.accounts.list_personas
   - bff.accounts.list_platform_accounts
   - bff.campaigns.list_campaigns
@@ -400,6 +429,7 @@ slots:
   - bff.contexts.current_persona
   - bff.contexts.current_persona_account
   - bff.schedule.list_schedules
+  - bff.timeline.abtests
   - bff.timeline.campaigns
   - bff.timeline.playbooks
   - bff.timeline.post_publications
@@ -426,6 +456,7 @@ slots:
   - accounts.persona.delete
   - accounts.persona.restore
   - accounts.persona.update
+  - bff.abtests.list
   - bff.accounts.list_accounts_for_persona
   - bff.accounts.read_persona
   - bff.playbook.list_playbooks
@@ -582,6 +613,7 @@ slots:
   description: Set a since date
   value_type: date
   flows:
+  - bff.timeline.abtests
   - bff.timeline.campaigns
   - bff.timeline.playbooks
   - bff.timeline.post_publications
@@ -623,6 +655,7 @@ slots:
   value_type: string
   flows:
   - abtests.create_abtest
+  - abtests.update_abtest
 - name: status
   label: Status
   description: Filter by status
@@ -718,11 +751,18 @@ slots:
   description: Set a until date
   value_type: date
   flows:
+  - bff.timeline.abtests
   - bff.timeline.campaigns
   - bff.timeline.playbooks
   - bff.timeline.post_publications
   - bff.timeline.trends
   - bff.trends.list_trends
+- name: uplift_percentage
+  label: Uplift Percentage
+  description: Filter by uplift percentage
+  value_type: float
+  flows:
+  - abtests.complete_abtest
 - name: values
   label: Values
   description: Filter by values
@@ -735,6 +775,7 @@ slots:
   value_type: string
   flows:
   - abtests.create_abtest
+  - abtests.update_abtest
 - name: variant_a_id
   label: Variant A Id
   description: Target a specific variant a id
@@ -783,6 +824,15 @@ slots:
   value_type: string
   flows:
   - action.schedule.cancel_schedules
+- name: winner_variant
+  label: Winner Variant
+  description: Filter by winner variant
+  value_type: enum
+  choices:
+  - A
+  - B
+  flows:
+  - abtests.complete_abtest
 - name: with_buckets
   label: With Buckets
   description: Filter by with buckets

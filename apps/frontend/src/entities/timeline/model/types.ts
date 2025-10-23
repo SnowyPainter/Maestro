@@ -5,7 +5,7 @@ import { PostPublicationOut, TrendItem } from "@/lib/api/generated";
  * Represents a single event in the timeline.
  * This is a discriminated union based on the `source` property.
  */
-type KnownTimelineSources = 'post_publication' | 'trends' | 'playbook' | 'campaign_kpi';
+type KnownTimelineSources = 'post_publication' | 'trends' | 'playbook' | 'campaign_kpi' | 'abtest';
 
 type KnownTimelineEvent =
   | (BaseTimelineEvent & {
@@ -35,6 +35,15 @@ type KnownTimelineEvent =
       source: 'campaign_kpi';
       payload: CampaignKpiPayload;
       correlation_keys: {
+        campaign_id: string;
+        [key: string]: string;
+      };
+    })
+  | (BaseTimelineEvent & {
+      source: 'abtest';
+      payload: AbTestPayload;
+      correlation_keys: {
+        abtest_id: string;
         campaign_id: string;
         [key: string]: string;
       };
@@ -102,6 +111,27 @@ export interface CampaignKpiPayload {
     values: Record<string, number>;
   };
   phase: 'recorded';
+}
+
+export interface AbTestSummary {
+  id: number;
+  persona_id: number;
+  campaign_id: number;
+  variable: string;
+  hypothesis?: string | null;
+  variant_a_id: number;
+  variant_b_id: number;
+  started_at: string;
+  finished_at?: string | null;
+  winner_variant?: string | null;
+  uplift_percentage?: number | null;
+  notes?: string | null;
+}
+
+export interface AbTestPayload {
+  phase_source: 'abtest';
+  abtest: AbTestSummary;
+  phase: 'started' | 'completed';
 }
 
 /**

@@ -24,6 +24,22 @@ import type {
 } from '@tanstack/react-query';
 
 import { apiFetch } from './fetcher';
+export type ABTestCompleteCommandUpliftPercentage = number | null;
+
+export interface ABTestCompleteCommand {
+  winner_variant: ABTestWinnerEnum;
+  uplift_percentage?: ABTestCompleteCommandUpliftPercentage;
+  /** @nullable */
+  finished_at?: string | null;
+  /**
+   * Playbook 로그에 남길 핵심 인사이트 요약
+   * @maxLength 500
+   * @nullable
+   */
+  insight_note?: string | null;
+  abtest_id: number;
+}
+
 export interface ABTestCompleteTemplateParams {
   abtest_id: number;
   persona_id: number;
@@ -61,6 +77,11 @@ export interface ABTestEvaluateReadyPayload {
   persona_account_id: number;
   publish_schedule_id: number;
   post_publication_ids: number[];
+}
+
+export interface ABTestListResponse {
+  items: ABTestOut[];
+  total: number;
 }
 
 export type ABTestOutUpliftPercentage = number | null;
@@ -127,6 +148,36 @@ export interface ABTestScheduleVariantParams {
   draft_id: number;
   platform: PlatformKind;
 }
+
+export interface ABTestUpdateCommand {
+  /**
+   * @maxLength 50
+   * @nullable
+   */
+  variable?: string | null;
+  /**
+   * @maxLength 255
+   * @nullable
+   */
+  hypothesis?: string | null;
+  /**
+   * @maxLength 500
+   * @nullable
+   */
+  notes?: string | null;
+  /** @nullable */
+  started_at?: string | null;
+  abtest_id: number;
+}
+
+export type ABTestWinnerEnum = typeof ABTestWinnerEnum[keyof typeof ABTestWinnerEnum];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ABTestWinnerEnum = {
+  A: 'A',
+  B: 'B',
+} as const;
 
 export type Aggregation = typeof Aggregation[keyof typeof Aggregation];
 
@@ -1951,6 +2002,14 @@ export interface ValidationError {
  */
 export interface _EmptyPayload { [key: string]: unknown }
 
+export type BffAbtestsListApiBffAbtestsGetParams = {
+persona_id?: number | null;
+campaign_id?: number | null;
+active_only?: boolean;
+limit?: number;
+offset?: number;
+};
+
 export type BffAccountsListPlatformAccountsApiBffAccountsPlatformGetParams = {
 platform?: PlatformKind | null;
 /**
@@ -2123,6 +2182,21 @@ limit?: number | null;
 
 export type BffTimelineTrendsApiBffTimelineTrendsGetBody = TimelineEventCollection | null;
 
+export type BffTimelineAbtestsApiBffTimelineAbtestsGetParams = {
+persona_account_id: number;
+/**
+ * @nullable
+ */
+since?: string | null;
+/**
+ * @nullable
+ */
+until?: string | null;
+limit?: number | null;
+};
+
+export type BffTimelineAbtestsApiBffTimelineAbtestsGetBody = TimelineEventCollection | null;
+
 export type BffTrendsListTrendsApiBffTrendsGetParams = {
 country?: string;
 limit?: number;
@@ -2194,6 +2268,185 @@ limit?: number;
 };
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * List AB tests for the authenticated user
+ * @summary List AB Tests
+ */
+export const bffAbtestsListApiBffAbtestsGet = (
+    params?: BffAbtestsListApiBffAbtestsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ABTestListResponse>(
+      {url: `/api/bff/abtests`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffAbtestsListApiBffAbtestsGetQueryKey = (params?: BffAbtestsListApiBffAbtestsGetParams,) => {
+    return [`/api/bff/abtests`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffAbtestsListApiBffAbtestsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError = HTTPValidationError>(params?: BffAbtestsListApiBffAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffAbtestsListApiBffAbtestsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>> = ({ signal }) => bffAbtestsListApiBffAbtestsGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffAbtestsListApiBffAbtestsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>>
+export type BffAbtestsListApiBffAbtestsGetQueryError = HTTPValidationError
+
+
+export function useBffAbtestsListApiBffAbtestsGet<TData = Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffAbtestsListApiBffAbtestsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAbtestsListApiBffAbtestsGet<TData = Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError = HTTPValidationError>(
+ params?: BffAbtestsListApiBffAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAbtestsListApiBffAbtestsGet<TData = Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError = HTTPValidationError>(
+ params?: BffAbtestsListApiBffAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List AB Tests
+ */
+
+export function useBffAbtestsListApiBffAbtestsGet<TData = Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError = HTTPValidationError>(
+ params?: BffAbtestsListApiBffAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsListApiBffAbtestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffAbtestsListApiBffAbtestsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get detailed AB test information
+ * @summary Read AB Test
+ */
+export const bffAbtestsReadApiBffAbtestsAbtestIdGet = (
+    abtestId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ABTestOut>(
+      {url: `/api/bff/abtests/${abtestId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffAbtestsReadApiBffAbtestsAbtestIdGetQueryKey = (abtestId?: number,) => {
+    return [`/api/bff/abtests/${abtestId}`] as const;
+    }
+
+    
+export const getBffAbtestsReadApiBffAbtestsAbtestIdGetQueryOptions = <TData = Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError = HTTPValidationError>(abtestId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffAbtestsReadApiBffAbtestsAbtestIdGetQueryKey(abtestId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>> = ({ signal }) => bffAbtestsReadApiBffAbtestsAbtestIdGet(abtestId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(abtestId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffAbtestsReadApiBffAbtestsAbtestIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>>
+export type BffAbtestsReadApiBffAbtestsAbtestIdGetQueryError = HTTPValidationError
+
+
+export function useBffAbtestsReadApiBffAbtestsAbtestIdGet<TData = Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError = HTTPValidationError>(
+ abtestId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAbtestsReadApiBffAbtestsAbtestIdGet<TData = Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError = HTTPValidationError>(
+ abtestId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffAbtestsReadApiBffAbtestsAbtestIdGet<TData = Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError = HTTPValidationError>(
+ abtestId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read AB Test
+ */
+
+export function useBffAbtestsReadApiBffAbtestsAbtestIdGet<TData = Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError = HTTPValidationError>(
+ abtestId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffAbtestsReadApiBffAbtestsAbtestIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffAbtestsReadApiBffAbtestsAbtestIdGetQueryOptions(abtestId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
 
@@ -5266,6 +5519,104 @@ export function useBffTimelineTrendsApiBffTimelineTrendsGet<TData = Awaited<Retu
 
 
 /**
+ * Get timeline events sourced from AB tests
+ * @summary Get AB Test Timeline
+ */
+export const bffTimelineAbtestsApiBffTimelineAbtestsGet = (
+    bffTimelineAbtestsApiBffTimelineAbtestsGetBody: BffTimelineAbtestsApiBffTimelineAbtestsGetBody,
+    params: BffTimelineAbtestsApiBffTimelineAbtestsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TimelineEventCollectionOut>(
+      {url: `/api/bff/timeline/abtests`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffTimelineAbtestsApiBffTimelineAbtestsGetQueryKey = (bffTimelineAbtestsApiBffTimelineAbtestsGetBody?: BffTimelineAbtestsApiBffTimelineAbtestsGetBody,
+    params?: BffTimelineAbtestsApiBffTimelineAbtestsGetParams,) => {
+    return [`/api/bff/timeline/abtests`, ...(params ? [params]: []), bffTimelineAbtestsApiBffTimelineAbtestsGetBody] as const;
+    }
+
+    
+export const getBffTimelineAbtestsApiBffTimelineAbtestsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError = HTTPValidationError>(bffTimelineAbtestsApiBffTimelineAbtestsGetBody: BffTimelineAbtestsApiBffTimelineAbtestsGetBody,
+    params: BffTimelineAbtestsApiBffTimelineAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffTimelineAbtestsApiBffTimelineAbtestsGetQueryKey(bffTimelineAbtestsApiBffTimelineAbtestsGetBody,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>> = ({ signal }) => bffTimelineAbtestsApiBffTimelineAbtestsGet(bffTimelineAbtestsApiBffTimelineAbtestsGetBody,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffTimelineAbtestsApiBffTimelineAbtestsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>>
+export type BffTimelineAbtestsApiBffTimelineAbtestsGetQueryError = HTTPValidationError
+
+
+export function useBffTimelineAbtestsApiBffTimelineAbtestsGet<TData = Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError = HTTPValidationError>(
+ bffTimelineAbtestsApiBffTimelineAbtestsGetBody: BffTimelineAbtestsApiBffTimelineAbtestsGetBody,
+    params: BffTimelineAbtestsApiBffTimelineAbtestsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineAbtestsApiBffTimelineAbtestsGet<TData = Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError = HTTPValidationError>(
+ bffTimelineAbtestsApiBffTimelineAbtestsGetBody: BffTimelineAbtestsApiBffTimelineAbtestsGetBody,
+    params: BffTimelineAbtestsApiBffTimelineAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffTimelineAbtestsApiBffTimelineAbtestsGet<TData = Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError = HTTPValidationError>(
+ bffTimelineAbtestsApiBffTimelineAbtestsGetBody: BffTimelineAbtestsApiBffTimelineAbtestsGetBody,
+    params: BffTimelineAbtestsApiBffTimelineAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get AB Test Timeline
+ */
+
+export function useBffTimelineAbtestsApiBffTimelineAbtestsGet<TData = Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError = HTTPValidationError>(
+ bffTimelineAbtestsApiBffTimelineAbtestsGetBody: BffTimelineAbtestsApiBffTimelineAbtestsGetBody,
+    params: BffTimelineAbtestsApiBffTimelineAbtestsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffTimelineAbtestsApiBffTimelineAbtestsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffTimelineAbtestsApiBffTimelineAbtestsGetQueryOptions(bffTimelineAbtestsApiBffTimelineAbtestsGetBody,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * Retrieve trend analysis data for content strategy and market insights dashboard
  * @summary Get Trend Analysis Data
  */
@@ -5572,6 +5923,202 @@ export const useAbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyP
       > => {
 
       const mutationOptions = getAbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update AB test metadata such as hypothesis or notes
+ * @summary Update AB Test
+ */
+export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch = (
+    abtestId: number,
+    aBTestUpdateCommand: ABTestUpdateCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<ABTestOut>(
+      {url: `/api/orchestrator/abtests/${abtestId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: aBTestUpdateCommand
+    },
+      options);
+    }
+  
+
+
+export const getAbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch>>, TError,{abtestId: number;data: ABTestUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch>>, TError,{abtestId: number;data: ABTestUpdateCommand}, TContext> => {
+
+const mutationKey = ['abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch>>, {abtestId: number;data: ABTestUpdateCommand}> = (props) => {
+          const {abtestId,data} = props ?? {};
+
+          return  abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch(abtestId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchMutationResult = NonNullable<Awaited<ReturnType<typeof abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch>>>
+    export type AbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchMutationBody = ABTestUpdateCommand
+    export type AbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchMutationError = HTTPValidationError
+
+    /**
+ * @summary Update AB Test
+ */
+export const useAbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch>>, TError,{abtestId: number;data: ABTestUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch>>,
+        TError,
+        {abtestId: number;data: ABTestUpdateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Delete an AB test
+ * @summary Delete AB Test
+ */
+export const abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete = (
+    abtestId: number,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<MessageOut>(
+      {url: `/api/orchestrator/abtests/${abtestId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getAbtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete>>, TError,{abtestId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete>>, TError,{abtestId: number}, TContext> => {
+
+const mutationKey = ['abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete>>, {abtestId: number}> = (props) => {
+          const {abtestId} = props ?? {};
+
+          return  abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete(abtestId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AbtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete>>>
+    
+    export type AbtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete AB Test
+ */
+export const useAbtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete>>, TError,{abtestId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDelete>>,
+        TError,
+        {abtestId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getAbtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Manually complete an AB test and record the outcome
+ * @summary Complete AB Test
+ */
+export const abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost = (
+    abtestId: number,
+    aBTestCompleteCommand: ABTestCompleteCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ABTestOut>(
+      {url: `/api/orchestrator/abtests/${abtestId}/complete`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: aBTestCompleteCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getAbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost>>, TError,{abtestId: number;data: ABTestCompleteCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost>>, TError,{abtestId: number;data: ABTestCompleteCommand}, TContext> => {
+
+const mutationKey = ['abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost>>, {abtestId: number;data: ABTestCompleteCommand}> = (props) => {
+          const {abtestId,data} = props ?? {};
+
+          return  abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost(abtestId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostMutationResult = NonNullable<Awaited<ReturnType<typeof abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost>>>
+    export type AbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostMutationBody = ABTestCompleteCommand
+    export type AbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Complete AB Test
+ */
+export const useAbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost>>, TError,{abtestId: number;data: ABTestCompleteCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost>>,
+        TError,
+        {abtestId: number;data: ABTestCompleteCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getAbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

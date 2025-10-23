@@ -221,11 +221,14 @@ async def list_abtests(
     db: AsyncSession,
     *,
     filters: Optional[ABTestFilter] = None,
+    owner_user_id: Optional[int] = None,
     limit: int = 20,
     offset: int = 0,
 ) -> Tuple[List[ABTest], int]:
     filters = filters or ABTestFilter()
     stmt: Select = select(ABTest)
+    if owner_user_id is not None:
+        stmt = stmt.join(ABTest.persona).where(Persona.owner_user_id == owner_user_id)
     if filters.persona_id is not None:
         stmt = stmt.where(ABTest.persona_id == filters.persona_id)
     if filters.campaign_id is not None:
@@ -238,7 +241,9 @@ async def list_abtests(
 
     rows = (
         await db.execute(
-            stmt.order_by(ABTest.started_at.desc()).limit(limit).offset(offset)
+            stmt.order_by(ABTest.started_at.desc(), ABTest.id.desc())
+            .limit(limit)
+            .offset(offset)
         )
     ).scalars().all()
     return rows, total
@@ -246,6 +251,59 @@ async def list_abtests(
 
 async def get_abtest(db: AsyncSession, abtest_id: int) -> Optional[ABTest]:
     return await db.get(ABTest, abtest_id)
+
+
+async def update_abtest(
+    db: AsyncSession,
+    *,
+    abtest_id: int,
+    owner_user_id: Optional[int],
+    variable: Optional[str] = None,
+    hypothesis: Optional[str] = None,
+    notes: Optional[str] = None,
+    started_at: Optional[datetime] = None,
+) -> ABTest:
+    row = await db.get(ABTest, abtest_id)
+    if row is None:
+        raise ValueError("abtest not found")
+
+    if owner_user_id is not None:
+        persona = await db.get(Persona, row.persona_id)
+        if persona is None or persona.owner_user_id != owner_user_id:
+            raise PermissionError("abtest does not belong to user")
+
+    if variable is not None:
+        row.variable = variable
+    if hypothesis is not None:
+        row.hypothesis = hypothesis
+    if notes is not None:
+        row.notes = notes
+    if started_at is not None:
+        row.started_at = _to_utc(started_at)
+
+    await db.flush()
+    await db.commit()
+    await db.refresh(row)
+    return row
+
+
+async def delete_abtest(
+    db: AsyncSession,
+    *,
+    abtest_id: int,
+    owner_user_id: Optional[int],
+) -> None:
+    row = await db.get(ABTest, abtest_id)
+    if row is None:
+        raise ValueError("abtest not found")
+
+    if owner_user_id is not None:
+        persona = await db.get(Persona, row.persona_id)
+        if persona is None or persona.owner_user_id != owner_user_id:
+            raise PermissionError("abtest does not belong to user")
+
+    await db.delete(row)
+    await db.commit()
 
 
 async def complete_abtest(

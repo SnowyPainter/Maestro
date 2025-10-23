@@ -36,6 +36,13 @@ class ABTestComplete(BaseModel):
     )
 
 
+class ABTestUpdate(BaseModel):
+    variable: Optional[str] = Field(default=None, max_length=50)
+    hypothesis: Optional[str] = Field(default=None, max_length=255)
+    notes: Optional[str] = Field(default=None, max_length=500)
+    started_at: Optional[datetime] = None
+
+
 class ABTestFilter(BaseModel):
     persona_id: Optional[int] = None
     campaign_id: Optional[int] = None

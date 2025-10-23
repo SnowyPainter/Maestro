@@ -9,6 +9,67 @@ import {
 } from 'zod';
 
 /**
+ * List AB tests for the authenticated user
+ * @summary List AB Tests
+ */
+export const bffAbtestsListApiBffAbtestsGetQueryActiveOnlyDefault = false;export const bffAbtestsListApiBffAbtestsGetQueryLimitDefault = 20;export const bffAbtestsListApiBffAbtestsGetQueryOffsetDefault = 0;
+
+export const bffAbtestsListApiBffAbtestsGetQueryParams = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "active_only": zod.boolean().optional(),
+  "limit": zod.number().default(bffAbtestsListApiBffAbtestsGetQueryLimitDefault),
+  "offset": zod.number().optional()
+})
+
+export const bffAbtestsListApiBffAbtestsGetResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "variable": zod.string(),
+  "hypothesis": zod.string().nullish(),
+  "variant_a_id": zod.number(),
+  "variant_b_id": zod.number(),
+  "started_at": zod.iso.datetime({}),
+  "finished_at": zod.iso.datetime({}).nullish(),
+  "winner_variant": zod.string().nullish(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
+  "notes": zod.string().nullish(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * Get detailed AB test information
+ * @summary Read AB Test
+ */
+export const bffAbtestsReadApiBffAbtestsAbtestIdGetParams = zod.object({
+  "abtest_id": zod.number()
+})
+
+export const bffAbtestsReadApiBffAbtestsAbtestIdGetResponse = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "variable": zod.string(),
+  "hypothesis": zod.string().nullish(),
+  "variant_a_id": zod.number(),
+  "variant_b_id": zod.number(),
+  "started_at": zod.iso.datetime({}),
+  "finished_at": zod.iso.datetime({}).nullish(),
+  "winner_variant": zod.string().nullish(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
+  "notes": zod.string().nullish(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
  * Check if a platform account is valid for UI display
  * @summary Check if platform account is valid
  */
@@ -1171,6 +1232,53 @@ export const bffTimelineTrendsApiBffTimelineTrendsGetResponse = zod.object({
 
 
 /**
+ * Get timeline events sourced from AB tests
+ * @summary Get AB Test Timeline
+ */
+export const bffTimelineAbtestsApiBffTimelineAbtestsGetQueryLimitDefault = 200;
+
+export const bffTimelineAbtestsApiBffTimelineAbtestsGetQueryParams = zod.object({
+  "persona_account_id": zod.number(),
+  "since": zod.iso.datetime({}).nullish(),
+  "until": zod.iso.datetime({}).nullish(),
+  "limit": zod.union([zod.number(),zod.null()]).default(bffTimelineAbtestsApiBffTimelineAbtestsGetQueryLimitDefault)
+})
+
+export const bffTimelineAbtestsApiBffTimelineAbtestsGetBody = zod.union([zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional()
+}).describe('Container returned by source-specific timeline operators.'),zod.null()])
+
+export const bffTimelineAbtestsApiBffTimelineAbtestsGetResponse = zod.object({
+  "source": zod.string(),
+  "events": zod.array(zod.object({
+  "event_id": zod.string(),
+  "persona_account_id": zod.number(),
+  "source": zod.string(),
+  "kind": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "status": zod.string(),
+  "payload": zod.record(zod.string(), zod.any()).optional(),
+  "operators": zod.array(zod.string()).optional(),
+  "correlation_keys": zod.record(zod.string(), zod.string()).optional(),
+  "origin_flow": zod.string().nullish()
+}).describe('Normalized representation for a single timeline datapoint.')).optional(),
+  "payload": zod.record(zod.string(), zod.any()).optional()
+}).describe('Flow result that preserves payload info and emits merged events.')
+
+
+/**
  * Retrieve trend analysis data for content strategy and market insights dashboard
  * @summary Get Trend Analysis Data
  */
@@ -1266,6 +1374,95 @@ export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost
 
 export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostResponse = zod.object({
   "message": zod.string()
+})
+
+
+/**
+ * Update AB test metadata such as hypothesis or notes
+ * @summary Update AB Test
+ */
+export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchParams = zod.object({
+  "abtest_id": zod.number()
+})
+
+export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchBodyVariableMax = 50;
+export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchBodyHypothesisMax = 255;
+export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchBodyNotesMax = 500;
+
+
+export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchBody = zod.object({
+  "variable": zod.string().max(abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchBodyVariableMax).nullish(),
+  "hypothesis": zod.string().max(abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchBodyHypothesisMax).nullish(),
+  "notes": zod.string().max(abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchBodyNotesMax).nullish(),
+  "started_at": zod.iso.datetime({}).nullish(),
+  "abtest_id": zod.number()
+})
+
+export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchResponse = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "variable": zod.string(),
+  "hypothesis": zod.string().nullish(),
+  "variant_a_id": zod.number(),
+  "variant_b_id": zod.number(),
+  "started_at": zod.iso.datetime({}),
+  "finished_at": zod.iso.datetime({}).nullish(),
+  "winner_variant": zod.string().nullish(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
+  "notes": zod.string().nullish(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * Delete an AB test
+ * @summary Delete AB Test
+ */
+export const abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDeleteParams = zod.object({
+  "abtest_id": zod.number()
+})
+
+export const abtestsDeleteAbtestApiOrchestratorAbtestsAbtestIdDeleteResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * Manually complete an AB test and record the outcome
+ * @summary Complete AB Test
+ */
+export const abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostParams = zod.object({
+  "abtest_id": zod.number()
+})
+
+export const abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostBodyInsightNoteMax = 500;
+
+
+export const abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostBody = zod.object({
+  "winner_variant": zod.enum(['A', 'B']),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
+  "finished_at": zod.iso.datetime({}).nullish(),
+  "insight_note": zod.string().max(abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostBodyInsightNoteMax).nullish().describe('Playbook 로그에 남길 핵심 인사이트 요약'),
+  "abtest_id": zod.number()
+})
+
+export const abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostResponse = zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "variable": zod.string(),
+  "hypothesis": zod.string().nullish(),
+  "variant_a_id": zod.number(),
+  "variant_b_id": zod.number(),
+  "started_at": zod.iso.datetime({}),
+  "finished_at": zod.iso.datetime({}).nullish(),
+  "winner_variant": zod.string().nullish(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
+  "notes": zod.string().nullish(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
 })
 
 

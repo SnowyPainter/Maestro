@@ -3,6 +3,98 @@ info:
   title: Maestro Backend
   version: 0.1.0
 paths:
+  /api/bff/abtests:
+    get:
+      tags:
+      - bff
+      - bff
+      - abtests
+      - list
+      - read
+      summary: List AB Tests
+      description: List AB tests for the authenticated user
+      operationId: bff_abtests_list_api_bff_abtests_get
+      parameters:
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: active_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Active Only
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/abtests/{abtest_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - abtests
+      - read
+      summary: Read AB Test
+      description: Get detailed AB test information
+      operationId: bff_abtests_read_api_bff_abtests__abtest_id__get
+      parameters:
+      - name: abtest_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Abtest Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/accounts/platform/{account_id}/is-valid:
     get:
       tags:
@@ -1491,6 +1583,70 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/timeline/abtests:
+    get:
+      tags:
+      - bff
+      - bff
+      - timeline
+      - abtests
+      - read
+      summary: Get AB Test Timeline
+      description: Get timeline events sourced from AB tests
+      operationId: bff_timeline_abtests_api_bff_timeline_abtests_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Persona Account Id
+      - name: since
+        in: query
+        required: false
+        schema:
+          title: Since
+          format: date-time
+          type: string
+          nullable: true
+      - name: until
+        in: query
+        required: false
+        schema:
+          title: Until
+          format: date-time
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: 200
+          title: Limit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/TimelineEventCollection'
+              - type: 'null'
+              title: Events
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineEventCollectionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/trends:
     get:
       tags:
@@ -1636,6 +1792,107 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/abtests/{abtest_id}:
+    patch:
+      tags:
+      - action
+      - action
+      - abtests
+      - update
+      summary: Update AB Test
+      description: Update AB test metadata such as hypothesis or notes
+      operationId: abtests_update_abtest_api_orchestrator_abtests__abtest_id__patch
+      parameters:
+      - name: abtest_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Abtest Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ABTestUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - action
+      - action
+      - abtests
+      - delete
+      summary: Delete AB Test
+      description: Delete an AB test
+      operationId: abtests_delete_abtest_api_orchestrator_abtests__abtest_id__delete
+      parameters:
+      - name: abtest_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Abtest Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/abtests/{abtest_id}/complete:
+    post:
+      tags:
+      - action
+      - action
+      - abtests
+      - complete
+      summary: Complete AB Test
+      description: Manually complete an AB test and record the outcome
+      operationId: abtests_complete_abtest_api_orchestrator_abtests__abtest_id__complete_post
+      parameters:
+      - name: abtest_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Abtest Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ABTestCompleteCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestOut'
         '422':
           description: Validation Error
           content:
@@ -3053,6 +3310,34 @@ paths:
               schema: {}
 components:
   schemas:
+    ABTestCompleteCommand:
+      properties:
+        winner_variant:
+          $ref: '#/components/schemas/ABTestWinnerEnum'
+        uplift_percentage:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Uplift Percentage
+        finished_at:
+          title: Finished At
+          format: date-time
+          type: string
+          nullable: true
+        insight_note:
+          title: Insight Note
+          description: Playbook 로그에 남길 핵심 인사이트 요약
+          maxLength: 500
+          type: string
+          nullable: true
+        abtest_id:
+          type: integer
+          title: Abtest Id
+      type: object
+      required:
+      - winner_variant
+      - abtest_id
+      title: ABTestCompleteCommand
     ABTestCompleteTemplateParams:
       properties:
         abtest_id:
@@ -3156,6 +3441,21 @@ components:
       - publish_schedule_id
       - post_publication_ids
       title: ABTestEvaluateReadyPayload
+    ABTestListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ABTestOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: ABTestListResponse
     ABTestOut:
       properties:
         id:
@@ -3340,6 +3640,41 @@ components:
       - draft_id
       - platform
       title: ABTestScheduleVariantParams
+    ABTestUpdateCommand:
+      properties:
+        variable:
+          title: Variable
+          maxLength: 50
+          type: string
+          nullable: true
+        hypothesis:
+          title: Hypothesis
+          maxLength: 255
+          type: string
+          nullable: true
+        notes:
+          title: Notes
+          maxLength: 500
+          type: string
+          nullable: true
+        started_at:
+          title: Started At
+          format: date-time
+          type: string
+          nullable: true
+        abtest_id:
+          type: integer
+          title: Abtest Id
+      type: object
+      required:
+      - abtest_id
+      title: ABTestUpdateCommand
+    ABTestWinnerEnum:
+      type: string
+      enum:
+      - A
+      - B
+      title: ABTestWinnerEnum
     Aggregation:
       type: string
       enum:

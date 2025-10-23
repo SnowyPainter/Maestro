@@ -16,6 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.common.enums import PostStatus
 from apps.backend.src.modules.drafts.schemas import PostPublicationOut
 from apps.backend.src.modules.campaigns.service import list_kpi_results
+from apps.backend.src.modules.abtests.schemas import ABTestOut, ABTestFilter
+from apps.backend.src.modules.abtests.service import list_abtests
 from apps.backend.src.modules.trends.service import query_trends
 from apps.backend.src.modules.accounts.models import PersonaAccount
 from apps.backend.src.orchestrator.adapters.timeline import (
@@ -226,6 +228,48 @@ def _playbook_log_events(logs: Iterable[PlaybookLogOut], persona_account_id: int
     return events
 
 
+def _abtest_events(abtest: ABTestOut, persona_account_id: int) -> List[TimelineEvent]:
+    payload_base = {
+        "phase_source": "abtest",
+        "abtest": abtest.model_dump(),
+    }
+    base_kwargs: Dict[str, Any] = {
+        "persona_account_id": persona_account_id,
+        "source": "abtest",
+        "kind": "abtest.lifecycle",
+        "payload": payload_base.copy(),
+        "operators": ("bff.timeline.abtests",),
+        "correlation_keys": {
+            "abtest_id": str(abtest.id),
+            "campaign_id": str(abtest.campaign_id),
+        },
+        "origin_flow": "bff.timeline.abtests",
+    }
+
+    events: List[TimelineEvent] = []
+
+    def _add(phase: str, timestamp: Optional[datetime], status: str) -> None:
+        if timestamp is None:
+            return
+        event = TimelineEvent(
+            event_id=f"abtest:{abtest.id}:{phase}",
+            timestamp=timestamp,
+            status=status,
+            **base_kwargs,
+        )
+        event.payload = dict(base_kwargs["payload"])
+        event.payload["phase"] = phase
+        events.append(event)
+
+    _add("started", abtest.started_at, status="started")
+    if abtest.finished_at is not None:
+        status = "completed"
+        event_phase = "completed"
+        _add(event_phase, abtest.finished_at, status=status)
+
+    return events
+
+
 def _campaign_kpi_events(kpi_result, account_persona_id: int) -> List[TimelineEvent]:
     """Generate timeline events for campaign KPI results."""
     base_payload = {
@@ -356,6 +400,46 @@ async def op_timeline_campaigns(
     return TimelineEventCollectionOut(
         source=combined.source,
         payload=payload.model_dump(), #DO NOT exclude events
+        events=combined.events,
+    )
+
+
+@operator(
+    key="bff.timeline.abtests",
+    title="Timeline Events for AB Tests",
+    side_effect="read",
+)
+async def op_timeline_abtests(
+    payload: TimelineQueryPayload,
+    _ctx: TaskContext,
+    db: AsyncSession,
+) -> TimelineEventCollectionOut:
+    persona_id = await _resolve_persona_id_for_account(db, payload.persona_account_id)
+    filters = ABTestFilter(persona_id=persona_id)
+    limit = payload.limit or 200
+
+    rows, _ = await list_abtests(
+        db,
+        filters=filters,
+        owner_user_id=None,
+        limit=limit,
+        offset=0,
+    )
+    abtests = [ABTestOut.model_validate(row) for row in rows]
+
+    events: List[TimelineEvent] = []
+    for abtest in abtests:
+        events.extend(_abtest_events(abtest, payload.persona_account_id))
+
+    filtered = _filter_by_range(events, since=payload.since, until=payload.until)
+    combined = compose_timeline_collections([
+        payload.events,
+        TimelineEventCollection(source="abtests", events=filtered),
+    ])
+
+    return TimelineEventCollectionOut(
+        source=combined.source,
+        payload=payload.model_dump(),
         events=combined.events,
     )
 
@@ -534,9 +618,25 @@ def _flow_bff_trends(builder: FlowBuilder) -> None:
     builder.expect_terminal(trends)
 
 
+@FLOWS.flow(
+    key="bff.timeline.abtests",
+    title="Get AB Test Timeline",
+    description="Get timeline events sourced from AB tests",
+    input_model=TimelineQueryPayload,
+    output_model=TimelineEventCollectionOut,
+    method="get",
+    path="/timeline/abtests",
+    tags=("bff", "timeline", "abtests", "read"),
+)
+def _flow_bff_abtests(builder: FlowBuilder) -> None:
+    abtests = builder.task("abtests", "bff.timeline.abtests")
+    builder.expect_terminal(abtests)
+
+
 __all__ = [
     "op_timeline_post_publications",
     "op_timeline_campaigns",
     "op_timeline_trends",
     "op_timeline_playbooks",
+    "op_timeline_abtests",
 ]

@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/api/bff/abtests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List AB Tests
+         * @description List AB tests for the authenticated user
+         */
+        get: operations["bff_abtests_list_api_bff_abtests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/abtests/{abtest_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read AB Test
+         * @description Get detailed AB test information
+         */
+        get: operations["bff_abtests_read_api_bff_abtests__abtest_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/accounts/platform/{account_id}/is-valid": {
         parameters: {
             query?: never;
@@ -704,6 +744,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/timeline/abtests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get AB Test Timeline
+         * @description Get timeline events sourced from AB tests
+         */
+        get: operations["bff_timeline_abtests_api_bff_timeline_abtests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/trends": {
         parameters: {
             query?: never;
@@ -775,6 +835,50 @@ export interface paths {
          * @description Mark an AB test as ready for completion
          */
         post: operations["abtests_evaluate_ready_api_orchestrator_abtests__abtest_id__evaluate_ready_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/abtests/{abtest_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete AB Test
+         * @description Delete an AB test
+         */
+        delete: operations["abtests_delete_abtest_api_orchestrator_abtests__abtest_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update AB Test
+         * @description Update AB test metadata such as hypothesis or notes
+         */
+        patch: operations["abtests_update_abtest_api_orchestrator_abtests__abtest_id__patch"];
+        trace?: never;
+    };
+    "/api/orchestrator/abtests/{abtest_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete AB Test
+         * @description Manually complete an AB test and record the outcome
+         */
+        post: operations["abtests_complete_abtest_api_orchestrator_abtests__abtest_id__complete_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1559,6 +1663,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ABTestCompleteCommand */
+        ABTestCompleteCommand: {
+            winner_variant: components["schemas"]["ABTestWinnerEnum"];
+            /** Uplift Percentage */
+            uplift_percentage?: number | null;
+            /**
+             * Finished At
+             * Format: date-time
+             */
+            finished_at?: string | null;
+            /**
+             * Insight Note
+             * @description Playbook 로그에 남길 핵심 인사이트 요약
+             */
+            insight_note?: string | null;
+            /** Abtest Id */
+            abtest_id: number;
+        };
         /** ABTestCompleteTemplateParams */
         ABTestCompleteTemplateParams: {
             /** Abtest Id */
@@ -1610,6 +1732,13 @@ export interface components {
             publish_schedule_id: number;
             /** Post Publication Ids */
             post_publication_ids: number[];
+        };
+        /** ABTestListResponse */
+        ABTestListResponse: {
+            /** Items */
+            items: components["schemas"]["ABTestOut"][];
+            /** Total */
+            total: number;
         };
         /** ABTestOut */
         ABTestOut: {
@@ -1721,6 +1850,27 @@ export interface components {
             draft_id: number;
             platform: components["schemas"]["PlatformKind"];
         };
+        /** ABTestUpdateCommand */
+        ABTestUpdateCommand: {
+            /** Variable */
+            variable?: string | null;
+            /** Hypothesis */
+            hypothesis?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at?: string | null;
+            /** Abtest Id */
+            abtest_id: number;
+        };
+        /**
+         * ABTestWinnerEnum
+         * @enum {string}
+         */
+        ABTestWinnerEnum: "A" | "B";
         /**
          * Aggregation
          * @enum {string}
@@ -3894,6 +4044,72 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    bff_abtests_list_api_bff_abtests_get: {
+        parameters: {
+            query?: {
+                persona_id?: number | null;
+                campaign_id?: number | null;
+                active_only?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_abtests_read_api_bff_abtests__abtest_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                abtest_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_accounts_is_valid_platform_account_api_bff_accounts_platform__account_id__is_valid_get: {
         parameters: {
             query?: never;
@@ -5006,6 +5222,44 @@ export interface operations {
             };
         };
     };
+    bff_timeline_abtests_api_bff_timeline_abtests_get: {
+        parameters: {
+            query: {
+                persona_account_id: number;
+                since?: string | null;
+                until?: string | null;
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TimelineEventCollection"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineEventCollectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_trends_list_trends_api_bff_trends_get: {
         parameters: {
             query?: {
@@ -5115,6 +5369,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abtests_delete_abtest_api_orchestrator_abtests__abtest_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                abtest_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abtests_update_abtest_api_orchestrator_abtests__abtest_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                abtest_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ABTestUpdateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abtests_complete_abtest_api_orchestrator_abtests__abtest_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                abtest_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ABTestCompleteCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestOut"];
                 };
             };
             /** @description Validation Error */
