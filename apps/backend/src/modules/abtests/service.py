@@ -36,12 +36,6 @@ from apps.backend.src.modules.scheduler.schemas import (
     ScheduleCompileRequest,
 )
 
-from apps.backend.src.core.logging import setup_logging
-setup_logging()
-import logging
-
-logger = logging.getLogger(__name__)
-
 def _ensure_distinct_variants(payload: ABTestCreate) -> None:
     if payload.variant_a_id == payload.variant_b_id:
         raise ValueError("variant_a_id and variant_b_id must be different")
@@ -198,25 +192,6 @@ async def _latest_sample_for_publication(
     return (await db.execute(stmt)).scalars().first()
 
 
-async def _collect_variant_publications(
-    db: AsyncSession,
-    *,
-    variant_id: int,
-    persona_id: int,
-) -> List[PostPublication]:
-    logger.info(f"Collecting variant publications for variant {variant_id} and persona {persona_id}")
-    stmt = (
-        select(PostPublication)
-        .join(PersonaAccount, PersonaAccount.id == PostPublication.account_persona_id)
-        .where(
-            PostPublication.variant_id == variant_id,
-            PersonaAccount.persona_id == persona_id,
-        )
-        .order_by(PostPublication.created_at.desc(), PostPublication.id.desc())
-    )
-    return (await db.execute(stmt)).scalars().all()
-
-
 async def _collect_variant_insight(
     db: AsyncSession,
     *,
@@ -313,10 +288,16 @@ def _decide_winner(
             continue
 
         if a > b + epsilon:
-            uplift = ((a - b) / b * 100.0) if b > epsilon else None
+            if b > epsilon:
+                uplift = (a - b) / b * 100.0
+            else:
+                uplift = 100.0  # baseline is zero; treat as full improvement
             return "A", metric_key, a, b, uplift
         if b > a + epsilon:
-            uplift = ((b - a) / a * 100.0) if a > epsilon else None
+            if a > epsilon:
+                uplift = (b - a) / a * 100.0
+            else:
+                uplift = 100.0  # baseline is zero; treat as full improvement
             return "B", metric_key, b, a, uplift
 
     return None, None, None, None, None
