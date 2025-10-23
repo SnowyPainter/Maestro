@@ -100,21 +100,6 @@ def _flow_bff_list_playbooks(builder: FlowBuilder) -> None:
     task = builder.task("list_playbooks", "bff.playbook.list_playbooks")
     builder.expect_terminal(task)
 
-@FLOWS.flow(
-    key="bff.playbook.get_playbook",
-    title="Get Playbook",
-    description="Get a playbook by id",
-    input_model=PlaybookGetPayload,
-    output_model=PlaybookGetResponse,
-    method="get",
-    path="/playbooks/{playbook_id}",
-    tags=("bff", "playbooks", "read", "ui"),
-)
-def _flow_bff_get_playbook(builder: FlowBuilder) -> None:
-    task = builder.task("get_playbook", "bff.playbook.get_playbook")
-    builder.expect_terminal(task)
-
-
 __all__ = [
     "PlaybookListPayload",
     "PlaybookListResponse",
