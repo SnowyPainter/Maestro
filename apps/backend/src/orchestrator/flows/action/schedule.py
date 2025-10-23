@@ -155,6 +155,67 @@ def _merge_meta(base: Dict[str, Any], extra: Optional[Dict[str, Any]]) -> Dict[s
     return merged
 
 
+def _get_spec_field(spec: Any, field: str) -> Any:
+    if isinstance(spec, dict):
+        return spec.get(field)
+    return getattr(spec, field, None)
+
+
+def _extract_template_hint(context: Dict[str, Any], dag_spec: Any) -> Optional[str]:
+    template_from_context = context.get("template")
+    if template_from_context:
+        return template_from_context
+    meta = _get_spec_field(dag_spec, "meta")
+    if isinstance(meta, dict):
+        label = meta.get("label")
+        if label:
+            return label
+    return None
+
+
+def _format_schedule_event_name(template_hint: Optional[str], payload_data: Dict[str, Any]) -> str:
+    if template_hint:
+        return f"schedule.created.{template_hint}"
+    if "post_publication_id" in payload_data:
+        return "schedule.created.post_publish"
+    if "abtest_id" in payload_data:
+        return "schedule.created.abtest"
+    if "post_publication_ids" in payload_data:
+        return "schedule.created.abtest.complete"
+    return "schedule.created"
+
+
+def _collect_payload_identifiers(payload_data: Dict[str, Any]) -> Dict[str, Any]:
+    keys = (
+        "persona_id",
+        "persona_account_id",
+        "campaign_id",
+        "draft_id",
+        "variant_id",
+        "post_publication_id",
+        "post_publication_ids",
+        "abtest_id",
+        "publish_schedule_id",
+    )
+    return {key: payload_data[key] for key in keys if key in payload_data and payload_data[key] is not None}
+
+
+def _dag_stats(dag_spec: Any) -> Dict[str, Any]:
+    dag = _get_spec_field(dag_spec, "dag")
+    nodes = []
+    edges = []
+    if isinstance(dag, dict):
+        nodes = dag.get("nodes") or []
+        edges = dag.get("edges") or []
+    elif dag is not None:
+        nodes = getattr(dag, "nodes", []) or []
+        edges = getattr(dag, "edges", []) or []
+    return {
+        "dag_nodes": len(nodes),
+        "dag_edges": len(edges),
+    }
+
+
 def _persist_schedule(
     db: AsyncSession,
     *,
@@ -196,9 +257,15 @@ async def _persist_schedules(
         payload_data = payload
     else:
         payload_data = {}
+    dag_meta = _get_spec_field(dag_spec, "meta")
+    dag_meta = dag_meta if isinstance(dag_meta, dict) else {}
+    dag_stats_info = _dag_stats(dag_spec)
     for due_at, ctx_extra in due_times:
         context = dict(base_context or {})
         context.update(ctx_extra)
+        template_hint = _extract_template_hint(context, dag_spec)
+        event_name = _format_schedule_event_name(template_hint, payload_data)
+        identifiers = _collect_payload_identifiers(payload_data)
         schedule = _persist_schedule(
             db,
             persona_account_id=persona_account_id,
@@ -210,18 +277,24 @@ async def _persist_schedules(
         )
         await db.flush()
         meta_payload = {
-            key: value
-            for key, value in {
-                "template": context.get("template"),
-                "plan_segment": context.get("plan_segment"),
-                "schedule_index": context.get("schedule_index"),
-                "queue": queue,
-            }.items()
-            if value is not None
+            "template": template_hint,
+            "plan_title": context.get("plan_title"),
+            "plan_segment": context.get("plan_segment"),
+            "schedule_index": context.get("schedule_index"),
+            "queue": queue,
+            "due_at_utc": due_at.isoformat(),
+            "plan_local_due": context.get("plan_local_due"),
+            "dag_label": dag_meta.get("label"),
+            **dag_stats_info,
         }
+        if dag_meta:
+            meta_payload.setdefault("dag_meta", dag_meta)
+        if identifiers:
+            meta_payload["identifiers"] = identifiers
+        meta_payload = {key: value for key, value in meta_payload.items() if value is not None}
         await record_playbook_event(
             db,
-            event="schedule.created",
+            event=event_name,
             schedule_id=schedule.id,
             schedule=schedule,
             persona_id=payload_data.get("persona_id"),

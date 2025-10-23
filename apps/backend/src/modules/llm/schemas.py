@@ -28,6 +28,7 @@ class PromptVars(BaseModel):
     persona_brief: Optional[Dict[str, Any]] = None
     campaign_brief: Optional[Dict[str, Any]] = None
     playbook_summary: Optional[Dict[str, Any]] = None
+    recent_publications: Optional[List[Dict[str, Any]]] = None
 
 class PromptMetadata(BaseModel):
     """프롬프트 템플릿의 메타데이터"""
@@ -111,7 +112,7 @@ PROMPT_METADATA_REGISTRY: Dict[PromptKey, PromptMetadata] = {
     PromptKey.COWORKER_CONTEXTUAL_WRITE: PromptMetadata(
         key=PromptKey.COWORKER_CONTEXTUAL_WRITE,
         required_vars={"text"},
-        optional_vars={"persona_brief", "campaign_brief", "playbook_summary", "tone", "goal"},
+        optional_vars={"persona_brief", "campaign_brief", "playbook_summary", "recent_publications", "tone", "goal"},
         output_schema=CoworkerContextualWriteOutput,
         description="컨텍스트(페르소나/캠페인/플레이북)를 반영한 카피 작성"
     ),

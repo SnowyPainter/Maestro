@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import select, create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker, selectinload
 
 from apps.backend.src.core.celery_app import celery_app
 from apps.backend.src.core.context import (
@@ -24,7 +24,8 @@ from apps.backend.src.modules.llm.schemas import LlmInvokeContext, PromptKey, Pr
 from apps.backend.src.modules.llm.service import LLMService
 from apps.backend.src.modules.playbooks.models import Playbook, PlaybookLog
 from apps.backend.src.modules.llm.style_composer import StyleComposer
-from apps.backend.src.modules.common.enums import PlatformKind
+from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS, PlatformKind, PostStatus
+from apps.backend.src.modules.drafts.models import PostPublication, DraftVariant
 
 logger = logging.getLogger(__name__)
 ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
@@ -76,13 +77,20 @@ def _iso(dt) -> Optional[str]:
 def _gather_context(
     persona_account_id: Optional[int],
     campaign_id: Optional[int],
-) -> Tuple[Optional[Persona], Optional[Campaign], Optional[Dict[str, Any]], Optional[PlatformKind]]:
+) -> Tuple[
+    Optional[Persona],
+    Optional[Campaign],
+    Optional[Dict[str, Any]],
+    Optional[PlatformKind],
+    List[Dict[str, Any]],
+]:
     with SessionLocal() as session:
         persona, _ = _load_persona_scope(session, persona_account_id)
         campaign = _load_campaign(session, campaign_id, persona)
         playbook_summary = _load_playbook_summary(session, persona, campaign)
         platform = _load_platform(session, persona_account_id)
-    return persona, campaign, playbook_summary, platform
+        recent_publications = _load_recent_publications(session, persona_account_id)
+    return persona, campaign, playbook_summary, platform, recent_publications
 
 
 def _load_persona_scope(
@@ -172,6 +180,66 @@ def _load_platform(session: Session, persona_account_id: Optional[int]) -> Optio
         return None
     return account.platform
 
+
+def _load_recent_publications(
+    session: Session,
+    persona_account_id: Optional[int],
+    *,
+    limit: int = 3,
+) -> List[Dict[str, Any]]:
+    if persona_account_id is None:
+        return []
+
+    stmt = (
+        select(PostPublication)
+        .where(
+            PostPublication.account_persona_id == persona_account_id,
+            PostPublication.status.in_(list(ALREADY_PUBLISHED_STATUS)),
+            PostPublication.published_at.isnot(None),
+        )
+        .order_by(PostPublication.published_at.desc(), PostPublication.id.desc())
+        .limit(limit)
+        .options(
+            selectinload(PostPublication.variant).selectinload(DraftVariant.draft)
+        )
+    )
+
+    publications = session.execute(stmt).scalars().all()
+
+    results: List[Dict[str, Any]] = []
+    for publication in publications:
+        variant = publication.variant
+        draft = variant.draft if variant is not None else None
+
+        caption = None
+        meta = publication.meta if isinstance(publication.meta, dict) else {}
+        if isinstance(meta, dict):
+            caption = meta.get("rendered_caption") or meta.get("caption")
+        if not caption and variant is not None:
+            caption = variant.rendered_caption
+
+        payload: Dict[str, Any] = {
+            "id": publication.id,
+            "external_id": publication.external_id,
+            "platform": publication.platform.value if publication.platform else None,
+            "caption": caption,
+            "permalink": publication.permalink,
+            "published_at": _iso(publication.published_at),
+            "status": publication.status.value if hasattr(publication.status, "value") else str(publication.status),
+            "variant_id": publication.variant_id,
+            "draft_id": draft.id if draft is not None else None,
+            "draft_title": getattr(draft, "title", None) if draft is not None else None,
+        }
+        keep_if_blank = {"caption", "permalink"}
+        payload = {
+            key: value
+            for key, value in payload.items()
+            if value is not None and (value != "" or key in keep_if_blank)
+        }
+        results.append(payload)
+
+    return results
+
 def _persona_to_brief(persona: Optional[Persona]) -> Optional[Dict[str, Any]]:
     if persona is None:
         return None
@@ -220,6 +288,7 @@ async def _invoke_llm(
     campaign: Optional[Campaign],
     playbook_summary: Optional[Dict[str, Any]],
     platform: Optional[PlatformKind],
+    recent_publications: List[Dict[str, Any]],
 ) -> str:
     persona_brief = _persona_to_brief(persona)
     campaign_brief = _campaign_to_brief(campaign)
@@ -233,6 +302,7 @@ async def _invoke_llm(
         persona_brief=persona_brief,
         campaign_brief=campaign_brief,
         playbook_summary=playbook_summary,
+        recent_publications=recent_publications or None,
     )
     ctx = _build_llm_context(persona_account_id)
     result = await service.ainvoke(
@@ -262,7 +332,7 @@ def generate_contextual_text(self, prompt_text: str) -> str:
     """
     persona_account_id = _parse_int(get_persona_account_id())
     campaign_id = _parse_int(get_campaign_id())
-    persona, campaign, playbook_summary, platform = _gather_context(
+    persona, campaign, playbook_summary, platform, recent_publications = _gather_context(
         persona_account_id,
         campaign_id,
     )
@@ -275,6 +345,7 @@ def generate_contextual_text(self, prompt_text: str) -> str:
             campaign=campaign,
             playbook_summary=playbook_summary,
             platform=platform,
+            recent_publications=recent_publications,
         )
 
     loop = _ensure_loop()

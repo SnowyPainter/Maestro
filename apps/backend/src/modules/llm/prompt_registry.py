@@ -157,9 +157,13 @@ CampaignBrief:
 PlaybookSummary:
 {{ playbook_summary | tojson(indent=2) if playbook_summary else "null" }}
 
+RecentPublications:
+{{ recent_publications | tojson(indent=2) if recent_publications else "[]" }}
+
 Instructions:
 - Write a single piece of copy tailored to the persona and campaign (if provided).
 - Reflect the persona's tone or `tone` field when available; otherwise infer from PersonaBrief.
+- Review RecentPublications to maintain continuity in voice and storyline; call back to them when it strengthens the copy.
 - If PlaybookSummary includes insights or checkpoints, weave them naturally into the copy.
 - Keep it under 200 words, actionable, and ready to publish as-is.
 - Avoid markdown unless the context explicitly requests formatting.
