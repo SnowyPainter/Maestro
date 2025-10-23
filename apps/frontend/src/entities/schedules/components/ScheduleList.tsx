@@ -6,15 +6,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useActionScheduleCancelSchedulesApiOrchestratorActionsSchedulesCancelPost, ScheduleListItem, ScheduleStatus } from "@/lib/api/generated";
 import { Badge } from "@/components/ui/badge";
-import { 
-    Clock, CheckCircle2, CalendarDays, UserCircle, AlertTriangle, 
-    ChevronDown, Copy, RefreshCw, XCircle, AlertCircle, HelpCircle, Ban, CircleDashed
+import {
+    Clock, CheckCircle2, CalendarDays, UserCircle, AlertTriangle,
+    ChevronDown, RefreshCw, XCircle, AlertCircle, HelpCircle, Ban, CircleDashed
 } from "lucide-react";
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast, isFuture, isThisWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ScheduleItemDetails } from "./ScheduleItemDetails";
 
 const parseUtcDate = (dateString: string | null | undefined): Date | null => {
     if (!dateString) return null;
@@ -24,18 +24,6 @@ const parseUtcDate = (dateString: string | null | undefined): Date | null => {
     return new Date(dateString + 'Z');
 };
 
-const JsonViewer = ({ data, title }: { data: any; title: string }) => (
-    <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="item-1">
-            <AccordionTrigger className="text-xs font-semibold">{title}</AccordionTrigger>
-            <AccordionContent>
-                <pre className="text-xs bg-muted/50 p-2 rounded-md overflow-auto">
-                    {JSON.stringify(data, null, 2)}
-                </pre>
-            </AccordionContent>
-        </AccordionItem>
-    </Accordion>
-);
 
 const StatusDisplay = ({ status, dueDate }: { status: ScheduleStatus, dueDate: Date | null }) => {
     const isOverdue = dueDate && isPast(dueDate) && status === 'pending';
@@ -62,57 +50,6 @@ const StatusDisplay = ({ status, dueDate }: { status: ScheduleStatus, dueDate: D
         </div>
     );
 };
-
-function ScheduleItemDetails({ item }: { item: ScheduleListItem }) {
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast.success("Copied to clipboard");
-    };
-
-    return (
-        <div className="p-3 bg-muted/30 border-t">
-            <div className="grid grid-cols-1 gap-x-6 gap-y-3 text-xs">
-                <div className="space-y-2">
-                    <h5 className="font-semibold text-xs uppercase text-muted-foreground">Details</h5>
-                    {item.last_error && (
-                        <div className="p-2 bg-red-500/10 text-red-700 rounded-md">
-                            <p className="font-bold flex items-center gap-2"><AlertCircle className="h-4 w-4" />Last Error</p>
-                            <p className="font-mono text-xs mt-1">{item.last_error}</p>
-                        </div>
-                    )}
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Attempts:</span>
-                        <span className="font-mono">{item.attempts || 0} / {item.max_attempts ?? '∞'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Idempotency Key:</span>
-                        {item.idempotency_key ? (
-                            <div className="flex items-center gap-1">
-                                <span className="font-mono text-gray-500 truncate max-w-[120px]">{item.idempotency_key}</span>
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(item.idempotency_key!)}>
-                                    <Copy className="h-3.5 w-3.5" />
-                                </Button>
-                            </div>
-                        ) : <span className="text-muted-foreground">N/A</span>}
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Created:</span>
-                        <span className="font-mono">{item.created_at ? format(parseUtcDate(item.created_at)!, 'Pp') : 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Updated:</span>
-                        <span className="font-mono">{item.updated_at ? format(parseUtcDate(item.updated_at)!, 'Pp') : 'N/A'}</span>
-                    </div>
-                </div>
-            </div>
-            <div className="mt-3">
-                {item.dag_spec && <JsonViewer data={item.dag_spec} title="DAG Spec" />}
-                {item.payload && <JsonViewer data={item.payload} title="Payload" />}
-                {item.context && <JsonViewer data={item.context} title="Context" />}
-            </div>
-        </div>
-    );
-}
 
 
 function ScheduleItem({ item, onSelect, isSelected }: { item: ScheduleListItem, onSelect: (id: number) => void, isSelected: boolean }) {

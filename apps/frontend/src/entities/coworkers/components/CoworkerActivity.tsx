@@ -1,18 +1,32 @@
 import { useMemo, useState, useCallback } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { formatDistanceToNow, isPast, isToday, isFuture } from 'date-fns';
+import {
+    format,
+    formatDistanceToNow,
+    isPast,
+    isToday,
+    isFuture,
+    startOfDay,
+    addDays,
+    subDays,
+    eachDayOfInterval,
+    isSameDay,
+    startOfWeek,
+    endOfWeek
+} from 'date-fns';
 import { 
     getBffScheduleListSchedulesApiBffSchedulesGetQueryOptions,
     ScheduleListItem,
     ScheduleStatus
 } from "@/lib/api/generated";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Clock, CheckCircle2, AlertTriangle, AlertCircle, HelpCircle, Ban, CircleDashed, RefreshCw, Info } from "lucide-react";
+import { Clock, CheckCircle2, AlertTriangle, AlertCircle, HelpCircle, Ban, CircleDashed, RefreshCw, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScheduleMetaDetails } from "./ScheduleMetaDetails";
 
 const parseUtcDate = (dateString: string | null | undefined): Date | null => {
     if (!dateString) return null;
@@ -41,284 +55,357 @@ const StatusDisplay = ({ status, dueDate }: { status: ScheduleStatus, dueDate: D
     );
 };
 
-const KeyValueRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="flex justify-between items-start text-sm py-1.5 border-b border-border/50">
-        <dt className="text-muted-foreground font-medium shrink-0 pr-4">{label}</dt>
-        <dd className="text-right text-foreground break-words">{value}</dd>
+// GitHub activity 스타일의 날짜별 스케줄 빈도 표시
+const ActivityDay = ({
+    date,
+    count,
+    isToday,
+    onClick
+}: {
+    date: Date;
+    count: number;
+    isToday: boolean;
+    onClick: () => void;
+}) => {
+
+    const getIntensityColor = (count: number) => {
+        if (count === 0) return 'bg-gray-200';
+        if (count <= 2) return 'bg-green-300';
+        if (count <= 5) return 'bg-green-400';
+        if (count <= 10) return 'bg-green-500';
+        return 'bg-green-600';
+    };
+
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <button
+                        className={cn(
+                            "w-full h-full rounded-sm border border-gray-300 transition-colors hover:ring-2 hover:ring-green-300 hover:ring-offset-1",
+                            getIntensityColor(count),
+                            isToday && "ring-2 ring-blue-400 ring-offset-1"
+                        )}
+                        onClick={onClick}
+                        aria-label={`${format(date, 'MMM d, yyyy')}: ${count} schedules`}
+                    />
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p className="text-xs">
+                        <strong>{format(date, 'MMM d, yyyy')}</strong><br />
+                        {count === 0 ? 'No schedules' : `${count} schedule${count === 1 ? '' : 's'}`}
+                    </p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+};
+
+// 날짜별 스케줄 목록 표시
+const DayScheduleList = ({
+    date,
+    schedules,
+    onScheduleClick
+}: {
+    date: Date;
+    schedules: ScheduleListItem[];
+    onScheduleClick: (schedule: ScheduleListItem) => void;
+}) => (
+    <div className="space-y-2">
+        <h4 className="font-semibold text-sm">
+            {format(date, 'MMM d, yyyy')}
+        </h4>
+        <ScrollArea className="max-h-60">
+            <div className="space-y-2">
+                {schedules.map(schedule => (
+                    <div
+                        key={schedule.id}
+                        className="flex items-center gap-3 p-2 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => onScheduleClick(schedule)}
+                    >
+                        <StatusDisplay status={schedule.status as ScheduleStatus} dueDate={parseUtcDate(schedule.due_at)} />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                                {schedule.meta?.label || `Schedule #${schedule.id}`}
+                            </p>
+                            {schedule.status === 'failed' && schedule.last_error && (
+                                <p className="text-xs text-red-600 truncate">
+                                    Error: {schedule.last_error}
+                                </p>
+                            )}
+                        </div>
+                        <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </div>
+                ))}
+            </div>
+        </ScrollArea>
     </div>
 );
 
-const ScheduleMetaDetails = ({ meta, schedule }: { meta: any, schedule: ScheduleListItem }) => {
-    if (!meta) return <p className="text-sm text-muted-foreground">No metadata available.</p>;
+// GitHub activity 스타일의 메인 컴포넌트
+const ActivityGrid = ({
+    schedules,
+    onDayClick,
+    onScheduleClick
+}: {
+    schedules: ScheduleListItem[];
+    onDayClick: (date: Date) => void;
+    onScheduleClick: (schedule: ScheduleListItem) => void;
+}) => {
+    const today = new Date();
+    const WEEKS_PER_VIEW = 12; // 한 번에 12주씩 표시
+    const WEEKS_TO_JUMP = 6; // 6주씩 점프
 
-    const { label, dag_meta, context, payload } = meta;
-    const { status, due_at, created_at, updated_at, last_error } = schedule;
-    const dagResults = context?._dag?.results;
+    // 오늘을 가운데로 하는 초기 offset 계산
+    const initialOffset = useMemo(() => {
+        const todayWeekIndex = Math.floor((today.getTime() - subDays(today, 180).getTime()) / (7 * 24 * 60 * 60 * 1000));
+        return Math.max(0, Math.min(52 - WEEKS_PER_VIEW, todayWeekIndex - Math.floor(WEEKS_PER_VIEW / 2)));
+    }, []);
+
+    const [currentWeekOffset, setCurrentWeekOffset] = useState(initialOffset);
+
+    // 오늘 기준 ±6개월로 전체 52주 그리드 생성
+    const { weeks, schedulesByDate } = useMemo(() => {
+        const map = new Map<string, ScheduleListItem[]>();
+
+        schedules.forEach(schedule => {
+            const dueDate = parseUtcDate(schedule.due_at);
+            if (dueDate) {
+                const dateKey = format(startOfDay(dueDate), 'yyyy-MM-dd');
+                if (!map.has(dateKey)) {
+                    map.set(dateKey, []);
+                }
+                map.get(dateKey)!.push(schedule);
+            }
+        });
+
+        // 전체 범위: 오늘 기준 ±6개월 (52주)
+        const result = [];
+        const startWeek = startOfWeek(subDays(today, 180), { weekStartsOn: 1 }); // 6개월 전부터
+
+        for (let week = 0; week < 52; week++) {
+            const weekStart = addDays(startWeek, week * 7);
+            const weekDays = [];
+
+            for (let day = 0; day < 7; day++) {
+                const date = addDays(weekStart, day);
+                const dateKey = format(date, 'yyyy-MM-dd');
+                const daySchedules = map.get(dateKey) || [];
+                const isToday = isSameDay(date, today);
+
+                weekDays.push({
+                    date,
+                    count: daySchedules.length,
+                    isToday,
+                    schedules: daySchedules
+                });
+            }
+
+            result.push(weekDays);
+        }
+
+        return {
+            weeks: result,
+            schedulesByDate: map
+        };
+    }, [schedules, today]);
+
+    // 현재 표시할 주 범위
+    const visibleWeeks = weeks.slice(currentWeekOffset, currentWeekOffset + WEEKS_PER_VIEW);
+
+    const handlePrev = () => {
+        setCurrentWeekOffset(Math.max(0, currentWeekOffset - WEEKS_TO_JUMP));
+    };
+
+    const handleNext = () => {
+        setCurrentWeekOffset(Math.min(52 - WEEKS_PER_VIEW, currentWeekOffset + WEEKS_TO_JUMP));
+    };
+
+    const canGoPrev = currentWeekOffset > 0;
+    const canGoNext = currentWeekOffset < 52 - WEEKS_PER_VIEW;
 
     return (
-        <div className="space-y-6">
-            {/* Summary */}
-            <div>
-                <h4 className="font-semibold mb-2 text-foreground">Summary</h4>
-                <dl className="space-y-1">
-                    {label && <KeyValueRow label="Type" value={<Badge variant="outline">{label}</Badge>} />}
-                    {dag_meta?.title && <KeyValueRow label="Title" value={dag_meta.title} />}
-                    {dag_meta?.scheduled_for && <KeyValueRow label="Scheduled For" value={new Date(dag_meta.scheduled_for).toLocaleString()} />}
-                </dl>
+        <div className="space-y-4 w-full relative">
+            {/* Navigation */}
+            <div className="flex items-center justify-between mb-4">
+                <button
+                    onClick={handlePrev}
+                    disabled={!canGoPrev}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                </button>
+
+                <div className="text-sm text-muted-foreground">
+                    {format(visibleWeeks[0]?.[0]?.date || today, 'MMM d')} - {format(visibleWeeks[visibleWeeks.length - 1]?.[6]?.date || today, 'MMM d, yyyy')}
+                </div>
+
+                <button
+                    onClick={handleNext}
+                    disabled={!canGoNext}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                </button>
             </div>
 
-            {/* Last Error */}
-            {last_error && (
-                <div>
-                    <h4 className="font-semibold mb-2 text-foreground">Last Error</h4>
-                    <p className="text-sm text-muted-foreground">{last_error}</p>
-                </div>
-            )}
 
-            {/* Payload */}
-            {payload && (
-                <div>
-                    <h4 className="font-semibold mb-2 text-foreground">Parameters</h4>
-                    <dl className="space-y-1">
-                        {Object.entries(payload).map(([key, value]) => (
-                            <KeyValueRow key={key} label={key} value={String(value)} />
-                        ))}
-                    </dl>
+            {/* 요일 표시 + 그리드 */}
+            <div className="flex gap-0.5">
+                {/* 요일 표시 */}
+                <div className="flex flex-col text-xs text-muted-foreground flex-shrink-0" style={{ width: '2.5rem' }}>
+                    {['Mon', '', 'Wed', '', 'Fri', '', 'Sun'].map((day, index) => (
+                        <div key={index} className="flex-1 flex items-center justify-center">
+                            {day}
+                        </div>
+                    ))}
                 </div>
-            )}
 
-            {/* Context */}
-            {context && (
-                <div>
-                    <h4 className="font-semibold mb-2 text-foreground">Context</h4>
-                    <dl className="space-y-1">
-                        {Object.entries(context).map(([key, value]) => (
-                            <KeyValueRow key={key} label={key} value={String(value)} />
-                        ))}
-                    </dl>
+                {/* 그리드 */}
+                <div className="flex gap-0.5 flex-1">
+                    {visibleWeeks.map((week, weekIndex) => (
+                        <div key={`week-${currentWeekOffset + weekIndex}`} className="flex flex-col gap-0.5 flex-1">
+                            {week.map((day, dayIndex) => (
+                                <div key={`day-container-${currentWeekOffset + weekIndex}-${dayIndex}`} className="flex-1">
+                                    <ActivityDay
+                                        date={day.date}
+                                        count={day.count}
+                                        isToday={day.isToday}
+                                        onClick={() => onDayClick(day.date)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ))}
                 </div>
-            )}
+            </div>
 
-            {/* DAG Status */}
-            {context?._dag && (
-                 <div>
-                    <h4 className="font-semibold mb-2 text-foreground">Automation Status</h4>
-                    <dl className="space-y-1">
-                        {context._dag.waiting_node && <KeyValueRow label="Current Step" value={<Badge variant="secondary">{context._dag.waiting_node}</Badge>} />}
-                        {context._dag.resume_next && <KeyValueRow label="Next Step(s)" value={context._dag.resume_next.join(', ')} />}
-                    </dl>
+            {/* 범례 */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>Less</span>
+                <div className="flex gap-1">
+                    {[0, 1, 3, 6].map(count => (
+                        <div
+                            key={count}
+                            className={cn(
+                                "w-6 h-6 rounded-sm border-2 border-gray-300",
+                                count === 0 ? 'bg-gray-200' :
+                                count <= 2 ? 'bg-green-300' :
+                                count <= 5 ? 'bg-green-400' : 'bg-green-500'
+                            )}
+                        />
+                    ))}
                 </div>
-            )}
-
-            {/* Results */}
-            {dagResults && Object.keys(dagResults).length > 0 && (
-                 <div>
-                    <h4 className="font-semibold mb-2 text-foreground">Step Results</h4>
-                    <Accordion type="single" collapsible className="w-full rounded-md border">
-                        {Object.entries(dagResults).map(([key, value]) => (
-                            Object.keys(value as object).length > 0 && (
-                                <AccordionItem value={key} key={key}>
-                                    <AccordionTrigger className="px-3 text-sm">{key}</AccordionTrigger>
-                                    <AccordionContent className="px-3 pb-3">
-                                        <pre className="text-xs bg-muted rounded-md p-2.5 overflow-x-auto">
-                                            {JSON.stringify(value, null, 2)}
-                                        </pre>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            )
-                        ))}
-                    </Accordion>
-                </div>
-            )}
-
-            {/* Raw JSON Fallback */}
-            <div className="pt-4">
-                 <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="raw">
-                        <AccordionTrigger className="text-sm text-muted-foreground">View Raw Metadata</AccordionTrigger>
-                        <AccordionContent>
-                            <pre className="text-xs bg-muted rounded-md p-2.5 overflow-x-auto">
-                                {JSON.stringify(meta, null, 2)}
-                            </pre>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
+                <span>More</span>
             </div>
         </div>
     );
-}
-
-const WorklogItem = ({ item, onShowDetails }: { item: ScheduleListItem, onShowDetails: () => void }) => {
-    const updatedAt = parseUtcDate(item.updated_at);
-    const hasMeta = item.meta && Object.keys(item.meta).length > 0;
-    const scheduledAt = parseUtcDate(item.due_at);
-    return (
-        <div className="flex items-start gap-3 py-2.5 px-2 hover:bg-muted/50 rounded-lg cursor-pointer" onClick={hasMeta ? onShowDetails : undefined}>
-            <div className="w-24 flex-shrink-0 pt-0.5">
-                <StatusDisplay status={item.status as ScheduleStatus} dueDate={parseUtcDate(item.due_at)} />
-            </div>
-            <div className="flex-1 grid gap-0.5 overflow-hidden">
-                <p className="font-medium text-sm leading-tight text-foreground truncate">{item.meta?.label || `Schedule #${item.id}`}</p>
-                {item.status === 'failed' && item.last_error && (
-                    <p className="text-xs text-red-600 truncate" title={item.last_error}>Error: {item.last_error}</p>
-                )}
-            </div>
-            <div className="flex items-center gap-2 text-right pt-0.5 shrink-0">
-                {hasMeta && (
-                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                )}
-                {(() => {
-                    const isPendingExecution = item.status === 'pending' || item.status === 'enqueued';
-                    const referenceDate = isPendingExecution ? scheduledAt : updatedAt;
-
-                    if (referenceDate) {
-                        return (
-                            <p className="text-xs text-muted-foreground whitespace-nowrap">
-                                {formatDistanceToNow(referenceDate, { addSuffix: true })}
-                            </p>
-                        );
-                    }
-                    return null;
-                })()}
-            </div>
-        </div>
-    )
-}
+};
 
 export const CoworkerActivity = ({ personaAccountIds }: { personaAccountIds: number[] }) => {
-    const [detailedItem, setDetailedItem] = useState<ScheduleListItem | null>(null);
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [selectedSchedule, setSelectedSchedule] = useState<ScheduleListItem | null>(null);
+
     const scheduleQueries = useQueries({
         queries: (personaAccountIds || []).map(id => ({
-            ...getBffScheduleListSchedulesApiBffSchedulesGetQueryOptions({ persona_account_id: id, limit: 50 }),
+            ...getBffScheduleListSchedulesApiBffSchedulesGetQueryOptions({ persona_account_id: id, limit: 200 }),
             refetchInterval: 30000, // 30초마다 자동으로 refetch
         })),
     });
 
     const isLoading = scheduleQueries.some(q => q.isLoading);
+    const allSchedules = scheduleQueries.flatMap(q => q.data?.items || []);
 
-    const { running, today, upcoming, past } = useMemo(() => {
-        if (isLoading) return { running: [], today: [], upcoming: [], past: [] };
-
-        const allSchedules = scheduleQueries.flatMap(q => q.data?.items || []);
-        
-        const running: ScheduleListItem[] = [];
-        const today: ScheduleListItem[] = [];
-        const upcoming: ScheduleListItem[] = [];
-        const past: ScheduleListItem[] = [];
-
-        allSchedules.forEach(item => {
-            if (item.status === 'running') {
-                running.push(item);
-            } else if (item.status === 'done' || item.status === 'failed' || item.status === 'cancelled') {
-                past.push(item);
-            } else if (item.status === 'pending' || item.status === 'enqueued') {
-                const dueDate = parseUtcDate(item.due_at);
-                if (dueDate) {
-                    if (isToday(dueDate) || isPast(dueDate)) {
-                        today.push(item); // Overdue items are shown in Today
-                    } else if (isFuture(dueDate)) {
-                        upcoming.push(item);
-                    }
-                } else {
-                    upcoming.push(item); // No due date, considered upcoming
-                }
-            }
-        });
-
-        const sortByDate = (a: ScheduleListItem, b: ScheduleListItem) => (parseUtcDate(a.due_at)?.getTime() || 0) - (parseUtcDate(b.due_at)?.getTime() || 0);
-        const sortByUpdateDateDesc = (a: ScheduleListItem, b: ScheduleListItem) => (parseUtcDate(b.updated_at)?.getTime() || 0) - (parseUtcDate(a.updated_at)?.getTime() || 0);
-
-        return {
-            running: running.sort(sortByDate),
-            today: today.sort(sortByDate),
-            upcoming: upcoming.sort(sortByDate),
-            past: past.sort(sortByUpdateDateDesc).slice(0, 20) // Limit past items to 20
-        };
-    }, [scheduleQueries, isLoading]);
-
-    const handleShowDetails = useCallback((item: ScheduleListItem) => {
-        setDetailedItem(item);
+    const handleDayClick = useCallback((date: Date) => {
+        setSelectedDate(date);
+        setSelectedSchedule(null);
     }, []);
 
-    const renderList = (items: ScheduleListItem[]) => (
-        <ScrollArea className="h-72">
-            <div className="flow-root pr-4">
-                <ul className="-my-1 divide-y divide-border">
-                    {items.map(item => (
-                        <li key={item.id}>
-                            <WorklogItem item={item} onShowDetails={() => handleShowDetails(item)} />
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </ScrollArea>
-    );
+    const handleScheduleClick = useCallback((schedule: ScheduleListItem) => {
+        setSelectedSchedule(schedule);
+    }, []);
 
-    const renderContent = () => {
-        if (isLoading && personaAccountIds.length > 0) {
-            return <div className="space-y-2 px-4 py-2"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-full" /></div>;
-        }
+    // 선택된 날짜의 스케줄들 필터링
+    const selectedDateSchedules = useMemo(() => {
+        if (!selectedDate) return [];
 
-        const allEmpty = [running, today, upcoming, past].every(arr => arr.length === 0);
-        if (allEmpty) {
-            return <p className="text-xs text-muted-foreground text-center py-4">No activity found for monitored accounts.</p>;
-        }
+        return allSchedules.filter(schedule => {
+            const dueDate = parseUtcDate(schedule.due_at);
+            return dueDate && isSameDay(dueDate, selectedDate);
+        });
+    }, [selectedDate, allSchedules]);
 
-        const defaultOpen = ['running', 'today'].filter(key => 
-            (key === 'running' && running.length > 0) || (key === 'today' && today.length > 0)
-        );
-
+    if (isLoading && personaAccountIds.length > 0) {
         return (
-            <Accordion type="multiple" defaultValue={defaultOpen} className="w-full">
-                {running.length > 0 && (
-                    <AccordionItem value="running">
-                        <AccordionTrigger className="px-4 text-sm font-semibold">In Progress <Badge variant="secondary" className="ml-2">{running.length}</Badge></AccordionTrigger>
-                        <AccordionContent className="px-2 pb-2">{renderList(running)}</AccordionContent>
-                    </AccordionItem>
-                )}
-                {today.length > 0 && (
-                    <AccordionItem value="today">
-                        <AccordionTrigger className="px-4 text-sm font-semibold">Today <Badge variant="secondary" className="ml-2">{today.length}</Badge></AccordionTrigger>
-                        <AccordionContent className="px-2 pb-2">{renderList(today)}</AccordionContent>
-                    </AccordionItem>
-                )}
-                {upcoming.length > 0 && (
-                    <AccordionItem value="upcoming">
-                        <AccordionTrigger className="px-4 text-sm font-semibold">Upcoming <Badge variant="outline" className="ml-2">{upcoming.length}</Badge></AccordionTrigger>
-                        <AccordionContent className="px-2 pb-2">{renderList(upcoming)}</AccordionContent>
-                    </AccordionItem>
-                )}
-                {past.length > 0 && (
-                    <AccordionItem value="past">
-                        <AccordionTrigger className="px-4 text-sm font-semibold">Completed <Badge variant="outline" className="ml-2">{past.length}</Badge></AccordionTrigger>
-                        <AccordionContent className="px-2 pb-2">{renderList(past)}</AccordionContent>
-                    </AccordionItem>
-                )}
-            </Accordion>
+            <div className="py-2">
+                <h4 className="text-sm font-semibold text-muted-foreground mb-4 px-4">Co-Worker Activity</h4>
+                <div className="px-4">
+                    <Skeleton className="h-32 w-full" />
+                </div>
+            </div>
+        );
+    }
+
+    if (allSchedules.length === 0) {
+        return (
+            <div className="py-2">
+                <h4 className="text-sm font-semibold text-muted-foreground mb-2 px-4">Co-Worker Activity</h4>
+                <p className="text-xs text-muted-foreground text-center py-4">No activity found for monitored accounts.</p>
+            </div>
         );
     }
 
     return (
         <div className="py-2">
-            <h4 className="text-sm font-semibold text-muted-foreground mb-2 px-4">Co-Worker Activity</h4>
-            
-            {renderContent()}
+            <h4 className="text-sm font-semibold text-muted-foreground mb-4 px-4">Co-Worker Activity</h4>
 
-            <Dialog open={!!detailedItem} onOpenChange={(isOpen) => !isOpen && setDetailedItem(null)}>
+            <div className="px-4">
+                <ActivityGrid
+                    schedules={allSchedules}
+                    onDayClick={handleDayClick}
+                    onScheduleClick={handleScheduleClick}
+                />
+            </div>
+
+            {/* 날짜별 스케줄 목록 다이얼로그 */}
+            <Dialog open={!!selectedDate && !selectedSchedule} onOpenChange={(isOpen) => !isOpen && setSelectedDate(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg">
+                            {selectedDate && format(selectedDate, 'MMM d, yyyy')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {selectedDateSchedules.length} schedule{selectedDateSchedules.length === 1 ? '' : 's'} on this date
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedDate && (
+                        <DayScheduleList
+                            date={selectedDate}
+                            schedules={selectedDateSchedules}
+                            onScheduleClick={handleScheduleClick}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* 스케줄 상세 다이얼로그 */}
+            <Dialog open={!!selectedSchedule} onOpenChange={(isOpen) => !isOpen && setSelectedSchedule(null)}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Schedule Details</DialogTitle>
                         <DialogDescription>
-                            Detailed information for schedule #{detailedItem?.id}.
+                            Detailed information for schedule #{selectedSchedule?.id}.
                         </DialogDescription>
                     </DialogHeader>
-                    {detailedItem && (
+                    {selectedSchedule && (
                         <div className="py-4 max-h-[70vh] overflow-y-auto pr-4">
-                           <ScheduleMetaDetails meta={detailedItem.meta} schedule={detailedItem} />
+                           <ScheduleMetaDetails meta={selectedSchedule.meta} schedule={selectedSchedule} />
                         </div>
                     )}
                 </DialogContent>
             </Dialog>
         </div>
-    )
-}
+    );
+};
