@@ -57,7 +57,7 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
       onSuccess?.();
       form.reset();
     } catch (error: any) {
-      toast.error(error?.message || "Failed to schedule A/B Test");
+      toast.error(error?.data.detail || "Failed to schedule A/B Test");
     }
   };
 
@@ -88,7 +88,8 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
                   size="sm"
                   onClick={() => {
                     const now = new Date();
-                    const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                    const oneMinuteLater = new Date(now.getTime() + 60 * 1000); // Add 1 minute
+                    const localDateTime = new Date(oneMinuteLater.getTime() - oneMinuteLater.getTimezoneOffset() * 60000)
                       .toISOString()
                       .slice(0, 16);
                     form.setValue("runAt", localDateTime);

@@ -207,6 +207,7 @@ async def record_playbook_event(
     post_publication_id: Optional[int] = None,
     schedule_id: Optional[int] = None,
     ref_id: Optional[int] = None,
+    abtest_id: Optional[int] = None,
     schedule: Optional[Schedule] = None,
     message: Optional[str] = None,
     meta: Optional[dict] = None,
@@ -232,6 +233,7 @@ async def record_playbook_event(
     post_publication_id = _as_int(post_publication_id)
     schedule_id = _as_int(schedule_id)
     ref_id = _as_int(ref_id)
+    abtest_id = _as_int(abtest_id)
 
     schedule_obj = schedule
     if schedule_obj is None and schedule_id is not None:
@@ -296,6 +298,7 @@ async def record_playbook_event(
         timestamp=timestamp,
         draft_id=draft_id,
         schedule_id=schedule_id,
+        abtest_id=abtest_id,
         ref_id=ref_id,
         persona_snapshot=persona_snapshot,
         trend_snapshot=trend_snapshot,
