@@ -40,6 +40,7 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
     },
   });
 
+  const runAtValue = form.watch("runAt");
   const scheduleMutation = useAbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost();
 
   const onSubmit = async (data: any) => {
@@ -73,13 +74,29 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
           render={({ field }) => (
             <FormItem>
               <FormLabel>Publication Time</FormLabel>
-              <FormControl>
-                <Input
-                  type="datetime-local"
-                  {...field}
-                  placeholder="Select publication time"
-                />
-              </FormControl>
+              <div className="flex gap-2">
+                <FormControl className="flex-1">
+                  <Input
+                    type="datetime-local"
+                    {...field}
+                    placeholder="Select publication time"
+                  />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const now = new Date();
+                    const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                      .toISOString()
+                      .slice(0, 16);
+                    form.setValue("runAt", localDateTime);
+                  }}
+                >
+                  Right now
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -90,13 +107,32 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
           render={({ field }) => (
             <FormItem>
               <FormLabel>Completion Time (Optional)</FormLabel>
-              <FormControl>
-                <Input
-                  type="datetime-local"
-                  {...field}
-                  placeholder="Select completion time"
-                />
-              </FormControl>
+              <div className="flex gap-2">
+                <FormControl className="flex-1">
+                  <Input
+                    type="datetime-local"
+                    {...field}
+                    placeholder="Select completion time"
+                  />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!runAtValue}
+                  onClick={() => {
+                    if (!runAtValue) return;
+                    const runAt = new Date(runAtValue);
+                    const completeAt = new Date(runAt.getTime() + 24 * 60 * 60 * 1000); // Add 1 day
+                    const localDateTime = new Date(completeAt.getTime() - completeAt.getTimezoneOffset() * 60000)
+                      .toISOString()
+                      .slice(0, 16);
+                    form.setValue("completeAt", localDateTime);
+                  }}
+                >
+                  +1d
+                </Button>
+              </div>
               <FormMessage />
               <p className="text-sm text-muted-foreground">
                 Leave empty to manually complete the test later
