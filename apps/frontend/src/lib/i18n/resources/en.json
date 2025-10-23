@@ -454,5 +454,107 @@
   "chat": {
     "error_message": "Sorry, an error occurred while processing the chat."
   },
-  "app_name": "Maestro"
+  "app_name": "Maestro",
+  "landing_v2": {
+    "hero": {
+      "title": "Publish through Maestro. Replicating your judgment.",
+      "subtitle": "A single judgment becomes the brand's memory, and that memory makes the next decision.",
+      "cta": "Start Brand Intelligence",
+      "cta_subtitle": "Try Maestro Beta — Free for Early Users"
+    },
+    "problem": {
+      "title": "Are you re-judging, re-writing, and re-editing every time?",
+      "body_1": "There are many marketing automation tools, but none of them \"remember you.\"",
+      "body_2": "They forget today's tone tomorrow, and fail to apply yesterday's performance to this campaign.",
+      "body_3": "Maestro records and reproduces your judgment. Without losing the brand's rhythm."
+    },
+    "what_is_maestro": {
+      "title": "The Intelligent Orchestra that Conducts Your Brand",
+      "body_1": "Maestro is not just an automation tool. It is an engine that connects your judgment and actions into a single system.",
+      "body_2": "Every publication, revision, and analysis operates under a single command, and the result of each becomes the basis for the next action.",
+      "flow": "Persona → Playbook → Orchestrator → CoWorker"
+    },
+    "core_components": {
+      "title": "Four engines conduct your judgment.",
+      "subtitle": "Humans judge, and the system repeats that judgment.",
+      "persona": {
+        "title": "Persona",
+        "description": "The ego that remembers the brand's voice, tone, and forbidden words.",
+        "keywords": "Voice, Tone, Identity"
+      },
+      "playbook": {
+        "title": "Playbook",
+        "description": "The memory that learns from actions and results, leaving them as insights.",
+        "keywords": "Learning, Memory, Feedback"
+      },
+      "orchestrator": {
+        "title": "Orchestrator",
+        "description": "The conductor that executes all actions deterministically.",
+        "keywords": "Control, Trace, Determinism"
+      },
+      "coworker": {
+        "title": "CoWorker",
+        "description": "The colleague who continues the routine even in your absence.",
+        "keywords": "Automation, Continuity, Presence"
+      }
+    },
+    "experience": {
+      "title": "\"Ctrl + K\" Wherever you type, Maestro is with you at that moment.",
+      "item_1": "With a single key, you can recall the current persona, past records, and trend data.",
+      "item_2": "It suggests a draft while remembering your tone and rhythm.",
+      "item_3": "When a trend is detected, CoWorker automatically suggests a draft.",
+      "item_4": "With your single approval, it is published perfectly tailored for all platforms.",
+      "quote": "\"Maestro doesn't write for me, it plays my rhythm for me.\""
+    },
+    "how_it_works": {
+      "title": "A single action becomes a routine.",
+      "subtitle": "This loop constantly replicates and refines your judgment.",
+      "steps": {
+        "1": {
+          "title": "1. Detect",
+          "description": "The Sniffer detects market signals."
+        },
+        "2": {
+          "title": "2. Generate",
+          "description": "Persona and Playbook construct the guidelines."
+        },
+        "3": {
+          "title": "3. Execute",
+          "description": "The Orchestrator determines the action."
+        },
+        "4": {
+          "title": "4. Learn",
+          "description": "The CoWorker records the results."
+        }
+      }
+    },
+    "insight": {
+      "title": "Judgment is verified by data, and data returns to judgment.",
+      "body": "A/B testing, automatic KPI aggregation, comment reaction collection — all results are recorded in the Playbook to evolve the brand's judgment algorithm.",
+      "image_caption": "Playbook Dashboard Screenshot + \"Engagement ↑104% with warm tone\""
+    },
+    "philosophy": {
+      "title": "Automation that remembers.",
+      "body_1": "Maestro does not replace human judgment. Instead, it ensures that judgment is not repeated from scratch every time.",
+      "body_2": "Technology remembers your rhythm, and the brand grows on that memory.",
+      "body_3": "This is not automation, but the ethics of replication."
+    },
+    "testimonials": {
+      "title": "What Our Users Say",
+      "quote_1": "\"This isn't AI, it's a system that remembers for me.\"",
+      "author_1": "Creator @snowypainter",
+      "quote_2": "\"My brand started speaking before I did.\"",
+      "author_2": "Marketing Director A"
+    },
+    "cta": {
+      "title": "Replicate your judgment.",
+      "subtitle": "Today's action becomes tomorrow's intelligence. Start building your brand's memory with Maestro.",
+      "button_start": "Start Now",
+      "button_demo": "View Demo",
+      "button_figma": "Download Figma Flow"
+    },
+    "footer": {
+      "text": "MAESTRO. Automation that remembers."
+    }
+  }
 }

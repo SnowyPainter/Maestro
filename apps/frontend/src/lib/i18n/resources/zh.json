@@ -454,5 +454,107 @@
   "chat": {
     "error_message": "抱歉，处理聊天时发生错误。"
   },
-  "app_name": "Maestro"
+  "app_name": "Maestro",
+  "landing_v2": {
+    "hero": {
+      "title": "通过 Maestro 发布。正在复制您的判断。",
+      "subtitle": "一次判断成为品牌的记忆，该记忆将代替您做出下一个决定。",
+      "cta": "开启品牌智能",
+      "cta_subtitle": "试用 Maestro Beta — 早期用户免费"
+    },
+    "problem": {
+      "title": "您是否每次都在重新判断、重新编写、重新修改？",
+      "body_1": "市场上的营销自动化工具很多，但没有一个能“记住您”。",
+      "body_2": "它们会忘记今天的语气，也无法将昨天的成果应用到本次活动中。",
+      "body_3": "Maestro 记录并重现您的判断。同时保持品牌的节奏。"
+    },
+    "what_is_maestro": {
+      "title": "指挥品牌的智能管弦乐队",
+      "body_1": "Maestro 不仅仅是一个自动化工具。它是一个将您的判断和行动连接成一个系统的引擎。",
+      "body_2": "每一次发布、修改和分析都在统一的指挥下运作，每一次的结果都成为下一次行动的依据。",
+      "flow": "人格 → 剧本 → 编排器 → 同事"
+    },
+    "core_components": {
+      "title": "四大引擎指挥您的判断。",
+      "subtitle": "人类做出判断，系统重复该判断。",
+      "persona": {
+        "title": "Persona (人格)",
+        "description": "记住品牌声音、语气和禁忌词的自我。",
+        "keywords": "声音, 语气, 身份"
+      },
+      "playbook": {
+        "title": "Playbook (剧本)",
+        "description": "从行动和结果中学习，并将其作为洞察力留存的记忆。",
+        "keywords": "学习, 记忆, 反馈"
+      },
+      "orchestrator": {
+        "title": "Orchestrator (编排器)",
+        "description": "确定性地执行所有行动的指挥家。",
+        "keywords": "控制, 追踪, 确定性"
+      },
+      "coworker": {
+        "title": "CoWorker (同事)",
+        "description": "即使您不在，也能继续执行常规任务的同事。",
+        "keywords": "自动化, 连续性, 存在"
+      }
+    },
+    "experience": {
+      "title": "“Ctrl + K” 无论您在哪里输入，Maestro 都会在那一刻与您同在。",
+      "item_1": "只需一个快捷键，即可调出当前的人格、过去的的记录和趋势数据。",
+      "item_2": "它会在记住您的语气和节奏的同时，提供草稿建议。",
+      "item_3": "当检测到趋势时，CoWorker 会自动建议草稿。",
+      "item_4": "只需您一次批准，即可完美适配所有平台并发布。",
+      "quote": "“Maestro 不是代替我写作，而是代替我演奏我的节奏。”"
+    },
+    "how_it_works": {
+      "title": "一次行动，成为一套常规。",
+      "subtitle": "这个循环不断地复制和提炼您的判断。",
+      "steps": {
+        "1": {
+          "title": "1. 感知",
+          "description": "嗅探器 (Sniffer) 探测市场信号。"
+        },
+        "2": {
+          "title": "2. 生成",
+          "description": "人格 (Persona) 和剧本 (Playbook) 构建指令。"
+        },
+        "3": {
+          "title": "3. 执行",
+          "description": "编排器 (Orchestrator) 决定行动。"
+        },
+        "4": {
+          "title": "4. 学习",
+          "description": "同事 (CoWorker) 记录结果。"
+        }
+      }
+    },
+    "insight": {
+      "title": "判断由数据验证，数据再回归于判断。",
+      "body": "A/B 测试、KPI 自动汇总、评论反应收集——所有结果都记录在剧本 (Playbook) 中，以进化品牌的判断算法。",
+      "image_caption": "Playbook 仪表板截图 + “使用温暖语气，互动率 ↑104%”"
+    },
+    "philosophy": {
+      "title": "懂记忆的自动化。",
+      "body_1": "Maestro 不会取代人类的判断。相反，它确保判断不会每次都从头来过。",
+      "body_2": "技术会记住您的节奏，品牌则在该记忆之上成长。",
+      "body_3": "这不是自动化，而是复制的伦理。"
+    },
+    "testimonials": {
+      "title": "用户评价",
+      "quote_1": "“这不是 AI，而是一个为我记忆的系统。”",
+      "author_1": "创作者 @snowypainter",
+      "quote_2": "“我的品牌在我开口之前就开始说话了。”",
+      "author_2": "市场总监 A"
+    },
+    "cta": {
+      "title": "复制您的判断。",
+      "subtitle": "今天的行动将成为明天的智能。与 Maestro 一起开始建立您品牌的记忆。",
+      "button_start": "立即开始",
+      "button_demo": "观看演示",
+      "button_figma": "下载 Figma 流程图"
+    },
+    "footer": {
+      "text": "MAESTRO. 懂记忆的自动化。"
+    }
+  }
 }
