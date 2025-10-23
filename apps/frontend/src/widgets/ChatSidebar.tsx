@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Settings, BarChart3, MessageSquare, Calendar, FileText, BadgeCheck, Plug, Volume2, PersonStanding, TowerControl, Bot } from "lucide-react";
+import { Settings, BarChart3, MessageSquare, Calendar, FileText, BadgeCheck, Plug, Volume2, PersonStanding, TowerControl, Bot, Search, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/Logo";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -18,6 +19,7 @@ const initialTools = [
     { id: 'accounts', title: 'Accounts', icon: <BadgeCheck className="w-5 h-5 text-primary" /> },
     { id: 'schedules', title: 'Schedules', icon: <Calendar className="w-5 h-5 text-primary" /> },
     { id: 'coworker', title: 'CoWorker', icon: <Bot className="w-5 h-5 text-primary" /> },
+    { id: 'ab-tests', title: 'A/B Tests', icon: <FlaskConical className="w-5 h-5 text-primary" /> },
 ];
 
 function SortableToolCard({ tool, onClick, ...props }: {
@@ -56,6 +58,11 @@ export function ChatSidebar({
     onToolClick: (toolId: string) => void,
 }) {
     const [tools, setTools] = useState(initialTools);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredTools = tools.filter(tool =>
+        tool.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -115,10 +122,21 @@ export function ChatSidebar({
             <div className="p-2">
                 <Logo />
             </div>
+            <div className="px-2 mb-2">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search tools..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 h-9"
+                    />
+                </div>
+            </div>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={tools.map(t => t.id)} strategy={rectSortingStrategy}>
-                    <div className="grid grid-cols-2 gap-2">
-                        {tools.map(tool => (
+                <SortableContext items={filteredTools.map(t => t.id)} strategy={rectSortingStrategy}>
+                    <div className="grid grid-cols-2 gap-2 max-h-120 overflow-y-auto">
+                        {filteredTools.map(tool => (
                             <SortableToolCard key={tool.id} tool={tool} onClick={getClickHandler(tool.id)} />
                         ))}
                     </div>

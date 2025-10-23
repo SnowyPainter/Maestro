@@ -43,8 +43,10 @@ import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
 import { EditCoworkerForm } from "@/features/coworkers/components/EditCoworkerForm";
 import { CancelScheduleForm } from "@/features/schedules/components/CancelScheduleForm";
 import { CreateSyncMetricsScheduleForm } from "@/features/schedules/components/CreateSyncMetricsScheduleForm";
-
-const DEFAULT_ERROR_MESSAGE = '채팅 처리 중 오류가 발생했습니다.';
+import ABTestToolCard from "@/features/abtests/components/ABTestToolCard";
+import ABTestCreateForm from "@/features/abtests/components/ABTestCreateForm";
+import ABTestList from "@/entities/abtests/components/ABTestList";
+import ABTestDetail from "@/entities/abtests/components/ABTestDetail";
 
 const isMessageOfComponent = (content: Message["content"], component: React.ComponentType<any>): boolean => (
   React.isValidElement(content) && content.type === component
@@ -496,6 +498,41 @@ export function useChatPageEvents() {
     });
   }, [addCardMessage, removeMessagesByComponent, removeMessage, getNextMessageId]);
 
+  const handleABTestCreateSuccess = useCallback<EntitySuccessHandler>((abTestId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    } else {
+      removeMessagesByComponent(ABTestCreateForm);
+    }
+    addCardMessage(messageId => (
+      <ABTestDetail
+        abTestId={abTestId}
+        onDelete={() => handleCardDelete(messageId)}
+      />
+    ));
+  }, [addCardMessage, handleCardDelete, removeMessage, removeMessagesByComponent]);
+
+  const handleNewABTest = useCallback(() => {
+    removeMessagesByComponent(ABTestToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <ABTestCreateForm
+          onSuccess={(abTestId) => handleABTestCreateSuccess(abTestId, messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handleABTestCreateSuccess, removeMessagesByComponent]);
+
+  const handleSelectABTest = useCallback(() => {
+    removeMessagesByComponent(ABTestToolCard);
+    removeMessagesByComponent(ABTestList);
+    addCardMessage(() => (
+      <ABTestList />
+    ));
+  }, [addCardMessage, removeMessagesByComponent]);
 
   const handleToolClick = useCallback((toolId: string) => {
     switch (toolId) {
@@ -565,10 +602,19 @@ export function useChatPageEvents() {
           />
         ));
         break;
+      case 'ab-tests':
+        removeMessagesByComponent(ABTestToolCard);
+        addCardMessage(() => (
+          <ABTestToolCard
+            onNew={handleNewABTest}
+            onSelect={handleSelectABTest}
+          />
+        ));
+        break;
       default:
         break;
     }
-  }, [addCardMessage, handleNewCampaign, handleNewDraft, handleNewPersona, handleSelectCampaign, handleSelectDraft, handleSelectPersona, handleNewAccount, handleSelectAccount, handleSelectPersonaForLinks, removeMessagesByComponent, handleNewPostSchedule, handleNewMailSchedule, handleNewRawSchedule, handleCancelSchedule]);
+  }, [addCardMessage, handleNewCampaign, handleNewDraft, handleNewPersona, handleSelectCampaign, handleSelectDraft, handleSelectPersona, handleNewAccount, handleSelectAccount, handleSelectPersonaForLinks, removeMessagesByComponent, handleNewPostSchedule, handleNewMailSchedule, handleNewRawSchedule, handleCancelSchedule, handleNewABTest, handleSelectABTest]);
 
   const clearChat = useCallback(() => {
     clearMessages();
