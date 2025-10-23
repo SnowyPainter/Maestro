@@ -743,6 +743,7 @@ async def op_schedule_abtest(
         "persona_account_id": plan.persona_account_id,
         "post_publication_ids": publication_ids,
         "scheduled_for": scheduled_iso,
+        "user_id": user.id,
     }
 
     publish_schedule = _persist_schedule(
@@ -799,6 +800,7 @@ async def op_schedule_abtest(
             "campaign_id": plan.abtest.campaign_id,
             "publish_schedule_id": publish_schedule.id,
             "scheduled_for": completion_iso,
+            "user_id": user.id,
         }
         completion_schedule = _persist_schedule(
             db,
