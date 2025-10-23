@@ -553,12 +553,39 @@ async def complete_abtest(
 
     await db.flush()
 
+    kpi_snapshot: Optional[dict] = None
+    try:
+        summary = await collect_abtest_insights(
+            db,
+            abtest_id=abtest_id,
+        )
+        kpi_snapshot = {
+            "decision_metric": summary.decision_metric,
+            "winner_variant": summary.winner_variant,
+            "winner_value": summary.winner_value,
+            "loser_value": summary.loser_value,
+            "uplift_percentage": summary.uplift_percentage,
+            "variant_a": {
+                "draft_id": row.variant_a_id,
+                "post_publication_ids": summary.variant_a.post_publication_ids,
+                "metrics": summary.variant_a.metrics,
+            },
+            "variant_b": {
+                "draft_id": row.variant_b_id,
+                "post_publication_ids": summary.variant_b.post_publication_ids,
+                "metrics": summary.variant_b.metrics,
+            },
+        }
+    except Exception:
+        kpi_snapshot = None
+
     await playbook_service.record_abtest_completion(
         db,
         persona_id=row.persona_id,
         campaign_id=row.campaign_id,
         abtest=row,
         insight_note=payload.insight_note,
+        kpi_snapshot=kpi_snapshot,
     )
 
     await db.commit()

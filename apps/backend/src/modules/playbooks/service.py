@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, List, Optional, Tuple, TYPE_CHECKING
+from datetime import datetime, date
+from typing import Any, List, Optional, Tuple, TYPE_CHECKING, Dict
 
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from apps.backend.src.modules.playbooks.schemas import (
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.scheduler.models import Schedule
+from apps.backend.src.modules.trends.service import query_trends
 
 if TYPE_CHECKING:
     from apps.backend.src.modules.abtests.models import ABTest
@@ -140,6 +141,7 @@ async def record_abtest_completion(
     campaign_id: int,
     abtest: "ABTest",
     insight_note: Optional[str] = None,
+    kpi_snapshot: Optional[dict] = None,
 ) -> PlaybookLog:
     timestamp = abtest.finished_at or datetime.utcnow()
     meta = {
@@ -160,6 +162,7 @@ async def record_abtest_completion(
             abtest_id=abtest.id,
             meta=meta,
             message=insight_note,
+            kpi_snapshot=kpi_snapshot,
         ),
     )
 
@@ -291,6 +294,14 @@ async def record_playbook_event(
     if persona_id is None or campaign_id is None:
         return None
 
+    persona_row: Optional[Persona] = await db.get(Persona, persona_id) if persona_id else None
+
+    if persona_snapshot is None and persona_row is not None:
+        persona_snapshot = _build_persona_snapshot(persona_row)
+
+    if trend_snapshot is None and persona_row is not None:
+        trend_snapshot = await _build_trend_snapshot(db, persona_row, limit=3)
+
     payload = PlaybookLogCreate(
         persona_id=persona_id,
         campaign_id=campaign_id,
@@ -364,7 +375,6 @@ async def update_playbook_fields(
     await db.commit()
     return playbook
 
-
 def _apply_patch(playbook: Playbook, patch: Optional[PlaybookAggregatePatch]) -> None:
     if patch is None:
         return
@@ -376,3 +386,105 @@ def _apply_patch(playbook: Playbook, patch: Optional[PlaybookAggregatePatch]) ->
         playbook.best_tone = patch.best_tone
     if patch.top_hashtags is not None:
         playbook.top_hashtags = patch.top_hashtags
+
+async def search_playbooks(
+    db: AsyncSession,
+    *,
+    playbook_id: Optional[int] = None,
+    campaign_id: Optional[int] = None,
+    persona_id: Optional[int] = None,
+    last_event: Optional[str] = None,
+) -> Tuple[List[Playbook], int]:
+    stmt = select(Playbook)
+    if playbook_id is not None:
+        stmt = stmt.where(Playbook.id == playbook_id)
+    if campaign_id is not None:
+        stmt = stmt.where(Playbook.campaign_id == campaign_id)
+    if persona_id is not None:
+        stmt = stmt.where(Playbook.persona_id == persona_id)
+    if last_event is not None:
+        stmt = stmt.where(Playbook.last_event.ilike(f"{last_event}%"))
+    total_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(total_stmt)).scalar_one()
+    rows = (
+        await db.execute(
+            stmt.order_by(Playbook.last_updated.desc())
+        )
+    ).scalars().all()
+    return rows, total
+
+
+def _build_persona_snapshot(persona: Persona) -> Dict[str, Any]:
+    return {
+        "id": persona.id,
+        "name": persona.name,
+        "avatar_url": persona.avatar_url,
+        "bio": persona.bio,
+        "language": persona.language,
+        "tone": persona.tone,
+        "style_guide": persona.style_guide,
+        "pillars": persona.pillars,
+        "default_hashtags": persona.default_hashtags,
+        "posting_windows": persona.posting_windows,
+        "extras": persona.extras,
+        "updated_at": persona.updated_at.isoformat() if persona.updated_at else None,
+    }
+
+
+def _resolve_country(persona: Persona) -> str:
+    extras = persona.extras or {}
+    country = None
+    if isinstance(extras, dict):
+        country = extras.get("country") or extras.get("default_country")
+    if not country and persona.language:
+        lang = persona.language.lower()
+        country = {
+            "ko": "KR",
+            "en": "US",
+            "ja": "JP",
+            "zh": "CN",
+        }.get(lang)
+    if not country:
+        country = "US"
+    return str(country).upper()
+
+
+async def _build_trend_snapshot(
+    db: AsyncSession,
+    persona: Persona,
+    *,
+    limit: int = 3,
+) -> Optional[Dict[str, Any]]:
+    try:
+        country = _resolve_country(persona)
+        result = await query_trends(
+            db,
+            country=country,
+            limit=limit,
+            q=None,
+            on_date=None,
+            since=None,
+            until=None,
+        )
+        raw_rows = (result or {}).get("rows") or []
+        rows = [_serialize_trend_item(row) for row in raw_rows[:limit]]
+        return {
+            "country": country,
+            "source": (result or {}).get("source"),
+            "items": rows,
+            "retrieved_at": datetime.utcnow().isoformat(),
+        }
+    except Exception:
+        return None
+
+
+def _serialize_trend_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    serialized: Dict[str, Any] = {}
+    for key, value in (item or {}).items():
+        if isinstance(value, datetime):
+            serialized[key] = value.isoformat()
+        elif isinstance(value, date):
+            serialized[key] = datetime.combine(value, datetime.min.time()).isoformat()
+        else:
+            serialized[key] = value
+    return serialized

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import select, create_engine
@@ -18,18 +19,20 @@ from apps.backend.src.core.context import (
     get_user_id,
 )
 from apps.backend.src.core.config import settings
+from apps.backend.src.core.db import SessionLocal as AsyncSessionLocal
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount, PlatformAccount
 from apps.backend.src.modules.campaigns.models import Campaign
 from apps.backend.src.modules.llm.schemas import LlmInvokeContext, PromptKey, PromptVars
 from apps.backend.src.modules.llm.service import LLMService
 from apps.backend.src.modules.playbooks.models import Playbook, PlaybookLog
+from apps.backend.src.modules.playbooks.service import record_playbook_event
 from apps.backend.src.modules.llm.style_composer import StyleComposer
 from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS, PlatformKind, PostStatus
 from apps.backend.src.modules.drafts.models import PostPublication, DraftVariant
 
 logger = logging.getLogger(__name__)
 ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
+SyncSessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
 _LOOP: Optional[asyncio.AbstractEventLoop] = None
 _LOOP_THREAD: Optional[threading.Thread] = None
 _LOOP_LOCK = threading.Lock()
@@ -84,7 +87,7 @@ def _gather_context(
     Optional[PlatformKind],
     List[Dict[str, Any]],
 ]:
-    with SessionLocal() as session:
+    with SyncSessionLocal() as session:
         persona, _ = _load_persona_scope(session, persona_account_id)
         campaign = _load_campaign(session, campaign_id, persona)
         playbook_summary = _load_playbook_summary(session, persona, campaign)
@@ -319,6 +322,40 @@ async def _invoke_llm(
     return text
 
 
+async def _record_generation_log(
+    *,
+    persona_id: Optional[int],
+    campaign_id: Optional[int],
+    persona_account_id: Optional[int],
+    prompt_text: str,
+    generated_text: str,
+    platform: Optional[PlatformKind],
+) -> None:
+    if persona_id is None or campaign_id is None:
+        return
+
+    async with AsyncSessionLocal() as session:
+        try:
+            log_entry = await record_playbook_event(
+                session,
+                event="coworker.generated_text",
+                timestamp=datetime.utcnow(),
+                persona_id=persona_id,
+                persona_account_id=persona_account_id,
+                campaign_id=campaign_id,
+                message=None,
+                llm_input={"prompt": prompt_text},
+                llm_output={"text": generated_text},
+                meta={
+                    "platform": platform.value if isinstance(platform, PlatformKind) else None,
+                },
+            )
+            if log_entry is not None:
+                await session.commit()
+        except Exception:  # pragma: no cover - logging defensive
+            logger.exception("failed to record playbook log for coworker output")
+
+
 @celery_app.task(
     name="apps.backend.src.workers.CoWorker.generate_texts.generate_contextual_text",
     bind=True,
@@ -336,9 +373,9 @@ def generate_contextual_text(self, prompt_text: str) -> str:
         persona_account_id,
         campaign_id,
     )
-
+    
     async def _execute() -> str:
-        return await _invoke_llm(
+        generated_text = await _invoke_llm(
             prompt_text,
             persona_account_id=persona_account_id,
             persona=persona,
@@ -347,6 +384,15 @@ def generate_contextual_text(self, prompt_text: str) -> str:
             platform=platform,
             recent_publications=recent_publications,
         )
+        await _record_generation_log(
+            persona_id=persona.id if persona is not None else None,
+            campaign_id=(campaign_id if campaign_id is not None else (campaign.id if campaign is not None else None)),
+            persona_account_id=persona_account_id,
+            prompt_text=prompt_text,
+            generated_text=generated_text,
+            platform=platform,
+        )
+        return generated_text
 
     loop = _ensure_loop()
     future = asyncio.run_coroutine_threadsafe(_execute(), loop)
