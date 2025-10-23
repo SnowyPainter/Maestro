@@ -1438,33 +1438,47 @@ export const PlatformKind = {
   threads: 'threads',
 } as const;
 
+export type PlaybookEnrichedOutAggregateKpiAnyOf = {[key: string]: number};
+
+export type PlaybookEnrichedOutAggregateKpi = PlaybookEnrichedOutAggregateKpiAnyOf | null;
+
+export type PlaybookEnrichedOutTopHashtags = string[] | null;
+
+/**
+ * Enriched Playbook schema with campaign and persona names.
+ */
+export interface PlaybookEnrichedOut {
+  id: number;
+  persona_id: number;
+  campaign_id: number;
+  aggregate_kpi?: PlaybookEnrichedOutAggregateKpi;
+  /** @nullable */
+  best_time_window?: string | null;
+  /** @nullable */
+  best_tone?: string | null;
+  top_hashtags?: PlaybookEnrichedOutTopHashtags;
+  /** @nullable */
+  last_event?: string | null;
+  last_updated: string;
+  created_at: string;
+  campaign_name: string;
+  /** @nullable */
+  campaign_description?: string | null;
+  persona_name: string;
+  /** @nullable */
+  persona_bio?: string | null;
+}
+
 export interface PlaybookListResponse {
-  items: PlaybookOut[];
+  items: PlaybookEnrichedOut[];
   total: number;
   limit: number;
   offset: number;
 }
 
-export type PlaybookOutAggregateKpiAnyOf = {[key: string]: number};
-
-export type PlaybookOutAggregateKpi = PlaybookOutAggregateKpiAnyOf | null;
-
-export type PlaybookOutTopHashtags = string[] | null;
-
-export interface PlaybookOut {
-  id: number;
-  persona_id: number;
-  campaign_id: number;
-  aggregate_kpi?: PlaybookOutAggregateKpi;
-  /** @nullable */
-  best_time_window?: string | null;
-  /** @nullable */
-  best_tone?: string | null;
-  top_hashtags?: PlaybookOutTopHashtags;
-  /** @nullable */
-  last_event?: string | null;
-  last_updated: string;
-  created_at: string;
+export interface PlaybookSearchResponse {
+  items: PlaybookEnrichedOut[];
+  total: number;
 }
 
 export type PostPublicationOutErrors = string[] | null;
@@ -2171,6 +2185,16 @@ persona_id?: number | null;
 campaign_id?: number | null;
 limit?: number;
 offset?: number;
+};
+
+export type BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
 };
 
 export type BffScheduleListSchedulesApiBffSchedulesGetParams = {
@@ -5006,6 +5030,96 @@ export function useBffPlaybookListPlaybooksApiBffPlaybooksGet<TData = Awaited<Re
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffPlaybookListPlaybooksApiBffPlaybooksGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Search playbooks with optional filtering.
+ * @summary Search Playbooks
+ */
+export const bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet = (
+    params?: BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PlaybookSearchResponse>(
+      {url: `/api/bff/playbooks/search`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryKey = (params?: BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams,) => {
+    return [`/api/bff/playbooks/search`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError = HTTPValidationError>(params?: BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>> = ({ signal }) => bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>>
+export type BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet<TData = Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet<TData = Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet<TData = Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Search Playbooks
+ */
+
+export function useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet<TData = Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Settings, BarChart3, MessageSquare, Calendar, FileText, BadgeCheck, Plug, Volume2, PersonStanding, TowerControl, Bot, Search, FlaskConical } from "lucide-react";
+import { Settings, BarChart3, MessageSquare, Calendar, FileText, BadgeCheck, Plug, Volume2, PersonStanding, TowerControl, Bot, Search, FlaskConical, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ const initialTools = [
     { id: 'personas', title: 'Personas', icon: <PersonStanding className="w-5 h-5 text-primary" /> },
     { id: 'accounts', title: 'Accounts', icon: <BadgeCheck className="w-5 h-5 text-primary" /> },
     { id: 'schedules', title: 'Schedules', icon: <Calendar className="w-5 h-5 text-primary" /> },
+    { id: 'playbooks', title: 'Playbooks', icon: <BookOpen className="w-5 h-5 text-primary" /> },
     { id: 'coworker', title: 'CoWorker', icon: <Bot className="w-5 h-5 text-primary" /> },
     { id: 'ab-tests', title: 'A/B Tests', icon: <FlaskConical className="w-5 h-5 text-primary" /> },
 ];

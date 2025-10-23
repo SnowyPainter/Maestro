@@ -39,6 +39,14 @@ class PlaybookOut(BaseModel):
     created_at: datetime
 
 
+class PlaybookEnrichedOut(PlaybookOut):
+    """Enriched Playbook schema with campaign and persona names."""
+    campaign_name: str
+    campaign_description: Optional[str] = None
+    persona_name: str
+    persona_bio: Optional[str] = None
+
+
 class PlaybookLogCreate(BaseModel):
     persona_id: int
     campaign_id: int

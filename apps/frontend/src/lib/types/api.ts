@@ -624,6 +624,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/playbooks/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Playbooks
+         * @description Search playbooks with optional filtering.
+         */
+        get: operations["bff_playbook_search_playbooks_api_bff_playbooks_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/schedules": {
         parameters: {
             query?: never;
@@ -3342,19 +3362,11 @@ export interface components {
          * @enum {string}
          */
         PlatformKind: "instagram" | "threads";
-        /** PlaybookListResponse */
-        PlaybookListResponse: {
-            /** Items */
-            items: components["schemas"]["PlaybookOut"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-        };
-        /** PlaybookOut */
-        PlaybookOut: {
+        /**
+         * PlaybookEnrichedOut
+         * @description Enriched Playbook schema with campaign and persona names.
+         */
+        PlaybookEnrichedOut: {
             /** Id */
             id: number;
             /** Persona Id */
@@ -3383,6 +3395,32 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Campaign Name */
+            campaign_name: string;
+            /** Campaign Description */
+            campaign_description?: string | null;
+            /** Persona Name */
+            persona_name: string;
+            /** Persona Bio */
+            persona_bio?: string | null;
+        };
+        /** PlaybookListResponse */
+        PlaybookListResponse: {
+            /** Items */
+            items: components["schemas"]["PlaybookEnrichedOut"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+        };
+        /** PlaybookSearchResponse */
+        PlaybookSearchResponse: {
+            /** Items */
+            items: components["schemas"]["PlaybookEnrichedOut"][];
+            /** Total */
+            total: number;
         };
         /** PostPublicationOut */
         PostPublicationOut: {
@@ -5131,6 +5169,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlaybookListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_search_playbooks_api_bff_playbooks_search_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaybookSearchResponse"];
                 };
             };
             /** @description Validation Error */

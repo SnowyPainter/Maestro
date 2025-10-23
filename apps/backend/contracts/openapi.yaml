@@ -1162,6 +1162,65 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/search:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - search
+      - pagination
+      - ui
+      - frontend
+      - dashboard
+      summary: Search Playbooks
+      description: Search playbooks with optional filtering.
+      operationId: bff_playbook_search_playbooks_api_bff_playbooks_search_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybookSearchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/schedules:
     get:
       tags:
@@ -6195,30 +6254,7 @@ components:
       - instagram
       - threads
       title: PlatformKind
-    PlaybookListResponse:
-      properties:
-        items:
-          items:
-            $ref: '#/components/schemas/PlaybookOut'
-          type: array
-          title: Items
-        total:
-          type: integer
-          title: Total
-        limit:
-          type: integer
-          title: Limit
-        offset:
-          type: integer
-          title: Offset
-      type: object
-      required:
-      - items
-      - total
-      - limit
-      - offset
-      title: PlaybookListResponse
-    PlaybookOut:
+    PlaybookEnrichedOut:
       properties:
         id:
           type: integer
@@ -6263,6 +6299,20 @@ components:
           type: string
           format: date-time
           title: Created At
+        campaign_name:
+          type: string
+          title: Campaign Name
+        campaign_description:
+          title: Campaign Description
+          type: string
+          nullable: true
+        persona_name:
+          type: string
+          title: Persona Name
+        persona_bio:
+          title: Persona Bio
+          type: string
+          nullable: true
       type: object
       required:
       - id
@@ -6270,7 +6320,48 @@ components:
       - campaign_id
       - last_updated
       - created_at
-      title: PlaybookOut
+      - campaign_name
+      - persona_name
+      title: PlaybookEnrichedOut
+      description: Enriched Playbook schema with campaign and persona names.
+    PlaybookListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PlaybookEnrichedOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+        limit:
+          type: integer
+          title: Limit
+        offset:
+          type: integer
+          title: Offset
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      title: PlaybookListResponse
+    PlaybookSearchResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PlaybookEnrichedOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - items
+      - total
+      title: PlaybookSearchResponse
     PostPublicationOut:
       properties:
         id:

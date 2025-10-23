@@ -22,6 +22,8 @@ import { DraftVariantDetail } from "../drafts/components/DraftVariantDetail";
 import { TimelineCard } from "@/entities/timeline/components/TimelineCard";
 import { TimelineEvent } from "@/entities/timeline/model/types";
 import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
+import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
+import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -30,6 +32,7 @@ export interface CardRenderCallbacks {
   onPersonaSelect?: (personaId: number, sourceMessageId: number) => void;
   onAccountSelect?: (accountId: number, sourceMessageId: number) => void;
   onDraftVariantSelect?: (variant: DraftVariantRender, sourceMessageId: number) => void;
+  onPlaybookSelect?: (playbookId: number, sourceMessageId: number) => void;
   onCoworkerSelect?: () => void;
 }
 
@@ -143,6 +146,23 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
       <AccountDetail
         accountId={data.id as number}
         onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+      />
+    );
+  }
+
+  // Playbook 관련 특수 처리
+  if (card_type === 'playbook.detail' && data?.id) {
+    return (
+      <PlaybookDetail
+        playbookId={data.id as number}
+        onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+      />
+    );
+  }
+  if (card_type === 'playbook.list') {
+    return (
+      <PlaybookList
+        onSelectPlaybook={playbookId => callbacks.onPlaybookSelect?.(playbookId, messageId)}
       />
     );
   }

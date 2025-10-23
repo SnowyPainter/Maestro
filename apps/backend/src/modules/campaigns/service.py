@@ -59,8 +59,16 @@ async def update_campaign(
     await db.commit()
     return camp
 
-async def get_campaign(db: AsyncSession, campaign_id: int) -> Optional[Campaign]:
-    return await db.get(Campaign, campaign_id)
+async def get_campaign(db: AsyncSession, campaign_id: int, owner_user_id: Optional[int] = None) -> Optional[Campaign]:
+    campaign = await db.get(Campaign, campaign_id)
+    if campaign is None:
+        return None
+
+    # If owner_user_id is provided, validate ownership
+    if owner_user_id is not None and campaign.owner_user_id != owner_user_id:
+        return None
+
+    return campaign
 
 
 async def list_campaigns(

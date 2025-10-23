@@ -95,6 +95,7 @@ slots:
   - bff.campaigns.read_campaign
   - bff.drafts.list_drafts
   - bff.playbook.list_playbooks
+  - bff.playbook.search_playbooks
   - campaigns.aggregate_kpis
   - campaigns.delete_campaign
   - campaigns.record_kpi_result
@@ -304,6 +305,12 @@ slots:
   flows:
   - drafts.create
   - drafts.update_ir
+- name: last_event
+  label: Last Event
+  description: Filter by last event
+  value_type: string
+  flows:
+  - bff.playbook.search_playbooks
 - name: limit
   label: Limit
   description: Limit the number of results
@@ -459,6 +466,7 @@ slots:
   - bff.accounts.list_accounts_for_persona
   - bff.accounts.read_persona
   - bff.playbook.list_playbooks
+  - bff.playbook.search_playbooks
   - internal.mail.compose_trends_email
 - name: pipeline_id
   label: Pipeline Id
@@ -490,6 +498,12 @@ slots:
   value_type: integer
   flows:
   - insights.ingest
+- name: playbook_id
+  label: Playbook Id
+  description: Target a specific playbook id
+  value_type: integer
+  flows:
+  - bff.playbook.search_playbooks
 - name: post_publication_id
   label: Post Publication Id
   description: Target a specific post publication id

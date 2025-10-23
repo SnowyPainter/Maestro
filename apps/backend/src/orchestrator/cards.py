@@ -32,7 +32,8 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "TimelineEventCollectionOut": "timeline.events.composed",
 
     "CoworkerLeaseOut": "coworker.detail",
-
+    "PlaybookListResponse": "playbook.list",
+    "PlaybookSearchResponse": "playbook.list",
     "MessageOut": "info",
 }
 

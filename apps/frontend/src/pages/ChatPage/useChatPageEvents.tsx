@@ -45,6 +45,9 @@ import ABTestCreateForm from "@/features/abtests/components/ABTestCreateForm";
 import ABTestList from "@/entities/abtests/components/ABTestList";
 import ABTestDetail from "@/entities/abtests/components/ABTestDetail";
 import PostPublicationList from "@/entities/post-publications/components/PostPublicationList";
+import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
+import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
+import { PlaybookToolCard } from "@/features/playbooks/components/PlaybookToolCard";
 
 const isMessageOfComponent = (content: Message["content"], component: React.ComponentType<any>): boolean => (
   React.isValidElement(content) && content.type === component
@@ -573,6 +576,33 @@ export function useChatPageEvents() {
     addCardMessage(() => <PostPublicationList />);
   }, [addCardMessage, removeMessagesByComponent]);
 
+  const handlePlaybookSelect = useCallback<EntitySelectHandler>((playbookId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addCardMessage(messageId => (
+      <PlaybookDetail
+        playbookId={playbookId}
+        onDelete={() => handleCardDelete(messageId)}
+      />
+    ));
+  }, [addCardMessage, handleCardDelete, removeMessage]);
+
+  const handleSelectPlaybook = useCallback(() => {
+    removeMessagesByComponent(PlaybookToolCard);
+    removeMessagesByComponent(PlaybookList);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <PlaybookList
+          onSelectPlaybook={playbookId => handlePlaybookSelect(playbookId, messageId)}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, handlePlaybookSelect, removeMessagesByComponent]);
+
   const handleToolClick = useCallback(
     (toolId: string) => {
       switch (toolId) {
@@ -645,6 +675,12 @@ export function useChatPageEvents() {
             <ABTestToolCard onNew={handleNewABTest} onSelect={handleSelectABTest} />
           ));
           break;
+        case "playbooks":
+          removeMessagesByComponent(PlaybookToolCard);
+          addCardMessage(() => (
+            <PlaybookToolCard onSelect={handleSelectPlaybook} />
+          ));
+          break;
         default:
           break;
       }
@@ -668,6 +704,8 @@ export function useChatPageEvents() {
       handleNewABTest,
       handleSelectABTest,
       handleSelectListPublications,
+      handleSelectPlaybook,
+      PlaybookToolCard,
     ]
   );
 
@@ -705,6 +743,7 @@ export function useChatPageEvents() {
             onPersonaSelect: handlePersonaSelect,
             onAccountSelect: handleAccountSelect,
             onDraftVariantSelect: handleDraftVariantSelect,
+            onPlaybookSelect: handlePlaybookSelect,
             onCoworkerSelect: handleCoworkerSelect,
           },
         }));
