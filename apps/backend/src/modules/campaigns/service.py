@@ -234,10 +234,10 @@ async def _latest_metrics_per_post_publication(
 
     return snap
 
-# ---- 메인: Aggregation을 존중하는 집계
-async def aggregate_campaign_kpis_respecting_defs(
+# ---- 메인 계산 로직 (재사용 가능)
+async def calculate_campaign_kpis_snapshot(
     db: AsyncSession, *, campaign_id: int, as_of: Optional[datetime] = None
-) -> CampaignKPIResult:
+) -> tuple[Dict[str, float], bool, datetime]:
     as_of = as_of or datetime.utcnow()
 
     # 1) KPI 정의 로드
@@ -245,10 +245,7 @@ async def aggregate_campaign_kpis_respecting_defs(
         select(CampaignKPIDef).where(CampaignKPIDef.campaign_id == campaign_id)
     )).scalars().all()
     if not defs:
-        # 정의가 없으면 빈 결과라도 기록
-        row = CampaignKPIResult(campaign_id=campaign_id, as_of=as_of, values={})
-        db.add(row); await db.flush(); await db.commit()
-        return row
+        return {}, False, as_of
 
     # 2) 스냅샷 구축(포스트 퍼블리케이션별 최신 샘플)
     ppids = await _campaign_post_publication_ids(db, campaign_id)
@@ -322,8 +319,27 @@ async def aggregate_campaign_kpis_respecting_defs(
         saves = totals_for_derived[KPIKey.SAVES.value]
         values[KPIKey.ER.value] = ((likes + comments + shares + saves) / impressions) if impressions else 0.0
 
-    # 5) 저장
-    row = CampaignKPIResult(campaign_id=campaign_id, as_of=as_of, values=values)
+    return values, True, as_of
+
+
+# ---- 메인: Aggregation을 존중하는 집계
+async def aggregate_campaign_kpis_respecting_defs(
+    db: AsyncSession, *, campaign_id: int, as_of: Optional[datetime] = None
+) -> CampaignKPIResult:
+    values, has_defs, effective_as_of = await calculate_campaign_kpis_snapshot(
+        db,
+        campaign_id=campaign_id,
+        as_of=as_of,
+    )
+
+    if not has_defs:
+        row = CampaignKPIResult(campaign_id=campaign_id, as_of=effective_as_of, values={})
+        db.add(row)
+        await db.flush()
+        await db.commit()
+        return row
+
+    row = CampaignKPIResult(campaign_id=campaign_id, as_of=effective_as_of, values=values)
     db.add(row)
     await db.flush()
     await db.commit()

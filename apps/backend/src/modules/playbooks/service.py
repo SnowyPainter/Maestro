@@ -15,6 +15,9 @@ from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.scheduler.models import Schedule
 from apps.backend.src.modules.trends.service import query_trends
+from apps.backend.src.modules.playbooks.aggregators import run_aggregators
+from apps.backend.src.modules.insights.models import InsightSample
+from apps.backend.src.modules.campaigns.service import calculate_campaign_kpis_snapshot
 
 if TYPE_CHECKING:
     from apps.backend.src.modules.abtests.models import ABTest
@@ -131,6 +134,17 @@ async def record_event(
     _apply_patch(playbook, payload.aggregate_patch)
 
     await db.flush()
+
+    patches = await run_aggregators(db, playbook, payload)
+    applied = False
+    for patch in patches:
+        if patch is not None:
+            _apply_patch(playbook, patch)
+            applied = True
+
+    if applied:
+        await db.flush()
+
     return log
 
 
@@ -301,6 +315,15 @@ async def record_playbook_event(
 
     if trend_snapshot is None and persona_row is not None:
         trend_snapshot = await _build_trend_snapshot(db, persona_row, limit=3)
+
+    if kpi_snapshot is None:
+        kpi_snapshot = await _build_kpi_snapshot(
+            db,
+            campaign_id=campaign_id,
+            post_publication_id=post_publication_id,
+            variant_id=variant_id,
+            draft_id=draft_id,
+        )
 
     payload = PlaybookLogCreate(
         persona_id=persona_id,
@@ -488,3 +511,66 @@ def _serialize_trend_item(item: Dict[str, Any]) -> Dict[str, Any]:
         else:
             serialized[key] = value
     return serialized
+
+
+def _is_number(value: Any) -> bool:
+    try:
+        float(value)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+async def _build_kpi_snapshot(
+    db: AsyncSession,
+    *,
+    campaign_id: Optional[int],
+    post_publication_id: Optional[int],
+    variant_id: Optional[int],
+    draft_id: Optional[int],
+) -> Optional[Dict[str, float]]:
+    if campaign_id is not None:
+        values, has_defs, _ = await calculate_campaign_kpis_snapshot(
+            db,
+            campaign_id=campaign_id,
+        )
+        if has_defs and values:
+            return {key: float(val) for key, val in values.items() if _is_number(val)} or None
+
+    metrics: Optional[dict] = None
+
+    if post_publication_id is not None:
+        metrics = await db.scalar(
+            select(InsightSample.metrics)
+            .where(InsightSample.post_publication_id == post_publication_id)
+            .order_by(InsightSample.ts.desc(), InsightSample.id.desc())
+            .limit(1)
+        )
+
+    if metrics is None and variant_id is not None:
+        metrics = await db.scalar(
+            select(InsightSample.metrics)
+            .where(InsightSample.variant_id == variant_id)
+            .order_by(InsightSample.ts.desc(), InsightSample.id.desc())
+            .limit(1)
+        )
+
+    if metrics is None and draft_id is not None:
+        metrics = await db.scalar(
+            select(InsightSample.metrics)
+            .where(InsightSample.draft_id == draft_id)
+            .order_by(InsightSample.ts.desc(), InsightSample.id.desc())
+            .limit(1)
+        )
+
+    if not isinstance(metrics, dict) or not metrics:
+        return None
+
+    normalized: Dict[str, float] = {}
+    for key, value in metrics.items():
+        if not isinstance(key, str):
+            key = str(key)
+        if _is_number(value):
+            normalized[key] = float(value)
+
+    return normalized or None

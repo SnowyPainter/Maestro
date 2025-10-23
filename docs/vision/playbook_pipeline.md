@@ -1,156 +1,93 @@
-# Playbook Aggregation Pipeline
+# Playbook Pipeline: Two Core Values
 
-이 문서는 `playbook_logs` 에 누적되는 이벤트를 Playbook 요약 정보(`Playbook.aggregate_kpi`, `best_time_window`, `top_hashtags` …)로 자동 갱신하는 파이프라인 설계를 정리한 것이다.  
-현재 코드 기준으로 동작하는 부분과 앞으로 구현/보완해야 할 단계까지 모두 문서화한다.
-
----
-
-## 1. 로그 수집 단계
-
-| 단계 | 설명 | 관련 코드 |
-| ---- | ---- | --------- |
-| ① 이벤트 트리거 | 스케줄 생성, 게시, A/B 테스트 완료, CoWorker LLM 호출 등에서 `record_playbook_event` 호출 | `modules/drafts/service.py`, `modules/abtests/service.py`, `workers/CoWorker/generate_texts.py`, … |
-| ② 필수 ID 해석 | `record_playbook_event` 내부에서 `persona_id`, `campaign_id`, `draft_id`, `variant_id`, `post_publication_id` 등을 추론 | `playbooks/service.py:215` 이하 |
-| ③ 자동 스냅샷 생성 | `persona_snapshot` / `trend_snapshot` 자동 채움, 필요 시 KPI 스냅샷 생성 | `playbooks/service.py:245` |
-| ④ PlaybookLog 저장 | `PlaybookLogCreate` → `record_event` → DB INSERT. 동시에 `Playbook.last_event`, `last_updated` 갱신 | `playbooks/service.py:110` |
-| ⑤ 집계 패치 적용 (추가 예정) | 이벤트별 Aggregator가 `PlaybookAggregatePatch` 를 생성 → `_apply_patch` 로 Playbook 요약 필드 갱신 | 본 문서 2절 참조 |
-
-> **결론:** 로그는 자동으로 남지만, Playbook 요약 필드가 갱신되려면 ⑤단계 구현이 필요하다.
+Playbook은 “로그가 쌓이는 곳”을 넘어, **브랜드 운영자가 바로 활용할 수 있는 지식 베이스**가 되는 것을 목표로 한다.  
+우리가 구축하려는 파이프라인은 두 가지 가치를 동시에 제공해야 한다.
 
 ---
 
-## 2. 실시간 집계 (Aggregator) 설계
+## 1. 트렌드·상황 → 액션 히스토리
 
-### 2.1 이벤트 ↔ Aggregator 매핑
+### 목표
+- “어떤 트렌드/상황에서 어떤 액션을 실제로 실행했는가?”를 시간 축으로 명확하게 파악한다.
+- A/B 테스트, 게시, LLM 생성, 인사이트 수집 등 모든 활동을 하나의 타임라인에 기록한다.
 
-```python
-AGGREGATORS = {
-    "sync.metrics": aggregate_from_metrics,
-    "abtest.completed": aggregate_from_abtest,
-    "coworker.generated_text": aggregate_from_llm,
-    "post.published": aggregate_from_publications,
-    "schedule.created": aggregate_from_schedule,
-    # 필요 시 추가
-}
-```
+### 구성 요소
+| 요소 | 설명 | 현재 상태 |
+| --- | --- | --- |
+| **PlaybookLog** | 이벤트 단위 기록 (`event`, `timestamp`, `meta`, `kpi_snapshot`, `llm_input/output`, …) | 구현 완료 |
+| **Persona Snapshot** | 이벤트 시점의 페르소나 프로필/스타일 정보 | `record_playbook_event`에서 자동 생성 |
+| **Trend Snapshot** | 페르소나 언어/국가 기반 최신 트렌드 (최대 3개) | 자동 생성 (Datetime → ISO 변환) |
+| **LLM Trace** | CoWorker 등 생성형 활동의 input/output | `coworker.generated_text` 로그에 저장 |
+| **KPI Snapshot** | A/B 테스트, metrics sync 이벤트가 제공하는 성과 지표 | 이벤트별로 공급 |
 
-각 Aggregator는 다음 시그니처를 따른다.
+### 구현 흐름
+1. 서비스 코드(스케줄, 게시, LLM 등)에서 `record_playbook_event` 호출  
+2. 내부에서 persona/campaign/draft 등을 추론하고 스냅샷 자동 생성  
+3. 로그를 INSERT + Playbook의 `last_event`, `last_updated` 갱신  
+4. (추가 예정) 이벤트별 Aggregator가 요약 필드를 업데이트  
 
-```python
-async def aggregate_from_metrics(
-    db: AsyncSession,
-    *,
-    playbook: Playbook,
-    log: PlaybookLogCreate,
-) -> PlaybookAggregatePatch | None:
-    ...
-```
-
-**적용 흐름**
-1. `record_playbook_event`에서 INSERT 직후 이벤트명으로 Aggregator 조회  
-2. Aggregator가 `PlaybookAggregatePatch`를 반환하면 `_apply_patch` 호출  
-3. 변경된 Playbook은 동일 트랜잭션 내에서 커밋
-
-### 2.2 Aggregator 예시
-
-| 이벤트 | 입력 데이터 | 갱신 대상 | 비고 |
-| ------ | ----------- | ---------- | ---- |
-| `sync.metrics` | `kpi_snapshot` | `aggregate_kpi` (누적 평균 or 최근 값) | KPI Key → KPI Value 맵 |
-| `abtest.completed` | `kpi_snapshot`, `meta`, `message` | ① KPI 합산<br>② `last_event`는 기존 로직으로 갱신 | 승리 변형 기록 |
-| `coworker.generated_text` | `llm_output["text"]` | `top_hashtags`, `best_tone` 후보 | 해시태그 파싱 / 스타일 분석 |
-| `post.published` | `meta["platform"]`, `timestamp` | `best_time_window`, `aggregate_kpi` | 게시 시간대별 성과 집계 |
-| `schedule.created` | `schedule.due_at`, `meta` | `best_time_window` 후보, `top_hashtags` | 계획 단계 데이터 반영 |
-
-### 2.3 구현 체크리스트
-- [ ] `playbooks/service.py` 에 `AGGREGATORS` 테이블 추가
-- [ ] `record_playbook_event` 에 Aggregator 호출 로직 삽입
-- [ ] 각 Aggregator 함수 구현 및 테스트
-- [ ] Null/예외 시 안전하게 무시하도록 방어 로직 추가
+### 기대 효과 & 활용 예시
+- 지난달에 어떤 트렌드가 어떤 콘텐츠/스케줄/AB 테스트로 이어졌는지 회고 레포트 작성
+- 특정 이벤트(예: LLM 생성) 이후 실제로 게시·성과까지 이어졌는지 추적
+- 고객/에이전시와의 리뷰 미팅에서 “이런 인사이트에 대응해 이런 액션을 했다”는 근거로 제공
 
 ---
 
-## 3. 백필 / 재빌드 파이프라인
+## 2. 집계 기반 상태 요약
 
-실시간 Aggregator가 도입되더라도, 과거 로그나 알고리즘 변경 시 재계산이 필요하다.  
-이를 위해 “재빌드” 태스크를 제공한다.
+### 목표
+- 로그를 전부 읽지 않아도 **Playbook 한 장**으로 현황을 이해한다.
+- KPI, 최적 시간대, 상위 해시태그 등 반복 관측에서 얻은 인사이트를 바로 노출한다.
 
-### 3.1 API 설계 (의견)
-```python
-async def rebuild_playbook_aggregates(
-    db: AsyncSession,
-    playbook_id: int,
-    *,
-    since: datetime | None = None,
-) -> Playbook:
-    """Playbook의 모든 로그를 다시 스캔해서 aggregate 필드 재계산."""
-```
+### 요약 필드
+| 필드 | 의미 | 데이터 출처 (예시) |
+| --- | --- | --- |
+| `aggregate_kpi` | KPI Key → 최근/평균 값 | `sync.metrics`, `abtest.completed` 의 `kpi_snapshot` |
+| `best_time_window` | 게시/스케줄 성과가 가장 좋은 시간대 | `post.published`, `schedule.created` 로그 |
+| `best_tone` | 반응이 좋았던 톤/스타일 | LLM 로그 + 성과 지표 |
+| `top_hashtags` | 자주 쓰이고 성과가 좋은 해시태그 | LLM output, 게시 캡션 |
 
-### 3.2 처리 순서
-1. 대상 Playbook의 로그 (`playbook_logs`) 를 시간 순으로 로딩
-2. 초기 `PlaybookAggregatePatch()` 생성
-3. 각 로그를 Aggregator에 전달 (실시간과 동일한 로직 재사용)
-4. 완성된 Patch를 `_apply_patch`로 반영 후 커밋
+### 집계 파이프라인
+1. **실시간 Aggregator**  
+   - 이벤트별 함수가 `PlaybookAggregatePatch` 를 생성 (`aggregate_from_metrics`, `aggregate_from_abtest` …)  
+   - `record_playbook_event`가 패치를 받아 `_apply_patch` 로 즉시 갱신
+2. **백필 / 재빌드**  
+   - `rebuild_playbook_aggregates(playbook_id)` 형태의 태스크로 과거 로그를 재계산  
+   - 배치나 CLI에서 전체/부분 리빌드 실행 가능
 
-### 3.3 운영 시나리오
-- 배포 후 새 집계 로직을 적용할 때 전체/부분 재빌드
-- 소정 기간(예: 24h) 내 갱신된 Playbook만 리빌드
-- 문제 발생 시 관리용 CLI/관리자 API에서 on-demand 실행
-
----
-
-## 4. 저장되는 스냅샷 구조 복습
-
-`record_playbook_event` 호출 시 자동 생성되는 스냅샷:
-
-| 스냅샷 | 내용 | 생성 조건 |
-| ------ | ---- | --------- |
-| `persona_snapshot` | Persona 프로필·스타일·해시태그 등 | Persona 조회 가능할 때 항상 |
-| `trend_snapshot` | 국가 기준 최신 트렌드 3개 (Datetime → ISO 변환) | Persona 조회 가능할 때 항상 |
-| `kpi_snapshot` | 이벤트별 KPI 메트릭 (예: A/B 테스트 승리 지표) | 이벤트 공급 시 선택 |
-| `llm_input` / `llm_output` | LLM 프롬프트 및 결과 | CoWorker, LLM 기반 이벤트 |
-
-> 트렌드 스냅샷은 `datetime` 을 ISO8601 문자열로 미리 변환하여 JSON 직렬화 문제를 방지한다.
+### 기대 효과 & 활용 예시
+- 대시보드에서 Playbook 카드 하나로 “현재 KPI·최적 시간대·상위 해시태그” 확인
+- 스케줄러/추천 로직이 최적 시간대를 즉시 활용해 자동 배포
+- LLM 프롬프트에 상위 해시태그나 최근 KPI를 주입하여 더 맥락 있는 콘텐츠 생성
 
 ---
 
-## 5. 플레이북 모델 요약 필드
+## 지금 무엇을 할 수 있나?
 
-| 필드명 | 의미 | 갱신 주체 |
-| ------ | ---- | --------- |
-| `aggregate_kpi` | KPI 키별 누적 성과 (ex. 좋아요, 도달, CTR) | `sync.metrics`, `abtest.completed` |
-| `best_time_window` | 게시/캠페인 관점 Best 시간대 | `post.published`, `schedule.created` |
-| `best_tone` | 반응이 가장 좋은 톤 | LLM/게시 성과 기반 분석 |
-| `top_hashtags` | 상위 해시태그 리스트 | LLM 생성 콘텐츠/게시물 해시태그 |
-| `last_event` | 최신 이벤트 식별자 | 이미 `record_event`에서 자동 갱신 |
-| `last_updated` | 마지막 갱신 시각 | `record_event`에서 자동 갱신 |
+1. **Playbook 타임라인 조회**
+   - `playbook_logs` 를 시간순으로 조회하면 “트렌드 → 액션 → 결과” 흐름이 한눈에 나온다.
+   - 페르소나·캠페인 스냅샷, LLM input/output, KPI 스냅샷이 함께 저장되므로 회고·보고용으로 즉시 활용 가능.
 
-`_apply_patch` 가 각 필드를 덮어쓰는 형태이므로 Aggregator는 `PlaybookAggregatePatch`에 필요한 필드만 채우면 된다.
+2. **Playbook 요약 데이터 활용**
+   - `Playbook.aggregate_kpi`, `best_time_window`, `top_hashtags` 등 요약 필드가 실시간 갱신된다.
+   - 대시보드/추천 로직/LLM 프롬프트가 이 필드만 읽어도 최신 현황을 파악할 수 있다.
 
----
+3. **자동화 및 추천**
+   - 스케줄링 로직이 `best_time_window`를 사용해 최적 시간대 자동 배치.
+   - CoWorker 프롬프트에 `top_hashtags`, `aggregate_kpi`를 삽입해 더 맥락 있는 문장 생성.
 
-## 6. 향후 과제 / TODO
+4. **캠페인 KPI 재활용**
+   - kpi_snapshot을 정의 기반으로 끌어와 Playbook과 Campaign 모듈이 같은 수치를 공유한다.
+   - A/B 테스트 완료, metrics sync, manual fallback을 통해 KPI 스냅샷이 자동으로 채워진다.
 
-1. **Aggregator 구현**
-   - [ ] KPI 누적 로직 설계 (가중치, 기간 등)
-   - [ ] 시간대 분석 알고리즘 정의 (버킷 크기, 지표)
-   - [ ] 해시태그 추출/랭킹 로직 확정
-2. **실시간 파이프라인 연결**
-   - [ ] `record_playbook_event`에 Aggregator 호출/커밋 추가
-   - [ ] 이벤트별 테스트 작성
-3. **백필 도구**
-   - [ ] `rebuild_playbook_aggregates` 구현
-   - [ ] 배치/관리 CLI 등록
-4. **문서/관측**
-   - [ ] 본 문서에 집계 규칙 버전 관리
-   - [ ] 대시보드에서 요약 필드 표시 계획
+5. **백필 및 모델링**
+   - `calculate_campaign_kpis_snapshot`와 향후 `rebuild_playbook_aggregates`를 활용해 과거 로그도 재집계 가능.
+   - 필요 시 배치/CLI에서 전체 Playbook을 리빌드해 최신 전략에 맞게 정리.
 
 ---
 
-## 7. 요약
+## 결론
 
-- Playbook Log는 시스템 전반의 이벤트 허브이며, Aggregator를 통해 Playbook 요약 정보를 자동 갱신한다.
-- Aggregator는 이벤트별로 독립 구현하며, 실시간/재빌드에 동일 로직을 재사용한다.
-- 스냅샷(`persona`, `trend`, `kpi`, `llm_input/output`)은 자동으로 채워지므로 집계 로직에서 적극 활용할 수 있다.
-- `PlaybookAggregatePatch`를 활용하면 업데이트 로직이 중앙화되고, 배치로 재빌드하기도 쉽다.
-
-추가 변경 사항이나 알고리즘이 확정되면 이 문서를 업데이트한다.
+- **로그 히스토리**는 “이 트렌드 → 저 액션”을 증명하고 회고하기 위한 원본 데이터다.  
+- **집계 요약**은 그 히스토리를 바탕으로 현재 상태를 한눈에 보여주고, 다음 행동에 바로 쓰기 위한 데이터다.  
+- 두 축이 함께 움직여야 Playbook이 “기록 + 인사이트 + 자동화”를 모두 제공하는 지식 베이스가 된다.
