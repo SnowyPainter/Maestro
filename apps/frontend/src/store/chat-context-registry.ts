@@ -37,6 +37,10 @@ export const SLOT_ICONS: Record<string, string> = {
   // Draft/Content
   draft_id: "FileText",
   variant_id: "FileText",
+  post_publication_id: "Send",
+
+  // Comments
+  comment_id: "MessageSquare",
 
   // Persona/Account
   persona_id: "User",

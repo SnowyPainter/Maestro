@@ -1084,6 +1084,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/insights/{post_publication_id}/comments:
+    get:
+      tags:
+      - bff
+      - bff
+      - insights
+      - comments
+      summary: List Comments
+      description: List comments for a post publication.
+      operationId: bff_insights_comments_list_api_bff_insights__post_publication_id__comments_get
+      parameters:
+      - name: post_publication_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Publication Id
+      - name: persona_account_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightCommentList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/me:
     get:
       tags:
@@ -2586,8 +2631,8 @@ paths:
       - content
       - create
       - writing
-      summary: Create Content Draft
-      description: Start a new content draft with initial parameters and metadata
+      summary: Create Draft
+      description: Create a new draft from a source/comment/trend data
       operationId: drafts_create_api_orchestrator_drafts_post
       requestBody:
         content:
@@ -3338,7 +3383,7 @@ paths:
         required: false
         schema:
           type: integer
-          maximum: 50
+          maximum: 100
           minimum: 1
           description: Maximum number of hints to return
           default: 10
@@ -5164,6 +5209,25 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    InsightCommentList:
+      properties:
+        comments:
+          items:
+            $ref: '#/components/schemas/InsightCommentOut'
+          type: array
+          title: Comments
+        total:
+          type: integer
+          title: Total
+        has_more:
+          type: boolean
+          title: Has More
+          default: false
+      type: object
+      required:
+      - comments
+      - total
+      title: InsightCommentList
     InsightCommentOut:
       properties:
         owner_user_id:

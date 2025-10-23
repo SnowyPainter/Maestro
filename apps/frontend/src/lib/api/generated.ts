@@ -854,6 +854,12 @@ export interface HTTPValidationError {
   detail?: ValidationError[];
 }
 
+export interface InsightCommentList {
+  comments: InsightCommentOut[];
+  total: number;
+  has_more?: boolean;
+}
+
 export type InsightCommentOutOwnerUserId = number | null;
 
 export type InsightCommentOutPostPublicationId = number | null;
@@ -2180,6 +2186,11 @@ limit?: number;
 offset?: number;
 };
 
+export type BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams = {
+persona_account_id?: number | null;
+limit?: number;
+};
+
 export type BffPlaybookListPlaybooksApiBffPlaybooksGetParams = {
 persona_id?: number | null;
 campaign_id?: number | null;
@@ -2388,7 +2399,7 @@ flow?: string | null;
 /**
  * Maximum number of hints to return
  * @minimum 1
- * @maximum 50
+ * @maximum 100
  */
 limit?: number;
 };
@@ -4851,6 +4862,103 @@ export function useBffDraftsListDraftsApiBffDraftsGet<TData = Awaited<ReturnType
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffDraftsListDraftsApiBffDraftsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * List comments for a post publication.
+ * @summary List Comments
+ */
+export const bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet = (
+    postPublicationId: number,
+    params?: BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<InsightCommentList>(
+      {url: `/api/bff/insights/${postPublicationId}/comments`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryKey = (postPublicationId?: number,
+    params?: BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams,) => {
+    return [`/api/bff/insights/${postPublicationId}/comments`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError = HTTPValidationError>(postPublicationId: number,
+    params?: BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryKey(postPublicationId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>> = ({ signal }) => bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet(postPublicationId,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(postPublicationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>>
+export type BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryError = HTTPValidationError
+
+
+export function useBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError = HTTPValidationError>(
+ postPublicationId: number,
+    params: undefined |  BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError = HTTPValidationError>(
+ postPublicationId: number,
+    params?: BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError = HTTPValidationError>(
+ postPublicationId: number,
+    params?: BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Comments
+ */
+
+export function useBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError = HTTPValidationError>(
+ postPublicationId: number,
+    params?: BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryOptions(postPublicationId,params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -7455,8 +7563,8 @@ export const useCampaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregat
     }
     
 /**
- * Start a new content draft with initial parameters and metadata
- * @summary Create Content Draft
+ * Create a new draft from a source/comment/trend data
+ * @summary Create Draft
  */
 export const draftsCreateApiOrchestratorDraftsPost = (
     draftSaveRequest: DraftSaveRequest,
@@ -7504,7 +7612,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DraftsCreateApiOrchestratorDraftsPostMutationError = HTTPValidationError
 
     /**
- * @summary Create Content Draft
+ * @summary Create Draft
  */
 export const useDraftsCreateApiOrchestratorDraftsPost = <TError = HTTPValidationError,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof draftsCreateApiOrchestratorDraftsPost>>, TError,{data: DraftSaveRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}

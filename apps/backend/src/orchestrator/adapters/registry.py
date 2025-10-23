@@ -95,6 +95,7 @@ ADAPTERS = AdapterRegistry()
 
 ADAPTERS.register("bff.trends.list_trends", "drafts.create", trends_to_draft_adapter, priority=10)
 ADAPTERS.register("internal.insights.list_comments", "drafts.create", comments_to_draft_adapter, priority=10)
+ADAPTERS.register("bff.insights.comments.list", "drafts.create", comments_to_draft_adapter, priority=7)
 ADAPTERS.register("bff.timeline.*", "bff.timeline.*", timeline_result_adapter, priority=5)
 
 

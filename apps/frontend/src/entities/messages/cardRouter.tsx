@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatCard, TrendsListResponse, DraftVariantRender } from "@/lib/api/generated";
+import { ChatCard, TrendsListResponse, DraftVariantRender, InsightCommentList } from "@/lib/api/generated";
 import { TableCard } from "./components/Table";
 import { ChartCard } from "./components/ChartCard";
 import { EditorCard } from "./components/EditorCard";
@@ -24,6 +24,8 @@ import { TimelineEvent } from "@/entities/timeline/model/types";
 import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
 import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
 import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
+import PostPublicationList from "@/entities/post-publications/components/PostPublicationList";
+import CommentList from "@/entities/comments/components/CommentList";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -34,6 +36,8 @@ export interface CardRenderCallbacks {
   onDraftVariantSelect?: (variant: DraftVariantRender, sourceMessageId: number) => void;
   onPlaybookSelect?: (playbookId: number, sourceMessageId: number) => void;
   onCoworkerSelect?: () => void;
+  onPostPublicationSelect?: (publicationId: number, sourceMessageId: number) => void;
+  onCommentSelect?: (commentId: number, sourceMessageId: number) => void;
 }
 
 export interface RenderCardOptions {
@@ -163,6 +167,23 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     return (
       <PlaybookList
         onSelectPlaybook={playbookId => callbacks.onPlaybookSelect?.(playbookId, messageId)}
+      />
+    );
+  }
+
+  if (card_type === 'draft.post_publications.list') {
+    return (
+      <PostPublicationList
+        onSelectPublication={(publicationId) => callbacks.onPostPublicationSelect?.(publicationId, messageId)}
+      />
+    );
+  }
+
+  if (card_type === 'insights.comments.list') {
+    return (
+      <CommentList
+        data={data as unknown as InsightCommentList}
+        onSelectComment={(commentId) => callbacks.onCommentSelect?.(commentId, messageId)}
       />
     );
   }

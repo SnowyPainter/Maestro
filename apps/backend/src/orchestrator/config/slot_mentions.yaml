@@ -322,6 +322,7 @@ slots:
   - bff.campaigns.list_campaigns
   - bff.campaigns.list_kpi_results
   - bff.drafts.list_drafts
+  - bff.insights.comments.list
   - bff.playbook.list_playbooks
   - bff.schedule.get_schedule_stream
   - bff.schedule.list_schedules
@@ -435,6 +436,7 @@ slots:
   - bff.abtests.publications
   - bff.contexts.current_persona
   - bff.contexts.current_persona_account
+  - bff.insights.comments.list
   - bff.schedule.list_schedules
   - bff.timeline.abtests
   - bff.timeline.campaigns
@@ -509,6 +511,7 @@ slots:
   description: Target a specific post publication id
   value_type: integer
   flows:
+  - bff.insights.comments.list
   - insights.ingest
   - internal.drafts.publish
   - internal.insights.list_comments

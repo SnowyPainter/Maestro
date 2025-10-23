@@ -42,7 +42,7 @@ class SlotHintItem(BaseModel):
 async def list_slot_hints(
     query: Optional[str] = Query(default=None, description="Filter hints by name or label"),
     flow: Optional[str] = Query(default=None, description="Filter hints relevant to a specific flow key"),
-    limit: int = Query(default=10, ge=1, le=50, description="Maximum number of hints to return"),
+    limit: int = Query(default=10, ge=1, le=100, description="Maximum number of hints to return"),
 ) -> List[SlotHintItem]:
     hints = filter_slot_hints(query=query, flow=flow, limit=limit)
     return [SlotHintItem.from_hint(hint) for hint in hints]

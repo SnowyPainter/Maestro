@@ -584,6 +584,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/insights/{post_publication_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Comments
+         * @description List comments for a post publication.
+         */
+        get: operations["bff_insights_comments_list_api_bff_insights__post_publication_id__comments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/me": {
         parameters: {
             query?: never;
@@ -1207,8 +1227,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create Content Draft
-         * @description Start a new content draft with initial parameters and metadata
+         * Create Draft
+         * @description Create a new draft from a source/comment/trend data
          */
         post: operations["drafts_create_api_orchestrator_drafts_post"];
         delete?: never;
@@ -2718,6 +2738,18 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InsightCommentList */
+        InsightCommentList: {
+            /** Comments */
+            comments: components["schemas"]["InsightCommentOut"][];
+            /** Total */
+            total: number;
+            /**
+             * Has More
+             * @default false
+             */
+            has_more: boolean;
         };
         /** InsightCommentOut */
         InsightCommentOut: {
@@ -5115,6 +5147,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_insights_comments_list_api_bff_insights__post_publication_id__comments_get: {
+        parameters: {
+            query?: {
+                persona_account_id?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                post_publication_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightCommentList"];
                 };
             };
             /** @description Validation Error */

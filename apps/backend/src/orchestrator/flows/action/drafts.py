@@ -115,8 +115,8 @@ async def op_delete_draft(payload: DraftDeleteCommand, ctx: TaskContext) -> Mess
 
 @FLOWS.flow(
     key="drafts.create",
-    title="Create Content Draft",
-    description="Start a new content draft with initial parameters and metadata",
+    title="Create Draft",
+    description="Create a new draft from a source/comment/trend data",
     input_model=DraftSaveRequest,
     output_model=DraftOut,
     method="post",

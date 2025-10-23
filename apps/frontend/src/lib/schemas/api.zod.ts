@@ -1025,6 +1025,48 @@ export const bffDraftsListDraftsApiBffDraftsGetResponse = zod.array(bffDraftsLis
 
 
 /**
+ * List comments for a post publication.
+ * @summary List Comments
+ */
+export const bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams = zod.object({
+  "post_publication_id": zod.number()
+})
+
+export const bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryLimitDefault = 20;
+
+export const bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryParams = zod.object({
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "limit": zod.number().default(bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetQueryLimitDefault)
+})
+
+export const bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetResponseHasMoreDefault = false;
+
+export const bffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetResponse = zod.object({
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})),
+  "total": zod.number(),
+  "has_more": zod.boolean().optional()
+})
+
+
+/**
  * Retrieve authenticated user profile information for user interface and settings
  * @summary Get Current User Profile
  */
@@ -2335,8 +2377,8 @@ export const campaignsAggregateKpisApiOrchestratorCampaignsCampaignIdAggregateKp
 
 
 /**
- * Start a new content draft with initial parameters and metadata
- * @summary Create Content Draft
+ * Create a new draft from a source/comment/trend data
+ * @summary Create Draft
  */
 export const draftsCreateApiOrchestratorDraftsPostBody = zod.object({
   "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
@@ -3025,7 +3067,7 @@ export const getAvailableFlowsApiOrchestratorChatFlowsGetResponse = zod.array(ge
  * @summary List Slot Hints
  */
 export const listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryLimitDefault = 10;
-export const listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryLimitMax = 50;
+export const listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryLimitMax = 100;
 
 
 export const listSlotHintsApiOrchestratorHelpersSlotHintsGetQueryParams = zod.object({

@@ -104,7 +104,7 @@ PROMPT_METADATA_REGISTRY: Dict[PromptKey, PromptMetadata] = {
     ),
     PromptKey.DRAFT_FROM_COMMENT: PromptMetadata(
         key=PromptKey.DRAFT_FROM_COMMENT,
-        required_vars={"comment_data"},
+        required_vars={"comment_data", "persona_brief"},
         optional_vars={"product_name", "audience", "tone", "goal", "text"},
         output_schema=DraftFromCommentOutput,
         description="댓글데이터를 바탕으로 글 작성"

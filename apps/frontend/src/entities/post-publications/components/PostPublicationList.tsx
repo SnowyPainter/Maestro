@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePersonaContextStore } from "@/store/persona-context";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 import { toast } from "sonner";
 import { ExternalLink, Calendar, Clock, AlertCircle, CheckCircle } from "lucide-react";
 
@@ -47,6 +48,7 @@ const getStatusIcon = (status: string) => {
 const PostPublicationList = ({ onSelectPublication }: PostPublicationListProps) => {
   const { personaAccountId } = usePersonaContextStore();
   const [selectedPublication, setSelectedPublication] = useState<number | null>(null);
+  const registerEmission = useContextRegistryStore((state) => state.registerEmission);
 
   const canQuery = !!personaAccountId;
 
@@ -61,6 +63,33 @@ const PostPublicationList = ({ onSelectPublication }: PostPublicationListProps) 
       });
     }
   }, [canQuery, personaAccountId, mutate]);
+
+  const publications = data || [];
+
+  // Register publications in context registry
+  useEffect(() => {
+    if (publications) {
+      publications.forEach((pub) => {
+        // Register publication_id
+        registerEmission('post_publication_id', {
+          value: pub.id.toString(),
+          label: pub.title || pub.variant_content?.substring(0, 10) + "..." || `Publication #${pub.id}`,
+        });
+
+        // Register variant_id
+        registerEmission('variant_id', {
+          value: pub.variant_id.toString(),
+          label: pub.title || pub.variant_content || `Variant #${pub.variant_id}`,
+        });
+
+        // Register account_persona_id
+        registerEmission('account_persona_id', {
+          value: pub.account_persona_id.toString(),
+          label: `${pub.platform} Account`,
+        });
+      });
+    }
+  }, [publications, registerEmission]);
 
   const handleSelectPublication = (publication: EnrichedPostPublicationOut) => {
     setSelectedPublication(publication.id);
@@ -138,8 +167,6 @@ const PostPublicationList = ({ onSelectPublication }: PostPublicationListProps) 
       </Card>
     );
   }
-
-  const publications = data || [];
 
   return (
     <Card className="shadow-sm">

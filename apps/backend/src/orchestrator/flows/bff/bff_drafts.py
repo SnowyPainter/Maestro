@@ -459,7 +459,7 @@ async def op_list_post_publications_by_platform_and_status(
 
 @operator(
     key="bff.drafts.list_post_publications_enriched",
-    title="BFF List Enriched Post Publications",
+    title="List Post Publications all",
     side_effect="read",
 )
 async def op_list_post_publications_enriched(

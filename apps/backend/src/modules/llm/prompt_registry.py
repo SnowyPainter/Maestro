@@ -127,11 +127,15 @@ DesiredTone: {{ tone or "empathetic" }}
 Goal: {{ goal or "conversion" }}
 AdditionalNotes: {{ text or "None" }}
 
+PersonaBrief (JSON):
+{{ persona_brief | tojson(indent=2) if persona_brief else "{}" }}
+
 CommentDataset (JSON):
 {{ comment_data | tojson(indent=2) if comment_data else "[]" }}
 
 Instructions:
 - Identify the hottest themes using metrics such as likes/replies.
+- Stay faithful to persona tone, guardrails, and bans described in PersonaBrief.
 - Create a DraftIR that acknowledges commenters' sentiment and moves the conversation forward.
 - Keep structure concise: hook, acknowledgement, value response, CTA.
 - Ensure facts stay consistent with the comments and avoid inventing metrics.
