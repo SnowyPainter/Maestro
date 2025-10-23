@@ -2,8 +2,8 @@
 
 ## English
 
-Our platform redefines how businesses create and manage social content.  
-Through a chat-first, card-driven interface, teams can plan, generate, schedule, and publish posts with precision and speed.  
+Our platform redefines how businesses create and manage social content.
+Through a simple 2-step process — "Get trends and create draft" then Schedule — teams can generate trend-driven content and automate publishing with precision and speed.  
 
 ### Key Benefits
 - **Efficiency**: Streamline workflows with deterministic action cards and automated scheduling.
@@ -21,8 +21,8 @@ Through a chat-first, card-driven interface, teams can plan, generate, schedule,
 
 ## 中文
 
-我们的平台重新定义了企业创建和管理社交内容的方式。  
-通过以聊天为核心、卡片驱动的界面，团队可以高效地规划、生成、排程并发布内容。  
+我们的平台重新定义了企业创建和管理社交内容的方式。
+通过简单的两步流程——"Get trends and create draft"然后Schedule——团队可以生成趋势驱动的内容并自动化发布。  
 
 ### 核心优势
 - **高效**：使用确定性操作卡片与自动排程，简化工作流程。
