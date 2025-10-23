@@ -63,12 +63,12 @@ const ABTestCompleteForm = ({ abTest, onSuccess }: ABTestCompleteFormProps) => {
                 >
                   <FormItem>
                     <FormControl>
-                      <ToggleGroupItem value={ABTestWinnerEnum.A} aria-label="Select A">Variant A</ToggleGroupItem>
+                      <ToggleGroupItem className="data-[state=on]:bg-blue-500 data-[state=on]:text-white" value={ABTestWinnerEnum.A} aria-label="Select A">Variant A</ToggleGroupItem>
                     </FormControl>
                   </FormItem>
                   <FormItem>
                     <FormControl>
-                      <ToggleGroupItem value={ABTestWinnerEnum.B} aria-label="Select B">Variant B</ToggleGroupItem>
+                      <ToggleGroupItem className="data-[state=on]:bg-green-500 data-[state=on]:text-white" value={ABTestWinnerEnum.B} aria-label="Select B">Variant B</ToggleGroupItem>
                     </FormControl>
                   </FormItem>
                 </ToggleGroup>

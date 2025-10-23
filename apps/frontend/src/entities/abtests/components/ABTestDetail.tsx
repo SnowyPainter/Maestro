@@ -1,9 +1,8 @@
 import { useBffAbtestsReadApiBffAbtestsAbtestIdGet, useBffDraftsReadDraftApiBffDraftsDraftIdGet } from "@/lib/api/generated";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DeleteABTestButton from "@/features/abtests/components/DeleteABTestButton";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ABTestCompleteForm from "@/features/abtests/components/ABTestCompleteForm";
 import ABTestEditForm from "@/features/abtests/components/ABTestEditForm";
@@ -61,62 +60,79 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
   }
 
   const displayName = `Test on: ${abTest.variable}`;
-
+  
+  const statusBadge = useMemo(() => (
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+      abTest.finished_at ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"
+    }`}>
+      {abTest.finished_at ? "Completed" : "Running"}
+    </span>
+  ), [abTest.finished_at]);
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">{displayName}</CardTitle>
-        <CardDescription>A/B Test ID: {abTest.id}</CardDescription>
-        <Badge variant={statusVariant[abTest.finished_at ? "completed" : "running"] || "default"}>{abTest.finished_at ? "Completed" : "Running"}</Badge>
+        <CardDescription>A/B Test ID: {abTest.id} {statusBadge}</CardDescription>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground">
         {abTest.hypothesis && <p className="mb-2"><strong>Hypothesis:</strong> {abTest.hypothesis}</p>}
         {abTest.notes && <p className="mb-4"><strong>Notes:</strong> {abTest.notes}</p>}
 
-        {/* Variant A Details */}
-        <div className="mb-4 p-4 border rounded-lg bg-blue-50">
-          <h4 className="font-semibold text-blue-900 mb-2">Variant A</h4>
-          {variantA ? (
-            <div>
-              <p className="text-sm text-blue-800 mb-1">
-                <strong>Title:</strong> {variantA.title || "Untitled"}
-              </p>
-              {variantA.goal && (
-                <p className="text-sm text-blue-800">
-                  <strong>Goal:</strong> {variantA.goal}
+        {/* Variants Details - Horizontal Layout */}
+        <div className="flex gap-4 mb-4">
+          {/* Variant A Details */}
+          <div className="flex-1 p-4 border rounded-lg bg-blue-50 relative">
+            {abTest.finished_at && abTest.winner_variant === 'A' && (
+              <div className="absolute top-2 right-2 text-yellow-600 font-bold text-lg">👑</div>
+            )}
+            <h4 className="font-semibold text-blue-900 mb-2">Variant A</h4>
+            {variantA ? (
+              <div>
+                <p className="text-sm text-blue-800 mb-1">
+                  <strong>Title:</strong> {variantA.title || "Untitled"}
                 </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-blue-600">Loading variant details...</p>
-          )}
-        </div>
-
-        {/* Variant B Details */}
-        <div className="mb-4 p-4 border rounded-lg bg-green-50">
-          <h4 className="font-semibold text-green-900 mb-2">Variant B</h4>
-          {variantB ? (
-            <div>
-              <p className="text-sm text-green-800 mb-1">
-                <strong>Title:</strong> {variantB.title || "Untitled"}
-              </p>
-              {variantB.goal && (
-                <p className="text-sm text-green-800">
-                  <strong>Goal:</strong> {variantB.goal}
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-green-600">Loading variant details...</p>
-          )}
-        </div>
-        {abTest.finished_at && (
-          <div className="mt-4 pt-4 border-t">
-            <p className="font-semibold text-foreground">Result:</p>
-            <p><strong>Winner:</strong> Variant {abTest.winner_variant}</p>
-            {abTest.uplift_percentage != null && <p><strong>Uplift:</strong> {abTest.uplift_percentage}%</p>}
+                {variantA.goal && (
+                  <p className="text-sm text-blue-800">
+                    <strong>Goal:</strong> {variantA.goal}
+                  </p>
+                )}
+                {abTest.finished_at && abTest.winner_variant === 'A' && abTest.uplift_percentage != null && (
+                  <p className="text-sm text-blue-800 mt-2 font-semibold">
+                    <strong>Uplift:</strong> {abTest.uplift_percentage}%
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-blue-600">Loading variant details...</p>
+            )}
           </div>
-        )}
+          {/* Variant B Details */}
+          <div className="flex-1 p-4 border rounded-lg bg-green-50 relative">
+            {abTest.finished_at && abTest.winner_variant === 'B' && (
+              <div className="absolute top-2 right-2 text-yellow-600 font-bold text-lg">👑</div>
+            )}
+            <h4 className="font-semibold text-green-900 mb-2">Variant B</h4>
+            {variantB ? (
+              <div>
+                <p className="text-sm text-green-800 mb-1">
+                  <strong>Title:</strong> {variantB.title || "Untitled"}
+                </p>
+                {variantB.goal && (
+                  <p className="text-sm text-green-800">
+                    <strong>Goal:</strong> {variantB.goal}
+                  </p>
+                )}
+                {abTest.finished_at && abTest.winner_variant === 'B' && abTest.uplift_percentage != null && (
+                  <p className="text-sm text-green-800 mt-2 font-semibold">
+                    <strong>Uplift:</strong> {abTest.uplift_percentage}%
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-green-600">Loading variant details...</p>
+            )}
+          </div>
+        </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         {abTest.finished_at === null && (
