@@ -34,8 +34,8 @@ from apps.backend.src.modules.adapters.core.types import (
     RenderedVariantBlocks,
     ThreadsCredentials,
 )
+from apps.backend.src.modules.adapters.utils.metrics import parse_metric_payload
 from apps.backend.src.modules.common.enums import (
-    KPIKey,
     ContentKind,
     MetricsScope,
     PlatformKind,
@@ -287,7 +287,7 @@ class ThreadsMetricsCapability(ThreadsCapabilityBase, MetricsCapability):
                 metrics={},
                 scope=MetricsScope.SINCE_PUBLISH,
                 content_kind=ContentKind.POST,
-                mapping_version=2,
+                mapping_version=3,
                 collected_at=_utcnow(),
                 raw={},
                 warnings=[],
@@ -301,7 +301,7 @@ class ThreadsMetricsCapability(ThreadsCapabilityBase, MetricsCapability):
                 metrics={},
                 scope=MetricsScope.SINCE_PUBLISH,
                 content_kind=ContentKind.POST,
-                mapping_version=2,
+                mapping_version=3,
                 collected_at=_utcnow(),
                 raw={},
                 warnings=[],
@@ -317,7 +317,7 @@ class ThreadsMetricsCapability(ThreadsCapabilityBase, MetricsCapability):
                 metrics={},
                 scope=MetricsScope.SINCE_PUBLISH,
                 content_kind=ContentKind.POST,
-                mapping_version=2,
+                mapping_version=3,
                 collected_at=_utcnow(),
                 raw={},
                 warnings=[],
@@ -330,7 +330,7 @@ class ThreadsMetricsCapability(ThreadsCapabilityBase, MetricsCapability):
             metrics=metrics,
             scope=MetricsScope.SINCE_PUBLISH,
             content_kind=ContentKind.POST,
-            mapping_version=2,
+            mapping_version=3,
             collected_at=_utcnow(),
             raw=insights or {},
             warnings=[],
@@ -710,32 +710,7 @@ def resolve_creation_id(payload: Dict[str, Any] | None) -> Optional[str]:
 
 
 def parse_metrics(payload: Dict[str, Any] | None) -> Dict[str, float]:
-    if not isinstance(payload, dict):
-        return {}
-    data = payload.get("data")
-    if not isinstance(data, list):
-        return {}
-    metrics: Dict[str, float] = {}
-    metric_name_map = {
-        "likes": KPIKey.LIKES.value,
-        "replies": KPIKey.COMMENTS.value,
-        "reposts": KPIKey.SHARES.value,
-    }
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-        name = item.get("name")
-        values = item.get("values")
-        if not isinstance(name, str) or not isinstance(values, list) or not values:
-            continue
-        first = values[0]
-        if isinstance(first, dict):
-            value = first.get("value")
-            if isinstance(value, (int, float)):
-                mapped = metric_name_map.get(name)
-                if mapped:
-                    metrics[mapped] = float(value)
-    return metrics
+    return parse_metric_payload(payload)
 
 
 def extract_comment_options(options: dict | None) -> Dict[str, Any]:
