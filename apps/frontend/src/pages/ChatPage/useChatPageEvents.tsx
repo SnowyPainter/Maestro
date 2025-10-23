@@ -398,6 +398,28 @@ export function useChatPageEvents() {
     removeMessagesByComponent(ScheduleToolCard);
   }, [addTextMessage, removeMessage, removeMessagesByComponent]);
 
+  const handleSelectABTestForScheduling = useCallback(() => {
+    removeMessagesByComponent(ScheduleToolCard);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <ABTestList
+          onSelectABTest={abTestId => {
+            removeMessage(messageId);
+            addCardMessage(messageId => (
+              <ABTestDetail
+                abTestId={abTestId}
+                onDelete={() => handleCardDelete(messageId)}
+              />
+            ));
+          }}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, removeMessage, removeMessagesByComponent, addCardMessage, handleCardDelete]);
+
   const handleNewPostSchedule = useCallback(() => {
     removeMessagesByComponent(ScheduleToolCard);
     const messageId = getNextMessageId();
@@ -597,6 +619,8 @@ export function useChatPageEvents() {
                   handleNewPostSchedule();
                 } else if (template.key.startsWith("insights.")) {
                   handleNewSyncMetricsSchedule();
+                } else if (template.key.startsWith("abtest.")) {
+                  handleSelectABTestForScheduling();
                 } else {
                   console.log("Unknown template:", template.key);
                 }

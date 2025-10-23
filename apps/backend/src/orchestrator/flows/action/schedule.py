@@ -708,6 +708,13 @@ async def op_schedule_abtest(
     user: User = ctx.require(User)
     abtest_id = _require_identifier(payload.abtest_id, "abtest_id")
 
+    # Validate that completion time is after publication time
+    if payload.complete_at is not None and payload.complete_at <= payload.run_at:
+        raise HTTPException(
+            status_code=400,
+            detail="Completion time must be after publication time"
+        )
+
     try:
         plan: ABTestSchedulePlan = await service_schedule_abtest(
             db,

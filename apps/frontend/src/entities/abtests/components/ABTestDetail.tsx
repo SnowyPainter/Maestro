@@ -7,11 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import ABTestCompleteForm from "@/features/abtests/components/ABTestCompleteForm";
 import ABTestEditForm from "@/features/abtests/components/ABTestEditForm";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "lucide-react";
+import { CreateABTestScheduleForm } from "@/features/schedules/components/CreateABTestScheduleForm";
 
 interface ABTestDetailProps {
   abTestId: number;
   onDelete: () => void;
 }
+
 
 interface VariantCardProps {
   variant: any;
@@ -37,8 +40,8 @@ const VariantCard = ({ variant, variantName, isWinner, upliftPercentage, bgColor
             <p className={`text-sm ${textColor}`} key={`${block.type}-${index}`}>
               {block.type === "text"
                 ? ((block.props?.markdown as string)?.length > 60
-                    ? (block.props.markdown as string).substring(0, 60) + "..."
-                    : (block.props.markdown as string))
+                  ? (block.props.markdown as string).substring(0, 60) + "..."
+                  : (block.props.markdown as string))
                 : block.type === "image"
                   ? (block.props?.url as string)
                   : (block.props?.video_url as string)}
@@ -70,8 +73,17 @@ const VariantCard = ({ variant, variantName, isWinner, upliftPercentage, bgColor
 const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [isScheduleDialogOpen, setScheduleDialogOpen] = useState(false);
 
   const { data: abTest, isLoading, error } = useBffAbtestsReadApiBffAbtestsAbtestIdGet(abTestId);
+
+  // Always call hooks in the same order - use enabled to control execution
+  const { data: variantA } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_a_id || 0, {
+    query: { enabled: !!abTest?.variant_a_id }
+  });
+  const { data: variantB } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_b_id || 0, {
+    query: { enabled: !!abTest?.variant_b_id }
+  });
 
   if (isLoading) {
     return (
@@ -86,14 +98,6 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
       </Card>
     );
   }
-
-  // Get variant details only after abTest is loaded
-  const { data: variantA } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_a_id || 0, {
-    query: { enabled: !!abTest }
-  });
-  const { data: variantB } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_b_id || 0, {
-    query: { enabled: !!abTest }
-  });
 
   if (error || !abTest) {
     return (
@@ -111,9 +115,8 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
   const displayName = `Test on: ${abTest.variable}`;
 
   const statusBadge = (
-    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-      abTest.finished_at ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"
-    }`}>
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${abTest.finished_at ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"
+      }`}>
       {abTest.finished_at ? "Completed" : "Running"}
     </span>
   );
@@ -148,21 +151,42 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
-        {abTest.finished_at === null && (
-          <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="sm">Edit</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit A/B Test</DialogTitle>
-              </DialogHeader>
-              <ABTestEditForm abTestId={abTest.id} onSuccess={() => setEditDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
+        {abTest.finished_at === null && abTest.persona_id && (
+          <>
+            <Dialog open={isScheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Schedule A/B Test</DialogTitle>
+                </DialogHeader>
+                <CreateABTestScheduleForm
+                  abTestId={abTestId}
+                  personaAccountId={abTest.persona_id}
+                  onSuccess={() => setScheduleDialogOpen(false)}
+                  onCancel={() => setScheduleDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm">Edit</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit A/B Test</DialogTitle>
+                </DialogHeader>
+                <ABTestEditForm abTestId={abTest.id} onSuccess={() => setEditDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
+          </>
         )}
         {abTest.finished_at === null && (
-           <Dialog open={isCompleteDialogOpen} onOpenChange={setCompleteDialogOpen}>
+          <Dialog open={isCompleteDialogOpen} onOpenChange={setCompleteDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm">Complete Test</Button>
             </DialogTrigger>
