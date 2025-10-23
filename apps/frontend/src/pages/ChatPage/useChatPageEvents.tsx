@@ -4,7 +4,6 @@ import { Message, useChatMessagesContext } from "@/entities/messages/context/Cha
 import {
   useChatQueryApiOrchestratorChatQueryPost,
   TrendsListResponse,
-  bffAccountsReadPlatformAccountApiBffAccountsPlatformAccountIdGet,
   DraftVariantRender,
   CoworkerLeaseState,
   ChatCard,
@@ -26,11 +25,9 @@ import { PersonaDetail } from "@/entities/personas/components/PersonaDetail";
 import { LinkedAccountList } from "@/entities/personas/components/LinkedAccountList";
 import { AccountToolCard } from "@/features/accounts/components/AccountToolCard";
 import { CreateAccountForm } from "@/features/accounts/components/CreateAccountForm";
-import { EditAccountForm } from "@/features/accounts/components/EditAccountForm";
 import { AccountList } from "@/entities/accounts/components/AccountList";
 import { AccountDetail } from "@/entities/accounts/components/AccountDetail";
 import { PersonaAccountList } from "@/entities/accounts/components/PersonaAccountList";
-import { PlatformAccountOut } from "@/lib/api/generated";
 import { DraftVariantList } from "@/entities/drafts/components/DraftVariantList";
 import { DraftVariantDetail } from "@/entities/drafts/components/DraftVariantDetail";
 import { useTranslation } from 'react-i18next';
@@ -47,6 +44,7 @@ import ABTestToolCard from "@/features/abtests/components/ABTestToolCard";
 import ABTestCreateForm from "@/features/abtests/components/ABTestCreateForm";
 import ABTestList from "@/entities/abtests/components/ABTestList";
 import ABTestDetail from "@/entities/abtests/components/ABTestDetail";
+import PostPublicationList from "@/entities/post-publications/components/PostPublicationList";
 
 const isMessageOfComponent = (content: Message["content"], component: React.ComponentType<any>): boolean => (
   React.isValidElement(content) && content.type === component
@@ -397,7 +395,7 @@ export function useChatPageEvents() {
       removeMessage(sourceMessageId);
     }
     addTextMessage(`Schedule(s) created successfully.`, 'bot');
-    removeMessagesByComponent(ScheduleToolCard); // Close the tool card on success
+    removeMessagesByComponent(ScheduleToolCard);
   }, [addTextMessage, removeMessage, removeMessagesByComponent]);
 
   const handleNewPostSchedule = useCallback(() => {
@@ -461,7 +459,7 @@ export function useChatPageEvents() {
       removeMessage(sourceMessageId);
     }
     addTextMessage(`Schedule(s) cancelled successfully.`, 'bot');
-    removeMessagesByComponent(ScheduleToolCard); // Close the tool card on success
+    removeMessagesByComponent(ScheduleToolCard);
   }, [addTextMessage, removeMessage, removeMessagesByComponent]);
 
   const handleCancelSchedule = useCallback(() => {
@@ -529,92 +527,109 @@ export function useChatPageEvents() {
   const handleSelectABTest = useCallback(() => {
     removeMessagesByComponent(ABTestToolCard);
     removeMessagesByComponent(ABTestList);
-    addCardMessage(() => (
-      <ABTestList />
-    ));
+    addCardMessage(() => <ABTestList />);
   }, [addCardMessage, removeMessagesByComponent]);
 
-  const handleToolClick = useCallback((toolId: string) => {
-    switch (toolId) {
-      case 'campaigns':
-        removeMessagesByComponent(CampaignToolCard);
-        addCardMessage(() => (
-          <CampaignToolCard
-            onNew={handleNewCampaign}
-            onSelect={handleSelectCampaign}
-          />
-        ));
-        break;
-      case 'draft':
-        removeMessagesByComponent(DraftToolCard);
-        addCardMessage(() => (
-          <DraftToolCard
-            onNew={handleNewDraft}
-            onSelect={handleSelectDraft}
-          />
-        ));
-        break;
-      case 'personas':
-        removeMessagesByComponent(PersonaToolCard);
-        addCardMessage(() => (
-          <PersonaToolCard
-            onNew={handleNewPersona}
-            onSelect={handleSelectPersona}
-          />
-        ));
-        break;
-      case 'accounts':
-        removeMessagesByComponent(AccountToolCard);
-        addCardMessage(() => (
-          <AccountToolCard
-            onNew={handleNewAccount}
-            onSelect={handleSelectAccount}
-            onSelectLinks={handleSelectPersonaForLinks}
-          />
-        ));
-        break;
-      case 'schedules':
-        removeMessagesByComponent(ScheduleToolCard);
-        addCardMessage(() => (
-          <ScheduleToolCard
-            onScheduleAction={(template) => {
-              if (template.key.startsWith('mail.')) {
-                handleNewMailSchedule();
-              } else if (template.key.startsWith('post.')) {
-                handleNewPostSchedule();
-              } else if (template.key.startsWith('insights.')) {
-                handleNewSyncMetricsSchedule();
-              } else {
-                console.log('Unknown template:', template.key);
-              }
-            }}
-            onNewRawSchedule={handleNewRawSchedule}
-            onCancel={handleCancelSchedule}
-          />
-        ));
-        break;
-      case 'coworker':
-        removeMessagesByComponent(CoworkerToolCard);
-        addCardMessage(() => (
-          <CoworkerToolCard 
-            onViewDetails={handleViewCoworkerDetails}
-            onEdit={handleEditCoworker}
-          />
-        ));
-        break;
-      case 'ab-tests':
-        removeMessagesByComponent(ABTestToolCard);
-        addCardMessage(() => (
-          <ABTestToolCard
-            onNew={handleNewABTest}
-            onSelect={handleSelectABTest}
-          />
-        ));
-        break;
-      default:
-        break;
-    }
-  }, [addCardMessage, handleNewCampaign, handleNewDraft, handleNewPersona, handleSelectCampaign, handleSelectDraft, handleSelectPersona, handleNewAccount, handleSelectAccount, handleSelectPersonaForLinks, removeMessagesByComponent, handleNewPostSchedule, handleNewMailSchedule, handleNewRawSchedule, handleCancelSchedule, handleNewABTest, handleSelectABTest]);
+  const handleSelectListPublications = useCallback(() => {
+    removeMessagesByComponent(DraftToolCard);
+    addCardMessage(() => <PostPublicationList />);
+  }, [addCardMessage, removeMessagesByComponent]);
+
+  const handleToolClick = useCallback(
+    (toolId: string) => {
+      switch (toolId) {
+        case "campaigns":
+          removeMessagesByComponent(CampaignToolCard);
+          addCardMessage(() => (
+            <CampaignToolCard onNew={handleNewCampaign} onSelect={handleSelectCampaign} />
+          ));
+          break;
+        case "draft":
+          removeMessagesByComponent(DraftToolCard);
+          addCardMessage(() => (
+            <DraftToolCard
+              onNew={handleNewDraft}
+              onSelect={handleSelectDraft}
+              onSelectListPublications={handleSelectListPublications}
+            />
+          ));
+          break;
+        case "personas":
+          removeMessagesByComponent(PersonaToolCard);
+          addCardMessage(() => (
+            <PersonaToolCard onNew={handleNewPersona} onSelect={handleSelectPersona} />
+          ));
+          break;
+        case "accounts":
+          removeMessagesByComponent(AccountToolCard);
+          addCardMessage(() => (
+            <AccountToolCard
+              onNew={handleNewAccount}
+              onSelect={handleSelectAccount}
+              onSelectLinks={handleSelectPersonaForLinks}
+            />
+          ));
+          break;
+        case "schedules":
+          removeMessagesByComponent(ScheduleToolCard);
+          addCardMessage(() => (
+            <ScheduleToolCard
+              onScheduleAction={(template) => {
+                if (template.key.startsWith("mail.")) {
+                  handleNewMailSchedule();
+                } else if (template.key.startsWith("post.")) {
+                  handleNewPostSchedule();
+                } else if (template.key.startsWith("insights.")) {
+                  handleNewSyncMetricsSchedule();
+                } else {
+                  console.log("Unknown template:", template.key);
+                }
+              }}
+              onNewRawSchedule={handleNewRawSchedule}
+              onCancel={handleCancelSchedule}
+            />
+          ));
+          break;
+        case "coworker":
+          removeMessagesByComponent(CoworkerToolCard);
+          addCardMessage(() => (
+            <CoworkerToolCard
+              onViewDetails={handleViewCoworkerDetails}
+              onEdit={handleEditCoworker}
+            />
+          ));
+          break;
+        case "ab-tests":
+          removeMessagesByComponent(ABTestToolCard);
+          addCardMessage(() => (
+            <ABTestToolCard onNew={handleNewABTest} onSelect={handleSelectABTest} />
+          ));
+          break;
+        default:
+          break;
+      }
+    },
+    [
+      addCardMessage,
+      handleNewCampaign,
+      handleNewDraft,
+      handleNewPersona,
+      handleSelectCampaign,
+      handleSelectDraft,
+      handleSelectPersona,
+      handleNewAccount,
+      handleSelectAccount,
+      handleSelectPersonaForLinks,
+      removeMessagesByComponent,
+      handleNewPostSchedule,
+      handleNewMailSchedule,
+      handleNewRawSchedule,
+      handleCancelSchedule,
+      handleNewABTest,
+      handleSelectABTest,
+      handleSelectListPublications,
+    ]
+  );
 
   const clearChat = useCallback(() => {
     clearMessages();
@@ -635,13 +650,11 @@ export function useChatPageEvents() {
         addTextMessage(message, 'bot');
       });
 
-      // Group cards by card_type and only render the last one for each type
       const cardsByType = new Map<string, ChatCard>();
       response.cards?.forEach(card => {
         cardsByType.set(card.card_type, card);
       });
 
-      // Render only the last card for each card_type
       cardsByType.forEach(card => {
         addCardMessage(messageId => renderCardByType(card, {
           messageId,

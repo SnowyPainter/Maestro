@@ -20,7 +20,7 @@ const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | 
   completed: "outline",
 };
 
-export const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
+const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const { data: abTest, isLoading, error } = useBffAbtestsReadApiBffAbtestsAbtestIdGet(abTestId);
@@ -58,7 +58,7 @@ export const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
       <CardHeader>
         <CardTitle className="text-lg">{displayName}</CardTitle>
         <CardDescription>A/B Test ID: {abTest.id}</CardDescription>
-        <Badge variant={statusVariant[abTest.status] || "default"}>{abTest.status}</Badge>
+        <Badge variant={statusVariant[abTest.finished_at ? "completed" : "running"] || "default"}>{abTest.finished_at ? "Completed" : "Running"}</Badge>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground">
         {abTest.hypothesis && <p className="mb-2"><strong>Hypothesis:</strong> {abTest.hypothesis}</p>}

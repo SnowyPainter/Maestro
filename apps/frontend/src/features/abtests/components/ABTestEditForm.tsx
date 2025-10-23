@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useGetAbtestQuery, useUpdateAbTestMutation, ABTestOut } from "@/lib/api/generated";
+import { useBffAbtestsReadApiBffAbtestsAbtestIdGet, useAbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch, ABTestOut, ABTestUpdateCommand } from "@/lib/api/generated";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -25,7 +24,7 @@ interface ABTestEditFormProps {
 
 const ABTestEditForm = ({ abTestId, onSuccess }: ABTestEditFormProps) => {
   const queryClient = useQueryClient();
-  const { data: abTest, isLoading, isError } = useGetAbtestQuery(abTestId);
+  const { data: abTest, isLoading, error: queryError } = useBffAbtestsReadApiBffAbtestsAbtestIdGet(abTestId);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,28 +40,38 @@ const ABTestEditForm = ({ abTestId, onSuccess }: ABTestEditFormProps) => {
     }
   }, [abTest, form]);
 
-  const updateMutation = useUpdateAbTestMutation({
-    onSuccess: () => {
+  const updateMutation = useAbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch();
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const updateData: ABTestUpdateCommand = {
+        abtest_id: abTestId,
+        variable: values.variable,
+        hypothesis: values.hypothesis || null,
+        notes: values.notes || null,
+      };
+
+      await updateMutation.mutateAsync({ abtestId: abTestId, data: updateData });
+
       toast.success("A/B Test updated successfully!");
       queryClient.invalidateQueries({ queryKey: ['abtests'] });
       queryClient.invalidateQueries({ queryKey: ['abtest', abTestId] });
       onSuccess();
-    },
-    onError: (error) => {
-      toast.error(`Failed to update A/B Test: ${error.message}`);
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    updateMutation.mutate({ abtestId: abTestId, data: values });
+    } catch (error: any) {
+      toast.error(`Failed to update A/B Test: ${error?.message || 'Unknown error'}`);
+    }
   }
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
   }
 
-  if (isError) {
-    return <p>Failed to load A/B Test data for editing.</p>;
+  if (queryError) {
+    return (
+      <div className="p-4 border border-red-200 rounded-md bg-red-50">
+        <p className="text-red-800">Failed to load A/B Test data for editing.</p>
+      </div>
+    );
   }
 
   return (
