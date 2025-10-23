@@ -6,9 +6,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
 html, body {
   @apply overflow-hidden;
 }
+*/
 
 /* === shadcn 권장 베이스 토큰: HSL 형식! === */
 @layer base {
