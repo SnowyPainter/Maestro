@@ -149,18 +149,24 @@ async def record_kpi_result(
 
 
 async def list_kpi_results(
-    db: AsyncSession, *,
+    db: AsyncSession,
+    *,
     campaign_id: int,
     start: Optional[datetime] = None,
     end: Optional[datetime] = None,
     limit: int = 200,
+    order: str = "asc",
 ) -> List[CampaignKPIResult]:
     stmt = select(CampaignKPIResult).where(CampaignKPIResult.campaign_id == campaign_id)
     if start:
         stmt = stmt.where(CampaignKPIResult.as_of >= start)
     if end:
         stmt = stmt.where(CampaignKPIResult.as_of < end)
-    stmt = stmt.order_by(CampaignKPIResult.as_of.asc()).limit(limit)
+    if order == "desc":
+        stmt = stmt.order_by(CampaignKPIResult.as_of.desc(), CampaignKPIResult.id.desc())
+    else:
+        stmt = stmt.order_by(CampaignKPIResult.as_of.asc(), CampaignKPIResult.id.asc())
+    stmt = stmt.limit(limit)
     rows = (await db.execute(stmt)).scalars().all()
     return rows
 

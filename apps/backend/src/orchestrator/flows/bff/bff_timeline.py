@@ -330,15 +330,18 @@ async def op_timeline_campaigns(
     until_date = safe_datetime_to_date(payload.until)
 
 
+    limit = payload.limit or 200
+
     events: List[TimelineEvent] = []
     for campaign in campaigns:
-        # Get KPI results for each campaign
+        # Get KPI results for each campaign (newest first)
         kpi_results = await list_kpi_results(
             db,
             campaign_id=campaign.id,
             start=to_aware_utc(since_date),
             end=to_aware_utc(until_date),
-            limit=100
+            limit=limit,
+            order="desc",
         )
 
         for kpi_result in kpi_results:
@@ -411,9 +414,13 @@ async def op_timeline_post_publications(
     _ctx: TaskContext,
     db: AsyncSession,
 ) -> TimelineEventCollectionOut:
+    limit = payload.limit or 200
     records = await list_post_publications_by_account_persona(
         db,
         account_persona_id=payload.persona_account_id,
+        since=to_aware_utc(payload.since),
+        until=to_aware_utc(payload.until),
+        limit=limit,
     )
 
     events: List[TimelineEvent] = []

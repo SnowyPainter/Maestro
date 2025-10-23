@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -546,8 +546,23 @@ async def list_post_publications_by_account_persona(
     db: AsyncSession,
     *,
     account_persona_id: int,
+    since: Optional[datetime] = None,
+    until: Optional[datetime] = None,
+    limit: Optional[int] = None,
 ) -> List[PostPublication]:
     stmt = select(PostPublication).where(PostPublication.account_persona_id == account_persona_id)
+    sort_key = func.coalesce(
+        PostPublication.published_at,
+        PostPublication.scheduled_at,
+        PostPublication.created_at,
+    )
+    if since is not None:
+        stmt = stmt.where(sort_key >= since)
+    if until is not None:
+        stmt = stmt.where(sort_key <= until)
+    stmt = stmt.order_by(sort_key.desc(), PostPublication.id.desc())
+    if limit is not None:
+        stmt = stmt.limit(limit)
     return (await db.execute(stmt)).scalars().all()
 
 async def list_post_publications_by_platform(
