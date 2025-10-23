@@ -144,6 +144,19 @@ def _flow_create_abtest(builder: FlowBuilder) -> None:
     task = builder.task("create_abtest", "abtests.create")
     builder.expect_terminal(task)
 
+@FLOWS.flow(
+    key="abtests.evaluate_ready",
+    title="Mark AB Test Ready for Completion",
+    description="Mark an AB test as ready for completion",
+    input_model=ABTestEvaluateReadyPayload,
+    output_model=MessageOut,
+    method="post",
+    path="/abtests/{abtest_id}/evaluate-ready",
+    tags=("action", "abtests", "evaluate ready"),
+)
+def _flow_evaluate_ready(builder: FlowBuilder) -> None:
+    task = builder.task("evaluate_ready", "abtests.evaluate_ready")
+    builder.expect_terminal(task)
 
 __all__ = [
     "ABTestCreateCommand",

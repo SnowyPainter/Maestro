@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon, FileText, TrendingUp, GanttChartSquare, AlertCircle } from 'lucide-react';
+import { LucideIcon, FileText, TrendingUp, GanttChartSquare, ClipboardList, AlertCircle } from 'lucide-react';
 
 interface TimelineIconProps {
   source: string;
@@ -9,7 +9,8 @@ interface TimelineIconProps {
 const iconMap: Record<string, LucideIcon> = {
   post_publication: FileText,
   trends: TrendingUp,
-  kpis: GanttChartSquare,
+  campaign_kpi: GanttChartSquare,
+  playbook: ClipboardList,
   default: AlertCircle,
 };
 

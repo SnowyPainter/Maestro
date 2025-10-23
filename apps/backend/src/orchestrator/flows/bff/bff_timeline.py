@@ -117,26 +117,109 @@ async def _resolve_persona_id_for_account(db: AsyncSession, persona_account_id: 
     return persona_account.persona_id
 
 
+def _summarize_playbook_log(log: PlaybookLogOut, meta: Dict[str, Any]) -> Dict[str, Any]:
+    """Produce a compact summary describing a playbook log entry for UI display."""
+    event_name = log.event or "event"
+    parts = [segment.strip() for segment in event_name.split(".") if segment.strip()]
+    readable_event = " · ".join(part.replace("_", " ").title() for part in parts) or event_name
+
+    summary: Dict[str, Any] = {
+        "title": readable_event,
+        "message": log.message,
+        "highlights": [],
+    }
+
+    def _add_highlight(label: str, value: Any) -> None:
+        if value is None:
+            return
+        summary["highlights"].append({"label": label, "value": str(value)})
+
+    template_label = meta.get("template")
+    if template_label and template_label not in summary["title"]:
+        summary["title"] = f"{summary['title']} ({template_label})"
+
+    _add_highlight("Schedule ID", log.schedule_id)
+    _add_highlight("Draft ID", log.draft_id)
+    _add_highlight("AB Test ID", log.abtest_id)
+
+    plan_title = meta.get("plan_title") or meta.get("dag_label")
+    _add_highlight("Plan", plan_title)
+    _add_highlight("Segment", meta.get("plan_segment"))
+    _add_highlight("Due (local)", meta.get("plan_local_due"))
+    _add_highlight("Due (UTC)", meta.get("due_at_utc"))
+    _add_highlight("Queue", meta.get("queue"))
+
+    dag_nodes = meta.get("dag_nodes")
+    dag_edges = meta.get("dag_edges")
+    if dag_nodes is not None or dag_edges is not None:
+        summary["highlights"].append(
+            {
+                "label": "DAG",
+                "value": f"{dag_nodes or 0} nodes · {dag_edges or 0} edges",
+            }
+        )
+
+    identifiers = meta.get("identifiers")
+    if isinstance(identifiers, dict):
+        for key, value in identifiers.items():
+            _add_highlight(key.replace("_", " ").title(), value)
+
+    # Remove highlight list if nothing was added
+    if not summary["highlights"]:
+        summary.pop("highlights", None)
+
+    return summary
+
+
 def _playbook_log_events(logs: Iterable[PlaybookLogOut], persona_account_id: int) -> List[TimelineEvent]:
     events: List[TimelineEvent] = []
     for log in logs:
         log_payload = log.model_dump()
+        meta_raw = log_payload.get("meta")
+        meta = meta_raw if isinstance(meta_raw, dict) else {}
+        summary = _summarize_playbook_log(log, meta)
+        if summary:
+            log_payload["summary"] = summary
+
+        identifiers = meta.get("identifiers") or {}
+        correlation_keys: Dict[str, str] = {
+            "playbook_id": str(log.playbook_id),
+            "event": log.event,
+        }
+        if log.schedule_id is not None:
+            correlation_keys["schedule_id"] = str(log.schedule_id)
+        if log.draft_id is not None:
+            correlation_keys["draft_id"] = str(log.draft_id)
+        if log.abtest_id is not None:
+            correlation_keys["abtest_id"] = str(log.abtest_id)
+        if isinstance(identifiers, dict):
+            for key, value in identifiers.items():
+                if value is None:
+                    continue
+                correlation_keys[f"identifier_{key}"] = str(value)
+
+        payload: Dict[str, Any] = {
+            "phase_source": "playbook_log",
+            "playbook_log": log_payload,
+        }
+        if meta:
+            payload["meta"] = meta
+        if summary:
+            payload["summary"] = summary
+        if identifiers:
+            payload["identifiers"] = identifiers
+        if log.message:
+            payload.setdefault("summary", summary or {})["message"] = log.message
         event = TimelineEvent(
             event_id=f"playbook_log:{log.id}",
             timestamp=log.timestamp,
             status=log.event,
             persona_account_id=persona_account_id,
             source="playbook",
-            kind="playbook.event",
-            payload={
-                "phase_source": "playbook_log",
-                "playbook_log": log_payload,
-            },
+            kind=f"playbook.{log.event}",
+            payload=payload,
             operators=("bff.timeline.playbooks",),
-            correlation_keys={
-                "playbook_id": str(log.playbook_id),
-                "event": log.event,
-            },
+            correlation_keys=correlation_keys,
             origin_flow="bff.timeline.playbooks",
         )
         events.append(event)

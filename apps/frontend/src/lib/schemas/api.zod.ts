@@ -1248,6 +1248,28 @@ export const abtestsCreateAbtestApiOrchestratorAbtestsPostResponse = zod.object(
 
 
 /**
+ * Mark an AB test as ready for completion
+ * @summary Mark AB Test Ready for Completion
+ */
+export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostParams = zod.object({
+  "abtest_id": zod.number()
+})
+
+export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostBody = zod.object({
+  "abtest_id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "persona_account_id": zod.number(),
+  "publish_schedule_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number())
+})
+
+export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * Create a new platform account (social media, website, etc.) for the user
  * @summary Create New Platform Account
  */

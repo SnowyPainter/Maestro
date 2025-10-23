@@ -14,21 +14,17 @@ export function TimelinePlaybookLogEvent({ event }: TimelinePlaybookLogEventProp
   }
 
   const { timestamp, status, payload } = event;
-  const { playbook_log } = payload;
+  const { playbook_log, summary, meta, identifiers } = payload;
 
-  const title = `Playbook: ${playbook_log.event}`;
-  let message = playbook_log.message || `Event finished with status: ${status}`;
+  const resolvedSummary = summary || playbook_log.summary;
+  const title =
+    resolvedSummary?.title ||
+    `Playbook: ${playbook_log.event}`;
 
-  // Create more descriptive messages based on the event type
-  if (playbook_log.event === 'schedule.created' && playbook_log.meta?.template) {
-    message = `Created schedule for template: ${playbook_log.meta.template}`;
-  } else if (playbook_log.event === 'post.published' && playbook_log.meta?.permalink) {
-    message = `Post published successfully.`;
-  } else if (playbook_log.event === 'sync.metrics' && playbook_log.meta?.comment_errors) {
-    message = `Metrics sync failed: ${playbook_log.meta.comment_errors[0]}`;
-  } else if (playbook_log.event === 'sync.metrics') {
-    message = 'Metrics synced successfully.';
-  }
+  const message =
+    resolvedSummary?.message ||
+    playbook_log.message ||
+    `Event finished with status: ${status}`;
 
   const formattedTime = new Date(timestamp).toLocaleTimeString([], {
     hour: '2-digit',
@@ -66,8 +62,34 @@ export function TimelinePlaybookLogEvent({ event }: TimelinePlaybookLogEventProp
           <p className="text-xs text-muted-foreground">{formattedTime}</p>
         </div>
         <p className="text-sm text-muted-foreground">{message}</p>
-        {playbook_log.event === 'post.published' && playbook_log.meta?.permalink && (
-          <a href={playbook_log.meta.permalink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+        {resolvedSummary?.highlights && resolvedSummary.highlights.length > 0 && (
+          <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+            {resolvedSummary.highlights.map((item: { label: string; value: string }) => (
+              <div key={`${item.label}-${item.value}`} className="flex justify-between gap-2">
+                <span className="font-medium">{item.label}</span>
+                <span className="text-right truncate">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {identifiers && Object.keys(identifiers).length > 0 && (
+          <div className="mt-3 space-y-1 text-[11px] text-muted-foreground">
+            <p className="uppercase tracking-wide font-semibold">Identifiers</p>
+            {Object.entries(identifiers).map(([key, value]) => (
+              <div key={key} className="flex justify-between gap-2">
+                <span className="capitalize">{key.replace(/_/g, ' ')}</span>
+                <span className="text-right truncate">{String(value)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {meta?.permalink && typeof meta.permalink === 'string' && (
+          <a
+            href={meta.permalink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-500 hover:underline mt-2 inline-block"
+          >
             View Post
           </a>
         )}

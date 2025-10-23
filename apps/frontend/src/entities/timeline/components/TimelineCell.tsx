@@ -36,10 +36,20 @@ const getEventTitle = (event: TimelineEventType) => {
         const phase = event.payload.phase || 'event';
         return `Post ${phase}`;
     }
+    if (event.source === 'campaign_kpi') {
+        const campaignId = event.payload.kpi_result?.campaign_id;
+        return campaignId ? `Campaign KPI #${campaignId}` : 'Campaign KPI';
+    }
     if (event.source === 'trends') {
         return event.payload.trend_data?.title || 'Trend event';
     }
     if (event.source === 'playbook') {
+        const summaryTitle =
+          event.payload.summary?.title ||
+          event.payload.playbook_log.summary?.title;
+        if (summaryTitle) {
+          return summaryTitle;
+        }
         return `Playbook: ${event.payload.playbook_log.event}`;
     }
     return event.kind;
