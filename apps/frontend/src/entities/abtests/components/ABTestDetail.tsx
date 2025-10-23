@@ -1,8 +1,8 @@
-import { useBffAbtestsReadApiBffAbtestsAbtestIdGet, useBffDraftsReadDraftApiBffDraftsDraftIdGet } from "@/lib/api/generated";
+import { DraftIRBlocksItem, DraftOut, useBffAbtestsReadApiBffAbtestsAbtestIdGet, useBffDraftsReadDraftApiBffDraftsDraftIdGet } from "@/lib/api/generated";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import DeleteABTestButton from "@/features/abtests/components/DeleteABTestButton";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ABTestCompleteForm from "@/features/abtests/components/ABTestCompleteForm";
 import ABTestEditForm from "@/features/abtests/components/ABTestEditForm";
@@ -13,10 +13,58 @@ interface ABTestDetailProps {
   onDelete: () => void;
 }
 
-const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
-  running: "secondary",
-  evaluate_ready: "default",
-  completed: "outline",
+interface VariantCardProps {
+  variant: any;
+  variantName: string;
+  isWinner: boolean;
+  upliftPercentage: number | null;
+  bgColor: string;
+  textColor: string;
+}
+const VariantCard = ({ variant, variantName, isWinner, upliftPercentage, bgColor, textColor }: VariantCardProps) => {
+  return (
+    <div className={`flex-1 p-4 border rounded-lg ${bgColor} relative`}>
+      {isWinner && (
+        <div className="absolute top-2 right-2 text-yellow-600 font-bold text-lg">👑</div>
+      )}
+      <h4 className={`font-semibold ${textColor} mb-2`}>{variantName}</h4>
+      {variant ? (
+        <div>
+          <p className={`text-sm ${textColor} mb-1`}>
+            <strong>Title:</strong> {variant.title || "Untitled"}
+          </p>
+          {variant.ir?.blocks?.map((block: any, index: number) => (
+            <p className={`text-sm ${textColor}`} key={`${block.type}-${index}`}>
+              {block.type === "text"
+                ? ((block.props?.markdown as string)?.length > 60
+                    ? (block.props.markdown as string).substring(0, 60) + "..."
+                    : (block.props.markdown as string))
+                : block.type === "image"
+                  ? (block.props?.url as string)
+                  : (block.props?.video_url as string)}
+            </p>
+          ))}
+          {variant.tags && variant.tags.length > 0 && (
+            <p className={`text-sm ${textColor}`}>
+              <strong>Tags:</strong> {variant.tags.join(", ")}
+            </p>
+          )}
+          {variant.goal && (
+            <p className={`text-sm ${textColor}`}>
+              <strong>Goal:</strong> {variant.goal}
+            </p>
+          )}
+          {isWinner && upliftPercentage != null && (
+            <p className={`text-sm ${textColor} mt-2 font-semibold`}>
+              <strong>Uplift:</strong> {upliftPercentage}%
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className={`text-sm ${textColor}`}>Loading variant details...</p>
+      )}
+    </div>
+  );
 };
 
 const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
@@ -25,13 +73,6 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
 
   const { data: abTest, isLoading, error } = useBffAbtestsReadApiBffAbtestsAbtestIdGet(abTestId);
 
-  // Get variant details
-  const { data: variantA } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_a_id || 0, {
-    query: { enabled: !!abTest?.variant_a_id }
-  });
-  const { data: variantB } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_b_id || 0, {
-    query: { enabled: !!abTest?.variant_b_id }
-  });
   if (isLoading) {
     return (
       <Card>
@@ -45,6 +86,14 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
       </Card>
     );
   }
+
+  // Get variant details only after abTest is loaded
+  const { data: variantA } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_a_id || 0, {
+    query: { enabled: !!abTest }
+  });
+  const { data: variantB } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_b_id || 0, {
+    query: { enabled: !!abTest }
+  });
 
   if (error || !abTest) {
     return (
@@ -60,14 +109,14 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
   }
 
   const displayName = `Test on: ${abTest.variable}`;
-  
-  const statusBadge = useMemo(() => (
+
+  const statusBadge = (
     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
       abTest.finished_at ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"
     }`}>
       {abTest.finished_at ? "Completed" : "Running"}
     </span>
-  ), [abTest.finished_at]);
+  );
   return (
     <Card>
       <CardHeader>
@@ -80,58 +129,22 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
 
         {/* Variants Details - Horizontal Layout */}
         <div className="flex gap-4 mb-4">
-          {/* Variant A Details */}
-          <div className="flex-1 p-4 border rounded-lg bg-blue-50 relative">
-            {abTest.finished_at && abTest.winner_variant === 'A' && (
-              <div className="absolute top-2 right-2 text-yellow-600 font-bold text-lg">👑</div>
-            )}
-            <h4 className="font-semibold text-blue-900 mb-2">Variant A</h4>
-            {variantA ? (
-              <div>
-                <p className="text-sm text-blue-800 mb-1">
-                  <strong>Title:</strong> {variantA.title || "Untitled"}
-                </p>
-                {variantA.goal && (
-                  <p className="text-sm text-blue-800">
-                    <strong>Goal:</strong> {variantA.goal}
-                  </p>
-                )}
-                {abTest.finished_at && abTest.winner_variant === 'A' && abTest.uplift_percentage != null && (
-                  <p className="text-sm text-blue-800 mt-2 font-semibold">
-                    <strong>Uplift:</strong> {abTest.uplift_percentage}%
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-blue-600">Loading variant details...</p>
-            )}
-          </div>
-          {/* Variant B Details */}
-          <div className="flex-1 p-4 border rounded-lg bg-green-50 relative">
-            {abTest.finished_at && abTest.winner_variant === 'B' && (
-              <div className="absolute top-2 right-2 text-yellow-600 font-bold text-lg">👑</div>
-            )}
-            <h4 className="font-semibold text-green-900 mb-2">Variant B</h4>
-            {variantB ? (
-              <div>
-                <p className="text-sm text-green-800 mb-1">
-                  <strong>Title:</strong> {variantB.title || "Untitled"}
-                </p>
-                {variantB.goal && (
-                  <p className="text-sm text-green-800">
-                    <strong>Goal:</strong> {variantB.goal}
-                  </p>
-                )}
-                {abTest.finished_at && abTest.winner_variant === 'B' && abTest.uplift_percentage != null && (
-                  <p className="text-sm text-green-800 mt-2 font-semibold">
-                    <strong>Uplift:</strong> {abTest.uplift_percentage}%
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-green-600">Loading variant details...</p>
-            )}
-          </div>
+          <VariantCard
+            variant={variantA}
+            variantName="Variant A"
+            isWinner={Boolean(abTest.finished_at && abTest.winner_variant === 'A')}
+            upliftPercentage={abTest.uplift_percentage ?? null}
+            bgColor="bg-blue-50"
+            textColor="text-blue-900"
+          />
+          <VariantCard
+            variant={variantB}
+            variantName="Variant B"
+            isWinner={Boolean(abTest.finished_at && abTest.winner_variant === 'B')}
+            upliftPercentage={abTest.uplift_percentage ?? null}
+            bgColor="bg-green-50"
+            textColor="text-green-900"
+          />
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
