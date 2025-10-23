@@ -112,10 +112,7 @@ const DayScheduleList = ({
     onScheduleClick: (schedule: ScheduleListItem) => void;
 }) => (
     <div className="space-y-2">
-        <h4 className="font-semibold text-sm">
-            {format(date, 'MMM d, yyyy')}
-        </h4>
-        <ScrollArea className="max-h-60">
+        <ScrollArea className="h-80 pr-4">
             <div className="space-y-2">
                 {schedules.map(schedule => (
                     <div
