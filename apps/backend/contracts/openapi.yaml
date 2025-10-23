@@ -65,6 +65,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/abtests/publications:
+    post:
+      tags:
+      - bff
+      - bff
+      - abtests
+      - publications
+      summary: Get AB Test Publications
+      description: Get existing publications for an AB test
+      operationId: bff_abtests_publications_api_bff_abtests_publications_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ABTestPublicationsPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestPublicationsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/abtests/{abtest_id}:
     get:
       tags:
@@ -1863,6 +1892,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/abtests/{abtest_id}/determine_winner:
+    post:
+      tags:
+      - action
+      - action
+      - abtests
+      - determine_winner
+      summary: Determine AB Test Winner
+      description: Determine the winner of an AB test
+      operationId: abtests_determine_winner_api_orchestrator_abtests__abtest_id__determine_winner_post
+      parameters:
+      - name: abtest_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Abtest Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ABTestDetermineWinnerPayload'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ABTestDetermineWinnerResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/accounts/platform:
     post:
       tags:
@@ -3316,9 +3381,6 @@ components:
         persona_account_id:
           type: integer
           title: Persona Account Id
-        publish_schedule_id:
-          type: integer
-          title: Publish Schedule Id
         post_publication_ids:
           items:
             type: integer
@@ -3330,7 +3392,6 @@ components:
       - persona_id
       - campaign_id
       - persona_account_id
-      - publish_schedule_id
       - post_publication_ids
       title: ABTestCompleteTemplateParams
     ABTestCreateCommand:
@@ -3374,6 +3435,56 @@ components:
       - variant_a_id
       - variant_b_id
       title: ABTestCreateCommand
+    ABTestDetermineWinnerPayload:
+      properties:
+        abtest_id:
+          type: integer
+          title: Abtest Id
+      type: object
+      required:
+      - abtest_id
+      title: ABTestDetermineWinnerPayload
+    ABTestDetermineWinnerResult:
+      properties:
+        abtest_id:
+          type: integer
+          title: Abtest Id
+        winner_variant:
+          type: string
+          title: Winner Variant
+        decision_metric:
+          type: string
+          title: Decision Metric
+        winner_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Winner Value
+        loser_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Loser Value
+        uplift_percentage:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Uplift Percentage
+        insight_note:
+          title: Insight Note
+          type: string
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          title: Finished At
+      type: object
+      required:
+      - abtest_id
+      - winner_variant
+      - decision_metric
+      - finished_at
+      title: ABTestDetermineWinnerResult
     ABTestInsightSummary:
       properties:
         variant_a:
@@ -3493,6 +3604,43 @@ components:
       - created_at
       - updated_at
       title: ABTestOut
+    ABTestPublicationInfo:
+      properties:
+        id:
+          type: integer
+          title: Id
+        scheduled_at:
+          title: Scheduled At
+          type: string
+          nullable: true
+      type: object
+      required:
+      - id
+      title: ABTestPublicationInfo
+    ABTestPublicationsPayload:
+      properties:
+        abtest_id:
+          type: integer
+          title: Abtest Id
+        persona_account_id:
+          type: integer
+          title: Persona Account Id
+      type: object
+      required:
+      - abtest_id
+      - persona_account_id
+      title: ABTestPublicationsPayload
+    ABTestPublicationsResponse:
+      properties:
+        publications:
+          items:
+            $ref: '#/components/schemas/ABTestPublicationInfo'
+          type: array
+          title: Publications
+      type: object
+      required:
+      - publications
+      title: ABTestPublicationsResponse
     ABTestScheduleCommand:
       properties:
         abtest_id:
@@ -3526,7 +3674,9 @@ components:
           type: integer
           title: Persona Account Id
         schedule_id:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Schedule Id
         completion_schedule_id:
           anyOf:
@@ -3551,7 +3701,6 @@ components:
       required:
       - abtest_id
       - persona_account_id
-      - schedule_id
       - post_publication_ids
       - run_at
       title: ABTestScheduleResult

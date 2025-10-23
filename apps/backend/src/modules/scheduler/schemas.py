@@ -174,7 +174,6 @@ class ABTestCompleteTemplateParams(BaseModel):
     persona_id: int
     campaign_id: int
     persona_account_id: int
-    publish_schedule_id: int
     post_publication_ids: List[int]
 
     @model_validator(mode="after")

@@ -101,6 +101,23 @@ export const bffAbtestsListApiBffAbtestsGetResponse = zod.object({
 
 
 /**
+ * Get existing publications for an AB test
+ * @summary Get AB Test Publications
+ */
+export const bffAbtestsPublicationsApiBffAbtestsPublicationsPostBody = zod.object({
+  "abtest_id": zod.number(),
+  "persona_account_id": zod.number()
+})
+
+export const bffAbtestsPublicationsApiBffAbtestsPublicationsPostResponse = zod.object({
+  "publications": zod.array(zod.object({
+  "id": zod.number(),
+  "scheduled_at": zod.string().nullish()
+}))
+})
+
+
+/**
  * Get detailed AB test information
  * @summary Read AB Test
  */
@@ -1738,6 +1755,30 @@ export const abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostResp
 
 
 /**
+ * Determine the winner of an AB test
+ * @summary Determine AB Test Winner
+ */
+export const abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostParams = zod.object({
+  "abtest_id": zod.number()
+})
+
+export const abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostBody = zod.object({
+  "abtest_id": zod.number()
+})
+
+export const abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostResponse = zod.object({
+  "abtest_id": zod.number(),
+  "winner_variant": zod.string(),
+  "decision_metric": zod.string(),
+  "winner_value": zod.union([zod.number(),zod.null()]).optional(),
+  "loser_value": zod.union([zod.number(),zod.null()]).optional(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
+  "insight_note": zod.string().nullish(),
+  "finished_at": zod.iso.datetime({})
+})
+
+
+/**
  * Create a new platform account (social media, website, etc.) for the user
  * @summary Create New Platform Account
  */
@@ -2451,7 +2492,6 @@ export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompile
   "persona_id": zod.number(),
   "campaign_id": zod.number(),
   "persona_account_id": zod.number(),
-  "publish_schedule_id": zod.number(),
   "post_publication_ids": zod.array(zod.number())
 }),zod.null()]).optional()
 })
@@ -2684,7 +2724,7 @@ export const abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdScheduleP
 export const abtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePostResponse = zod.object({
   "abtest_id": zod.number(),
   "persona_account_id": zod.number(),
-  "schedule_id": zod.number(),
+  "schedule_id": zod.union([zod.number(),zod.null()]).optional(),
   "completion_schedule_id": zod.union([zod.number(),zod.null()]).optional(),
   "post_publication_ids": zod.array(zod.number()),
   "run_at": zod.iso.datetime({}),

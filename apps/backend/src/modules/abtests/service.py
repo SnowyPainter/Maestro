@@ -160,11 +160,11 @@ async def _load_persona_account_for_abtest(
 class ABTestSchedulePlan:
     abtest: ABTest
     persona_account_id: int
-    variant_a: ABTestScheduleVariantParams
-    variant_b: ABTestScheduleVariantParams
-    publish_request: ScheduleCompileRequest
+    variant_a: Optional[ABTestScheduleVariantParams]
+    variant_b: Optional[ABTestScheduleVariantParams]
+    publish_request: Optional[ScheduleCompileRequest]
     completion_params: Optional[Dict[str, object]]
-    publications: tuple[PostPublication, PostPublication]
+    publications: tuple[PostPublication, ...]
     run_at: datetime
     complete_at: Optional[datetime]
 
@@ -584,6 +584,38 @@ async def complete_abtest(
     return row
 
 
+async def get_abtest_existing_publications(
+    db: AsyncSession,
+    *,
+    abtest_id: int,
+    persona_account_id: int,
+) -> List[PostPublication]:
+    """AB Test의 기존 스케줄된 publications을 가져옵니다."""
+    abtest = await db.get(ABTest, abtest_id)
+    if abtest is None:
+        return []
+
+    # AB Test의 두 draft에 속한 모든 variants 찾기
+    stmt = select(DraftVariant.id).where(
+        DraftVariant.draft_id.in_([abtest.variant_a_id, abtest.variant_b_id])
+    )
+    result = await db.execute(stmt)
+    variant_ids = [row[0] for row in result.all()]
+
+    if not variant_ids:
+        return []
+
+    # 해당 variant들에 해당하는 publications 찾기
+    stmt = select(PostPublication).where(
+        PostPublication.variant_id.in_(variant_ids),
+        PostPublication.account_persona_id == persona_account_id,
+        PostPublication.status.in_(tuple(ALREADY_PUBLISHED_STATUS)),  # 이미 스케줄된 것들만
+    ).order_by(PostPublication.scheduled_at.desc())
+
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
 async def schedule_abtest(
     db: AsyncSession,
     *,
@@ -611,15 +643,6 @@ async def schedule_abtest(
     if campaign.owner_user_id != owner_user_id:
         raise PermissionError("campaign does not belong to user")
 
-    run_at_utc = _to_utc(run_at)
-    now_utc = datetime.now(timezone.utc)
-    if run_at_utc <= now_utc:
-        raise ValueError("run_at must be in the future")
-
-    completion_at_utc = _to_utc(complete_at) if complete_at is not None else None
-    if completion_at_utc is not None and completion_at_utc <= run_at_utc:
-        raise ValueError("complete_at must be after run_at")
-
     persona_account, platform_account = await _load_persona_account_for_abtest(
         db,
         persona_account_id=persona_account_id,
@@ -634,6 +657,76 @@ async def schedule_abtest(
         owner_user_id=owner_user_id,
         campaign_id=abtest.campaign_id,
     )
+
+    # 기존에 이미 스케줄된 publications이 있는지 확인
+    existing_publications = await get_abtest_existing_publications(
+        db,
+        abtest_id=abtest_id,
+        persona_account_id=persona_account_id,
+    )
+
+    
+    run_at_utc = _to_utc(run_at)
+    now_utc = datetime.now(timezone.utc)
+    if run_at_utc <= now_utc and len(existing_publications) < 2:
+        raise ValueError("run_at must be in the future")
+
+    completion_at_utc = _to_utc(complete_at) if complete_at is not None else None
+    if completion_at_utc is not None and completion_at_utc <= run_at_utc:
+        raise ValueError("complete_at must be after run_at")
+
+    # 이미 publications이 존재하면 publish 스케줄링은 건너뜀
+    if len(existing_publications) >= 2:
+        # 기존 publications 사용
+        publication_a = existing_publications[0]
+        publication_b = existing_publications[1]
+
+        existing_scheduled_ats = [pub.scheduled_at or pub.published_at for pub in existing_publications]
+
+        # completion time 검증 (publish time는 기존 publications의 시간 사용)
+        existing_scheduled_at = max(existing_scheduled_ats)
+        if completion_at_utc is not None and completion_at_utc <= existing_scheduled_at:
+            raise ValueError("complete_at must be after publication time")
+
+        # variant 정보 재구성
+        variant_a = await db.get(DraftVariant, publication_a.variant_id)
+        variant_b = await db.get(DraftVariant, publication_b.variant_id)
+
+        if variant_a is None or variant_b is None:
+            raise ValueError("Draft variants not found")
+
+        # variant_a와 variant_b를 올바르게 매핑
+        if variant_a.draft_id == abtest.variant_a_id:
+            variant_a_variant = variant_a
+            variant_b_variant = variant_b
+        else:
+            variant_a_variant = variant_b
+            variant_b_variant = variant_a
+            # publications 순서도 맞춰줌
+            publication_a, publication_b = publication_b, publication_a
+
+        # completion_params 생성 - 기존 publish schedule id 찾기
+        completion_params = None
+        if completion_at_utc is not None:
+            completion_params = {
+                "abtest_id": abtest.id,
+                "persona_id": abtest.persona_id,
+                "campaign_id": abtest.campaign_id,
+                "persona_account_id": persona_account.id,
+                "post_publication_ids": [publication_a.id, publication_b.id],
+            }
+
+        return ABTestSchedulePlan(
+            abtest=abtest,
+            persona_account_id=persona_account.id,
+            variant_a=None,  # publish 스케줄링 안 함
+            variant_b=None,  # publish 스케줄링 안 함
+            publish_request=None,  # publish 스케줄링 안 함
+            completion_params=completion_params,
+            publications=(publication_a, publication_b),  # 기존 publications 사용
+            run_at=existing_scheduled_at,  # 기존 publication 시간
+            complete_at=completion_at_utc,
+        )
 
     variant_a = await get_draft_variant(
         db,

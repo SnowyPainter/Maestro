@@ -45,7 +45,6 @@ export interface ABTestCompleteTemplateParams {
   persona_id: number;
   campaign_id: number;
   persona_account_id: number;
-  publish_schedule_id: number;
   post_publication_ids: number[];
 }
 
@@ -68,6 +67,28 @@ export interface ABTestCreateCommand {
    * @nullable
    */
   notes?: string | null;
+}
+
+export interface ABTestDetermineWinnerPayload {
+  abtest_id: number;
+}
+
+export type ABTestDetermineWinnerResultWinnerValue = number | null;
+
+export type ABTestDetermineWinnerResultLoserValue = number | null;
+
+export type ABTestDetermineWinnerResultUpliftPercentage = number | null;
+
+export interface ABTestDetermineWinnerResult {
+  abtest_id: number;
+  winner_variant: string;
+  decision_metric: string;
+  winner_value?: ABTestDetermineWinnerResultWinnerValue;
+  loser_value?: ABTestDetermineWinnerResultLoserValue;
+  uplift_percentage?: ABTestDetermineWinnerResultUpliftPercentage;
+  /** @nullable */
+  insight_note?: string | null;
+  finished_at: string;
 }
 
 export type ABTestInsightSummaryWinnerValue = number | null;
@@ -119,6 +140,21 @@ export interface ABTestOut {
   insights?: ABTestOutInsights;
 }
 
+export interface ABTestPublicationInfo {
+  id: number;
+  /** @nullable */
+  scheduled_at?: string | null;
+}
+
+export interface ABTestPublicationsPayload {
+  abtest_id: number;
+  persona_account_id: number;
+}
+
+export interface ABTestPublicationsResponse {
+  publications: ABTestPublicationInfo[];
+}
+
 export type ABTestScheduleCommandAbtestId = number | null;
 
 export interface ABTestScheduleCommand {
@@ -129,12 +165,14 @@ export interface ABTestScheduleCommand {
   complete_at?: string | null;
 }
 
+export type ABTestScheduleResultScheduleId = number | null;
+
 export type ABTestScheduleResultCompletionScheduleId = number | null;
 
 export interface ABTestScheduleResult {
   abtest_id: number;
   persona_account_id: number;
-  schedule_id: number;
+  schedule_id?: ABTestScheduleResultScheduleId;
   completion_schedule_id?: ABTestScheduleResultCompletionScheduleId;
   post_publication_ids: number[];
   run_at: string;
@@ -2425,6 +2463,72 @@ export function useBffAbtestsListApiBffAbtestsGet<TData = Awaited<ReturnType<typ
 
 
 
+/**
+ * Get existing publications for an AB test
+ * @summary Get AB Test Publications
+ */
+export const bffAbtestsPublicationsApiBffAbtestsPublicationsPost = (
+    aBTestPublicationsPayload: ABTestPublicationsPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ABTestPublicationsResponse>(
+      {url: `/api/bff/abtests/publications`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: aBTestPublicationsPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffAbtestsPublicationsApiBffAbtestsPublicationsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffAbtestsPublicationsApiBffAbtestsPublicationsPost>>, TError,{data: ABTestPublicationsPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffAbtestsPublicationsApiBffAbtestsPublicationsPost>>, TError,{data: ABTestPublicationsPayload}, TContext> => {
+
+const mutationKey = ['bffAbtestsPublicationsApiBffAbtestsPublicationsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffAbtestsPublicationsApiBffAbtestsPublicationsPost>>, {data: ABTestPublicationsPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffAbtestsPublicationsApiBffAbtestsPublicationsPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffAbtestsPublicationsApiBffAbtestsPublicationsPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffAbtestsPublicationsApiBffAbtestsPublicationsPost>>>
+    export type BffAbtestsPublicationsApiBffAbtestsPublicationsPostMutationBody = ABTestPublicationsPayload
+    export type BffAbtestsPublicationsApiBffAbtestsPublicationsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Get AB Test Publications
+ */
+export const useBffAbtestsPublicationsApiBffAbtestsPublicationsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffAbtestsPublicationsApiBffAbtestsPublicationsPost>>, TError,{data: ABTestPublicationsPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffAbtestsPublicationsApiBffAbtestsPublicationsPost>>,
+        TError,
+        {data: ABTestPublicationsPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffAbtestsPublicationsApiBffAbtestsPublicationsPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
 /**
  * Get detailed AB test information
  * @summary Read AB Test
@@ -6116,6 +6220,73 @@ export const useAbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePost 
       > => {
 
       const mutationOptions = getAbtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Determine the winner of an AB test
+ * @summary Determine AB Test Winner
+ */
+export const abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost = (
+    abtestId: number,
+    aBTestDetermineWinnerPayload: ABTestDetermineWinnerPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ABTestDetermineWinnerResult>(
+      {url: `/api/orchestrator/abtests/${abtestId}/determine_winner`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: aBTestDetermineWinnerPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getAbtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost>>, TError,{abtestId: number;data: ABTestDetermineWinnerPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost>>, TError,{abtestId: number;data: ABTestDetermineWinnerPayload}, TContext> => {
+
+const mutationKey = ['abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost>>, {abtestId: number;data: ABTestDetermineWinnerPayload}> = (props) => {
+          const {abtestId,data} = props ?? {};
+
+          return  abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost(abtestId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AbtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostMutationResult = NonNullable<Awaited<ReturnType<typeof abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost>>>
+    export type AbtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostMutationBody = ABTestDetermineWinnerPayload
+    export type AbtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Determine AB Test Winner
+ */
+export const useAbtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost>>, TError,{abtestId: number;data: ABTestDetermineWinnerPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof abtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPost>>,
+        TError,
+        {abtestId: number;data: ABTestDetermineWinnerPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getAbtestsDetermineWinnerApiOrchestratorAbtestsAbtestIdDetermineWinnerPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

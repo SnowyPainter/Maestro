@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.abtests.schemas import ABTestFilter, ABTestListResponse, ABTestOut
-from apps.backend.src.modules.abtests.service import collect_abtest_insights, get_abtest, list_abtests
+from apps.backend.src.modules.abtests.service import collect_abtest_insights, get_abtest, get_abtest_existing_publications, list_abtests
 from apps.backend.src.modules.accounts.service import get_persona
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -26,6 +26,20 @@ class ABTestListPayload(BaseModel):
 
 class ABTestReadPayload(BaseModel):
     abtest_id: int
+
+
+class ABTestPublicationsPayload(BaseModel):
+    abtest_id: int
+    persona_account_id: int
+
+
+class ABTestPublicationInfo(BaseModel):
+    id: int
+    scheduled_at: Optional[str] = None
+
+
+class ABTestPublicationsResponse(BaseModel):
+    publications: list[ABTestPublicationInfo]
 
 
 @operator(
@@ -85,6 +99,43 @@ async def op_read_abtest(
     return out.model_copy(update={"insights": insights})
 
 
+@operator(
+    key="bff.abtests.publications",
+    title="BFF Get AB Test Publications",
+    side_effect="read",
+)
+async def op_get_abtest_publications(
+    payload: ABTestPublicationsPayload,
+    ctx: TaskContext,
+) -> ABTestPublicationsResponse:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    abtest = await get_abtest(db, payload.abtest_id)
+    if abtest is None:
+        raise HTTPException(status_code=404, detail="AB test not found")
+
+    persona = await get_persona(db, persona_id=abtest.persona_id, owner_user_id=user.id)
+    if persona is None:
+        raise HTTPException(status_code=403, detail="Not authorized to view AB test")
+
+    publications = await get_abtest_existing_publications(
+        db,
+        abtest_id=payload.abtest_id,
+        persona_account_id=payload.persona_account_id,
+    )
+
+    publication_infos = [
+        ABTestPublicationInfo(
+            id=pub.id,
+            scheduled_at=pub.scheduled_at.isoformat() if pub.scheduled_at else pub.published_at.isoformat() if pub.published_at else None
+        )
+        for pub in publications
+    ]
+
+    return ABTestPublicationsResponse(publications=publication_infos)
+
+
 @FLOWS.flow(
     key="bff.abtests.list",
     title="List AB Tests",
@@ -99,6 +150,19 @@ def _flow_bff_list_abtests(builder: FlowBuilder) -> None:
     task = builder.task("list_abtests", "bff.abtests.list")
     builder.expect_terminal(task)
 
+@FLOWS.flow(
+    key="bff.abtests.publications",
+    title="Get AB Test Publications",
+    description="Get existing publications for an AB test",
+    input_model=ABTestPublicationsPayload,
+    output_model=ABTestPublicationsResponse,
+    method="post",
+    path="/abtests/publications",
+    tags=("bff", "abtests", "publications"),
+)
+def _flow_bff_get_abtest_publications(builder: FlowBuilder) -> None:
+    task = builder.task("get_abtest_publications", "bff.abtests.publications")
+    builder.expect_terminal(task)
 
 @FLOWS.flow(
     key="bff.abtests.read",
@@ -118,6 +182,10 @@ def _flow_bff_read_abtest(builder: FlowBuilder) -> None:
 __all__ = [
     "ABTestListPayload",
     "ABTestReadPayload",
+    "ABTestPublicationsPayload",
+    "ABTestPublicationInfo",
+    "ABTestPublicationsResponse",
     "op_list_abtests",
     "op_read_abtest",
+    "op_get_abtest_publications",
 ]

@@ -109,7 +109,7 @@ class ABTestScheduleCommand(BaseModel):
 class ABTestScheduleResult(BaseModel):
     abtest_id: int
     persona_account_id: int
-    schedule_id: int
+    schedule_id: Optional[int] = None
     completion_schedule_id: Optional[int] = None
     post_publication_ids: List[int]
     run_at: datetime
@@ -195,7 +195,6 @@ def _collect_payload_identifiers(payload_data: Dict[str, Any]) -> Dict[str, Any]
         "post_publication_id",
         "post_publication_ids",
         "abtest_id",
-        "publish_schedule_id",
     )
     return {key: payload_data[key] for key in keys if key in payload_data and payload_data[key] is not None}
 
@@ -729,63 +728,65 @@ async def op_schedule_abtest(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    publish_result = compile_schedule_template(plan.publish_request)
-    publish_spec = publish_result.dag_spec
-    publish_dag = publish_spec.model_dump(by_alias=True, exclude_none=True)
+    # publish_request가 없으면 publish 스케줄링을 건너뜀
+    publish_schedule = None
+    publication_ids = [pub.id for pub in plan.publications]
     scheduled_iso = plan.run_at.astimezone(timezone.utc).replace(microsecond=0).isoformat()
 
-    publication_ids = [pub.id for pub in plan.publications]
-    base_context: Dict[str, Any] = {
-        "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
-        "abtest_id": plan.abtest.id,
-        "persona_id": plan.abtest.persona_id,
-        "campaign_id": plan.abtest.campaign_id,
-        "persona_account_id": plan.persona_account_id,
-        "post_publication_ids": publication_ids,
-        "scheduled_for": scheduled_iso,
-        "user_id": user.id,
-    }
+    if plan.publish_request is not None:
+        publish_result = compile_schedule_template(plan.publish_request)
+        publish_spec = publish_result.dag_spec
+        publish_dag = publish_spec.model_dump(by_alias=True, exclude_none=True)
 
-    publish_schedule = _persist_schedule(
-        db,
-        persona_account_id=plan.persona_account_id,
-        dag_spec=publish_dag,
-        payload=publish_spec.payload,
-        due_at=plan.run_at,
-        queue="coworker",
-        context=base_context,
-    )
-    await db.flush()
+        base_context: Dict[str, Any] = {
+            "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+            "abtest_id": plan.abtest.id,
+            "persona_id": plan.abtest.persona_id,
+            "campaign_id": plan.abtest.campaign_id,
+            "persona_account_id": plan.persona_account_id,
+            "post_publication_ids": publication_ids,
+            "scheduled_for": scheduled_iso,
+            "user_id": user.id,
+        }
 
-    timestamp = datetime.now(timezone.utc)
-    publications_with_labels = [
-        (plan.variant_a.label, plan.publications[0]),
-        (plan.variant_b.label, plan.publications[1]),
-    ]
-    for label, publication in publications_with_labels:
-        meta = dict(publication.meta or {})
-        meta.update(
-            {
-                "schedule_label": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
-                "schedule_id": publish_schedule.id,
-                "scheduled_at": scheduled_iso,
-                "abtest_id": plan.abtest.id,
-                "persona_account_id": plan.persona_account_id,
-                "abtest_variant": label,
-            }
+        publish_schedule = _persist_schedule(
+            db,
+            persona_account_id=plan.persona_account_id,
+            dag_spec=publish_dag,
+            payload=publish_spec.payload,
+            due_at=plan.run_at,
+            queue="coworker",
+            context=base_context,
         )
-        publication.meta = meta
-        publication.updated_at = timestamp
-        db.add(publication)
+        await db.flush()
+
+        timestamp = datetime.now(timezone.utc)
+        publications_with_labels = [
+            (plan.variant_a.label, plan.publications[0]),  # type: ignore
+            (plan.variant_b.label, plan.publications[1]),  # type: ignore
+        ]
+        for label, publication in publications_with_labels:
+            meta = dict(publication.meta or {})
+            meta.update(
+                {
+                    "schedule_label": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+                    "schedule_id": publish_schedule.id,
+                    "scheduled_at": scheduled_iso,
+                    "abtest_id": plan.abtest.id,
+                    "persona_account_id": plan.persona_account_id,
+                    "abtest_variant": label,
+                }
+            )
+            publication.meta = meta
+            publication.updated_at = timestamp
+            db.add(publication)
 
     completion_schedule = None
     completion_iso: Optional[str] = None
     if plan.complete_at is not None and plan.completion_params is not None:
         completion_iso = plan.complete_at.astimezone(timezone.utc).replace(microsecond=0).isoformat()
-        completion_params = ABTestCompleteTemplateParams(
-            **plan.completion_params,
-            publish_schedule_id=publish_schedule.id,
-        )
+
+        completion_params = ABTestCompleteTemplateParams(**plan.completion_params)
         completion_request = ScheduleCompileRequest(
             template=ScheduleTemplateKey.COMPLETE_AB_TEST,
             abtest_complete=completion_params,
@@ -798,7 +799,6 @@ async def op_schedule_abtest(
             "abtest_id": plan.abtest.id,
             "persona_id": plan.abtest.persona_id,
             "campaign_id": plan.abtest.campaign_id,
-            "publish_schedule_id": publish_schedule.id,
             "scheduled_for": completion_iso,
             "user_id": user.id,
         }
@@ -813,11 +813,13 @@ async def op_schedule_abtest(
         )
         await db.flush()
 
+        # publications에 completion meta 추가
+        timestamp = datetime.now(timezone.utc)
         completion_meta = {
             "completion_schedule_id": completion_schedule.id,
             "completion_scheduled_at": completion_iso,
         }
-        for _, publication in publications_with_labels:
+        for publication in plan.publications:
             meta = dict(publication.meta or {})
             meta.update(completion_meta)
             publication.meta = meta
@@ -825,36 +827,65 @@ async def op_schedule_abtest(
             db.add(publication)
 
     await db.flush()
-    meta_payload = {
-        key: value
-        for key, value in {
-            "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
-            "persona_account_id": plan.persona_account_id,
-            "post_publication_ids": publication_ids,
-            "completion_schedule_id": completion_schedule.id if completion_schedule else None,
-            "run_at": scheduled_iso,
-            "complete_at": completion_iso,
-        }.items()
-        if value is not None
-    }
 
-    await record_playbook_event(
-        db,
-        event="abtest.scheduled",
-        schedule_id=publish_schedule.id,
-        schedule=publish_schedule,
-        persona_id=plan.abtest.persona_id,
-        persona_account_id=plan.persona_account_id,
-        campaign_id=plan.abtest.campaign_id,
-        abtest_id=plan.abtest.id,
-        meta=meta_payload,
-    )
+    # 이벤트 기록
+    if publish_schedule is not None:
+        # publish 스케줄이 생성된 경우
+        meta_payload = {
+            key: value
+            for key, value in {
+                "template": ScheduleTemplateKey.SCHEDULE_AB_TEST.value,
+                "persona_account_id": plan.persona_account_id,
+                "post_publication_ids": publication_ids,
+                "completion_schedule_id": completion_schedule.id if completion_schedule else None,
+                "run_at": scheduled_iso,
+                "complete_at": completion_iso,
+            }.items()
+            if value is not None
+        }
+
+        await record_playbook_event(
+            db,
+            event="abtest.scheduled",
+            schedule_id=publish_schedule.id,
+            schedule=publish_schedule,
+            persona_id=plan.abtest.persona_id,
+            persona_account_id=plan.persona_account_id,
+            campaign_id=plan.abtest.campaign_id,
+            abtest_id=plan.abtest.id,
+            meta=meta_payload,
+        )
+    elif completion_schedule is not None:
+        # completion만 스케줄된 경우
+        meta_payload = {
+            key: value
+            for key, value in {
+                "template": ScheduleTemplateKey.COMPLETE_AB_TEST.value,
+                "persona_account_id": plan.persona_account_id,
+                "post_publication_ids": publication_ids,
+                "completion_schedule_id": completion_schedule.id,
+                "complete_at": completion_iso,
+            }.items()
+            if value is not None
+        }
+
+        await record_playbook_event(
+            db,
+            event="abtest.completion_scheduled",
+            schedule_id=completion_schedule.id,
+            schedule=completion_schedule,
+            persona_id=plan.abtest.persona_id,
+            persona_account_id=plan.persona_account_id,
+            campaign_id=plan.abtest.campaign_id,
+            abtest_id=plan.abtest.id,
+            meta=meta_payload,
+        )
 
     await db.commit()
     return ABTestScheduleResult(
         abtest_id=abtest_id,
         persona_account_id=plan.persona_account_id,
-        schedule_id=publish_schedule.id,
+        schedule_id=publish_schedule.id if publish_schedule else None,
         completion_schedule_id=completion_schedule.id if completion_schedule else None,
         post_publication_ids=publication_ids,
         run_at=plan.run_at,

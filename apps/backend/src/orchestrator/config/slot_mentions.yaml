@@ -12,8 +12,10 @@ slots:
   flows:
   - abtests.complete_abtest
   - abtests.delete_abtest
+  - abtests.determine_winner
   - abtests.schedule_abtest
   - abtests.update_abtest
+  - bff.abtests.publications
   - bff.abtests.read
 - name: abtest_schedule
   label: Abtest Schedule
@@ -423,6 +425,7 @@ slots:
   - action.schedule.cancel_schedules
   - action.schedule.create_draft_post_schedule
   - action.schedule.create_from_raw_dag
+  - bff.abtests.publications
   - bff.contexts.current_persona
   - bff.contexts.current_persona_account
   - bff.schedule.list_schedules

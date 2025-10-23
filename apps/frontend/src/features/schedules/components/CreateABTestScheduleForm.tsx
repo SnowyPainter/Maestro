@@ -1,10 +1,11 @@
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost } from "@/lib/api/generated";
+import { useAbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost, useBffAbtestsPublicationsApiBffAbtestsPublicationsPost } from "@/lib/api/generated";
 import { toast } from "sonner";
 
 const scheduleSchema = z.object({
@@ -32,6 +33,43 @@ interface CreateABTestScheduleFormProps {
 }
 
 export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess, onCancel }: CreateABTestScheduleFormProps) {
+  // AB Test의 기존 publications 확인
+  const publicationsMutation = useBffAbtestsPublicationsApiBffAbtestsPublicationsPost();
+
+  // 컴포넌트 마운트 시 publications 가져오기
+  React.useEffect(() => {
+    if (abTestId && personaAccountId) {
+      publicationsMutation.mutate({
+        data: {
+          abtest_id: abTestId,
+          persona_account_id: personaAccountId,
+        },
+      });
+    }
+  }, [abTestId, personaAccountId]);
+
+  const existingPublications = publicationsMutation.data?.publications || [];
+  console.log("existingPublications", existingPublications);
+  const hasExistingPublications = existingPublications.length > 0;
+
+  // 가장 늦은 scheduled_at 찾기 (UTC 시간을 그대로 사용)
+  const latestScheduledAt = React.useMemo(() => {
+    const validScheduledAts = existingPublications
+      .map((pub) => pub.scheduled_at)
+      .filter((scheduledAt): scheduledAt is string =>
+        scheduledAt !== null &&
+        scheduledAt !== undefined &&
+        scheduledAt !== "" &&
+        !isNaN(new Date(scheduledAt).getTime())
+      );
+
+    return validScheduledAts.length > 0
+      ? new Date(validScheduledAts.reduce((latest, current) =>
+          new Date(current).getTime() > new Date(latest).getTime() ? current : latest
+        ))
+      : null;
+  }, [existingPublications]);
+
   const form = useForm({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
@@ -39,6 +77,18 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
       completeAt: "",
     },
   });
+
+  React.useEffect(() => {
+    if (latestScheduledAt && hasExistingPublications) {
+      const year = latestScheduledAt.getFullYear();
+      const month = String(latestScheduledAt.getMonth() + 1).padStart(2, '0');
+      const day = String(latestScheduledAt.getDate()).padStart(2, '0');
+      const hours = String(latestScheduledAt.getHours()).padStart(2, '0');
+      const minutes = String(latestScheduledAt.getMinutes()).padStart(2, '0');
+      const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+      form.setValue("runAt", localDateTime);
+    }
+  }, [latestScheduledAt, hasExistingPublications]);
 
   const runAtValue = form.watch("runAt");
   const scheduleMutation = useAbtestsScheduleAbtestApiOrchestratorActionsAbtestsAbtestIdSchedulePost();
@@ -80,24 +130,32 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
                     type="datetime-local"
                     {...field}
                     placeholder="Select publication time"
+                    disabled={hasExistingPublications}
                   />
                 </FormControl>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const now = new Date();
-                    const oneMinuteLater = new Date(now.getTime() + 60 * 1000); // Add 1 minute
-                    const localDateTime = new Date(oneMinuteLater.getTime() - oneMinuteLater.getTimezoneOffset() * 60000)
-                      .toISOString()
-                      .slice(0, 16);
-                    form.setValue("runAt", localDateTime);
-                  }}
-                >
-                  Right now
-                </Button>
+                {!hasExistingPublications && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const now = new Date();
+                      const oneMinuteLater = new Date(now.getTime() + 60 * 1000); // Add 1 minute
+                      const localDateTime = new Date(oneMinuteLater.getTime() - oneMinuteLater.getTimezoneOffset() * 60000)
+                        .toISOString()
+                        .slice(0, 16);
+                      form.setValue("runAt", localDateTime);
+                    }}
+                  >
+                    Right now
+                  </Button>
+                )}
               </div>
+              {hasExistingPublications && (
+                <p className="text-sm text-muted-foreground">
+                  Publication time is already set from existing schedule
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -107,7 +165,7 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
           name="completeAt"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Completion Time (Optional)</FormLabel>
+              <FormLabel>Completion Time{!hasExistingPublications ? " (Optional)" : ""}</FormLabel>
               <div className="flex gap-2">
                 <FormControl className="flex-1">
                   <Input
@@ -135,9 +193,11 @@ export function CreateABTestScheduleForm({ abTestId, personaAccountId, onSuccess
                 </Button>
               </div>
               <FormMessage />
-              <p className="text-sm text-muted-foreground">
-                Leave empty to manually complete the test later
-              </p>
+              {!hasExistingPublications && (
+                <p className="text-sm text-muted-foreground">
+                  Leave empty to manually complete the test later
+                </p>
+              )}
             </FormItem>
           )}
         />

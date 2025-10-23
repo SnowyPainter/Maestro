@@ -288,6 +288,19 @@ def _flow_complete_abtest(builder: FlowBuilder) -> None:
     task = builder.task("complete_abtest", "abtests.complete")
     builder.expect_terminal(task)
 
+@FLOWS.flow(
+    key="abtests.determine_winner",
+    title="Determine AB Test Winner",
+    description="Determine the winner of an AB test",
+    input_model=ABTestDetermineWinnerPayload,
+    output_model=ABTestDetermineWinnerResult,
+    method="post",
+    path="/abtests/{abtest_id}/determine_winner",
+    tags=("action", "abtests", "determine_winner"),
+)
+def _flow_determine_abtest_winner(builder: FlowBuilder) -> None:
+    task = builder.task("determine_winner", "abtests.determine_winner")
+    builder.expect_terminal(task)
 
 @FLOWS.flow(
     key="abtests.delete_abtest",

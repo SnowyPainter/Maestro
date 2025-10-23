@@ -24,6 +24,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/abtests/publications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get AB Test Publications
+         * @description Get existing publications for an AB test
+         */
+        post: operations["bff_abtests_publications_api_bff_abtests_publications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/abtests/{abtest_id}": {
         parameters: {
             query?: never;
@@ -865,6 +885,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/abtests/{abtest_id}/determine_winner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Determine AB Test Winner
+         * @description Determine the winner of an AB test
+         */
+        post: operations["abtests_determine_winner_api_orchestrator_abtests__abtest_id__determine_winner_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/accounts/platform": {
         parameters: {
             query?: never;
@@ -1671,8 +1711,6 @@ export interface components {
             campaign_id: number;
             /** Persona Account Id */
             persona_account_id: number;
-            /** Publish Schedule Id */
-            publish_schedule_id: number;
             /** Post Publication Ids */
             post_publication_ids: number[];
         };
@@ -1697,6 +1735,33 @@ export interface components {
             started_at?: string | null;
             /** Notes */
             notes?: string | null;
+        };
+        /** ABTestDetermineWinnerPayload */
+        ABTestDetermineWinnerPayload: {
+            /** Abtest Id */
+            abtest_id: number;
+        };
+        /** ABTestDetermineWinnerResult */
+        ABTestDetermineWinnerResult: {
+            /** Abtest Id */
+            abtest_id: number;
+            /** Winner Variant */
+            winner_variant: string;
+            /** Decision Metric */
+            decision_metric: string;
+            /** Winner Value */
+            winner_value?: number | null;
+            /** Loser Value */
+            loser_value?: number | null;
+            /** Uplift Percentage */
+            uplift_percentage?: number | null;
+            /** Insight Note */
+            insight_note?: string | null;
+            /**
+             * Finished At
+             * Format: date-time
+             */
+            finished_at: string;
         };
         /** ABTestInsightSummary */
         ABTestInsightSummary: {
@@ -1764,6 +1829,25 @@ export interface components {
             updated_at: string;
             insights?: components["schemas"]["ABTestInsightSummary"] | null;
         };
+        /** ABTestPublicationInfo */
+        ABTestPublicationInfo: {
+            /** Id */
+            id: number;
+            /** Scheduled At */
+            scheduled_at?: string | null;
+        };
+        /** ABTestPublicationsPayload */
+        ABTestPublicationsPayload: {
+            /** Abtest Id */
+            abtest_id: number;
+            /** Persona Account Id */
+            persona_account_id: number;
+        };
+        /** ABTestPublicationsResponse */
+        ABTestPublicationsResponse: {
+            /** Publications */
+            publications: components["schemas"]["ABTestPublicationInfo"][];
+        };
         /** ABTestScheduleCommand */
         ABTestScheduleCommand: {
             /** Abtest Id */
@@ -1788,7 +1872,7 @@ export interface components {
             /** Persona Account Id */
             persona_account_id: number;
             /** Schedule Id */
-            schedule_id: number;
+            schedule_id?: number | null;
             /** Completion Schedule Id */
             completion_schedule_id?: number | null;
             /** Post Publication Ids */
@@ -4134,6 +4218,39 @@ export interface operations {
             };
         };
     };
+    bff_abtests_publications_api_bff_abtests_publications_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ABTestPublicationsPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestPublicationsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_abtests_read_api_bff_abtests__abtest_id__get: {
         parameters: {
             query?: never;
@@ -5490,6 +5607,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ABTestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    abtests_determine_winner_api_orchestrator_abtests__abtest_id__determine_winner_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                abtest_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ABTestDetermineWinnerPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ABTestDetermineWinnerResult"];
                 };
             };
             /** @description Validation Error */

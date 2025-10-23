@@ -259,19 +259,18 @@ def _build_complete_abtest_template(request: "ScheduleCompileRequest") -> "Sched
 
     params: ABTestCompleteTemplateParams = request.require_abtest_complete_params()
     builder = ScheduleDagBuilder()
-    builder.meta(
-        label=ScheduleTemplateKey.COMPLETE_AB_TEST.value,
-        abtest_id=str(params.abtest_id),
-        persona_account_id=str(params.persona_account_id),
-        campaign_id=str(params.campaign_id),
-        publish_schedule_id=str(params.publish_schedule_id),
-    )
+    meta_kwargs = {
+        "label": ScheduleTemplateKey.COMPLETE_AB_TEST.value,
+        "abtest_id": str(params.abtest_id),
+        "persona_account_id": str(params.persona_account_id),
+        "campaign_id": str(params.campaign_id),
+    }
+    builder.meta(**meta_kwargs)
     builder.payload(
         abtest_id=params.abtest_id,
         persona_id=params.persona_id,
         campaign_id=params.campaign_id,
         persona_account_id=params.persona_account_id,
-        publish_schedule_id=params.publish_schedule_id,
         post_publication_ids=params.post_publication_ids,
     )
     determine_id = builder.add_node(
@@ -280,7 +279,7 @@ def _build_complete_abtest_template(request: "ScheduleCompileRequest") -> "Sched
         abtest_id=payload_ref("abtest_id"),
     )
     complete_id = builder.add_node(
-        "abtests.complete",
+        "abtests.complete_abtest",
         node_id="complete_abtest",
         abtest_id=payload_ref("abtest_id"),
         winner_variant=node_ref(determine_id, "winner_variant"),
