@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.abtests.schemas import (
     ABTestComplete,
     ABTestCreate,
+    ABTestDetermineWinnerResult,
     ABTestOut,
     ABTestUpdate,
 )
@@ -20,6 +21,7 @@ from apps.backend.src.modules.abtests.service import (
     complete_abtest,
     update_abtest,
     delete_abtest,
+    determine_abtest_winner,
 )
 from apps.backend.src.modules.accounts.service import get_persona
 from apps.backend.src.modules.campaigns.service import get_campaign
@@ -49,6 +51,10 @@ class ABTestCompleteCommand(ABTestComplete):
 
 
 class ABTestDeletePayload(BaseModel):
+    abtest_id: int
+
+
+class ABTestDetermineWinnerPayload(BaseModel):
     abtest_id: int
 
 
@@ -171,6 +177,52 @@ async def op_complete_abtest(
 
 
 @operator(
+    key="abtests.determine_winner",
+    title="Determine AB Test Winner",
+    side_effect="read",
+)
+async def op_determine_abtest_winner(
+    payload: ABTestDetermineWinnerPayload,
+    ctx: TaskContext,
+) -> ABTestDetermineWinnerResult:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: Optional[User] = ctx.optional(User)
+    schedule_context = ctx.optional(dict, name="schedule_context") or {}
+
+    owner_value = user.id if user else schedule_context.get("user_id")
+    try:
+        owner_user_id = int(owner_value)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Owner user context missing") from None
+
+    try:
+        result = await determine_abtest_winner(
+            db,
+            abtest_id=payload.abtest_id,
+            owner_user_id=owner_user_id,
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    await record_playbook_event(
+        db,
+        event="abtest.winner_determined",
+        abtest_id=payload.abtest_id,
+        meta={
+            "decision_metric": result.decision_metric,
+            "winner_variant": result.winner_variant,
+            "winner_value": result.winner_value,
+            "loser_value": result.loser_value,
+            "uplift_percentage": result.uplift_percentage,
+        },
+    )
+    await db.commit()
+    return result
+
+
+@operator(
     key="abtests.delete",
     title="Delete AB Test",
     side_effect="write",
@@ -256,8 +308,10 @@ __all__ = [
     "ABTestUpdateCommand",
     "ABTestCompleteCommand",
     "ABTestDeletePayload",
+    "ABTestDetermineWinnerPayload",
     "op_create_abtest",
     "op_update_abtest",
     "op_complete_abtest",
     "op_delete_abtest",
+    "op_determine_abtest_winner",
 ]

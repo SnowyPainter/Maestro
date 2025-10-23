@@ -37,7 +37,64 @@ export const bffAbtestsListApiBffAbtestsGetResponse = zod.object({
   "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
   "notes": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "insights": zod.union([zod.object({
+  "variant_a": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "variant_b": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "decision_metric": zod.string().nullish(),
+  "winner_variant": zod.string().nullish(),
+  "winner_value": zod.union([zod.number(),zod.null()]).optional(),
+  "loser_value": zod.union([zod.number(),zod.null()]).optional(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional()
+}),zod.null()]).optional()
 })),
   "total": zod.number()
 })
@@ -65,7 +122,64 @@ export const bffAbtestsReadApiBffAbtestsAbtestIdGetResponse = zod.object({
   "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
   "notes": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "insights": zod.union([zod.object({
+  "variant_a": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "variant_b": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "decision_metric": zod.string().nullish(),
+  "winner_variant": zod.string().nullish(),
+  "winner_value": zod.union([zod.number(),zod.null()]).optional(),
+  "loser_value": zod.union([zod.number(),zod.null()]).optional(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional()
+}),zod.null()]).optional()
 })
 
 
@@ -1359,7 +1473,64 @@ export const abtestsCreateAbtestApiOrchestratorAbtestsPostResponse = zod.object(
   "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
   "notes": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "insights": zod.union([zod.object({
+  "variant_a": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "variant_b": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "decision_metric": zod.string().nullish(),
+  "winner_variant": zod.string().nullish(),
+  "winner_value": zod.union([zod.number(),zod.null()]).optional(),
+  "loser_value": zod.union([zod.number(),zod.null()]).optional(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional()
+}),zod.null()]).optional()
 })
 
 
@@ -1398,7 +1569,64 @@ export const abtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatchResponse = zo
   "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
   "notes": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "insights": zod.union([zod.object({
+  "variant_a": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "variant_b": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "decision_metric": zod.string().nullish(),
+  "winner_variant": zod.string().nullish(),
+  "winner_value": zod.union([zod.number(),zod.null()]).optional(),
+  "loser_value": zod.union([zod.number(),zod.null()]).optional(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional()
+}),zod.null()]).optional()
 })
 
 
@@ -1448,7 +1676,64 @@ export const abtestsCompleteAbtestApiOrchestratorAbtestsAbtestIdCompletePostResp
   "uplift_percentage": zod.union([zod.number(),zod.null()]).optional(),
   "notes": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "insights": zod.union([zod.object({
+  "variant_a": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "variant_b": zod.object({
+  "variant_id": zod.number(),
+  "post_publication_ids": zod.array(zod.number()).optional(),
+  "latest_sample_at": zod.iso.datetime({}).nullish(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})).optional()
+}),
+  "decision_metric": zod.string().nullish(),
+  "winner_variant": zod.string().nullish(),
+  "winner_value": zod.union([zod.number(),zod.null()]).optional(),
+  "loser_value": zod.union([zod.number(),zod.null()]).optional(),
+  "uplift_percentage": zod.union([zod.number(),zod.null()]).optional()
+}),zod.null()]).optional()
 })
 
 

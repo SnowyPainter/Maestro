@@ -20,15 +20,18 @@ interface VariantCardProps {
   variant: any;
   variantName: string;
   isWinner: boolean;
-  upliftPercentage: number | null;
+  upliftPercentage: number | null | undefined;
+  isEstimated?: boolean;
   bgColor: string;
   textColor: string;
 }
-const VariantCard = ({ variant, variantName, isWinner, upliftPercentage, bgColor, textColor }: VariantCardProps) => {
+const VariantCard = ({ variant, variantName, isWinner, upliftPercentage, isEstimated = false, bgColor, textColor }: VariantCardProps) => {
   return (
     <div className={`flex-1 p-4 border rounded-lg ${bgColor} relative`}>
       {isWinner && (
-        <div className="absolute top-2 right-2 text-yellow-600 font-bold text-lg">👑</div>
+        <div className="absolute top-2 right-2 text-yellow-600 font-bold text-lg">
+          👑{isEstimated && <span className="text-xs ml-1">(Est.)</span>}
+        </div>
       )}
       <h4 className={`font-semibold ${textColor} mb-2`}>{variantName}</h4>
       {variant ? (
@@ -130,21 +133,94 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
         {abTest.hypothesis && <p className="mb-2"><strong>Hypothesis:</strong> {abTest.hypothesis}</p>}
         {abTest.notes && <p className="mb-4"><strong>Notes:</strong> {abTest.notes}</p>}
 
+        {/* Insights Display */}
+        {abTest.insights && (
+          <div className="mb-4 p-4 bg-muted/30 rounded-lg">
+            <h4 className="font-semibold mb-3 text-foreground">
+              Test Results{!abTest.finished_at && abTest.insights.winner_variant ? ' (Estimated)' : ''}
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Variant A Metrics */}
+              <div className="space-y-2">
+                <h5 className="font-medium text-blue-900">Variant A</h5>
+                {abTest.insights.variant_a.metrics && Object.entries(abTest.insights.variant_a.metrics).map(([key, value]) => (
+                  <div key={key} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground capitalize">{key.replace('_', ' ')}:</span>
+                    <span className="font-mono">{typeof value === 'number' ? value.toFixed(2) : value}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Publications:</span>
+                  <span className="font-mono">{abTest.insights.variant_a.post_publication_ids?.length || 0}</span>
+                </div>
+              </div>
+
+              {/* Variant B Metrics */}
+              <div className="space-y-2">
+                <h5 className="font-medium text-green-900">Variant B</h5>
+                {abTest.insights.variant_b.metrics && Object.entries(abTest.insights.variant_b.metrics).map(([key, value]) => (
+                  <div key={key} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground capitalize">{key.replace('_', ' ')}:</span>
+                    <span className="font-mono">{typeof value === 'number' ? value.toFixed(2) : value}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Publications:</span>
+                  <span className="font-mono">{abTest.insights.variant_b.post_publication_ids?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Decision Summary */}
+            {abTest.insights.decision_metric && (
+              <div className="mt-4 pt-3 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Decision Metric:</span>
+                  <span className="font-medium capitalize">{abTest.insights.decision_metric.replace('_', ' ')}</span>
+                </div>
+                {abTest.insights.winner_variant && (
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-muted-foreground">Winner:</span>
+                    <span className={`font-medium px-2 py-1 rounded text-xs ${
+                      abTest.insights.winner_variant === 'A'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      Variant {abTest.insights.winner_variant}
+                      {!abTest.finished_at && <span className="text-xs ml-1 opacity-75">(Estimated)</span>}
+                    </span>
+                  </div>
+                )}
+                {abTest.insights.uplift_percentage !== null && abTest.insights.uplift_percentage !== undefined && (
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-muted-foreground">Uplift:</span>
+                    <span className={`font-medium ${abTest.insights.uplift_percentage > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {abTest.insights.uplift_percentage > 0 ? '+' : ''}{abTest.insights.uplift_percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Variants Details - Horizontal Layout */}
         <div className="flex gap-4 mb-4">
           <VariantCard
             variant={variantA}
             variantName="Variant A"
-            isWinner={Boolean(abTest.finished_at && abTest.winner_variant === 'A')}
-            upliftPercentage={abTest.uplift_percentage ?? null}
+            isWinner={Boolean(abTest.finished_at ? abTest.winner_variant === 'A' : abTest.insights?.winner_variant === 'A')}
+            upliftPercentage={abTest.finished_at ? abTest.uplift_percentage : abTest.insights?.uplift_percentage}
+            isEstimated={!abTest.finished_at && Boolean(abTest.insights?.winner_variant)}
             bgColor="bg-blue-50"
             textColor="text-blue-900"
           />
           <VariantCard
             variant={variantB}
             variantName="Variant B"
-            isWinner={Boolean(abTest.finished_at && abTest.winner_variant === 'B')}
-            upliftPercentage={abTest.uplift_percentage ?? null}
+            isWinner={Boolean(abTest.finished_at ? abTest.winner_variant === 'B' : abTest.insights?.winner_variant === 'B')}
+            upliftPercentage={abTest.finished_at ? abTest.uplift_percentage : abTest.insights?.uplift_percentage}
+            isEstimated={!abTest.finished_at && Boolean(abTest.insights?.winner_variant)}
             bgColor="bg-green-50"
             textColor="text-green-900"
           />

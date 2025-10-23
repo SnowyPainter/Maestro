@@ -254,6 +254,7 @@ def _build_complete_abtest_template(request: "ScheduleCompileRequest") -> "Sched
         ABTestCompleteTemplateParams,
         ScheduleDagBuilder,
         payload_ref,
+        node_ref,
     )
 
     params: ABTestCompleteTemplateParams = request.require_abtest_complete_params()
@@ -273,16 +274,21 @@ def _build_complete_abtest_template(request: "ScheduleCompileRequest") -> "Sched
         publish_schedule_id=params.publish_schedule_id,
         post_publication_ids=params.post_publication_ids,
     )
-    builder.add_node(
-        "abtests.evaluate_ready",
-        node_id="mark_ready",
+    determine_id = builder.add_node(
+        "abtests.determine_winner",
+        node_id="determine_winner",
         abtest_id=payload_ref("abtest_id"),
-        persona_id=payload_ref("persona_id"),
-        campaign_id=payload_ref("campaign_id"),
-        persona_account_id=payload_ref("persona_account_id"),
-        publish_schedule_id=payload_ref("publish_schedule_id"),
-        post_publication_ids=payload_ref("post_publication_ids"),
     )
+    complete_id = builder.add_node(
+        "abtests.complete",
+        node_id="complete_abtest",
+        abtest_id=payload_ref("abtest_id"),
+        winner_variant=node_ref(determine_id, "winner_variant"),
+        uplift_percentage=node_ref(determine_id, "uplift_percentage"),
+        insight_note=node_ref(determine_id, "insight_note"),
+        finished_at=node_ref(determine_id, "finished_at"),
+    )
+    builder.connect(determine_id, complete_id)
     return builder.build_model()
 
 

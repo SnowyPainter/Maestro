@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from apps.backend.src.modules.abtests.models import ABTestWinner
+from apps.backend.src.modules.insights.schemas import InsightCommentOut
 
 
 class ABTestWinnerEnum(str, Enum):
@@ -66,8 +67,41 @@ class ABTestOut(BaseModel):
     notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    insights: Optional["ABTestInsightSummary"] = None
 
 
 class ABTestListResponse(BaseModel):
     items: list[ABTestOut]
     total: int
+
+
+class ABTestVariantInsight(BaseModel):
+    variant_id: int
+    post_publication_ids: List[int] = Field(default_factory=list)
+    latest_sample_at: Optional[datetime] = None
+    metrics: Dict[str, float] = Field(default_factory=dict)
+    comments: List[InsightCommentOut] = Field(default_factory=list)
+
+
+class ABTestInsightSummary(BaseModel):
+    variant_a: ABTestVariantInsight
+    variant_b: ABTestVariantInsight
+    decision_metric: Optional[str] = None
+    winner_variant: Optional[str] = None
+    winner_value: Optional[float] = None
+    loser_value: Optional[float] = None
+    uplift_percentage: Optional[float] = None
+
+
+class ABTestDetermineWinnerResult(BaseModel):
+    abtest_id: int
+    winner_variant: str
+    decision_metric: str
+    winner_value: Optional[float] = None
+    loser_value: Optional[float] = None
+    uplift_percentage: Optional[float] = None
+    insight_note: Optional[str] = None
+    finished_at: datetime
+
+
+ABTestOut.model_rebuild()

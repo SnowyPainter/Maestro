@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Dict, Optional, Tuple, List, Iterable
+from typing import Dict, Optional, Tuple, List, Iterable, Any
 
 from sqlalchemy import Select, func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,13 +15,19 @@ from apps.backend.src.modules.abtests.schemas import (
     ABTestComplete,
     ABTestCreate,
     ABTestFilter,
+    ABTestInsightSummary,
+    ABTestVariantInsight,
+    ABTestDetermineWinnerResult,
 )
-from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS
+from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS, KPIKey
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.drafts.service import (
     get_draft_variant,
     upsert_post_publication_schedule,
 )
+from apps.backend.src.modules.insights.models import InsightSample
+from apps.backend.src.modules.insights.schemas import InsightCommentOut
+from apps.backend.src.modules.insights.service import list_insight_comments
 from apps.backend.src.modules.playbooks import service as playbook_service
 from apps.backend.src.modules.scheduler.registry import ScheduleTemplateKey
 from apps.backend.src.modules.scheduler.schemas import (
@@ -30,6 +36,11 @@ from apps.backend.src.modules.scheduler.schemas import (
     ScheduleCompileRequest,
 )
 
+from apps.backend.src.core.logging import setup_logging
+setup_logging()
+import logging
+
+logger = logging.getLogger(__name__)
 
 def _ensure_distinct_variants(payload: ABTestCreate) -> None:
     if payload.variant_a_id == payload.variant_b_id:
@@ -158,6 +169,243 @@ class ABTestSchedulePlan:
     complete_at: Optional[datetime]
 
 
+_METRIC_PRIORITY: Tuple[str, ...] = (
+    KPIKey.LINK_CLICKS.value,
+    KPIKey.CTR.value,
+    KPIKey.ER.value,
+    KPIKey.PROFILE_VISITS.value,
+    KPIKey.REACH.value,
+    KPIKey.IMPRESSIONS.value,
+    KPIKey.LIKES.value,
+    KPIKey.COMMENTS.value,
+    KPIKey.SHARES.value,
+    KPIKey.SAVES.value,
+    KPIKey.FOLLOWS.value,
+)
+
+
+async def _latest_sample_for_publication(
+    db: AsyncSession,
+    *,
+    post_publication_id: int,
+) -> Optional[InsightSample]:
+    stmt = (
+        select(InsightSample)
+        .where(InsightSample.post_publication_id == post_publication_id)
+        .order_by(InsightSample.ts.desc(), InsightSample.id.desc())
+        .limit(1)
+    )
+    return (await db.execute(stmt)).scalars().first()
+
+
+async def _collect_variant_publications(
+    db: AsyncSession,
+    *,
+    variant_id: int,
+    persona_id: int,
+) -> List[PostPublication]:
+    logger.info(f"Collecting variant publications for variant {variant_id} and persona {persona_id}")
+    stmt = (
+        select(PostPublication)
+        .join(PersonaAccount, PersonaAccount.id == PostPublication.account_persona_id)
+        .where(
+            PostPublication.variant_id == variant_id,
+            PersonaAccount.persona_id == persona_id,
+        )
+        .order_by(PostPublication.created_at.desc(), PostPublication.id.desc())
+    )
+    return (await db.execute(stmt)).scalars().all()
+
+
+async def _collect_variant_insight(
+    db: AsyncSession,
+    *,
+    draft_id: int,
+    persona_id: int,
+    comment_limit: int = 5,
+) -> ABTestVariantInsight:
+    # ABTest의 경우, 이미 스케줄링된 PostPublication들이 있으므로 이를 통해 publications을 찾음
+    # draft_id를 통해 해당 draft의 모든 publications을 찾음
+    stmt = select(PostPublication).join(
+        DraftVariant, DraftVariant.id == PostPublication.variant_id
+    ).join(
+        PersonaAccount, PersonaAccount.id == PostPublication.account_persona_id
+    ).where(
+        DraftVariant.draft_id == draft_id,
+        PersonaAccount.persona_id == persona_id,
+    ).order_by(PostPublication.created_at.desc())
+
+    publications = (await db.execute(stmt)).scalars().all()
+    publication_ids = [pub.id for pub in publications]
+    
+    metrics: Dict[str, float] = {}
+    latest_sample_at: Optional[datetime] = None
+
+    for ppid in publication_ids:
+        sample = await _latest_sample_for_publication(db, post_publication_id=ppid)
+        if sample is None:
+            continue
+
+        if latest_sample_at is None or (
+            sample.ts and (latest_sample_at is None or sample.ts > latest_sample_at)
+        ):
+            latest_sample_at = sample.ts
+
+        for key, value in (sample.metrics or {}).items():
+            if not isinstance(key, str):
+                continue
+            try:
+                metrics[key] = metrics.get(key, 0.0) + float(value)
+            except (TypeError, ValueError):
+                continue
+
+    comments: List[InsightCommentOut] = []
+    seen_comment_ids: set[str] = set()
+    for ppid in publication_ids:
+        comment_list = await list_insight_comments(
+            db,
+            post_publication_id=ppid,
+            limit=comment_limit,
+        )
+        for comment in comment_list.comments:
+            comment_id = f"{comment.platform}:{comment.comment_external_id}"
+            if comment_id in seen_comment_ids:
+                continue
+            seen_comment_ids.add(comment_id)
+            comments.append(comment)
+            if len(comments) >= comment_limit:
+                break
+        if len(comments) >= comment_limit:
+            break
+
+    return ABTestVariantInsight(
+        variant_id=draft_id,  # draft_id를 variant_id로 사용
+        post_publication_ids=publication_ids,
+        latest_sample_at=latest_sample_at,
+        metrics=metrics,
+        comments=comments,
+    )
+
+
+def _decide_winner(
+    variant_a: ABTestVariantInsight,
+    variant_b: ABTestVariantInsight,
+) -> tuple[Optional[str], Optional[str], Optional[float], Optional[float], Optional[float]]:
+    metrics_a = variant_a.metrics or {}
+    metrics_b = variant_b.metrics or {}
+
+    epsilon = 1e-6
+
+    for metric_key in _METRIC_PRIORITY:
+        value_a = metrics_a.get(metric_key)
+        value_b = metrics_b.get(metric_key)
+
+        if value_a is None and value_b is None:
+            continue
+
+        try:
+            a = float(value_a) if value_a is not None else 0.0
+            b = float(value_b) if value_b is not None else 0.0
+        except (TypeError, ValueError):
+            continue
+
+        if abs(a - b) <= epsilon and (a <= epsilon and b <= epsilon):
+            continue
+
+        if a > b + epsilon:
+            uplift = ((a - b) / b * 100.0) if b > epsilon else None
+            return "A", metric_key, a, b, uplift
+        if b > a + epsilon:
+            uplift = ((b - a) / a * 100.0) if a > epsilon else None
+            return "B", metric_key, b, a, uplift
+
+    return None, None, None, None, None
+
+
+async def collect_abtest_insights(
+    db: AsyncSession,
+    *,
+    abtest_id: int,
+    owner_user_id: Optional[int] = None,
+    comment_limit: int = 5,
+) -> ABTestInsightSummary:
+    abtest = await get_abtest(db, abtest_id)
+    if abtest is None:
+        raise ValueError("AB test not found")
+
+    persona = await db.get(Persona, abtest.persona_id)
+    if persona is None:
+        raise ValueError("persona not found for AB test")
+    if owner_user_id is not None and persona.owner_user_id != owner_user_id:
+        raise PermissionError("AB test does not belong to user")
+
+    variant_a = await _collect_variant_insight(
+        db,
+        draft_id=abtest.variant_a_id,
+        persona_id=abtest.persona_id,
+        comment_limit=comment_limit,
+    )
+    variant_b = await _collect_variant_insight(
+        db,
+        draft_id=abtest.variant_b_id,
+        persona_id=abtest.persona_id,
+        comment_limit=comment_limit,
+    )
+
+    winner, metric_key, winner_value, loser_value, uplift = _decide_winner(variant_a, variant_b)
+
+    return ABTestInsightSummary(
+        variant_a=variant_a,
+        variant_b=variant_b,
+        decision_metric=metric_key,
+        winner_variant=winner,
+        winner_value=winner_value,
+        loser_value=loser_value,
+        uplift_percentage=uplift,
+    )
+
+
+async def determine_abtest_winner(
+    db: AsyncSession,
+    *,
+    abtest_id: int,
+    owner_user_id: Optional[int] = None,
+) -> ABTestDetermineWinnerResult:
+    summary = await collect_abtest_insights(
+        db,
+        abtest_id=abtest_id,
+        owner_user_id=owner_user_id,
+    )
+
+    if not summary.winner_variant or not summary.decision_metric:
+        raise ValueError("insufficient insight data to determine winner")
+
+    finished_at = datetime.now(timezone.utc)
+    winner_label = summary.winner_variant
+    metric_label = summary.decision_metric
+
+    insight_note = None
+    if summary.winner_value is not None and summary.loser_value is not None:
+        insight_note = (
+            f"Variant {winner_label} outperformed based on '{metric_label}': "
+            f"{summary.winner_value:.2f} vs {summary.loser_value:.2f}"
+        )
+    elif summary.winner_value is not None:
+        insight_note = (
+            f"Variant {winner_label} selected automatically using '{metric_label}' "
+            f"value {summary.winner_value:.2f}"
+        )
+
+    return ABTestDetermineWinnerResult(
+        abtest_id=abtest_id,
+        winner_variant=winner_label,
+        decision_metric=metric_label,
+        winner_value=summary.winner_value,
+        loser_value=summary.loser_value,
+        uplift_percentage=summary.uplift_percentage,
+        insight_note=insight_note,
+        finished_at=finished_at,
+    )
 async def create_abtest(
     db: AsyncSession,
     *,

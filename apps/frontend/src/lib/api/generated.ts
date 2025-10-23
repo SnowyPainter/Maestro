@@ -70,12 +70,32 @@ export interface ABTestCreateCommand {
   notes?: string | null;
 }
 
+export type ABTestInsightSummaryWinnerValue = number | null;
+
+export type ABTestInsightSummaryLoserValue = number | null;
+
+export type ABTestInsightSummaryUpliftPercentage = number | null;
+
+export interface ABTestInsightSummary {
+  variant_a: ABTestVariantInsight;
+  variant_b: ABTestVariantInsight;
+  /** @nullable */
+  decision_metric?: string | null;
+  /** @nullable */
+  winner_variant?: string | null;
+  winner_value?: ABTestInsightSummaryWinnerValue;
+  loser_value?: ABTestInsightSummaryLoserValue;
+  uplift_percentage?: ABTestInsightSummaryUpliftPercentage;
+}
+
 export interface ABTestListResponse {
   items: ABTestOut[];
   total: number;
 }
 
 export type ABTestOutUpliftPercentage = number | null;
+
+export type ABTestOutInsights = ABTestInsightSummary | null;
 
 export interface ABTestOut {
   id: number;
@@ -96,6 +116,7 @@ export interface ABTestOut {
   notes?: string | null;
   created_at: string;
   updated_at: string;
+  insights?: ABTestOutInsights;
 }
 
 export type ABTestScheduleCommandAbtestId = number | null;
@@ -159,6 +180,17 @@ export interface ABTestUpdateCommand {
   /** @nullable */
   started_at?: string | null;
   abtest_id: number;
+}
+
+export type ABTestVariantInsightMetrics = {[key: string]: number};
+
+export interface ABTestVariantInsight {
+  variant_id: number;
+  post_publication_ids?: number[];
+  /** @nullable */
+  latest_sample_at?: string | null;
+  metrics?: ABTestVariantInsightMetrics;
+  comments?: InsightCommentOut[];
 }
 
 export type ABTestWinnerEnum = typeof ABTestWinnerEnum[keyof typeof ABTestWinnerEnum];
@@ -782,6 +814,45 @@ export interface GenerateTextResponse {
 
 export interface HTTPValidationError {
   detail?: ValidationError[];
+}
+
+export type InsightCommentOutOwnerUserId = number | null;
+
+export type InsightCommentOutPostPublicationId = number | null;
+
+export type InsightCommentOutAccountPersonaId = number | null;
+
+export type InsightCommentOutIsOwnedByMe = boolean | null;
+
+export type InsightCommentOutMetrics = {[key: string]: number};
+
+export type InsightCommentOutRaw = { [key: string]: unknown };
+
+export interface InsightCommentOut {
+  owner_user_id?: InsightCommentOutOwnerUserId;
+  post_publication_id?: InsightCommentOutPostPublicationId;
+  platform: PlatformKind;
+  /** @nullable */
+  platform_post_id?: string | null;
+  account_persona_id?: InsightCommentOutAccountPersonaId;
+  comment_external_id: string;
+  /** @nullable */
+  parent_external_id?: string | null;
+  /** @nullable */
+  author_id?: string | null;
+  /** @nullable */
+  author_username?: string | null;
+  /** @nullable */
+  text?: string | null;
+  /** @nullable */
+  permalink?: string | null;
+  /** @nullable */
+  comment_created_at?: string | null;
+  is_owned_by_me?: InsightCommentOutIsOwnedByMe;
+  metrics?: InsightCommentOutMetrics;
+  raw?: InsightCommentOutRaw;
+  id: number;
+  ingested_at: string;
 }
 
 export type InsightInCommandOwnerUserId = number | null;

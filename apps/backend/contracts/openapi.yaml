@@ -3374,6 +3374,40 @@ components:
       - variant_a_id
       - variant_b_id
       title: ABTestCreateCommand
+    ABTestInsightSummary:
+      properties:
+        variant_a:
+          $ref: '#/components/schemas/ABTestVariantInsight'
+        variant_b:
+          $ref: '#/components/schemas/ABTestVariantInsight'
+        decision_metric:
+          title: Decision Metric
+          type: string
+          nullable: true
+        winner_variant:
+          title: Winner Variant
+          type: string
+          nullable: true
+        winner_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Winner Value
+        loser_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Loser Value
+        uplift_percentage:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Uplift Percentage
+      type: object
+      required:
+      - variant_a
+      - variant_b
+      title: ABTestInsightSummary
     ABTestListResponse:
       properties:
         items:
@@ -3443,6 +3477,10 @@ components:
           type: string
           format: date-time
           title: Updated At
+        insights:
+          anyOf:
+          - $ref: '#/components/schemas/ABTestInsightSummary'
+          - type: 'null'
       type: object
       required:
       - id
@@ -3602,6 +3640,35 @@ components:
       required:
       - abtest_id
       title: ABTestUpdateCommand
+    ABTestVariantInsight:
+      properties:
+        variant_id:
+          type: integer
+          title: Variant Id
+        post_publication_ids:
+          items:
+            type: integer
+          type: array
+          title: Post Publication Ids
+        latest_sample_at:
+          title: Latest Sample At
+          format: date-time
+          type: string
+          nullable: true
+        metrics:
+          additionalProperties:
+            type: number
+          type: object
+          title: Metrics
+        comments:
+          items:
+            $ref: '#/components/schemas/InsightCommentOut'
+          type: array
+          title: Comments
+      type: object
+      required:
+      - variant_id
+      title: ABTestVariantInsight
     ABTestWinnerEnum:
       type: string
       enum:
@@ -4889,6 +4956,85 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    InsightCommentOut:
+      properties:
+        owner_user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Owner User Id
+        post_publication_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Post Publication Id
+        platform:
+          $ref: '#/components/schemas/PlatformKind'
+        platform_post_id:
+          title: Platform Post Id
+          type: string
+          nullable: true
+        account_persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Account Persona Id
+        comment_external_id:
+          type: string
+          title: Comment External Id
+        parent_external_id:
+          title: Parent External Id
+          type: string
+          nullable: true
+        author_id:
+          title: Author Id
+          type: string
+          nullable: true
+        author_username:
+          title: Author Username
+          type: string
+          nullable: true
+        text:
+          title: Text
+          type: string
+          nullable: true
+        permalink:
+          title: Permalink
+          type: string
+          nullable: true
+        comment_created_at:
+          title: Comment Created At
+          format: date-time
+          type: string
+          nullable: true
+        is_owned_by_me:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Owned By Me
+        metrics:
+          additionalProperties:
+            type: number
+          type: object
+          title: Metrics
+        raw:
+          additionalProperties: true
+          type: object
+          title: Raw
+        id:
+          type: integer
+          title: Id
+        ingested_at:
+          type: string
+          format: date-time
+          title: Ingested At
+      type: object
+      required:
+      - platform
+      - comment_external_id
+      - id
+      - ingested_at
+      title: InsightCommentOut
     InsightInCommand:
       properties:
         owner_user_id:

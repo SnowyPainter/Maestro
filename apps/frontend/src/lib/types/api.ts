@@ -1698,6 +1698,21 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /** ABTestInsightSummary */
+        ABTestInsightSummary: {
+            variant_a: components["schemas"]["ABTestVariantInsight"];
+            variant_b: components["schemas"]["ABTestVariantInsight"];
+            /** Decision Metric */
+            decision_metric?: string | null;
+            /** Winner Variant */
+            winner_variant?: string | null;
+            /** Winner Value */
+            winner_value?: number | null;
+            /** Loser Value */
+            loser_value?: number | null;
+            /** Uplift Percentage */
+            uplift_percentage?: number | null;
+        };
         /** ABTestListResponse */
         ABTestListResponse: {
             /** Items */
@@ -1747,6 +1762,7 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            insights?: components["schemas"]["ABTestInsightSummary"] | null;
         };
         /** ABTestScheduleCommand */
         ABTestScheduleCommand: {
@@ -1830,6 +1846,24 @@ export interface components {
             started_at?: string | null;
             /** Abtest Id */
             abtest_id: number;
+        };
+        /** ABTestVariantInsight */
+        ABTestVariantInsight: {
+            /** Variant Id */
+            variant_id: number;
+            /** Post Publication Ids */
+            post_publication_ids?: number[];
+            /**
+             * Latest Sample At
+             * Format: date-time
+             */
+            latest_sample_at?: string | null;
+            /** Metrics */
+            metrics?: {
+                [key: string]: number;
+            };
+            /** Comments */
+            comments?: components["schemas"]["InsightCommentOut"][];
         };
         /**
          * ABTestWinnerEnum
@@ -2580,6 +2614,52 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InsightCommentOut */
+        InsightCommentOut: {
+            /** Owner User Id */
+            owner_user_id?: number | null;
+            /** Post Publication Id */
+            post_publication_id?: number | null;
+            platform: components["schemas"]["PlatformKind"];
+            /** Platform Post Id */
+            platform_post_id?: string | null;
+            /** Account Persona Id */
+            account_persona_id?: number | null;
+            /** Comment External Id */
+            comment_external_id: string;
+            /** Parent External Id */
+            parent_external_id?: string | null;
+            /** Author Id */
+            author_id?: string | null;
+            /** Author Username */
+            author_username?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Permalink */
+            permalink?: string | null;
+            /**
+             * Comment Created At
+             * Format: date-time
+             */
+            comment_created_at?: string | null;
+            /** Is Owned By Me */
+            is_owned_by_me?: boolean | null;
+            /** Metrics */
+            metrics?: {
+                [key: string]: number;
+            };
+            /** Raw */
+            raw?: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: number;
+            /**
+             * Ingested At
+             * Format: date-time
+             */
+            ingested_at: string;
         };
         /** InsightInCommand */
         InsightInCommand: {

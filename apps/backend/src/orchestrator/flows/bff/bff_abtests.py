@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.abtests.schemas import ABTestFilter, ABTestListResponse, ABTestOut
-from apps.backend.src.modules.abtests.service import get_abtest, list_abtests
+from apps.backend.src.modules.abtests.service import collect_abtest_insights, get_abtest, list_abtests
 from apps.backend.src.modules.accounts.service import get_persona
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -76,7 +76,13 @@ async def op_read_abtest(
     if persona is None:
         raise HTTPException(status_code=403, detail="Not authorized to view AB test")
 
-    return ABTestOut.model_validate(abtest)
+    insights = await collect_abtest_insights(
+        db,
+        abtest_id=abtest.id,
+        owner_user_id=user.id,
+    )
+    out = ABTestOut.model_validate(abtest)
+    return out.model_copy(update={"insights": insights})
 
 
 @FLOWS.flow(
