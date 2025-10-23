@@ -165,6 +165,9 @@ async def ensure_platform_account_credentials(
     now = _utcnow()
     expires_at = account.token_expires_at
     refresh_token = (account.refresh_token or "").strip()
+    if not refresh_token and account.platform == PlatformKind.THREADS:
+        # Legacy Threads records stored only the access token; treat it as refresh handle.
+        refresh_token = (account.access_token or "").strip()
 
     should_refresh = force_refresh
     if not should_refresh:
