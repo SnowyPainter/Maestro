@@ -14,8 +14,8 @@ import { useEffect, useMemo, useState } from "react";
 
 const formSchema = z.object({
   campaign_id: z.number(),
-  variant_a_id: z.number({ required_error: "Variant A is required." }),
-  variant_b_id: z.number({ required_error: "Variant B is required." }),
+  variant_a_id: z.number({ error: "Variant A is required." }),
+  variant_b_id: z.number({ error: "Variant B is required." }),
   variable: z.string().min(1, "Variable is required.").max(50),
   hypothesis: z.string().max(255).optional().nullable(),
   notes: z.string().max(500).optional().nullable(),
@@ -61,7 +61,8 @@ const ABTestCreateForm = ({ onSuccess }: ABTestCreateFormProps) => {
       onSuccess(data.id);
     },
     onError: (error: any) => {
-      const errorMessage = error.detail?.[0]?.msg || "An unknown error occurred.";
+      console.error(error);
+      const errorMessage = error.data.detail as string || "An unknown error occurred.";
       toast.error(`Failed to create A/B Test: ${errorMessage}`);
     },
   }});
