@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useBffAbtestsReadApiBffAbtestsAbtestIdGet, useAbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch, ABTestOut, ABTestUpdateCommand } from "@/lib/api/generated";
+import { useBffAbtestsReadApiBffAbtestsAbtestIdGet, useAbtestsUpdateAbtestApiOrchestratorAbtestsAbtestIdPatch, ABTestOut, ABTestUpdateCommand, useBffCampaignsListCampaignsApiBffCampaignsGet, useBffDraftsListDraftsApiBffDraftsGet, DraftOut } from "@/lib/api/generated";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormDescription } from "@/components/ui/form";
 
 const formSchema = z.object({
+  campaign_id: z.number(),
   variable: z.string().min(1, "Variable is required.").max(50),
   hypothesis: z.string().max(255).optional().nullable(),
   notes: z.string().max(500).optional().nullable(),
@@ -24,19 +27,31 @@ interface ABTestEditFormProps {
 
 const ABTestEditForm = ({ abTestId, onSuccess }: ABTestEditFormProps) => {
   const queryClient = useQueryClient();
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
+
   const { data: abTest, isLoading, error: queryError } = useBffAbtestsReadApiBffAbtestsAbtestIdGet(abTestId);
+  const { data: campaignsData } = useBffCampaignsListCampaignsApiBffCampaignsGet({});
+  const { data: draftsData } = useBffDraftsListDraftsApiBffDraftsGet({});
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      campaign_id: 0,
+      variable: "",
+      hypothesis: null,
+      notes: null,
+    },
   });
 
   useEffect(() => {
     if (abTest) {
       form.reset({
+        campaign_id: abTest.campaign_id,
         variable: abTest.variable,
-        hypothesis: abTest.hypothesis,
-        notes: abTest.notes,
+        hypothesis: abTest.hypothesis || null,
+        notes: abTest.notes || null,
       });
+      setSelectedCampaignId(abTest.campaign_id);
     }
   }, [abTest, form]);
 
@@ -77,6 +92,40 @@ const ABTestEditForm = ({ abTestId, onSuccess }: ABTestEditFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="campaign_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Campaign</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  const id = Number(value);
+                  field.onChange(id);
+                  setSelectedCampaignId(id);
+                }}
+                value={field.value?.toString()}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a campaign" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {campaignsData?.map(c => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Changing the campaign will affect which drafts are available for this test.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="variable"

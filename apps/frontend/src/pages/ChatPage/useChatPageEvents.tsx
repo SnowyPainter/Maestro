@@ -527,8 +527,24 @@ export function useChatPageEvents() {
   const handleSelectABTest = useCallback(() => {
     removeMessagesByComponent(ABTestToolCard);
     removeMessagesByComponent(ABTestList);
-    addCardMessage(() => <ABTestList />);
-  }, [addCardMessage, removeMessagesByComponent]);
+    const messageId = getNextMessageId();
+    appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <ABTestList
+          onSelectABTest={abTestId => {
+            addCardMessage(messageId => (
+              <ABTestDetail
+                abTestId={abTestId}
+                onDelete={() => handleCardDelete(messageId)}
+              />
+            ));
+          }}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, addCardMessage, handleCardDelete, removeMessagesByComponent]);
 
   const handleSelectListPublications = useCallback(() => {
     removeMessagesByComponent(DraftToolCard);

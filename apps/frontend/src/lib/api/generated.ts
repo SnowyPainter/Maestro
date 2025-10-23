@@ -70,15 +70,6 @@ export interface ABTestCreateCommand {
   notes?: string | null;
 }
 
-export interface ABTestEvaluateReadyPayload {
-  abtest_id: number;
-  persona_id: number;
-  campaign_id: number;
-  persona_account_id: number;
-  publish_schedule_id: number;
-  post_publication_ids: number[];
-}
-
 export interface ABTestListResponse {
   items: ABTestOut[];
   total: number;
@@ -539,6 +530,8 @@ export interface DraftOut {
   created_by: number;
   created_at: string;
   updated_at: string;
+  locked_for_post_publication?: boolean;
+  locked_for_active_abtest?: boolean;
 }
 
 export interface DraftPostPublicationsByPlatformAndStatusPayload {
@@ -5856,73 +5849,6 @@ export const useAbtestsCreateAbtestApiOrchestratorAbtestsPost = <TError = HTTPVa
       > => {
 
       const mutationOptions = getAbtestsCreateAbtestApiOrchestratorAbtestsPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Mark an AB test as ready for completion
- * @summary Mark AB Test Ready for Completion
- */
-export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost = (
-    abtestId: number,
-    aBTestEvaluateReadyPayload: ABTestEvaluateReadyPayload,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<MessageOut>(
-      {url: `/api/orchestrator/abtests/${abtestId}/evaluate-ready`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: aBTestEvaluateReadyPayload, signal
-    },
-      options);
-    }
-  
-
-
-export const getAbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost>>, TError,{abtestId: number;data: ABTestEvaluateReadyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost>>, TError,{abtestId: number;data: ABTestEvaluateReadyPayload}, TContext> => {
-
-const mutationKey = ['abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost>>, {abtestId: number;data: ABTestEvaluateReadyPayload}> = (props) => {
-          const {abtestId,data} = props ?? {};
-
-          return  abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost(abtestId,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostMutationResult = NonNullable<Awaited<ReturnType<typeof abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost>>>
-    export type AbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostMutationBody = ABTestEvaluateReadyPayload
-    export type AbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostMutationError = HTTPValidationError
-
-    /**
- * @summary Mark AB Test Ready for Completion
- */
-export const useAbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost>>, TError,{abtestId: number;data: ABTestEvaluateReadyPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPost>>,
-        TError,
-        {abtestId: number;data: ABTestEvaluateReadyPayload},
-        TContext
-      > => {
-
-      const mutationOptions = getAbtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

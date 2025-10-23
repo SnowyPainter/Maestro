@@ -1762,42 +1762,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/abtests/{abtest_id}/evaluate-ready:
-    post:
-      tags:
-      - action
-      - action
-      - abtests
-      - evaluate ready
-      summary: Mark AB Test Ready for Completion
-      description: Mark an AB test as ready for completion
-      operationId: abtests_evaluate_ready_api_orchestrator_abtests__abtest_id__evaluate_ready_post
-      parameters:
-      - name: abtest_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          title: Abtest Id
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ABTestEvaluateReadyPayload'
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageOut'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/abtests/{abtest_id}:
     patch:
       tags:
@@ -3410,37 +3374,6 @@ components:
       - variant_a_id
       - variant_b_id
       title: ABTestCreateCommand
-    ABTestEvaluateReadyPayload:
-      properties:
-        abtest_id:
-          type: integer
-          title: Abtest Id
-        persona_id:
-          type: integer
-          title: Persona Id
-        campaign_id:
-          type: integer
-          title: Campaign Id
-        persona_account_id:
-          type: integer
-          title: Persona Account Id
-        publish_schedule_id:
-          type: integer
-          title: Publish Schedule Id
-        post_publication_ids:
-          items:
-            type: integer
-          type: array
-          title: Post Publication Ids
-      type: object
-      required:
-      - abtest_id
-      - persona_id
-      - campaign_id
-      - persona_account_id
-      - publish_schedule_id
-      - post_publication_ids
-      title: ABTestEvaluateReadyPayload
     ABTestListResponse:
       properties:
         items:
@@ -4376,6 +4309,14 @@ components:
           type: string
           format: date-time
           title: Updated At
+        locked_for_post_publication:
+          type: boolean
+          title: Locked For Post Publication
+          default: false
+        locked_for_active_abtest:
+          type: boolean
+          title: Locked For Active Abtest
+          default: false
       type: object
       required:
       - id

@@ -2,11 +2,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ABTestCreateCommand, useAbtestsCreateAbtestApiOrchestratorAbtestsPost, useBffCampaignsListCampaignsApiBffCampaignsGet, useBffDraftsListDraftsApiBffDraftsGet } from "@/lib/api/generated";
+import { ABTestCreateCommand, DraftOut, useAbtestsCreateAbtestApiOrchestratorAbtestsPost, useBffCampaignsListCampaignsApiBffCampaignsGet, useBffDraftsListDraftsApiBffDraftsGet } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -48,10 +48,24 @@ const ABTestCreateForm = ({ onSuccess }: ABTestCreateFormProps) => {
   const { data: campaignsData, isLoading: isLoadingCampaigns } = useBffCampaignsListCampaignsApiBffCampaignsGet({});
   const { data: draftsData, isLoading: isLoadingDrafts } = useBffDraftsListDraftsApiBffDraftsGet({});
 
-  const campaignDrafts = useMemo(() => {
+  const campaignDrafts = useMemo<DraftOut[]>(() => {
     if (!draftsData || !selectedCampaignId) return [];
     return draftsData.filter(d => d.campaign_id === selectedCampaignId);
   }, [draftsData, selectedCampaignId]);
+
+  const formatDraftOptionLabel = (draft: DraftOut) => {
+    const baseLabel = draft.title || `Draft ${draft.id}`;
+    const reasons: string[] = [];
+    if (draft.locked_for_post_publication) {
+      reasons.push("locked: published/scheduled");
+    }
+    if (draft.locked_for_active_abtest) {
+      reasons.push("locked: active A/B test");
+    }
+    return reasons.length ? `${baseLabel} (${reasons.join(", ")})` : baseLabel;
+  };
+
+  const isDraftLocked = (draft: DraftOut) => draft.locked_for_post_publication || draft.locked_for_active_abtest;
 
   const createMutation = useAbtestsCreateAbtestApiOrchestratorAbtestsPost({
     mutation: {
@@ -116,9 +130,22 @@ const ABTestCreateForm = ({ onSuccess }: ABTestCreateFormProps) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {campaignDrafts.filter(d => d.id !== variantBId).map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.title || `Draft ${d.id}`}</SelectItem>)}
+                  {campaignDrafts
+                    .filter(d => d.id !== variantBId)
+                    .map(d => (
+                      <SelectItem
+                        key={d.id}
+                        value={d.id.toString()}
+                        disabled={isDraftLocked(d)}
+                      >
+                        {formatDraftOptionLabel(d)}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
+              <FormDescription>
+                Drafts that already have scheduled/published posts or are part of another active A/B test are disabled.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -136,9 +163,22 @@ const ABTestCreateForm = ({ onSuccess }: ABTestCreateFormProps) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {campaignDrafts.filter(d => d.id !== variantAId).map(d => <SelectItem key={d.id} value={d.id.toString()}>{d.title || `Draft ${d.id}`}</SelectItem>)}
+                  {campaignDrafts
+                    .filter(d => d.id !== variantAId)
+                    .map(d => (
+                      <SelectItem
+                        key={d.id}
+                        value={d.id.toString()}
+                        disabled={isDraftLocked(d)}
+                      >
+                        {formatDraftOptionLabel(d)}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
+              <FormDescription>
+                Drafts that already have scheduled/published posts or are part of another active A/B test are disabled.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

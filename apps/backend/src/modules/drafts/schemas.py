@@ -81,6 +81,8 @@ class DraftOut(BaseModel):
     created_by: int
     created_at: datetime
     updated_at: datetime
+    locked_for_post_publication: bool = False
+    locked_for_active_abtest: bool = False
 
 
 class DraftVariantOut(BaseModel):

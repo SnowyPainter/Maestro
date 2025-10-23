@@ -38,13 +38,6 @@ class ABTestCreateCommand(ABTestCreate):
     pass
 
 
-class ABTestEvaluateReadyPayload(BaseModel):
-    abtest_id: int
-    persona_id: int
-    campaign_id: int
-    persona_account_id: int
-    publish_schedule_id: int
-    post_publication_ids: List[int]
 
 
 class ABTestUpdateCommand(ABTestUpdate):
@@ -115,39 +108,6 @@ async def op_create_abtest(payload: ABTestCreateCommand, ctx: TaskContext) -> AB
     return ABTestOut.model_validate(created)
 
 
-@operator(
-    key="abtests.evaluate_ready",
-    title="Mark AB Test Ready for Completion",
-    side_effect="write",
-)
-async def op_abtest_evaluate_ready(
-    payload: ABTestEvaluateReadyPayload,
-    ctx: TaskContext,
-) -> MessageOut:
-    db: AsyncSession = ctx.require(AsyncSession)
-
-    abtest = await get_abtest(db, payload.abtest_id)
-    if abtest is None:
-        raise HTTPException(status_code=404, detail="AB test not found")
-    if abtest.finished_at is not None:
-        return MessageOut(message="AB test already completed; skipping evaluation reminder")
-
-    await record_playbook_event(
-        db,
-        event="abtest.completion_ready",
-        schedule_id=payload.publish_schedule_id,
-        schedule=None,
-        persona_id=payload.persona_id,
-        persona_account_id=payload.persona_account_id,
-        campaign_id=payload.campaign_id,
-        abtest_id=payload.abtest_id,
-        meta={
-            "post_publication_ids": payload.post_publication_ids,
-            "publish_schedule_id": payload.publish_schedule_id,
-        },
-    )
-    await db.commit()
-    return MessageOut(message="AB test evaluation reminder recorded")
 
 
 @operator(
@@ -245,19 +205,6 @@ def _flow_create_abtest(builder: FlowBuilder) -> None:
     task = builder.task("create_abtest", "abtests.create")
     builder.expect_terminal(task)
 
-@FLOWS.flow(
-    key="abtests.evaluate_ready",
-    title="Mark AB Test Ready for Completion",
-    description="Mark an AB test as ready for completion",
-    input_model=ABTestEvaluateReadyPayload,
-    output_model=MessageOut,
-    method="post",
-    path="/abtests/{abtest_id}/evaluate-ready",
-    tags=("action", "abtests", "evaluate ready"),
-)
-def _flow_evaluate_ready(builder: FlowBuilder) -> None:
-    task = builder.task("evaluate_ready", "abtests.evaluate_ready")
-    builder.expect_terminal(task)
 
 
 @FLOWS.flow(
@@ -306,12 +253,10 @@ def _flow_delete_abtest(builder: FlowBuilder) -> None:
 
 __all__ = [
     "ABTestCreateCommand",
-    "ABTestEvaluateReadyPayload",
-    "op_create_abtest",
-    "op_abtest_evaluate_ready",
     "ABTestUpdateCommand",
     "ABTestCompleteCommand",
     "ABTestDeletePayload",
+    "op_create_abtest",
     "op_update_abtest",
     "op_complete_abtest",
     "op_delete_abtest",

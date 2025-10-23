@@ -12,7 +12,6 @@ slots:
   flows:
   - abtests.complete_abtest
   - abtests.delete_abtest
-  - abtests.evaluate_ready
   - abtests.schedule_abtest
   - abtests.update_abtest
   - bff.abtests.read
@@ -88,7 +87,6 @@ slots:
   value_type: integer
   flows:
   - abtests.create_abtest
-  - abtests.evaluate_ready
   - bff.abtests.list
   - bff.campaigns.list_kpi_defs
   - bff.campaigns.list_kpi_results
@@ -420,7 +418,6 @@ slots:
   description: Target a specific persona account id
   value_type: integer
   flows:
-  - abtests.evaluate_ready
   - abtests.schedule_abtest
   - action.schedule.cancel_draft_post_schedule
   - action.schedule.cancel_schedules
@@ -451,7 +448,6 @@ slots:
   value_type: integer
   flows:
   - abtests.create_abtest
-  - abtests.evaluate_ready
   - accounts.link.delete
   - accounts.persona.delete
   - accounts.persona.restore
@@ -500,24 +496,12 @@ slots:
   - internal.drafts.publish
   - internal.insights.list_comments
   - internal.insights.sync_metrics
-- name: post_publication_ids
-  label: Post Publication Ids
-  description: Filter by post publication ids
-  value_type: integer_list
-  flows:
-  - abtests.evaluate_ready
 - name: post_publish
   label: Post Publish
   description: Filter by post publish
   value_type: string
   flows:
   - action.schedule.compile_template
-- name: publish_schedule_id
-  label: Publish Schedule Id
-  description: Target a specific publish schedule id
-  value_type: integer
-  flows:
-  - abtests.evaluate_ready
 - name: q
   label: Q
   description: Set a keyword search term

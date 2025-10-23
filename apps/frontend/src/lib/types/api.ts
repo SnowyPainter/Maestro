@@ -821,26 +821,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/abtests/{abtest_id}/evaluate-ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Mark AB Test Ready for Completion
-         * @description Mark an AB test as ready for completion
-         */
-        post: operations["abtests_evaluate_ready_api_orchestrator_abtests__abtest_id__evaluate_ready_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/abtests/{abtest_id}": {
         parameters: {
             query?: never;
@@ -1718,21 +1698,6 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
-        /** ABTestEvaluateReadyPayload */
-        ABTestEvaluateReadyPayload: {
-            /** Abtest Id */
-            abtest_id: number;
-            /** Persona Id */
-            persona_id: number;
-            /** Campaign Id */
-            campaign_id: number;
-            /** Persona Account Id */
-            persona_account_id: number;
-            /** Publish Schedule Id */
-            publish_schedule_id: number;
-            /** Post Publication Ids */
-            post_publication_ids: number[];
-        };
         /** ABTestListResponse */
         ABTestListResponse: {
             /** Items */
@@ -2303,6 +2268,16 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /**
+             * Locked For Post Publication
+             * @default false
+             */
+            locked_for_post_publication: boolean;
+            /**
+             * Locked For Active Abtest
+             * @default false
+             */
+            locked_for_active_abtest: boolean;
         };
         /** DraftPostPublicationsByPlatformAndStatusPayload */
         DraftPostPublicationsByPlatformAndStatusPayload: {
@@ -5334,41 +5309,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ABTestOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    abtests_evaluate_ready_api_orchestrator_abtests__abtest_id__evaluate_ready_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                abtest_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ABTestEvaluateReadyPayload"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MessageOut"];
                 };
             };
             /** @description Validation Error */

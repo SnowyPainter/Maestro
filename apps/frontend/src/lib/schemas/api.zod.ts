@@ -810,6 +810,8 @@ export const bffDraftsReadDraftApiBffDraftsDraftIdGetParams = zod.object({
   "draft_id": zod.number()
 })
 
+export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponseLockedForPostPublicationDefault = false;export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponseLockedForActiveAbtestDefault = false;
+
 export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponse = zod.object({
   "id": zod.number(),
   "user_id": zod.number(),
@@ -837,7 +839,9 @@ export const bffDraftsReadDraftApiBffDraftsDraftIdGetResponse = zod.object({
   "monitoring_ended_at": zod.iso.datetime({}).nullish(),
   "created_by": zod.number(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "locked_for_post_publication": zod.boolean().optional(),
+  "locked_for_active_abtest": zod.boolean().optional()
 })
 
 
@@ -852,6 +856,8 @@ export const bffDraftsListDraftsApiBffDraftsGetQueryParams = zod.object({
   "limit": zod.number().default(bffDraftsListDraftsApiBffDraftsGetQueryLimitDefault),
   "offset": zod.number().optional()
 })
+
+export const bffDraftsListDraftsApiBffDraftsGetResponseLockedForPostPublicationDefault = false;export const bffDraftsListDraftsApiBffDraftsGetResponseLockedForActiveAbtestDefault = false;
 
 export const bffDraftsListDraftsApiBffDraftsGetResponseItem = zod.object({
   "id": zod.number(),
@@ -880,7 +886,9 @@ export const bffDraftsListDraftsApiBffDraftsGetResponseItem = zod.object({
   "monitoring_ended_at": zod.iso.datetime({}).nullish(),
   "created_by": zod.number(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "locked_for_post_publication": zod.boolean().optional(),
+  "locked_for_active_abtest": zod.boolean().optional()
 })
 export const bffDraftsListDraftsApiBffDraftsGetResponse = zod.array(bffDraftsListDraftsApiBffDraftsGetResponseItem)
 
@@ -1352,28 +1360,6 @@ export const abtestsCreateAbtestApiOrchestratorAbtestsPostResponse = zod.object(
   "notes": zod.string().nullish(),
   "created_at": zod.iso.datetime({}),
   "updated_at": zod.iso.datetime({})
-})
-
-
-/**
- * Mark an AB test as ready for completion
- * @summary Mark AB Test Ready for Completion
- */
-export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostParams = zod.object({
-  "abtest_id": zod.number()
-})
-
-export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostBody = zod.object({
-  "abtest_id": zod.number(),
-  "persona_id": zod.number(),
-  "campaign_id": zod.number(),
-  "persona_account_id": zod.number(),
-  "publish_schedule_id": zod.number(),
-  "post_publication_ids": zod.array(zod.number())
-})
-
-export const abtestsEvaluateReadyApiOrchestratorAbtestsAbtestIdEvaluateReadyPostResponse = zod.object({
-  "message": zod.string()
 })
 
 
@@ -2010,6 +1996,8 @@ export const draftsCreateApiOrchestratorDraftsPostBody = zod.object({
 })
 })
 
+export const draftsCreateApiOrchestratorDraftsPostResponseLockedForPostPublicationDefault = false;export const draftsCreateApiOrchestratorDraftsPostResponseLockedForActiveAbtestDefault = false;
+
 export const draftsCreateApiOrchestratorDraftsPostResponse = zod.object({
   "id": zod.number(),
   "user_id": zod.number(),
@@ -2037,7 +2025,9 @@ export const draftsCreateApiOrchestratorDraftsPostResponse = zod.object({
   "monitoring_ended_at": zod.iso.datetime({}).nullish(),
   "created_by": zod.number(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "locked_for_post_publication": zod.boolean().optional(),
+  "locked_for_active_abtest": zod.boolean().optional()
 })
 
 
@@ -2070,6 +2060,8 @@ export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutBody = zod.object({
   "campaign_id": zod.union([zod.number(),zod.null()]).optional()
 })
 
+export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutResponseLockedForPostPublicationDefault = false;export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutResponseLockedForActiveAbtestDefault = false;
+
 export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutResponse = zod.object({
   "id": zod.number(),
   "user_id": zod.number(),
@@ -2097,7 +2089,9 @@ export const draftsUpdateIrApiOrchestratorDraftsDraftIdIrPutResponse = zod.objec
   "monitoring_ended_at": zod.iso.datetime({}).nullish(),
   "created_by": zod.number(),
   "created_at": zod.iso.datetime({}),
-  "updated_at": zod.iso.datetime({})
+  "updated_at": zod.iso.datetime({}),
+  "locked_for_post_publication": zod.boolean().optional(),
+  "locked_for_active_abtest": zod.boolean().optional()
 })
 
 

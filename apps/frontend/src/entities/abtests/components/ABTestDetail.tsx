@@ -1,4 +1,4 @@
-import { useBffAbtestsReadApiBffAbtestsAbtestIdGet } from "@/lib/api/generated";
+import { useBffAbtestsReadApiBffAbtestsAbtestIdGet, useBffDraftsReadDraftApiBffDraftsDraftIdGet } from "@/lib/api/generated";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,16 @@ const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | 
 const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
   const [isCompleteDialogOpen, setCompleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+
   const { data: abTest, isLoading, error } = useBffAbtestsReadApiBffAbtestsAbtestIdGet(abTestId);
+
+  // Get variant details
+  const { data: variantA } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_a_id || 0, {
+    query: { enabled: !!abTest?.variant_a_id }
+  });
+  const { data: variantB } = useBffDraftsReadDraftApiBffDraftsDraftIdGet(abTest?.variant_b_id || 0, {
+    query: { enabled: !!abTest?.variant_b_id }
+  });
   if (isLoading) {
     return (
       <Card>
@@ -62,9 +71,45 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground">
         {abTest.hypothesis && <p className="mb-2"><strong>Hypothesis:</strong> {abTest.hypothesis}</p>}
-        {abTest.notes && <p><strong>Notes:</strong> {abTest.notes}</p>}
-        <p><strong>Variant A ID:</strong> {abTest.variant_a_id}</p>
-        <p><strong>Variant B ID:</strong> {abTest.variant_b_id}</p>
+        {abTest.notes && <p className="mb-4"><strong>Notes:</strong> {abTest.notes}</p>}
+
+        {/* Variant A Details */}
+        <div className="mb-4 p-4 border rounded-lg bg-blue-50">
+          <h4 className="font-semibold text-blue-900 mb-2">Variant A</h4>
+          {variantA ? (
+            <div>
+              <p className="text-sm text-blue-800 mb-1">
+                <strong>Title:</strong> {variantA.title || "Untitled"}
+              </p>
+              {variantA.goal && (
+                <p className="text-sm text-blue-800">
+                  <strong>Goal:</strong> {variantA.goal}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-blue-600">Loading variant details...</p>
+          )}
+        </div>
+
+        {/* Variant B Details */}
+        <div className="mb-4 p-4 border rounded-lg bg-green-50">
+          <h4 className="font-semibold text-green-900 mb-2">Variant B</h4>
+          {variantB ? (
+            <div>
+              <p className="text-sm text-green-800 mb-1">
+                <strong>Title:</strong> {variantB.title || "Untitled"}
+              </p>
+              {variantB.goal && (
+                <p className="text-sm text-green-800">
+                  <strong>Goal:</strong> {variantB.goal}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-green-600">Loading variant details...</p>
+          )}
+        </div>
         {abTest.finished_at && (
           <div className="mt-4 pt-4 border-t">
             <p className="font-semibold text-foreground">Result:</p>
@@ -101,7 +146,6 @@ const ABTestDetail = ({ abTestId, onDelete }: ABTestDetailProps) => {
           </Dialog>
         )}
         <DeleteABTestButton abTestId={abTest.id} />
-        <Button variant="outline" size="sm" onClick={onDelete}>Close</Button>
       </CardFooter>
     </Card>
   );

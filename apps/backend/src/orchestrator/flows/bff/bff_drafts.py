@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel, RootModel
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -15,8 +15,9 @@ from apps.backend.src.modules.adapters.core.types import (
     RenderedMetrics,
     RenderedVariantBlocks,
 )
-from apps.backend.src.modules.common.enums import PlatformKind, PostStatus
-from apps.backend.src.modules.drafts.models import Draft, DraftVariant
+from apps.backend.src.modules.abtests.models import ABTest
+from apps.backend.src.modules.common.enums import DO_NOT_RECOMPILE_STATUS, PlatformKind, PostStatus
+from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
 from apps.backend.src.modules.drafts.schemas import DraftOut, PostPublicationOut, EnrichedPostPublicationOut
 from apps.backend.src.modules.drafts.service import (
     get_draft_for_user,
@@ -197,7 +198,54 @@ async def op_list_drafts(payload: DraftListPayload, ctx: TaskContext) -> DraftLi
         stmt = stmt.where(Draft.campaign_id == payload.campaign_id)
     stmt = stmt.order_by(Draft.updated_at.desc()).limit(payload.limit).offset(payload.offset)
     drafts = (await db.execute(stmt)).scalars().all()
-    items = [DraftOut.model_validate(draft) for draft in drafts]
+
+    draft_ids = [draft.id for draft in drafts]
+    draft_id_set = set(draft_ids)
+    locked_for_publication: set[int] = set()
+    locked_for_abtest: set[int] = set()
+
+    if draft_ids:
+        publication_stmt = (
+            select(DraftVariant.draft_id)
+            .select_from(DraftVariant)
+            .join(PostPublication, PostPublication.variant_id == DraftVariant.id)
+            .where(
+                DraftVariant.draft_id.in_(draft_ids),
+                PostPublication.status.in_(tuple(DO_NOT_RECOMPILE_STATUS)),
+            )
+            .group_by(DraftVariant.draft_id)
+        )
+        locked_for_publication = set(
+            (await db.execute(publication_stmt)).scalars().all()
+        )
+
+        abtest_stmt = (
+            select(ABTest.variant_a_id, ABTest.variant_b_id)
+            .where(
+                ABTest.finished_at.is_(None),
+                or_(
+                    ABTest.variant_a_id.in_(draft_ids),
+                    ABTest.variant_b_id.in_(draft_ids),
+                ),
+            )
+        )
+        abtest_rows = (await db.execute(abtest_stmt)).all()
+        for row in abtest_rows:
+            variant_a_id, variant_b_id = row
+            if variant_a_id in draft_id_set:
+                locked_for_abtest.add(variant_a_id)
+            if variant_b_id in draft_id_set:
+                locked_for_abtest.add(variant_b_id)
+
+    items = [
+        DraftOut.model_validate(draft).model_copy(
+            update={
+                "locked_for_post_publication": draft.id in locked_for_publication,
+                "locked_for_active_abtest": draft.id in locked_for_abtest,
+            }
+        )
+        for draft in drafts
+    ]
     return DraftList(root=items)
 
 
