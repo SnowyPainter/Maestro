@@ -6123,6 +6123,95 @@ export function useBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplate
 
 
 /**
+ * Get reaction action log by id
+ * @summary Read Reaction Action Log
+ */
+export const bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet = (
+    actionLogId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionActionLogOut>(
+      {url: `/api/bff/reactive/action-logs/${actionLogId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetQueryKey = (actionLogId?: number,) => {
+    return [`/api/bff/reactive/action-logs/${actionLogId}`] as const;
+    }
+
+    
+export const getBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetQueryOptions = <TData = Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError = HTTPValidationError>(actionLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetQueryKey(actionLogId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>> = ({ signal }) => bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet(actionLogId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(actionLogId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>>
+export type BffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetQueryError = HTTPValidationError
+
+
+export function useBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError = HTTPValidationError>(
+ actionLogId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError = HTTPValidationError>(
+ actionLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError = HTTPValidationError>(
+ actionLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read Reaction Action Log
+ */
+
+export function useBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError = HTTPValidationError>(
+ actionLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetQueryOptions(actionLogId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * List schedules for the authenticated user with optional persona filtering and meta information.
  * @summary List Schedules
  */

@@ -17,6 +17,7 @@ from apps.backend.src.modules.reactive.schemas import (
     ReactionMessageTemplateOut,
     ReactionMessageTemplateListResult,
     ReactionRuleOut,
+    ReactionActionLogOut,
     ReactionRulePublicationLink,
 )
 from apps.backend.src.modules.reactive.service import (
@@ -26,6 +27,7 @@ from apps.backend.src.modules.reactive.service import (
     list_message_templates,
     list_publication_links,
     list_reaction_rules,
+    get_action_log,
 )
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -194,6 +196,31 @@ async def op_read_reaction_template(
     return template
 
 
+class ReactionActionLogReadPayload(BaseModel):
+    action_log_id: int
+
+
+@operator(
+    key="bff.reactive.read_action_log",
+    title="Read reactive action log",
+    side_effect="read",
+)
+async def op_read_reaction_action_log(
+    payload: ReactionActionLogReadPayload,
+    ctx: TaskContext,
+) -> ReactionActionLogOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    action_log = await get_action_log(
+        db,
+        action_log_id=payload.action_log_id,
+        owner_user_id=user.id,
+    )
+    if action_log is None:
+        raise HTTPException(status_code=404, detail="Reaction action log not found")
+    return action_log
+
+
 @FLOWS.flow(
     key="bff.reactive.list_rules",
     title="List Reaction Rules",
@@ -281,6 +308,21 @@ def _flow_bff_list_reaction_templates(builder: FlowBuilder):
 )
 def _flow_bff_read_reaction_template(builder: FlowBuilder):
     task = builder.task("read_reaction_template", "bff.reactive.read_template")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.reactive.read_action_log",
+    title="Read Reaction Action Log",
+    description="Get reaction action log by id",
+    input_model=ReactionActionLogReadPayload,
+    output_model=ReactionActionLogOut,
+    method="get",
+    path="/reactive/action-logs/{action_log_id}",
+    tags=("bff", "reactive", "activity", "logs", "detail"),
+)
+def _flow_bff_read_reaction_action_log(builder: FlowBuilder):
+    task = builder.task("read_reaction_action_log", "bff.reactive.read_action_log")
     builder.expect_terminal(task)
 
 

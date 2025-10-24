@@ -822,6 +822,26 @@ async def list_action_logs(
         items=[_serialize_action_log(row) for row in rows],
     )
 
+async def get_action_log(
+    db: AsyncSession,
+    *,
+    action_log_id: int,
+    owner_user_id: int,
+) -> Optional[ReactionActionLogOut]:
+    stmt = (
+        select(ReactionActionLog)
+        .join(InsightComment, InsightComment.id == ReactionActionLog.insight_comment_id)
+        .where(
+            ReactionActionLog.id == action_log_id,
+            InsightComment.owner_user_id == owner_user_id,
+        )
+    )
+    result = await db.execute(stmt)
+    action_log = result.scalar_one_or_none()
+    if action_log is None:
+        return None
+    return _serialize_action_log(action_log)
+
 
 async def find_existing_reply_comment(
     db: AsyncSession,

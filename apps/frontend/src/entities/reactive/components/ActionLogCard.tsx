@@ -20,10 +20,12 @@ import {
 import { ReactionActionStatus, ReactionActionType } from "@/lib/api/generated";
 
 interface ActionLogCardProps {
-  onSelectLog?: (logId: number) => void;
+  onSelectLog?: (logId: number, sourceMessageId?: number) => void;
+  sourceMessageId?: number;
 }
 
-export function ActionLogCard({ onSelectLog }: ActionLogCardProps) {
+export function ActionLogCard({ onSelectLog, sourceMessageId }: ActionLogCardProps) {
+  console.log('ActionLogCard rendered with sourceMessageId:', sourceMessageId);
   const [statusFilter, setStatusFilter] = useState<ReactionActionStatus | "all">("all");
   const [actionTypeFilter, setActionTypeFilter] = useState<ReactionActionType | "all">("all");
   const [tagKeyFilter, setTagKeyFilter] = useState<string>("");
@@ -201,7 +203,15 @@ export function ActionLogCard({ onSelectLog }: ActionLogCardProps) {
                   <TableRow
                     key={log.id}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => onSelectLog?.(log.id)}
+                    onClick={() => {
+                      console.log('ActionLogCard: Row clicked', log.id, 'current sourceMessageId:', sourceMessageId);
+                      if (sourceMessageId) {
+                        console.log('ActionLogCard: Calling onSelectLog with valid sourceMessageId');
+                        onSelectLog?.(log.id, sourceMessageId);
+                      } else {
+                        console.log('ActionLogCard: sourceMessageId is undefined, not calling onSelectLog');
+                      }
+                    }}
                   >
                     <TableCell>
                       {getActionTypeIcon(log.action_type)}
@@ -219,7 +229,20 @@ export function ActionLogCard({ onSelectLog }: ActionLogCardProps) {
                       {log.reaction_rule_id || '-'}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click
+                          console.log('ActionLogCard: Button clicked', log.id, 'current sourceMessageId:', sourceMessageId);
+                          if (sourceMessageId) {
+                            console.log('ActionLogCard: Calling onSelectLog with valid sourceMessageId');
+                            onSelectLog?.(log.id, sourceMessageId);
+                          } else {
+                            console.log('ActionLogCard: sourceMessageId is undefined, not calling onSelectLog');
+                          }
+                        }}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>

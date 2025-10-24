@@ -784,6 +784,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/reactive/action-logs/{action_log_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Reaction Action Log
+         * @description Get reaction action log by id
+         */
+        get: operations["bff_reactive_read_action_log_api_bff_reactive_action_logs__action_log_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/schedules": {
         parameters: {
             query?: never;
@@ -6099,6 +6119,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReactionMessageTemplateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_reactive_read_action_log_api_bff_reactive_action_logs__action_log_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_log_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionActionLogOut"];
                 };
             };
             /** @description Validation Error */

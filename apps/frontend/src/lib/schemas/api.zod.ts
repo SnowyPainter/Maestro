@@ -1340,6 +1340,28 @@ export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetR
 
 
 /**
+ * Get reaction action log by id
+ * @summary Read Reaction Action Log
+ */
+export const bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetParams = zod.object({
+  "action_log_id": zod.number()
+})
+
+export const bffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGetResponse = zod.object({
+  "id": zod.number(),
+  "insight_comment_id": zod.number(),
+  "reaction_rule_id": zod.union([zod.number(),zod.null()]),
+  "tag_key": zod.string(),
+  "action_type": zod.enum(['dm', 'reply', 'alert']),
+  "status": zod.enum(['pending', 'success', 'failed', 'skipped']),
+  "payload": zod.union([zod.record(zod.string(), zod.any()),zod.null()]),
+  "error": zod.string().nullable(),
+  "executed_at": zod.iso.datetime({}).nullable(),
+  "created_at": zod.iso.datetime({})
+})
+
+
+/**
  * List schedules for the authenticated user with optional persona filtering and meta information.
  * @summary List Schedules
  */

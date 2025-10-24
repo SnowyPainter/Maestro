@@ -52,6 +52,7 @@ import { PlaybookToolCard } from "@/features/playbooks/components/PlaybookToolCa
 import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
 import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
 import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
+import { ActionLogDetailCard } from "@/entities/reactive/components/ActionLogDetailCard";
 import { RuleToolCard } from "@/entities/reactive/components/RuleToolCard";
 import { RuleComposeDrawer } from "@/features/reactive-rule/components/RuleComposeDrawer";
 import { RulePublicationModal } from "@/features/reactive-rule/components/RulePublicationModal";
@@ -95,10 +96,13 @@ export function useChatPageEvents() {
 
   const addCardMessage = useCallback((factory: CardContentFactory) => {
     const id = getNextMessageId();
+    console.log('addCardMessage: creating message with id', id);
+    const content = factory(id);
+    console.log('addCardMessage: factory returned content', content);
     appendMessage({
       id,
       type: 'card',
-      content: factory(id),
+      content,
     });
     return id;
   }, [appendMessage, getNextMessageId]);
@@ -676,9 +680,44 @@ export function useChatPageEvents() {
     });
   }, [appendMessage, getNextMessageId, removeMessage]);
 
+  const handleReactiveSelectActionLog = useCallback((actionLogId: number, sourceMessageId?: number) => {
+    console.log('handleReactiveSelectActionLog called', actionLogId, sourceMessageId);
+    try {
+      if (sourceMessageId) {
+        console.log('Removing message', sourceMessageId);
+        removeMessage(sourceMessageId);
+      }
+
+      const messageId = getNextMessageId();
+      console.log('Creating new message', messageId);
+
+      appendMessage({
+      id: messageId,
+      type: 'card',
+      content: (
+        <ActionLogDetailCard
+          actionLogId={actionLogId}
+          onBack={() => {
+            // Go back to activity log list
+            removeMessage(messageId);
+            const backMessageId = getNextMessageId();
+            appendMessage({
+              id: backMessageId,
+              type: 'card',
+              content: <ActionLogCard onSelectLog={handleReactiveSelectActionLog} sourceMessageId={backMessageId} />,
+            });
+          }}
+        />
+      ),
+    });
+    } catch (error) {
+      console.error('Error in handleReactiveSelectActionLog:', error);
+    }
+  }, [appendMessage, getNextMessageId, removeMessage]);
+
   const handleReactiveViewActivity = useCallback((sourceMessageId: number) => {
-    addCardMessage(() => <ActionLogCard />);
-  }, [addCardMessage]);
+    addCardMessage((messageId) => <ActionLogCard onSelectLog={handleReactiveSelectActionLog} sourceMessageId={messageId} />);
+  }, [addCardMessage, handleReactiveSelectActionLog]);
 
   const handleManageTemplates = useCallback(() => {
     removeMessagesByComponent(RuleToolCard);
@@ -705,7 +744,7 @@ export function useChatPageEvents() {
             ),
           });
         }}
-        onViewActivity={() => addCardMessage(() => <ActionLogCard />)}
+        onViewActivity={() => <ActionLogCard onSelectLog={handleReactiveSelectActionLog} sourceMessageId={messageIdRef.current} />}
         onSelectRule={handleReactiveRuleSelect}
         onManageTemplates={handleManageTemplates}
       />
@@ -809,7 +848,7 @@ export function useChatPageEvents() {
                   ),
                 });
               }}
-              onViewActivity={() => addCardMessage(() => <ActionLogCard />)}
+              onViewActivity={() => handleReactiveViewActivity(messageIdRef.current)}
               onSelectRule={handleReactiveSelectRule}
               onManageTemplates={handleManageTemplates}
             />
@@ -841,6 +880,7 @@ export function useChatPageEvents() {
       handleSelectPlaybook,
       handleReactiveSelectRule,
       handleManageTemplates,
+      handleReactiveSelectActionLog,
       PlaybookToolCard,
       RuleToolCard,
     ]
@@ -885,6 +925,7 @@ export function useChatPageEvents() {
             onReactiveRuleSelect: handleReactiveRuleSelect,
             onReactiveCreateRule: handleReactiveCreateRule,
             onReactiveViewActivity: handleReactiveViewActivity,
+            onReactiveSelectActionLog: handleReactiveSelectActionLog,
           },
         }));
       });

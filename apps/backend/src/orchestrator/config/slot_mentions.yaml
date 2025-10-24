@@ -52,6 +52,12 @@ slots:
   - bff.drafts.list_post_publications_by_variant
   - bff.drafts.list_post_publications_enriched
   - insights.ingest
+- name: action_log_id
+  label: Action Log Id
+  description: Target a specific action log id
+  value_type: integer
+  flows:
+  - bff.reactive.read_action_log
 - name: action_type
   label: Action Type
   description: Filter by action type

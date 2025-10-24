@@ -1501,6 +1501,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/reactive/action-logs/{action_log_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - reactive
+      - activity
+      - logs
+      - detail
+      summary: Read Reaction Action Log
+      description: Get reaction action log by id
+      operationId: bff_reactive_read_action_log_api_bff_reactive_action_logs__action_log_id__get
+      parameters:
+      - name: action_log_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Action Log Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionActionLogOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/schedules:
     get:
       tags:

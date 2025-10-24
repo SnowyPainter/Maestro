@@ -29,6 +29,7 @@ import CommentList from "@/entities/comments/components/CommentList";
 import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
 import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
 import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
+import { ActionLogDetailCard } from "@/entities/reactive/components/ActionLogDetailCard";
 import { TemplateDetailCard } from "@/entities/reactive/components/template/TemplateDetailCard";
 
 export interface CardRenderCallbacks {
@@ -45,6 +46,7 @@ export interface CardRenderCallbacks {
   onReactiveRuleSelect?: (ruleId: number, sourceMessageId: number) => void;
   onReactiveCreateRule?: (sourceMessageId: number) => void;
   onReactiveViewActivity?: (sourceMessageId: number) => void;
+  onReactiveSelectActionLog?: (actionLogId: number, sourceMessageId: number) => void;
 }
 
 export interface RenderCardOptions {
@@ -270,7 +272,26 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
       );
 
     case 'reactive.activity.log':
-      return <ActionLogCard />;
+      return (
+        <ActionLogCard
+          onSelectLog={(logId, sourceMessageId) => callbacks.onReactiveSelectActionLog?.(logId, sourceMessageId || messageId)}
+          sourceMessageId={messageId}
+        />
+      );
+
+    case 'reactive.action_log.detail':
+      if (data?.id) {
+        return (
+          <ActionLogDetailCard
+            actionLogId={data.id as number}
+            onBack={() => {
+              // Go back to activity log list
+              callbacks.onReactiveViewActivity?.(messageId);
+            }}
+          />
+        );
+      }
+      break;
 
     default:
       return <GenericCard title={title || "Data"} data={data || card} />;
