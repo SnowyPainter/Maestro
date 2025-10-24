@@ -5,12 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Search, Link } from "lucide-react";
-import { format } from "date-fns";
-import { ko } from "date-fns/locale";
+import { Search, Link } from "lucide-react";
 import { ReactionRulePublicationCommand, useReactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost, useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { cn } from "@/lib/utils";
@@ -40,14 +37,14 @@ export function RulePublicationModal({
   const publicationsMutation = useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost();
 
   useEffect(() => {
-    if (personaAccountId) {
+    if (personaAccountId && !publications.length && !isLoadingPublications) {
       publicationsMutation.mutate({
         data: {
           account_persona_id: personaAccountId,
         },
       });
     }
-  }, [personaAccountId, publicationsMutation]);
+  }, [personaAccountId]);
 
   const publications = publicationsMutation.data || [];
   const isLoadingPublications = publicationsMutation.isPending;
@@ -69,8 +66,6 @@ export function RulePublicationModal({
     },
   });
 
-  const activeFrom = watch("active_from");
-  const activeUntil = watch("active_until");
 
   const onSubmit = async (data: ReactionRulePublicationCommand) => {
     try {
@@ -141,7 +136,7 @@ export function RulePublicationModal({
             </div>
 
             <div className="max-h-60 overflow-y-auto border rounded-lg">
-              <div className="p-2 space-y-2">
+              <div className="p-2 space-y-2 max-w-sm mx-auto">
                 {isLoadingPublications ? (
                   <div className="text-center py-8 text-muted-foreground">
                     Loading publications...
@@ -151,27 +146,29 @@ export function RulePublicationModal({
                     <Card
                       key={pub.id}
                       className={cn(
-                        "cursor-pointer transition-colors hover:bg-muted/50",
+                        "cursor-pointer transition-colors hover:bg-muted/50 max-w-sm w-full",
                         selectedPublicationId === pub.id && "ring-2 ring-primary"
                       )}
                       onClick={() => handlePublicationSelect(pub.id)}
                     >
                       <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm truncate">
-                              {pub.variant_content || `Publication ${pub.id}`}
-                            </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {pub.platform}
-                              </Badge>
-                              {getStatusBadge(pub.status)}
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm block overflow-hidden text-ellipsis whitespace-nowrap w-full">
+                                {pub.variant_content || `Publication ${pub.id}`}
+                              </h4>
                             </div>
+                            {selectedPublicationId === pub.id && (
+                              <div className="text-primary font-medium text-sm shrink-0">✓</div>
+                            )}
                           </div>
-                          {selectedPublicationId === pub.id && (
-                            <div className="text-primary font-medium text-sm">Selected</div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {pub.platform}
+                            </Badge>
+                            {getStatusBadge(pub.status)}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -206,11 +203,10 @@ export function RulePublicationModal({
               <div>
                 <Label>Active Status</Label>
                 <div className="flex items-center space-x-2 mt-2">
-                  <input
-                    type="checkbox"
+                  <Switch
                     id="is_active"
-                    {...register("is_active")}
-                    className="rounded"
+                    checked={watch("is_active") ?? true}
+                    onCheckedChange={(checked: boolean) => setValue("is_active", checked)}
                   />
                   <Label htmlFor="is_active">Active</Label>
                 </div>
@@ -219,63 +215,23 @@ export function RulePublicationModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Active Start Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !activeFrom && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {activeFrom ? (
-                        format(activeFrom, "yyyy-MM-dd")
-                      ) : (
-                        "Select Date"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={activeFrom ? new Date(activeFrom) : undefined}
-                      onSelect={(date) => setValue("active_from", date?.toISOString() || null)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Label htmlFor="active_from">Active Start Date</Label>
+                <Input
+                  id="active_from"
+                  type="date"
+                  {...register("active_from")}
+                  className="mt-1"
+                />
               </div>
 
               <div>
-                <Label>End Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !activeUntil && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {activeUntil ? (
-                        format(activeUntil, "yyyy-MM-dd")
-                      ) : (
-                        "Select Date"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={activeUntil ? new Date(activeUntil) : undefined}
-                      onSelect={(date) => setValue("active_until", date?.toISOString() || null)}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Label htmlFor="active_until">End Date</Label>
+                <Input
+                  id="active_until"
+                  type="date"
+                  {...register("active_until")}
+                  className="mt-1"
+                />
               </div>
             </div>
           </div>

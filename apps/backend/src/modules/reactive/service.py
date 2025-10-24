@@ -318,8 +318,14 @@ async def create_reaction_rule(
 
     db.add(rule)
     await db.flush()
-    await db.refresh(rule)
-    return _serialize_rule(rule)
+    refreshed = await get_reaction_rule(
+        db,
+        rule_id=rule.id,
+        owner_user_id=owner_user_id,
+    )
+    if refreshed is None:
+        return _serialize_rule(rule)
+    return refreshed
 
 
 async def update_reaction_rule(
@@ -365,8 +371,14 @@ async def update_reaction_rule(
             rule.actions.append(_build_action(rule, item))
 
     await db.flush()
-    await db.refresh(rule)
-    return _serialize_rule(rule)
+    refreshed = await get_reaction_rule(
+        db,
+        rule_id=rule.id,
+        owner_user_id=owner_user_id,
+    )
+    if refreshed is None:
+        return _serialize_rule(rule)
+    return refreshed
 
 
 def _build_keyword(
