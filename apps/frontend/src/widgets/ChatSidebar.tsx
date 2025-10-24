@@ -19,6 +19,7 @@ const initialTools = [
     { id: 'accounts', title: 'Accounts', icon: <BadgeCheck className="w-5 h-5 text-primary" /> },
     { id: 'schedules', title: 'Schedules', icon: <Calendar className="w-5 h-5 text-primary" /> },
     { id: 'playbooks', title: 'Playbooks', icon: <BookOpen className="w-5 h-5 text-primary" /> },
+    { id: 'reactive', title: 'Reactive', icon: <Settings className="w-5 h-5 text-primary" /> },
     { id: 'coworker', title: 'CoWorker', icon: <Bot className="w-5 h-5 text-primary" /> },
     { id: 'ab-tests', title: 'A/B Tests', icon: <FlaskConical className="w-5 h-5 text-primary" /> },
 ];

@@ -179,7 +179,7 @@ async def op_unlink_rule_publication(
     output_model=ReactionRuleOut,
     method="post",
     path="/reactive/rules",
-    tags=("reactive", "rules", "create"),
+    tags=("action", "reactive", "rules", "create"),
 )
 def _flow_reactive_create_rule(builder: FlowBuilder):
     task = builder.task("create_rule", "reactive.create_rule")
@@ -194,7 +194,7 @@ def _flow_reactive_create_rule(builder: FlowBuilder):
     output_model=ReactionRuleOut,
     method="patch",
     path="/reactive/rules/{rule_id}",
-    tags=("reactive", "rules", "update"),
+    tags=("action", "reactive", "rules", "update"),
 )
 def _flow_reactive_update_rule(builder: FlowBuilder):
     task = builder.task("update_rule", "reactive.update_rule")
@@ -209,7 +209,7 @@ def _flow_reactive_update_rule(builder: FlowBuilder):
     output_model=OperationResult,
     method="delete",
     path="/reactive/rules/{rule_id}",
-    tags=("reactive", "rules", "delete"),
+    tags=("action", "reactive", "rules", "delete"),
 )
 def _flow_reactive_delete_rule(builder: FlowBuilder):
     task = builder.task("delete_rule", "reactive.delete_rule")
@@ -224,7 +224,7 @@ def _flow_reactive_delete_rule(builder: FlowBuilder):
     output_model=ReactionRulePublicationLink,
     method="post",
     path="/reactive/rules/{rule_id}/publications",
-    tags=("reactive", "rules", "publications", "link"),
+    tags=("action", "reactive", "rules", "publications", "link"),
 )
 def _flow_reactive_link_publication(builder: FlowBuilder):
     task = builder.task("link_rule_publication", "reactive.link_rule_publication")
@@ -239,7 +239,7 @@ def _flow_reactive_link_publication(builder: FlowBuilder):
     output_model=OperationResult,
     method="delete",
     path="/reactive/publications/{link_id}",
-    tags=("reactive", "rules", "publications", "unlink"),
+    tags=("action", "reactive", "rules", "publications", "unlink"),
 )
 def _flow_reactive_unlink_publication(builder: FlowBuilder):
     task = builder.task("unlink_rule_publication", "reactive.unlink_rule_publication")

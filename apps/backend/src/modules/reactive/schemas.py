@@ -134,3 +134,22 @@ class ReactionEvaluationResult(BaseModel):
 class ReactionActionLogListResult(BaseModel):
     total: int
     items: List[ReactionActionLogOut] = Field(default_factory=list)
+
+
+class ReactionMessageTemplateOut(BaseModel):
+    id: int
+    owner_user_id: int
+    persona_account_id: Optional[int]
+    template_type: ReactionActionType
+    tag_key: Optional[str]
+    title: Optional[str]
+    body: str
+    language: Optional[str]
+    metadata: Optional[dict]
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class ReactionMessageTemplateListResult(BaseModel):
+    items: List[ReactionMessageTemplateOut] = Field(default_factory=list)

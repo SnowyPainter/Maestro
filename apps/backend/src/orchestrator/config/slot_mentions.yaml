@@ -307,6 +307,13 @@ slots:
   flows:
   - abtests.create_abtest
   - abtests.update_abtest
+- name: include_inactive
+  label: Include Inactive
+  description: Filter by include inactive
+  value_type: boolean
+  flows:
+  - bff.reactive.list_templates
+  - bff.reactive.read_template
 - name: ingest_key
   label: Ingest Key
   description: Filter by ingest key
@@ -488,6 +495,7 @@ slots:
   - bff.contexts.current_persona
   - bff.contexts.current_persona_account
   - bff.insights.comments.list
+  - bff.reactive.list_templates
   - bff.schedule.list_schedules
   - bff.timeline.abtests
   - bff.timeline.campaigns
@@ -768,6 +776,7 @@ slots:
   value_type: string
   flows:
   - bff.reactive.list_action_logs
+  - bff.reactive.list_templates
 - name: tags
   label: Tags
   description: Filter by tags
@@ -789,6 +798,18 @@ slots:
   - action.schedule.compile_template
   - action.schedule.create_sync_metrics_schedule
   - action.schedule.create_trends_mail_schedule
+- name: template_id
+  label: Template Id
+  description: Target a specific template id
+  value_type: integer
+  flows:
+  - bff.reactive.read_template
+- name: template_type
+  label: Template Type
+  description: Filter by template type
+  value_type: string
+  flows:
+  - bff.reactive.list_templates
 - name: text
   label: Text
   description: Filter by text

@@ -1408,6 +1408,99 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/reactive/message-templates:
+    get:
+      tags:
+      - bff
+      - bff
+      - reactive
+      - templates
+      - list
+      summary: List Reaction Message Templates
+      description: Retrieve available reaction message templates for the current user
+      operationId: bff_reactive_list_templates_api_bff_reactive_message_templates_get
+      parameters:
+      - name: template_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ReactionActionType'
+          - type: 'null'
+          title: Template Type
+      - name: persona_account_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+      - name: tag_key
+        in: query
+        required: false
+        schema:
+          title: Tag Key
+          type: string
+          nullable: true
+      - name: include_inactive
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Inactive
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionMessageTemplateListResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/reactive/message-templates/{template_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - reactive
+      - templates
+      - detail
+      summary: Read Reaction Message Template
+      description: Retrieve a single reaction message template by id
+      operationId: bff_reactive_read_template_api_bff_reactive_message_templates__template_id__get
+      parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Template Id
+      - name: include_inactive
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Inactive
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionMessageTemplateOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/schedules:
     get:
       tags:
@@ -3237,6 +3330,173 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InsightOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/reactive/rules:
+    post:
+      tags:
+      - action
+      - action
+      - reactive
+      - rules
+      - create
+      summary: Create Reaction Rule
+      description: Create a new reaction rule with keywords and actions
+      operationId: reactive_create_rule_api_orchestrator_reactive_rules_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionRuleCreateCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionRuleOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/reactive/rules/{rule_id}:
+    patch:
+      tags:
+      - action
+      - action
+      - reactive
+      - rules
+      - update
+      summary: Update Reaction Rule
+      description: Update an existing reaction rule
+      operationId: reactive_update_rule_api_orchestrator_reactive_rules__rule_id__patch
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Rule Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionRuleUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionRuleOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - action
+      - action
+      - reactive
+      - rules
+      - delete
+      summary: Delete Reaction Rule
+      description: Delete a reaction rule
+      operationId: reactive_delete_rule_api_orchestrator_reactive_rules__rule_id__delete
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Rule Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/reactive/rules/{rule_id}/publications:
+    post:
+      tags:
+      - action
+      - action
+      - reactive
+      - rules
+      - publications
+      - link
+      summary: Attach Reaction Rule to Publication
+      description: Connect a reaction rule to a post publication
+      operationId: reactive_link_rule_publication_api_orchestrator_reactive_rules__rule_id__publications_post
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Rule Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionRulePublicationCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionRulePublicationLink'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/reactive/publications/{link_id}:
+    delete:
+      tags:
+      - action
+      - action
+      - reactive
+      - rules
+      - publications
+      - unlink
+      summary: Remove Reaction Rule Publication Link
+      description: Detach a reaction rule from a publication
+      operationId: reactive_unlink_rule_publication_api_orchestrator_reactive_publications__link_id__delete
+      parameters:
+      - name: link_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Link Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationResult'
         '422':
           description: Validation Error
           content:
@@ -5825,6 +6085,15 @@ components:
       - state
       - callback_url
       title: OAuthStartResponse
+    OperationResult:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+      type: object
+      required:
+      - ok
+      title: OperationResult
     Permission:
       type: string
       enum:
@@ -6791,6 +7060,119 @@ components:
       - contains
       - regex
       title: ReactionMatchType
+    ReactionMessageTemplateListResult:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ReactionMessageTemplateOut'
+          type: array
+          title: Items
+      type: object
+      title: ReactionMessageTemplateListResult
+    ReactionMessageTemplateOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        persona_account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+        template_type:
+          $ref: '#/components/schemas/ReactionActionType'
+        tag_key:
+          title: Tag Key
+          type: string
+          nullable: true
+        title:
+          title: Title
+          type: string
+          nullable: true
+        body:
+          type: string
+          title: Body
+        language:
+          title: Language
+          type: string
+          nullable: true
+        metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata
+        is_active:
+          type: boolean
+          title: Is Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - owner_user_id
+      - persona_account_id
+      - template_type
+      - tag_key
+      - title
+      - body
+      - language
+      - metadata
+      - is_active
+      - created_at
+      - updated_at
+      title: ReactionMessageTemplateOut
+    ReactionRuleActionConfig:
+      properties:
+        tag_key:
+          type: string
+          title: Tag Key
+          description: Tag key this action applies to
+        dm_template_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Dm Template Id
+        reply_template_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Reply Template Id
+        alert_enabled:
+          type: boolean
+          title: Alert Enabled
+          default: false
+        alert_severity:
+          title: Alert Severity
+          type: string
+          nullable: true
+        alert_assignee_user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Alert Assignee User Id
+        llm_mode:
+          $ref: '#/components/schemas/ReactionLLMMode'
+          default: template_only
+        metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata
+      type: object
+      required:
+      - tag_key
+      title: ReactionRuleActionConfig
     ReactionRuleActionOut:
       properties:
         tag_key:
@@ -6837,6 +7219,74 @@ components:
       - tag_key
       - id
       title: ReactionRuleActionOut
+    ReactionRuleCreateCommand:
+      properties:
+        name:
+          type: string
+          title: Name
+        description:
+          title: Description
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ReactionRuleStatus'
+          default: active
+        priority:
+          type: integer
+          title: Priority
+          default: 100
+        keywords:
+          items:
+            $ref: '#/components/schemas/ReactionRuleKeywordConfig'
+          type: array
+          title: Keywords
+        actions:
+          items:
+            $ref: '#/components/schemas/ReactionRuleActionConfig'
+          type: array
+          title: Actions
+        owner_user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Owner User Id
+          description: Set by service when omitted
+      type: object
+      required:
+      - name
+      title: ReactionRuleCreateCommand
+    ReactionRuleKeywordConfig:
+      properties:
+        tag_key:
+          type: string
+          title: Tag Key
+          description: Tag emitted when the keyword matches
+        match_type:
+          $ref: '#/components/schemas/ReactionMatchType'
+          description: Matching rule for the keyword
+          default: contains
+        keyword:
+          type: string
+          title: Keyword
+          description: Keyword or pattern to match
+        language:
+          title: Language
+          description: Optional language hint
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+          title: Is Active
+          default: true
+        priority:
+          type: integer
+          title: Priority
+          default: 100
+      type: object
+      required:
+      - tag_key
+      - keyword
+      title: ReactionRuleKeywordConfig
     ReactionRuleKeywordOut:
       properties:
         tag_key:
@@ -6938,6 +7388,37 @@ components:
       - created_at
       - updated_at
       title: ReactionRuleOut
+    ReactionRulePublicationCommand:
+      properties:
+        post_publication_id:
+          type: integer
+          title: Post Publication Id
+        priority:
+          type: integer
+          title: Priority
+          default: 100
+        active_from:
+          title: Active From
+          format: date-time
+          type: string
+          nullable: true
+        active_until:
+          title: Active Until
+          format: date-time
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+          title: Is Active
+          default: true
+        rule_id:
+          type: integer
+          title: Rule Id
+      type: object
+      required:
+      - post_publication_id
+      - rule_id
+      title: ReactionRulePublicationCommand
     ReactionRulePublicationLink:
       properties:
         id:
@@ -6982,6 +7463,46 @@ components:
       - inactive
       - archived
       title: ReactionRuleStatus
+    ReactionRuleUpdateCommand:
+      properties:
+        name:
+          title: Name
+          type: string
+          nullable: true
+        description:
+          title: Description
+          type: string
+          nullable: true
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/ReactionRuleStatus'
+          - type: 'null'
+        priority:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Priority
+        keywords:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/ReactionRuleKeywordConfig'
+            type: array
+          - type: 'null'
+          title: Keywords
+        actions:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/ReactionRuleActionConfig'
+            type: array
+          - type: 'null'
+          title: Actions
+        rule_id:
+          type: integer
+          title: Rule Id
+      type: object
+      required:
+      - rule_id
+      title: ReactionRuleUpdateCommand
     RenderedMediaItem:
       properties:
         type:

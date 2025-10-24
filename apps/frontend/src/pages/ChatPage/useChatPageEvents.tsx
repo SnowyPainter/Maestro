@@ -48,6 +48,12 @@ import PostPublicationList from "@/entities/post-publications/components/PostPub
 import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
 import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
 import { PlaybookToolCard } from "@/features/playbooks/components/PlaybookToolCard";
+import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
+import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
+import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
+import { RuleToolCard } from "@/entities/reactive/components/RuleToolCard";
+import { RuleComposeDrawer } from "@/features/reactive-rule/components/RuleComposeDrawer";
+import { RulePublicationModal } from "@/features/reactive-rule/components/RulePublicationModal";
 
 const isMessageOfComponent = (content: Message["content"], component: React.ComponentType<any>): boolean => (
   React.isValidElement(content) && content.type === component
@@ -603,6 +609,100 @@ export function useChatPageEvents() {
     });
   }, [appendMessage, getNextMessageId, handlePlaybookSelect, removeMessagesByComponent]);
 
+  // Reactive 핸들러들
+  const handleReactiveRuleSelect = useCallback<EntitySelectHandler>((ruleId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addCardMessage(messageId => (
+      <RuleDetailCard
+        ruleId={ruleId}
+        onRequestLinker={(ruleId) => {
+          // RulePublicationModal을 열기 위한 메시지 추가
+          const modalMessageId = getNextMessageId();
+          appendMessage({
+            id: modalMessageId,
+            type: 'card',
+            content: (
+              <RulePublicationModal
+                open={true}
+                onOpenChange={(open) => {
+                  if (!open) removeMessage(modalMessageId);
+                }}
+                ruleId={ruleId}
+                ruleName={`Rule ${ruleId}`}
+              />
+            ),
+          });
+        }}
+        onEditRule={(ruleId) => {
+          // RuleComposeDrawer를 열기 위한 메시지 추가
+          const drawerMessageId = getNextMessageId();
+          appendMessage({
+            id: drawerMessageId,
+            type: 'card',
+            content: (
+              <RuleComposeDrawer
+                open={true}
+                onOpenChange={(open) => {
+                  if (!open) removeMessage(drawerMessageId);
+                }}
+                ruleId={ruleId}
+                initialData={undefined}
+              />
+            ),
+          });
+        }}
+      />
+    ));
+  }, [addCardMessage, removeMessage, appendMessage, getNextMessageId]);
+
+  const handleReactiveCreateRule = useCallback((sourceMessageId: number) => {
+    // RuleComposeDrawer를 열기 위한 메시지 추가
+    const drawerMessageId = getNextMessageId();
+    appendMessage({
+      id: drawerMessageId,
+      type: 'card',
+      content: (
+        <RuleComposeDrawer
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) removeMessage(drawerMessageId);
+          }}
+        />
+      ),
+    });
+  }, [appendMessage, getNextMessageId, removeMessage]);
+
+  const handleReactiveViewActivity = useCallback((sourceMessageId: number) => {
+    addCardMessage(() => <ActionLogCard />);
+  }, [addCardMessage]);
+
+  const handleReactiveSelectRule = useCallback(() => {
+    removeMessagesByComponent(RuleToolCard);
+    addCardMessage(() => (
+      <RuleOverviewCard
+        onCreateRule={() => {
+          const messageId = getNextMessageId();
+          appendMessage({
+            id: messageId,
+            type: 'card',
+            content: (
+              <RuleComposeDrawer
+                open={true}
+                onOpenChange={(open) => {
+                  if (!open) removeMessage(messageId);
+                }}
+              />
+            ),
+          });
+        }}
+        onViewActivity={() => addCardMessage(() => <ActionLogCard />)}
+        onSelectRule={handleReactiveRuleSelect}
+      />
+    ));
+  }, [addCardMessage, removeMessagesByComponent, getNextMessageId, appendMessage, removeMessage, handleReactiveRuleSelect]);
+
   const handleToolClick = useCallback(
     (toolId: string) => {
       switch (toolId) {
@@ -681,6 +781,30 @@ export function useChatPageEvents() {
             <PlaybookToolCard onSelect={handleSelectPlaybook} />
           ));
           break;
+        case "reactive":
+          removeMessagesByComponent(RuleToolCard);
+          addCardMessage(() => (
+            <RuleToolCard
+              onCreateRule={() => {
+                const messageId = getNextMessageId();
+                appendMessage({
+                  id: messageId,
+                  type: 'card',
+                  content: (
+                    <RuleComposeDrawer
+                      open={true}
+                      onOpenChange={(open) => {
+                        if (!open) removeMessage(messageId);
+                      }}
+                    />
+                  ),
+                });
+              }}
+              onViewActivity={() => addCardMessage(() => <ActionLogCard />)}
+              onSelectRule={handleReactiveSelectRule}
+            />
+          ));
+          break;
         default:
           break;
       }
@@ -705,7 +829,9 @@ export function useChatPageEvents() {
       handleSelectABTest,
       handleSelectListPublications,
       handleSelectPlaybook,
+      handleReactiveSelectRule,
       PlaybookToolCard,
+      RuleToolCard,
     ]
   );
 
@@ -745,6 +871,9 @@ export function useChatPageEvents() {
             onDraftVariantSelect: handleDraftVariantSelect,
             onPlaybookSelect: handlePlaybookSelect,
             onCoworkerSelect: handleCoworkerSelect,
+            onReactiveRuleSelect: handleReactiveRuleSelect,
+            onReactiveCreateRule: handleReactiveCreateRule,
+            onReactiveViewActivity: handleReactiveViewActivity,
           },
         }));
       });
@@ -752,7 +881,7 @@ export function useChatPageEvents() {
       console.error('Chat error:', error);
       addTextMessage(t('chat.error_message'), 'bot');
     }
-  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, t]);
+  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, handleReactiveRuleSelect, handleReactiveCreateRule, handleReactiveViewActivity, t]);
 
   return {
     handleChatSend,

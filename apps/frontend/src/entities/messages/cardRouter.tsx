@@ -26,6 +26,9 @@ import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
 import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
 import PostPublicationList from "@/entities/post-publications/components/PostPublicationList";
 import CommentList from "@/entities/comments/components/CommentList";
+import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
+import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
+import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -38,6 +41,9 @@ export interface CardRenderCallbacks {
   onCoworkerSelect?: () => void;
   onPostPublicationSelect?: (publicationId: number, sourceMessageId: number) => void;
   onCommentSelect?: (commentId: number, sourceMessageId: number) => void;
+  onReactiveRuleSelect?: (ruleId: number, sourceMessageId: number) => void;
+  onReactiveCreateRule?: (sourceMessageId: number) => void;
+  onReactiveViewActivity?: (sourceMessageId: number) => void;
 }
 
 export interface RenderCardOptions {
@@ -226,6 +232,37 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     case 'trends':
     case 'trends.list':
       return <TrendResultCard query={title || "Trends"} results={data as unknown as TrendsListResponse} />;
+
+    // Reactive 관련 카드들
+    case 'reactive.rule.overview':
+      return (
+        <RuleOverviewCard
+          onCreateRule={() => callbacks.onReactiveCreateRule?.(messageId)}
+          onViewActivity={() => callbacks.onReactiveViewActivity?.(messageId)}
+          onSelectRule={(ruleId) => callbacks.onReactiveRuleSelect?.(ruleId, messageId)}
+        />
+      );
+
+    case 'reactive.rule.detail':
+      if (data?.id) {
+        return (
+          <RuleDetailCard
+            ruleId={data.id as number}
+            onRequestLinker={(ruleId) => {
+              // Linker modal을 열기 위한 로직 (ChatStream에서 구현)
+              console.log('Request linker for rule:', ruleId);
+            }}
+            onEditRule={(ruleId) => {
+              // Edit rule 로직 (ChatStream에서 구현)
+              console.log('Edit rule:', ruleId);
+            }}
+          />
+        );
+      }
+      break;
+
+    case 'reactive.activity.log':
+      return <ActionLogCard />;
 
     default:
       return <GenericCard title={title || "Data"} data={data || card} />;

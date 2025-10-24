@@ -14,12 +14,16 @@ from apps.backend.src.modules.common.enums import (
 )
 from apps.backend.src.modules.reactive.schemas import (
     ReactionActionLogListResult,
+    ReactionMessageTemplateOut,
+    ReactionMessageTemplateListResult,
     ReactionRuleOut,
     ReactionRulePublicationLink,
 )
 from apps.backend.src.modules.reactive.service import (
+    get_message_template,
     get_reaction_rule,
     list_action_logs,
+    list_message_templates,
     list_publication_links,
     list_reaction_rules,
 )
@@ -54,6 +58,18 @@ class ReactionActionLogQueryPayload(BaseModel):
     tag_key: str | None = None
     limit: int = 50
     offset: int = 0
+
+
+class ReactionMessageTemplateListPayload(BaseModel):
+    template_type: ReactionActionType | None = None
+    persona_account_id: int | None = None
+    tag_key: str | None = None
+    include_inactive: bool = False
+
+
+class ReactionMessageTemplateReadPayload(BaseModel):
+    template_id: int
+    include_inactive: bool = False
 
 
 @operator(
@@ -134,6 +150,50 @@ async def op_list_reaction_logs(
     return result
 
 
+@operator(
+    key="bff.reactive.list_templates",
+    title="List reactive message templates",
+    side_effect="read",
+)
+async def op_list_reaction_templates(
+    payload: ReactionMessageTemplateListPayload,
+    ctx: TaskContext,
+) -> ReactionMessageTemplateListResult:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    templates = await list_message_templates(
+        db,
+        owner_user_id=user.id,
+        template_type=payload.template_type,
+        persona_account_id=payload.persona_account_id,
+        tag_key=payload.tag_key,
+        include_inactive=payload.include_inactive,
+    )
+    return ReactionMessageTemplateListResult(items=templates)
+
+
+@operator(
+    key="bff.reactive.read_template",
+    title="Read reactive message template",
+    side_effect="read",
+)
+async def op_read_reaction_template(
+    payload: ReactionMessageTemplateReadPayload,
+    ctx: TaskContext,
+) -> ReactionMessageTemplateOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    template = await get_message_template(
+        db,
+        owner_user_id=user.id,
+        template_id=payload.template_id,
+        include_inactive=payload.include_inactive,
+    )
+    if template is None:
+        raise HTTPException(status_code=404, detail="Reaction message template not found")
+    return template
+
+
 @FLOWS.flow(
     key="bff.reactive.list_rules",
     title="List Reaction Rules",
@@ -191,6 +251,36 @@ def _flow_bff_list_rule_links(builder: FlowBuilder):
 )
 def _flow_bff_list_action_logs(builder: FlowBuilder):
     task = builder.task("list_action_logs", "bff.reactive.list_action_logs")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.reactive.list_templates",
+    title="List Reaction Message Templates",
+    description="Retrieve available reaction message templates for the current user",
+    input_model=ReactionMessageTemplateListPayload,
+    output_model=ReactionMessageTemplateListResult,
+    method="get",
+    path="/reactive/message-templates",
+    tags=("bff", "reactive", "templates", "list"),
+)
+def _flow_bff_list_reaction_templates(builder: FlowBuilder):
+    task = builder.task("list_reaction_templates", "bff.reactive.list_templates")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.reactive.read_template",
+    title="Read Reaction Message Template",
+    description="Retrieve a single reaction message template by id",
+    input_model=ReactionMessageTemplateReadPayload,
+    output_model=ReactionMessageTemplateOut,
+    method="get",
+    path="/reactive/message-templates/{template_id}",
+    tags=("bff", "reactive", "templates", "detail"),
+)
+def _flow_bff_read_reaction_template(builder: FlowBuilder):
+    task = builder.task("read_reaction_template", "bff.reactive.read_template")
     builder.expect_terminal(task)
 
 

@@ -1082,6 +1082,10 @@ export interface OAuthStartResponse {
   callback_url: string;
 }
 
+export interface OperationResult {
+  ok: boolean;
+}
+
 export type Permission = typeof Permission[keyof typeof Permission];
 
 
@@ -1615,6 +1619,57 @@ export const ReactionMatchType = {
   regex: 'regex',
 } as const;
 
+export interface ReactionMessageTemplateListResult {
+  items?: ReactionMessageTemplateOut[];
+}
+
+export type ReactionMessageTemplateOutPersonaAccountId = number | null;
+
+export type ReactionMessageTemplateOutMetadataAnyOf = { [key: string]: unknown };
+
+export type ReactionMessageTemplateOutMetadata = ReactionMessageTemplateOutMetadataAnyOf | null;
+
+export interface ReactionMessageTemplateOut {
+  id: number;
+  owner_user_id: number;
+  persona_account_id: ReactionMessageTemplateOutPersonaAccountId;
+  template_type: ReactionActionType;
+  /** @nullable */
+  tag_key: string | null;
+  /** @nullable */
+  title: string | null;
+  body: string;
+  /** @nullable */
+  language: string | null;
+  metadata: ReactionMessageTemplateOutMetadata;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ReactionRuleActionConfigDmTemplateId = number | null;
+
+export type ReactionRuleActionConfigReplyTemplateId = number | null;
+
+export type ReactionRuleActionConfigAlertAssigneeUserId = number | null;
+
+export type ReactionRuleActionConfigMetadataAnyOf = { [key: string]: unknown };
+
+export type ReactionRuleActionConfigMetadata = ReactionRuleActionConfigMetadataAnyOf | null;
+
+export interface ReactionRuleActionConfig {
+  /** Tag key this action applies to */
+  tag_key: string;
+  dm_template_id?: ReactionRuleActionConfigDmTemplateId;
+  reply_template_id?: ReactionRuleActionConfigReplyTemplateId;
+  alert_enabled?: boolean;
+  /** @nullable */
+  alert_severity?: string | null;
+  alert_assignee_user_id?: ReactionRuleActionConfigAlertAssigneeUserId;
+  llm_mode?: ReactionLLMMode;
+  metadata?: ReactionRuleActionConfigMetadata;
+}
+
 export type ReactionRuleActionOutDmTemplateId = number | null;
 
 export type ReactionRuleActionOutReplyTemplateId = number | null;
@@ -1637,6 +1692,39 @@ export interface ReactionRuleActionOut {
   llm_mode?: ReactionLLMMode;
   metadata?: ReactionRuleActionOutMetadata;
   id: number;
+}
+
+/**
+ * Set by service when omitted
+ */
+export type ReactionRuleCreateCommandOwnerUserId = number | null;
+
+export interface ReactionRuleCreateCommand {
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  status?: ReactionRuleStatus;
+  priority?: number;
+  keywords?: ReactionRuleKeywordConfig[];
+  actions?: ReactionRuleActionConfig[];
+  /** Set by service when omitted */
+  owner_user_id?: ReactionRuleCreateCommandOwnerUserId;
+}
+
+export interface ReactionRuleKeywordConfig {
+  /** Tag emitted when the keyword matches */
+  tag_key: string;
+  /** Matching rule for the keyword */
+  match_type?: ReactionMatchType;
+  /** Keyword or pattern to match */
+  keyword: string;
+  /**
+   * Optional language hint
+   * @nullable
+   */
+  language?: string | null;
+  is_active?: boolean;
+  priority?: number;
 }
 
 export interface ReactionRuleKeywordOut {
@@ -1676,6 +1764,17 @@ export interface ReactionRuleOut {
   actions?: ReactionRuleActionOut[];
 }
 
+export interface ReactionRulePublicationCommand {
+  post_publication_id: number;
+  priority?: number;
+  /** @nullable */
+  active_from?: string | null;
+  /** @nullable */
+  active_until?: string | null;
+  is_active?: boolean;
+  rule_id: number;
+}
+
 export interface ReactionRulePublicationLink {
   id: number;
   reaction_rule_id: number;
@@ -1697,6 +1796,26 @@ export const ReactionRuleStatus = {
   inactive: 'inactive',
   archived: 'archived',
 } as const;
+
+export type ReactionRuleUpdateCommandStatus = ReactionRuleStatus | null;
+
+export type ReactionRuleUpdateCommandPriority = number | null;
+
+export type ReactionRuleUpdateCommandKeywords = ReactionRuleKeywordConfig[] | null;
+
+export type ReactionRuleUpdateCommandActions = ReactionRuleActionConfig[] | null;
+
+export interface ReactionRuleUpdateCommand {
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  description?: string | null;
+  status?: ReactionRuleUpdateCommandStatus;
+  priority?: ReactionRuleUpdateCommandPriority;
+  keywords?: ReactionRuleUpdateCommandKeywords;
+  actions?: ReactionRuleUpdateCommandActions;
+  rule_id: number;
+}
 
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
 
@@ -2366,6 +2485,20 @@ action_type?: ReactionActionType | null;
 tag_key?: string | null;
 limit?: number;
 offset?: number;
+};
+
+export type BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams = {
+template_type?: ReactionActionType | null;
+persona_account_id?: number | null;
+/**
+ * @nullable
+ */
+tag_key?: string | null;
+include_inactive?: boolean;
+};
+
+export type BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams = {
+include_inactive?: boolean;
 };
 
 export type BffScheduleListSchedulesApiBffSchedulesGetParams = {
@@ -5757,6 +5890,193 @@ export function useBffReactiveListActionLogsApiBffReactiveActionLogsGet<TData = 
 
 
 /**
+ * Retrieve available reaction message templates for the current user
+ * @summary List Reaction Message Templates
+ */
+export const bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet = (
+    params?: BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionMessageTemplateListResult>(
+      {url: `/api/bff/reactive/message-templates`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryKey = (params?: BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams,) => {
+    return [`/api/bff/reactive/message-templates`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryOptions = <TData = Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError = HTTPValidationError>(params?: BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>> = ({ signal }) => bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>>
+export type BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryError = HTTPValidationError
+
+
+export function useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet<TData = Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet<TData = Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError = HTTPValidationError>(
+ params?: BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet<TData = Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError = HTTPValidationError>(
+ params?: BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Reaction Message Templates
+ */
+
+export function useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet<TData = Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError = HTTPValidationError>(
+ params?: BffReactiveListTemplatesApiBffReactiveMessageTemplatesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve a single reaction message template by id
+ * @summary Read Reaction Message Template
+ */
+export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet = (
+    templateId: number,
+    params?: BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionMessageTemplateOut>(
+      {url: `/api/bff/reactive/message-templates/${templateId}`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryKey = (templateId?: number,
+    params?: BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams,) => {
+    return [`/api/bff/reactive/message-templates/${templateId}`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryOptions = <TData = Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError = HTTPValidationError>(templateId: number,
+    params?: BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryKey(templateId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>> = ({ signal }) => bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet(templateId,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(templateId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>>
+export type BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryError = HTTPValidationError
+
+
+export function useBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError = HTTPValidationError>(
+ templateId: number,
+    params: undefined |  BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError = HTTPValidationError>(
+ templateId: number,
+    params?: BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError = HTTPValidationError>(
+ templateId: number,
+    params?: BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read Reaction Message Template
+ */
+
+export function useBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError = HTTPValidationError>(
+ templateId: number,
+    params?: BffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryOptions(templateId,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * List schedules for the authenticated user with optional persona filtering and meta information.
  * @summary List Schedules
  */
@@ -9063,6 +9383,331 @@ export const useInsightsIngestApiOrchestratorInsightsPost = <TError = HTTPValida
       > => {
 
       const mutationOptions = getInsightsIngestApiOrchestratorInsightsPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Create a new reaction rule with keywords and actions
+ * @summary Create Reaction Rule
+ */
+export const reactiveCreateRuleApiOrchestratorReactiveRulesPost = (
+    reactionRuleCreateCommand: ReactionRuleCreateCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionRuleOut>(
+      {url: `/api/orchestrator/reactive/rules`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: reactionRuleCreateCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getReactiveCreateRuleApiOrchestratorReactiveRulesPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveCreateRuleApiOrchestratorReactiveRulesPost>>, TError,{data: ReactionRuleCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveCreateRuleApiOrchestratorReactiveRulesPost>>, TError,{data: ReactionRuleCreateCommand}, TContext> => {
+
+const mutationKey = ['reactiveCreateRuleApiOrchestratorReactiveRulesPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveCreateRuleApiOrchestratorReactiveRulesPost>>, {data: ReactionRuleCreateCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reactiveCreateRuleApiOrchestratorReactiveRulesPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveCreateRuleApiOrchestratorReactiveRulesPostMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveCreateRuleApiOrchestratorReactiveRulesPost>>>
+    export type ReactiveCreateRuleApiOrchestratorReactiveRulesPostMutationBody = ReactionRuleCreateCommand
+    export type ReactiveCreateRuleApiOrchestratorReactiveRulesPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Reaction Rule
+ */
+export const useReactiveCreateRuleApiOrchestratorReactiveRulesPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveCreateRuleApiOrchestratorReactiveRulesPost>>, TError,{data: ReactionRuleCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveCreateRuleApiOrchestratorReactiveRulesPost>>,
+        TError,
+        {data: ReactionRuleCreateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveCreateRuleApiOrchestratorReactiveRulesPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update an existing reaction rule
+ * @summary Update Reaction Rule
+ */
+export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch = (
+    ruleId: number,
+    reactionRuleUpdateCommand: ReactionRuleUpdateCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<ReactionRuleOut>(
+      {url: `/api/orchestrator/reactive/rules/${ruleId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: reactionRuleUpdateCommand
+    },
+      options);
+    }
+  
+
+
+export const getReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch>>, TError,{ruleId: number;data: ReactionRuleUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch>>, TError,{ruleId: number;data: ReactionRuleUpdateCommand}, TContext> => {
+
+const mutationKey = ['reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch>>, {ruleId: number;data: ReactionRuleUpdateCommand}> = (props) => {
+          const {ruleId,data} = props ?? {};
+
+          return  reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch(ruleId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch>>>
+    export type ReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchMutationBody = ReactionRuleUpdateCommand
+    export type ReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Reaction Rule
+ */
+export const useReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch>>, TError,{ruleId: number;data: ReactionRuleUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch>>,
+        TError,
+        {ruleId: number;data: ReactionRuleUpdateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Delete a reaction rule
+ * @summary Delete Reaction Rule
+ */
+export const reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete = (
+    ruleId: number,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<OperationResult>(
+      {url: `/api/orchestrator/reactive/rules/${ruleId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete>>, TError,{ruleId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete>>, TError,{ruleId: number}, TContext> => {
+
+const mutationKey = ['reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete>>, {ruleId: number}> = (props) => {
+          const {ruleId} = props ?? {};
+
+          return  reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete(ruleId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete>>>
+    
+    export type ReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Reaction Rule
+ */
+export const useReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete>>, TError,{ruleId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete>>,
+        TError,
+        {ruleId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Connect a reaction rule to a post publication
+ * @summary Attach Reaction Rule to Publication
+ */
+export const reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost = (
+    ruleId: number,
+    reactionRulePublicationCommand: ReactionRulePublicationCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionRulePublicationLink>(
+      {url: `/api/orchestrator/reactive/rules/${ruleId}/publications`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: reactionRulePublicationCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getReactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost>>, TError,{ruleId: number;data: ReactionRulePublicationCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost>>, TError,{ruleId: number;data: ReactionRulePublicationCommand}, TContext> => {
+
+const mutationKey = ['reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost>>, {ruleId: number;data: ReactionRulePublicationCommand}> = (props) => {
+          const {ruleId,data} = props ?? {};
+
+          return  reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost(ruleId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost>>>
+    export type ReactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostMutationBody = ReactionRulePublicationCommand
+    export type ReactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Attach Reaction Rule to Publication
+ */
+export const useReactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost>>, TError,{ruleId: number;data: ReactionRulePublicationCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPost>>,
+        TError,
+        {ruleId: number;data: ReactionRulePublicationCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Detach a reaction rule from a publication
+ * @summary Remove Reaction Rule Publication Link
+ */
+export const reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete = (
+    linkId: number,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<OperationResult>(
+      {url: `/api/orchestrator/reactive/publications/${linkId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getReactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete>>, TError,{linkId: number}, TContext> => {
+
+const mutationKey = ['reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete>>, {linkId: number}> = (props) => {
+          const {linkId} = props ?? {};
+
+          return  reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete(linkId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete>>>
+    
+    export type ReactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Remove Reaction Rule Publication Link
+ */
+export const useReactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete>>, TError,{linkId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDelete>>,
+        TError,
+        {linkId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -1279,6 +1279,67 @@ export const bffReactiveListActionLogsApiBffReactiveActionLogsGetResponse = zod.
 
 
 /**
+ * Retrieve available reaction message templates for the current user
+ * @summary List Reaction Message Templates
+ */
+export const bffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryIncludeInactiveDefault = false;
+
+export const bffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryParams = zod.object({
+  "template_type": zod.union([zod.enum(['dm', 'reply', 'alert']),zod.null()]).optional(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "tag_key": zod.string().nullish(),
+  "include_inactive": zod.boolean().optional()
+})
+
+export const bffReactiveListTemplatesApiBffReactiveMessageTemplatesGetResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]),
+  "template_type": zod.enum(['dm', 'reply', 'alert']),
+  "tag_key": zod.string().nullable(),
+  "title": zod.string().nullable(),
+  "body": zod.string(),
+  "language": zod.string().nullable(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]),
+  "is_active": zod.boolean(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})).optional()
+})
+
+
+/**
+ * Retrieve a single reaction message template by id
+ * @summary Read Reaction Message Template
+ */
+export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams = zod.object({
+  "template_id": zod.number()
+})
+
+export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryIncludeInactiveDefault = false;
+
+export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetQueryParams = zod.object({
+  "include_inactive": zod.boolean().optional()
+})
+
+export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetResponse = zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]),
+  "template_type": zod.enum(['dm', 'reply', 'alert']),
+  "tag_key": zod.string().nullable(),
+  "title": zod.string().nullable(),
+  "body": zod.string(),
+  "language": zod.string().nullable(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]),
+  "is_active": zod.boolean(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
  * List schedules for the authenticated user with optional persona filtering and meta information.
  * @summary List Schedules
  */
@@ -3034,6 +3095,198 @@ export const insightsIngestApiOrchestratorInsightsPostResponse = zod.object({
   "ingest_key": zod.string().nullish(),
   "id": zod.number(),
   "ingested_at": zod.iso.datetime({})
+})
+
+
+/**
+ * Create a new reaction rule with keywords and actions
+ * @summary Create Reaction Rule
+ */
+export const reactiveCreateRuleApiOrchestratorReactiveRulesPostBodyPriorityDefault = 100;export const reactiveCreateRuleApiOrchestratorReactiveRulesPostBodyKeywordsItemIsActiveDefault = true;export const reactiveCreateRuleApiOrchestratorReactiveRulesPostBodyKeywordsItemPriorityDefault = 100;export const reactiveCreateRuleApiOrchestratorReactiveRulesPostBodyActionsItemAlertEnabledDefault = false;
+
+export const reactiveCreateRuleApiOrchestratorReactiveRulesPostBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['active', 'inactive', 'archived']).optional(),
+  "priority": zod.number().default(reactiveCreateRuleApiOrchestratorReactiveRulesPostBodyPriorityDefault),
+  "keywords": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag emitted when the keyword matches'),
+  "match_type": zod.enum(['exact', 'contains', 'regex']).optional(),
+  "keyword": zod.string().describe('Keyword or pattern to match'),
+  "language": zod.string().nullish().describe('Optional language hint'),
+  "is_active": zod.boolean().default(reactiveCreateRuleApiOrchestratorReactiveRulesPostBodyKeywordsItemIsActiveDefault),
+  "priority": zod.number().default(reactiveCreateRuleApiOrchestratorReactiveRulesPostBodyKeywordsItemPriorityDefault)
+})).optional(),
+  "actions": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag key this action applies to'),
+  "dm_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "reply_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "alert_enabled": zod.boolean().optional(),
+  "alert_severity": zod.string().nullish(),
+  "alert_assignee_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "llm_mode": zod.enum(['template_only', 'template_with_llm_augment']).optional(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional()
+})).optional(),
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional().describe('Set by service when omitted')
+})
+
+export const reactiveCreateRuleApiOrchestratorReactiveRulesPostResponseKeywordsItemIsActiveDefault = true;export const reactiveCreateRuleApiOrchestratorReactiveRulesPostResponseKeywordsItemPriorityDefault = 100;export const reactiveCreateRuleApiOrchestratorReactiveRulesPostResponseActionsItemAlertEnabledDefault = false;
+
+export const reactiveCreateRuleApiOrchestratorReactiveRulesPostResponse = zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'inactive', 'archived']),
+  "priority": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({}),
+  "keywords": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag emitted when the keyword matches'),
+  "match_type": zod.enum(['exact', 'contains', 'regex']).optional(),
+  "keyword": zod.string().describe('Keyword or pattern to match'),
+  "language": zod.string().nullish().describe('Optional language hint'),
+  "is_active": zod.boolean().default(reactiveCreateRuleApiOrchestratorReactiveRulesPostResponseKeywordsItemIsActiveDefault),
+  "priority": zod.number().default(reactiveCreateRuleApiOrchestratorReactiveRulesPostResponseKeywordsItemPriorityDefault),
+  "id": zod.number()
+})).optional(),
+  "actions": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag key this action applies to'),
+  "dm_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "reply_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "alert_enabled": zod.boolean().optional(),
+  "alert_severity": zod.string().nullish(),
+  "alert_assignee_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "llm_mode": zod.enum(['template_only', 'template_with_llm_augment']).optional(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "id": zod.number()
+})).optional()
+})
+
+
+/**
+ * Update an existing reaction rule
+ * @summary Update Reaction Rule
+ */
+export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchParams = zod.object({
+  "rule_id": zod.number()
+})
+
+export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchBodyKeywordsItemIsActiveDefault = true;export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchBodyKeywordsItemPriorityDefault = 100;export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchBodyActionsItemAlertEnabledDefault = false;
+
+export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchBody = zod.object({
+  "name": zod.string().nullish(),
+  "description": zod.string().nullish(),
+  "status": zod.union([zod.enum(['active', 'inactive', 'archived']),zod.null()]).optional(),
+  "priority": zod.union([zod.number(),zod.null()]).optional(),
+  "keywords": zod.union([zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag emitted when the keyword matches'),
+  "match_type": zod.enum(['exact', 'contains', 'regex']).optional(),
+  "keyword": zod.string().describe('Keyword or pattern to match'),
+  "language": zod.string().nullish().describe('Optional language hint'),
+  "is_active": zod.boolean().default(reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchBodyKeywordsItemIsActiveDefault),
+  "priority": zod.number().default(reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchBodyKeywordsItemPriorityDefault)
+})),zod.null()]).optional(),
+  "actions": zod.union([zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag key this action applies to'),
+  "dm_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "reply_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "alert_enabled": zod.boolean().optional(),
+  "alert_severity": zod.string().nullish(),
+  "alert_assignee_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "llm_mode": zod.enum(['template_only', 'template_with_llm_augment']).optional(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional()
+})),zod.null()]).optional(),
+  "rule_id": zod.number()
+})
+
+export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchResponseKeywordsItemIsActiveDefault = true;export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchResponseKeywordsItemPriorityDefault = 100;export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchResponseActionsItemAlertEnabledDefault = false;
+
+export const reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchResponse = zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'inactive', 'archived']),
+  "priority": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({}),
+  "keywords": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag emitted when the keyword matches'),
+  "match_type": zod.enum(['exact', 'contains', 'regex']).optional(),
+  "keyword": zod.string().describe('Keyword or pattern to match'),
+  "language": zod.string().nullish().describe('Optional language hint'),
+  "is_active": zod.boolean().default(reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchResponseKeywordsItemIsActiveDefault),
+  "priority": zod.number().default(reactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatchResponseKeywordsItemPriorityDefault),
+  "id": zod.number()
+})).optional(),
+  "actions": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag key this action applies to'),
+  "dm_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "reply_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "alert_enabled": zod.boolean().optional(),
+  "alert_severity": zod.string().nullish(),
+  "alert_assignee_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "llm_mode": zod.enum(['template_only', 'template_with_llm_augment']).optional(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "id": zod.number()
+})).optional()
+})
+
+
+/**
+ * Delete a reaction rule
+ * @summary Delete Reaction Rule
+ */
+export const reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteParams = zod.object({
+  "rule_id": zod.number()
+})
+
+export const reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * Connect a reaction rule to a post publication
+ * @summary Attach Reaction Rule to Publication
+ */
+export const reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostParams = zod.object({
+  "rule_id": zod.number()
+})
+
+export const reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostBodyPriorityDefault = 100;export const reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostBodyIsActiveDefault = true;
+
+export const reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostBody = zod.object({
+  "post_publication_id": zod.number(),
+  "priority": zod.number().default(reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostBodyPriorityDefault),
+  "active_from": zod.iso.datetime({}).nullish(),
+  "active_until": zod.iso.datetime({}).nullish(),
+  "is_active": zod.boolean().default(reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostBodyIsActiveDefault),
+  "rule_id": zod.number()
+})
+
+export const reactiveLinkRulePublicationApiOrchestratorReactiveRulesRuleIdPublicationsPostResponse = zod.object({
+  "id": zod.number(),
+  "reaction_rule_id": zod.number(),
+  "post_publication_id": zod.number(),
+  "priority": zod.number(),
+  "active_from": zod.iso.datetime({}).nullable(),
+  "active_until": zod.iso.datetime({}).nullable(),
+  "is_active": zod.boolean()
+})
+
+
+/**
+ * Detach a reaction rule from a publication
+ * @summary Remove Reaction Rule Publication Link
+ */
+export const reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteParams = zod.object({
+  "link_id": zod.number()
+})
+
+export const reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 

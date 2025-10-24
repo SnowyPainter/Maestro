@@ -19,6 +19,7 @@ from apps.backend.src.modules.insights.models import InsightComment
 from apps.backend.src.modules.reactive.models import (
     ReactionActionLog,
     ReactionAlert,
+    ReactionMessageTemplate,
     ReactionRule,
     ReactionRuleAction,
     ReactionRuleKeyword,
@@ -38,6 +39,7 @@ from apps.backend.src.modules.reactive.schemas import (
     ReactionRulePublicationCreate,
     ReactionRulePublicationLink,
     ReactionRuleUpdate,
+    ReactionMessageTemplateOut,
 )
 
 
@@ -64,6 +66,23 @@ def _serialize_action(model: ReactionRuleAction) -> ReactionRuleActionOut:
         alert_assignee_user_id=model.alert_assignee_user_id,
         llm_mode=model.llm_mode,
         metadata=model.metadata_json,
+    )
+
+
+def _serialize_message_template(model: ReactionMessageTemplate) -> ReactionMessageTemplateOut:
+    return ReactionMessageTemplateOut(
+        id=model.id,
+        owner_user_id=model.owner_user_id,
+        persona_account_id=model.persona_account_id,
+        template_type=model.template_type,
+        tag_key=model.tag_key,
+        title=model.title,
+        body=model.body,
+        language=model.language,
+        metadata=model.template_metadata,
+        is_active=model.is_active,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
     )
 
 
@@ -122,6 +141,52 @@ async def list_reaction_rules(db: AsyncSession, *, owner_user_id: int) -> list[R
     result = await db.execute(stmt)
     rules = result.scalars().unique().all()
     return [_serialize_rule(rule) for rule in rules]
+
+
+async def list_message_templates(
+    db: AsyncSession,
+    *,
+    owner_user_id: int,
+    template_type: ReactionActionType | None = None,
+    persona_account_id: int | None = None,
+    tag_key: str | None = None,
+    include_inactive: bool = False,
+) -> list[ReactionMessageTemplateOut]:
+    stmt: Select[ReactionMessageTemplate] = select(ReactionMessageTemplate).where(
+        ReactionMessageTemplate.owner_user_id == owner_user_id
+    )
+    if template_type is not None:
+        stmt = stmt.where(ReactionMessageTemplate.template_type == template_type)
+    if persona_account_id is not None:
+        stmt = stmt.where(ReactionMessageTemplate.persona_account_id == persona_account_id)
+    if tag_key:
+        stmt = stmt.where(ReactionMessageTemplate.tag_key == tag_key)
+    if not include_inactive:
+        stmt = stmt.where(ReactionMessageTemplate.is_active.is_(True))
+    stmt = stmt.order_by(ReactionMessageTemplate.updated_at.desc(), ReactionMessageTemplate.id.desc())
+    result = await db.execute(stmt)
+    templates = result.scalars().all()
+    return [_serialize_message_template(template) for template in templates]
+
+
+async def get_message_template(
+    db: AsyncSession,
+    *,
+    owner_user_id: int,
+    template_id: int,
+    include_inactive: bool = False,
+) -> Optional[ReactionMessageTemplateOut]:
+    stmt = select(ReactionMessageTemplate).where(
+        ReactionMessageTemplate.id == template_id,
+        ReactionMessageTemplate.owner_user_id == owner_user_id,
+    )
+    if not include_inactive:
+        stmt = stmt.where(ReactionMessageTemplate.is_active.is_(True))
+    result = await db.execute(stmt)
+    template = result.scalars().one_or_none()
+    if template is None:
+        return None
+    return _serialize_message_template(template)
 
 
 async def get_reaction_rule(

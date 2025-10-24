@@ -744,6 +744,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/reactive/message-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reaction Message Templates
+         * @description Retrieve available reaction message templates for the current user
+         */
+        get: operations["bff_reactive_list_templates_api_bff_reactive_message_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/reactive/message-templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Reaction Message Template
+         * @description Retrieve a single reaction message template by id
+         */
+        get: operations["bff_reactive_read_template_api_bff_reactive_message_templates__template_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/schedules": {
         parameters: {
             query?: never;
@@ -1592,6 +1632,90 @@ export interface paths {
          */
         post: operations["insights_ingest_api_orchestrator_insights_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/reactive/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Reaction Rule
+         * @description Create a new reaction rule with keywords and actions
+         */
+        post: operations["reactive_create_rule_api_orchestrator_reactive_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/reactive/rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Reaction Rule
+         * @description Delete a reaction rule
+         */
+        delete: operations["reactive_delete_rule_api_orchestrator_reactive_rules__rule_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Reaction Rule
+         * @description Update an existing reaction rule
+         */
+        patch: operations["reactive_update_rule_api_orchestrator_reactive_rules__rule_id__patch"];
+        trace?: never;
+    };
+    "/api/orchestrator/reactive/rules/{rule_id}/publications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach Reaction Rule to Publication
+         * @description Connect a reaction rule to a post publication
+         */
+        post: operations["reactive_link_rule_publication_api_orchestrator_reactive_rules__rule_id__publications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/reactive/publications/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Reaction Rule Publication Link
+         * @description Detach a reaction rule from a publication
+         */
+        delete: operations["reactive_unlink_rule_publication_api_orchestrator_reactive_publications__link_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3121,6 +3245,11 @@ export interface components {
             /** Callback Url */
             callback_url: string;
         };
+        /** OperationResult */
+        OperationResult: {
+            /** Ok */
+            ok: boolean;
+        };
         /**
          * Permission
          * @enum {string}
@@ -3675,6 +3804,72 @@ export interface components {
          * @enum {string}
          */
         ReactionMatchType: "exact" | "contains" | "regex";
+        /** ReactionMessageTemplateListResult */
+        ReactionMessageTemplateListResult: {
+            /** Items */
+            items?: components["schemas"]["ReactionMessageTemplateOut"][];
+        };
+        /** ReactionMessageTemplateOut */
+        ReactionMessageTemplateOut: {
+            /** Id */
+            id: number;
+            /** Owner User Id */
+            owner_user_id: number;
+            /** Persona Account Id */
+            persona_account_id: number | null;
+            template_type: components["schemas"]["ReactionActionType"];
+            /** Tag Key */
+            tag_key: string | null;
+            /** Title */
+            title: string | null;
+            /** Body */
+            body: string;
+            /** Language */
+            language: string | null;
+            /** Metadata */
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+            /** Is Active */
+            is_active: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ReactionRuleActionConfig */
+        ReactionRuleActionConfig: {
+            /**
+             * Tag Key
+             * @description Tag key this action applies to
+             */
+            tag_key: string;
+            /** Dm Template Id */
+            dm_template_id?: number | null;
+            /** Reply Template Id */
+            reply_template_id?: number | null;
+            /**
+             * Alert Enabled
+             * @default false
+             */
+            alert_enabled: boolean;
+            /** Alert Severity */
+            alert_severity?: string | null;
+            /** Alert Assignee User Id */
+            alert_assignee_user_id?: number | null;
+            /** @default template_only */
+            llm_mode: components["schemas"]["ReactionLLMMode"];
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+        };
         /** ReactionRuleActionOut */
         ReactionRuleActionOut: {
             /**
@@ -3703,6 +3898,62 @@ export interface components {
             } | null;
             /** Id */
             id: number;
+        };
+        /** ReactionRuleCreateCommand */
+        ReactionRuleCreateCommand: {
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** @default active */
+            status: components["schemas"]["ReactionRuleStatus"];
+            /**
+             * Priority
+             * @default 100
+             */
+            priority: number;
+            /** Keywords */
+            keywords?: components["schemas"]["ReactionRuleKeywordConfig"][];
+            /** Actions */
+            actions?: components["schemas"]["ReactionRuleActionConfig"][];
+            /**
+             * Owner User Id
+             * @description Set by service when omitted
+             */
+            owner_user_id?: number | null;
+        };
+        /** ReactionRuleKeywordConfig */
+        ReactionRuleKeywordConfig: {
+            /**
+             * Tag Key
+             * @description Tag emitted when the keyword matches
+             */
+            tag_key: string;
+            /**
+             * @description Matching rule for the keyword
+             * @default contains
+             */
+            match_type: components["schemas"]["ReactionMatchType"];
+            /**
+             * Keyword
+             * @description Keyword or pattern to match
+             */
+            keyword: string;
+            /**
+             * Language
+             * @description Optional language hint
+             */
+            language?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Priority
+             * @default 100
+             */
+            priority: number;
         };
         /** ReactionRuleKeywordOut */
         ReactionRuleKeywordOut: {
@@ -3774,6 +4025,33 @@ export interface components {
             /** Actions */
             actions?: components["schemas"]["ReactionRuleActionOut"][];
         };
+        /** ReactionRulePublicationCommand */
+        ReactionRulePublicationCommand: {
+            /** Post Publication Id */
+            post_publication_id: number;
+            /**
+             * Priority
+             * @default 100
+             */
+            priority: number;
+            /**
+             * Active From
+             * Format: date-time
+             */
+            active_from?: string | null;
+            /**
+             * Active Until
+             * Format: date-time
+             */
+            active_until?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /** Rule Id */
+            rule_id: number;
+        };
         /** ReactionRulePublicationLink */
         ReactionRulePublicationLink: {
             /** Id */
@@ -3802,6 +4080,22 @@ export interface components {
          * @enum {string}
          */
         ReactionRuleStatus: "active" | "inactive" | "archived";
+        /** ReactionRuleUpdateCommand */
+        ReactionRuleUpdateCommand: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            status?: components["schemas"]["ReactionRuleStatus"] | null;
+            /** Priority */
+            priority?: number | null;
+            /** Keywords */
+            keywords?: components["schemas"]["ReactionRuleKeywordConfig"][] | null;
+            /** Actions */
+            actions?: components["schemas"]["ReactionRuleActionConfig"][] | null;
+            /** Rule Id */
+            rule_id: number;
+        };
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**
@@ -5662,6 +5956,73 @@ export interface operations {
             };
         };
     };
+    bff_reactive_list_templates_api_bff_reactive_message_templates_get: {
+        parameters: {
+            query?: {
+                template_type?: components["schemas"]["ReactionActionType"] | null;
+                persona_account_id?: number | null;
+                tag_key?: string | null;
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionMessageTemplateListResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_reactive_read_template_api_bff_reactive_message_templates__template_id__get: {
+        parameters: {
+            query?: {
+                include_inactive?: boolean;
+            };
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionMessageTemplateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     bff_schedule_list_schedules_api_bff_schedules_get: {
         parameters: {
             query?: {
@@ -7192,6 +7553,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InsightOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_create_rule_api_orchestrator_reactive_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionRuleCreateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_delete_rule_api_orchestrator_reactive_rules__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_update_rule_api_orchestrator_reactive_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionRuleUpdateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_link_rule_publication_api_orchestrator_reactive_rules__rule_id__publications_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionRulePublicationCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionRulePublicationLink"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_unlink_rule_publication_api_orchestrator_reactive_publications__link_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationResult"];
                 };
             };
             /** @description Validation Error */
