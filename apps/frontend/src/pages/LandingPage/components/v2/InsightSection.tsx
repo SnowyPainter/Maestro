@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { BarChart2 } from 'lucide-react';
+import abtestImage from '@/assets/abtest.png';
 
 export function InsightSection() {
   const { t } = useTranslation();
@@ -41,10 +41,19 @@ export function InsightSection() {
         </motion.p>
 
         <motion.div variants={itemVariants} className="relative w-full max-w-3xl mx-auto">
-          {/* Placeholder for Playbook Dashboard Screenshot */}
-          <div className="bg-gray-800 h-64 rounded-lg flex items-center justify-center text-gray-400 text-sm border border-border/40">
-            <BarChart2 className="h-16 w-16 mb-2" />
-            <p>{t('landing_v2.insight.image_caption')}</p>
+          {/* Playbook Dashboard Screenshot with Engagement Results */}
+          <div className="relative rounded-lg overflow-hidden border border-border/40 bg-card">
+            <img
+              src={abtestImage}
+              alt="Playbook Dashboard showing engagement metrics"
+              className="w-full h-auto"
+            />
+            {/* Engagement overlay */}
+            <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2 text-white">
+              <div className="text-sm font-medium">
+                Engagement ↑104% with warm tone
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>

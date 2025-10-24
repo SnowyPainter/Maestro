@@ -137,7 +137,7 @@ export function ChatSidebar({
             </div>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={filteredTools.map(t => t.id)} strategy={rectSortingStrategy}>
-                    <div className="grid grid-cols-2 gap-2 max-h-120 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2 max-h-120 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40">
                         {filteredTools.map(tool => (
                             <SortableToolCard key={tool.id} tool={tool} onClick={getClickHandler(tool.id)} />
                         ))}
