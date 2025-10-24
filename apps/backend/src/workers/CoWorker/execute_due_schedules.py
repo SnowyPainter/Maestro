@@ -216,7 +216,7 @@ async def _execute_due_schedules(owner_user_id: Optional[int], task) -> dict[str
                     logger.exception("Failed to mark schedule %s as failed", schedule.id)
         rescheduled = False
         if owner_user_id is not None:
-            rescheduled = _reschedule_self(task, owner_user_id)
+            rescheduled = await _reschedule_self(task, owner_user_id)
         return {"processed": processed, "rescheduled": rescheduled}
 
 
@@ -365,17 +365,7 @@ def ensure_coworker_polls() -> dict[str, int]:
     return {"inspected": len(leases), "started": restarted, "cleared": cleared}
 
 
-def _reschedule_self(task, owner_user_id: int) -> bool:
-    """Reschedule the task synchronously."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(_async_reschedule_self(task, owner_user_id))
-    finally:
-        loop.close()
-
-
-async def _async_reschedule_self(task, owner_user_id: int) -> bool:
+async def _reschedule_self(task, owner_user_id: int) -> bool:
     lease = await _fetch_lease(owner_user_id)
     if lease is None or not lease.active:
         await _store_task_id(owner_user_id, None)

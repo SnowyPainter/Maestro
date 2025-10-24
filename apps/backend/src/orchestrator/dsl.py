@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 from apps.backend.src.orchestrator.registry import FLOWS, FlowDefinition
+
+
+logger = logging.getLogger(__name__)
+
+LEGACY_FLOW_ALIASES: Dict[str, str] = {
+    # Historical flow key retained for backward compatibility with older schedules.
+    "abtests.complete": "abtests.complete_abtest",
+}
 
 
 @dataclass
@@ -52,6 +61,10 @@ def parse_dag_spec(spec: Dict[str, Any]) -> DagSpec:
             raise ValueError("dag.nodes entries must be objects")
         node_id = item.get("id")
         flow_key = item.get("flow") or item.get("op")
+        if isinstance(flow_key, str) and flow_key in LEGACY_FLOW_ALIASES:
+            aliased_key = LEGACY_FLOW_ALIASES[flow_key]
+            logger.debug("Using legacy flow alias '%s' -> '%s'", flow_key, aliased_key)
+            flow_key = aliased_key
         if not node_id or not isinstance(node_id, str):
             raise ValueError("dag.nodes entries must include string 'id'")
         if node_id in nodes:
