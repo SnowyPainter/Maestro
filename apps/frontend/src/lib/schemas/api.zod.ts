@@ -1186,8 +1186,8 @@ export const bffReactiveListRulesApiBffReactiveRulesGetResponse = zod.object({
 
 
 /**
- * Retrieve a single reaction rule with keywords and actions
- * @summary Read Reaction Rule
+ * Get reaction rule by id
+ * @summary Get Reaction Rule
  */
 export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetParams = zod.object({
   "rule_id": zod.number()

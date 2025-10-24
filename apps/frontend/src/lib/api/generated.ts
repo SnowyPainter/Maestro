@@ -5668,8 +5668,8 @@ export function useBffReactiveListRulesApiBffReactiveRulesGet<TData = Awaited<Re
 
 
 /**
- * Retrieve a single reaction rule with keywords and actions
- * @summary Read Reaction Rule
+ * Get reaction rule by id
+ * @summary Get Reaction Rule
  */
 export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGet = (
     ruleId: number,
@@ -5736,7 +5736,7 @@ export function useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet<TData = Await
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Read Reaction Rule
+ * @summary Get Reaction Rule
  */
 
 export function useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError = HTTPValidationError>(

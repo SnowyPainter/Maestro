@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet } from "@/lib/api/generated";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +16,10 @@ import {
   RefreshCw,
   ArrowLeft,
   Tag,
-  Calendar
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink
 } from "lucide-react";
 import { ReactionActionStatus, ReactionActionType } from "@/lib/api/generated";
 
@@ -26,6 +30,19 @@ interface ActionLogDetailCardProps {
 
 export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCardProps) {
   const { data: actionLog, isLoading, error, refetch } = useBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet(actionLogId);
+  const [isPayloadExpanded, setIsPayloadExpanded] = useState(true);
+  const { registerEmission } = useContextRegistryStore();
+
+  // Register rule_id to context registry when actionLog is loaded
+  useEffect(() => {
+    if (actionLog?.reaction_rule_id) {
+      registerEmission('rule_id', {
+        value: actionLog.reaction_rule_id.toString(),
+        label: `Rule #${actionLog.reaction_rule_id}`,
+        icon: 'BookTemplate',
+      });
+    }
+  }, [actionLog?.reaction_rule_id, registerEmission]);
 
   const getStatusBadge = (status: ReactionActionStatus) => {
     switch (status) {
@@ -77,6 +94,94 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
       minute: '2-digit',
       second: '2-digit',
     });
+  };
+
+  const isUrl = (str: string) => {
+    try {
+      new URL(str);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const renderJsonValue = (value: any, key?: string): React.ReactNode => {
+    if (value === null) {
+      return <span className="text-gray-500">null</span>;
+    }
+    if (typeof value === 'boolean') {
+      return <span className="text-purple-600">{value.toString()}</span>;
+    }
+    if (typeof value === 'number') {
+      return <span className="text-blue-600">{value}</span>;
+    }
+    if (typeof value === 'string') {
+      if (isUrl(value)) {
+        return (
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"
+          >
+            {value}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        );
+      }
+      return <span className="text-green-600">"{value}"</span>;
+    }
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        return <span className="text-gray-500">[]</span>;
+      }
+      return (
+        <div className="ml-4">
+          <span className="text-gray-700">[</span>
+          <div className="ml-4 space-y-1">
+            {value.map((item, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <span className="text-gray-500">{index}:</span>
+                {renderJsonValue(item)}
+                {index < value.length - 1 && <span className="text-gray-700">,</span>}
+              </div>
+            ))}
+          </div>
+          <span className="text-gray-700">]</span>
+        </div>
+      );
+    }
+    if (typeof value === 'object') {
+      const entries = Object.entries(value);
+      if (entries.length === 0) {
+        return <span className="text-gray-500">{"{}"}</span>;
+      }
+      return (
+        <div className="ml-4">
+          <span className="text-gray-700">{"{"}</span>
+          <div className="ml-4 space-y-1">
+            {entries.map(([k, v], index) => (
+              <div key={k} className="flex items-start gap-2">
+                <span className="text-orange-600">"{k}"</span>
+                <span className="text-gray-700">:</span>
+                {renderJsonValue(v, k)}
+                {index < entries.length - 1 && <span className="text-gray-700">,</span>}
+              </div>
+            ))}
+          </div>
+          <span className="text-gray-700">{"}"}</span>
+        </div>
+      );
+    }
+    return <span className="text-gray-700">{String(value)}</span>;
+  };
+
+  const renderCompactJson = (obj: any) => {
+    return (
+      <div className="font-mono text-sm">
+        {renderJsonValue(obj)}
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -187,12 +292,23 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
         {/* Payload Data */}
         {actionLog.payload && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Action Payload</h4>
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <pre className="text-xs text-gray-700 whitespace-pre-wrap overflow-x-auto">
-                {JSON.stringify(actionLog.payload, null, 2)}
-              </pre>
-            </div>
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-0 h-auto hover:bg-gray-50 mb-3"
+              onClick={() => setIsPayloadExpanded(!isPayloadExpanded)}
+            >
+              <h4 className="font-medium text-gray-900 text-left">Action Payload</h4>
+              {isPayloadExpanded ? (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              )}
+            </Button>
+            {isPayloadExpanded && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-96 overflow-y-auto">
+                {renderCompactJson(actionLog.payload)}
+              </div>
+            )}
           </div>
         )}
 

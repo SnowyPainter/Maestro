@@ -692,8 +692,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Read Reaction Rule
-         * @description Retrieve a single reaction rule with keywords and actions
+         * Get Reaction Rule
+         * @description Get reaction rule by id
          */
         get: operations["bff_reactive_read_rule_api_bff_reactive_rules__rule_id__get"];
         put?: never;

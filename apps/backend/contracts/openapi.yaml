@@ -1292,8 +1292,8 @@ paths:
       - reactive
       - rules
       - detail
-      summary: Read Reaction Rule
-      description: Retrieve a single reaction rule with keywords and actions
+      summary: Get Reaction Rule
+      description: Get reaction rule by id
       operationId: bff_reactive_read_rule_api_bff_reactive_rules__rule_id__get
       parameters:
       - name: rule_id

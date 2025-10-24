@@ -238,8 +238,8 @@ def _flow_bff_list_reaction_rules(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.reactive.read_rule",
-    title="Read Reaction Rule",
-    description="Retrieve a single reaction rule with keywords and actions",
+    title="Get Reaction Rule",
+    description="Get reaction rule by id",
     input_model=ReactionRuleReadPayload,
     output_model=ReactionRuleOut,
     method="get",
