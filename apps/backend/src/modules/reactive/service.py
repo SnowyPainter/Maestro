@@ -555,6 +555,51 @@ async def record_action_log(
     return _serialize_action_log(log)
 
 
+async def ensure_action_log(
+    db: AsyncSession,
+    *,
+    insight_comment_id: int,
+    reaction_rule_id: Optional[int],
+    tag_key: str,
+    action_type: ReactionActionType,
+    status: ReactionActionStatus,
+    payload: Optional[dict] = None,
+    error: Optional[str] = None,
+) -> Optional[int]:
+    stmt = (
+        select(ReactionActionLog)
+        .where(
+            ReactionActionLog.insight_comment_id == insight_comment_id,
+            ReactionActionLog.tag_key == tag_key,
+            ReactionActionLog.action_type == action_type,
+        )
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
+    if existing:
+        if existing.status in (ReactionActionStatus.SUCCESS, ReactionActionStatus.PENDING):
+            return None
+        existing.status = status
+        existing.payload = payload
+        existing.error = error
+        existing.executed_at = None
+        await db.flush()
+        return existing.id
+
+    log = await record_action_log(
+        db,
+        insight_comment_id=insight_comment_id,
+        reaction_rule_id=reaction_rule_id,
+        tag_key=tag_key,
+        action_type=action_type,
+        status=status,
+        payload=payload,
+        error=error,
+    )
+    return log.id
+
+
 async def mark_action_log_status(
     db: AsyncSession,
     *,

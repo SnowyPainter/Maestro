@@ -404,7 +404,7 @@ class ThreadsCommentCreateCapability(ThreadsCapabilityBase, CommentCreateCapabil
                 warnings=[],
             )
 
-        payload: Dict[str, Any] = {"text": body, "reply_to_id": parent_id}
+        payload: Dict[str, Any] = {"text": body, "reply_to_id": parent_id, "media_type": "TEXT"}
         if isinstance(options, dict):
             extra = extract_comment_options(options)
             if extra:
@@ -443,6 +443,7 @@ class ThreadsCommentCreateCapability(ThreadsCapabilityBase, CommentCreateCapabil
 
         comment_id = resolve_creation_id(published) or creation_id
         external_id: Optional[str] = comment_id
+        permalink: Optional[str] = None
         try:
             details = await client.fetch_thread(comment_id)
         except ThreadsAPIError as exc:

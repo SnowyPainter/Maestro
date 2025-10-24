@@ -15,14 +15,14 @@ from apps.backend.src.modules.common.enums import (
     ReactionActionStatus,
     ReactionActionType,
 )
+from apps.backend.src.modules.reactive.schemas import ReactionEvaluationAction
 from apps.backend.src.modules.insights.models import InsightComment
 from apps.backend.src.modules.reactive.models import ReactionMessageTemplate
 from apps.backend.src.modules.reactive.service import (
-    action_log_exists,
     create_alert,
+    ensure_action_log,
     evaluate_comment,
     mark_action_log_status,
-    record_action_log,
 )
 from apps.backend.src.workers.Adapter.tasks import (
     reactive_reply_to_comment,
@@ -38,6 +38,10 @@ async def _load_recent_comments(
     cutoff: datetime,
     limit: int,
 ) -> List[InsightComment]:
+
+    logger.info(f"Loading recent comments from {cutoff} to {datetime.now(timezone.utc)}")
+    logger.info(f"Limit: {limit}")
+
     stmt = (
         select(InsightComment)
         .where(
@@ -83,15 +87,7 @@ async def _ensure_log(
     payload: Optional[Dict[str, Any]] = None,
     error: Optional[str] = None,
 ) -> Optional[int]:
-    exists = await action_log_exists(
-        session,
-        insight_comment_id=insight_comment_id,
-        tag_key=tag_key,
-        action_type=action_type,
-    )
-    if exists:
-        return None
-    log = await record_action_log(
+    return await ensure_action_log(
         session,
         insight_comment_id=insight_comment_id,
         reaction_rule_id=rule_id,
@@ -101,20 +97,20 @@ async def _ensure_log(
         payload=payload,
         error=error,
     )
-    return log.id
 
 
 async def _process_action(
     session,
     comment: InsightComment,
     *,
-    action,
+    action: ReactionEvaluationAction,
     dispatch_queue: List[Tuple[str, Dict[str, Any]]],
 ) -> Tuple[int, int]:
     dispatch_count = 0
     alert_count = 0
     # Reply automation
     if action.reply_template_id and comment.comment_external_id and comment.account_persona_id:
+        logger.info(f"Processing reply action for comment {comment.id}")
         template = await _load_template(
             session,
             action.reply_template_id,
@@ -136,7 +132,7 @@ async def _process_action(
                 "template_id": template.id,
                 "template_title": template.title,
                 "mode": action.llm_mode.value,
-                "metadata": action.metadata_json,
+                "metadata": action.metadata,
             }
             log_id = await _ensure_log(
                 session,
@@ -157,7 +153,7 @@ async def _process_action(
                             "reaction_rule_id": action.reaction_rule_id,
                             "tag_key": action.tag_key,
                             "message": template.body,
-                            "metadata": action.metadata_json or {},
+                            "metadata": action.metadata or {},
                         },
                     )
                 )
@@ -186,7 +182,7 @@ async def _process_action(
                 "template_id": template.id,
                 "template_title": template.title,
                 "mode": action.llm_mode.value,
-                "metadata": action.metadata_json,
+                "metadata": action.metadata,
             }
             log_id = await _ensure_log(
                 session,
@@ -209,7 +205,7 @@ async def _process_action(
                             "insight_comment_id": comment.id,
                             "recipient_external_id": comment.author_id,
                             "message": template.body,
-                            "metadata": action.metadata_json or {},
+                            "metadata": action.metadata or {},
                         },
                     )
                 )
@@ -224,7 +220,7 @@ async def _process_action(
             tag_key=action.tag_key,
             action_type=ReactionActionType.ALERT,
             status=ReactionActionStatus.PENDING,
-            payload={"metadata": action.metadata_json},
+            payload={"metadata": action.metadata},
         )
         if log_id is not None:
             alert = await create_alert(
@@ -234,7 +230,7 @@ async def _process_action(
                 tag_key=action.tag_key,
                 severity=action.alert_severity,
                 assignee_user_id=action.alert_assignee_user_id,
-                metadata=action.metadata_json,
+                metadata=action.metadata,
             )
             await mark_action_log_status(
                 session,
@@ -251,7 +247,7 @@ async def _process_comment(session, comment: InsightComment) -> Dict[str, int]:
     stats = {"actions": 0, "dispatches": 0}
     if not comment.owner_user_id:
         return stats
-
+    logger.info(f"Processing comment {comment.id} with owner_user_id: {comment.owner_user_id}")
     evaluation = await evaluate_comment(
         session,
         comment=comment,
@@ -259,7 +255,7 @@ async def _process_comment(session, comment: InsightComment) -> Dict[str, int]:
     )
     if not evaluation.actions:
         return stats
-
+    logger.info(f"Evaluation actions: {len(evaluation.actions)}")
     dispatch_queue: List[Tuple[str, Dict[str, Any]]] = []
     total_dispatches = 0
     total_alerts = 0
@@ -272,9 +268,10 @@ async def _process_comment(session, comment: InsightComment) -> Dict[str, int]:
         )
         total_dispatches += dispatched
         total_alerts += alerts
-
+    logger.info(f"Total dispatches: {total_dispatches}, Total alerts: {total_alerts}")
     if dispatch_queue or total_alerts:
         await session.commit()
+        logger.info(f"Committed session for comment {comment.id}")
         stats["actions"] = total_dispatches + total_alerts
         for action_type, payload in dispatch_queue:
             if action_type == "reply":
@@ -288,13 +285,15 @@ async def _process_comment(session, comment: InsightComment) -> Dict[str, int]:
 
 
 async def _ingest(window_minutes: int, limit: int) -> Dict[str, int]:
-    cutoff = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=window_minutes + 60*24*3) # 임시
     summary = {"comments": 0, "dispatches": 0, "actions": 0}
     async with SessionLocal() as session:
         comments = await _load_recent_comments(session, cutoff=cutoff, limit=limit)
+        logger.info(f"Found {len(comments)} comments to process")
         for comment in comments:
             try:
                 stats = await _process_comment(session, comment)
+                logger.info(f"Processed comment {comment.id} with stats: {stats}")
                 summary["comments"] += 1
                 summary["actions"] += stats["actions"]
                 summary["dispatches"] += stats["dispatches"]
