@@ -1471,8 +1471,8 @@ paths:
       - reactive
       - templates
       - detail
-      summary: Read Reaction Message Template
-      description: Retrieve a single reaction message template by id
+      summary: Get Reaction Template
+      description: Get reaction template by id
       operationId: bff_reactive_read_template_api_bff_reactive_message_templates__template_id__get
       parameters:
       - name: template_id

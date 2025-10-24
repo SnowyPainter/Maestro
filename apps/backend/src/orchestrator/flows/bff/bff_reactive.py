@@ -174,7 +174,7 @@ async def op_list_reaction_templates(
 
 @operator(
     key="bff.reactive.read_template",
-    title="Read reactive message template",
+    title="Get reactive message template",
     side_effect="read",
 )
 async def op_read_reaction_template(
@@ -271,8 +271,8 @@ def _flow_bff_list_reaction_templates(builder: FlowBuilder):
 
 @FLOWS.flow(
     key="bff.reactive.read_template",
-    title="Read Reaction Message Template",
-    description="Retrieve a single reaction message template by id",
+    title="Get Reaction Template",
+    description="Get reaction template by id",
     input_model=ReactionMessageTemplateReadPayload,
     output_model=ReactionMessageTemplateOut,
     method="get",

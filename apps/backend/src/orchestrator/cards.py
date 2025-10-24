@@ -42,6 +42,9 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "ReactionRuleOut": "reactive.rule.detail",
     "ReactionRuleLinksResult": "reactive.rule.publications",
     "ReactionActionLogListResult": "reactive.activity.log",
+
+    "ReactionMessageTemplateOut": "reactive.template.detail",
+    
     "OperationResult": "info",
 }
 

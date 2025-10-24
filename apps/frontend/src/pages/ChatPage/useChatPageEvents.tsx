@@ -7,6 +7,7 @@ import {
   DraftVariantRender,
   CoworkerLeaseState,
   ChatCard,
+  ReactionMessageTemplateOut,
 } from "@/lib/api/generated";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
@@ -683,6 +684,7 @@ export function useChatPageEvents() {
     removeMessagesByComponent(RuleToolCard);
     addCardMessage(() => <TemplateManager />);
   }, [addCardMessage, removeMessagesByComponent]);
+
 
   const handleReactiveSelectRule = useCallback(() => {
     removeMessagesByComponent(RuleToolCard);

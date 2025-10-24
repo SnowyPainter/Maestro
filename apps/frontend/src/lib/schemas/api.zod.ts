@@ -1310,8 +1310,8 @@ export const bffReactiveListTemplatesApiBffReactiveMessageTemplatesGetResponse =
 
 
 /**
- * Retrieve a single reaction message template by id
- * @summary Read Reaction Message Template
+ * Get reaction template by id
+ * @summary Get Reaction Template
  */
 export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGetParams = zod.object({
   "template_id": zod.number()

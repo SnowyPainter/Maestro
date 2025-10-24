@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Filter, BookTemplate } from "lucide-react";
 import { TemplateCard } from "./TemplateCard";
 import { ReactionMessageTemplateOut, ReactionActionType } from "@/lib/api/generated";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 interface TemplateListProps {
   templates: ReactionMessageTemplateOut[];
@@ -29,6 +30,29 @@ export function TemplateList({
   onEdit,
   onDelete,
 }: TemplateListProps) {
+  const { registerEmission } = useContextRegistryStore();
+
+  // Register templates in context registry
+  React.useEffect(() => {
+    templates.forEach(template => {
+      const typePrefix = template.template_type === 'dm' ? 'DM' :
+                        template.template_type === 'reply' ? 'Reply' : '';
+      const baseLabel = template.title || `Template ${template.id}`;
+      const label = typePrefix ? `${typePrefix} ${baseLabel}` : baseLabel;
+
+      registerEmission('template_id', {
+        value: template.id.toString(),
+        label: label,
+        icon: 'BookTemplate',
+        meta: {
+          template_id: template.id,
+          template_type: template.template_type,
+          tag_key: template.tag_key
+        }
+      });
+    });
+  }, [templates, registerEmission]);
+
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          template.body.toLowerCase().includes(searchTerm.toLowerCase()) ||

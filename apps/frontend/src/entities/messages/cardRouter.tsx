@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatCard, TrendsListResponse, DraftVariantRender, InsightCommentList } from "@/lib/api/generated";
+import { ChatCard, TrendsListResponse, DraftVariantRender, InsightCommentList, ReactionMessageTemplateOut } from "@/lib/api/generated";
 import { TableCard } from "./components/Table";
 import { ChartCard } from "./components/ChartCard";
 import { EditorCard } from "./components/EditorCard";
@@ -29,6 +29,7 @@ import CommentList from "@/entities/comments/components/CommentList";
 import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
 import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
 import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
+import { TemplateDetailCard } from "@/entities/reactive/components/template/TemplateDetailCard";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -260,6 +261,13 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         );
       }
       break;
+
+    case 'reactive.template.detail':
+      return (
+        <TemplateDetailCard
+          template={data as unknown as ReactionMessageTemplateOut}
+        />
+      );
 
     case 'reactive.activity.log':
       return <ActionLogCard />;

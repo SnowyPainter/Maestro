@@ -46,6 +46,9 @@ export const SLOT_ICONS: Record<string, string> = {
   persona_id: "User",
   persona_account_id: "User",
 
+  // Reactive
+  template_id: "BookTemplate",
+
   // Location
   country: "MapPin",
 

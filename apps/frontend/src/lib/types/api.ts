@@ -772,8 +772,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Read Reaction Message Template
-         * @description Retrieve a single reaction message template by id
+         * Get Reaction Template
+         * @description Get reaction template by id
          */
         get: operations["bff_reactive_read_template_api_bff_reactive_message_templates__template_id__get"];
         put?: never;

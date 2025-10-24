@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { ReactionRuleStatus, ReactionActionType } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
+import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 interface RuleDetailCardProps {
   ruleId: number;
@@ -34,12 +35,37 @@ export function RuleDetailCard({
   onEditRule,
 }: RuleDetailCardProps) {
   const { personaAccountId } = usePersonaContextStore();
+  const { registerEmission } = useContextRegistryStore();
 
   const { data: rule, isLoading: ruleLoading, error: ruleError } = useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet(ruleId);
   const { data: links, isLoading: linksLoading } = useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet(ruleId);
 
   // Fetch all publications to get details for linked ones
   const publicationsQuery = useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost();
+
+  // Register template IDs in context registry
+  React.useEffect(() => {
+    if (rule?.actions) {
+      rule.actions.forEach(action => {
+        if (action.dm_template_id) {
+          registerEmission('template_id', {
+            value: action.dm_template_id.toString(),
+            label: `DM ${action.dm_template_id}`,
+            icon: 'BookTemplate',
+            meta: { template_id: action.dm_template_id, template_type: 'dm', tag_key: action.tag_key }
+          });
+        }
+        if (action.reply_template_id) {
+          registerEmission('template_id', {
+            value: action.reply_template_id.toString(),
+            label: `Reply ${action.reply_template_id}`,
+            icon: 'BookTemplate',
+            meta: { template_id: action.reply_template_id, template_type: 'reply', tag_key: action.tag_key }
+          });
+        }
+      });
+    }
+  }, [rule, registerEmission]);
 
   React.useEffect(() => {
     if (personaAccountId && links && links.length > 0) {

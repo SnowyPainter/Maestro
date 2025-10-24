@@ -6026,8 +6026,8 @@ export function useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet<TDa
 
 
 /**
- * Retrieve a single reaction message template by id
- * @summary Read Reaction Message Template
+ * Get reaction template by id
+ * @summary Get Reaction Template
  */
 export const bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet = (
     templateId: number,
@@ -6101,7 +6101,7 @@ export function useBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplate
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Read Reaction Message Template
+ * @summary Get Reaction Template
  */
 
 export function useBffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadTemplateApiBffReactiveMessageTemplatesTemplateIdGet>>, TError = HTTPValidationError>(
