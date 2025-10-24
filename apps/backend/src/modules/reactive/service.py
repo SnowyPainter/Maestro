@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timezone
 from typing import Iterable, Optional, Sequence
 
-from sqlalchemy import Select, select, func
+from sqlalchemy import Select, select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -624,6 +624,14 @@ async def evaluate_comment(
             ReactionRulePublication.post_publication_id == comment.post_publication_id,
             ReactionRulePublication.is_active.is_(True),
             ReactionRulePublication.priority >= 0,
+            or_(
+                ReactionRulePublication.active_from.is_(None),
+                ReactionRulePublication.active_from <= when,
+            ),
+            or_(
+                ReactionRulePublication.active_until.is_(None),
+                ReactionRulePublication.active_until >= when,
+            ),
         )
         .options(
             selectinload(ReactionRule.keywords),

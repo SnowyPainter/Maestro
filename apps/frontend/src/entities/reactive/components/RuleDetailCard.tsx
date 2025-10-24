@@ -1,5 +1,5 @@
 import React from "react";
-import { useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet, useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet } from "@/lib/api/generated";
+import { useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet, useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet, useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import {
   Edit
 } from "lucide-react";
 import { ReactionRuleStatus, ReactionActionType } from "@/lib/api/generated";
+import { usePersonaContextStore } from "@/store/persona-context";
 
 interface RuleDetailCardProps {
   ruleId: number;
@@ -30,8 +31,25 @@ export function RuleDetailCard({
   onRequestLinker,
   onEditRule,
 }: RuleDetailCardProps) {
+  const { personaAccountId } = usePersonaContextStore();
+
   const { data: rule, isLoading: ruleLoading, error: ruleError } = useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet(ruleId);
   const { data: links, isLoading: linksLoading } = useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet(ruleId);
+
+  // Fetch all publications to get details for linked ones
+  const publicationsQuery = useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost();
+
+  React.useEffect(() => {
+    if (personaAccountId && links && links.length > 0) {
+      publicationsQuery.mutate({
+        data: {
+          account_persona_id: personaAccountId,
+        },
+      });
+    }
+  }, [personaAccountId, links]);
+
+  const publications = publicationsQuery.data || [];
 
   if (ruleLoading) {
     return (
@@ -247,43 +265,56 @@ export function RuleDetailCard({
               Link Publication
             </Button>
           </div>
-          {linksLoading ? (
+          {linksLoading || publicationsQuery.isPending ? (
             <Skeleton className="h-16 w-full" />
           ) : links && links.length > 0 ? (
             <div className="space-y-2">
-              {links.map((link) => (
-                <div
-                  key={link.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">
-                      Publication ID: {link.post_publication_id}
-                    </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                      <span>Priority: {link.priority}</span>
-                      {link.active_from && (
-                        <>
-                          <span>•</span>
-                          <Calendar className="h-3 w-3" />
-                          <span>From {new Date(link.active_from).toLocaleDateString()}</span>
-                        </>
+              {links.map((link) => {
+                const publication = publications.find(pub => pub.id === link.post_publication_id);
+                return (
+                  <div
+                    key={link.id}
+                    className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">
+                        {publication ? publication.variant_content?.substring(0, 70) + "..." || `Publication ${publication.id}` : `Publication ID: ${link.post_publication_id}`}
+                      </div>
+                      {publication && (
+                        <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {publication.platform}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {publication.status}
+                          </Badge>
+                        </div>
                       )}
-                      {link.active_until && (
-                        <>
-                          <span>•</span>
-                          <span>To {new Date(link.active_until).toLocaleDateString()}</span>
-                        </>
-                      )}
-                      {link.is_active ? (
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3 w-3 text-red-500" />
-                      )}
+                      <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                        <span>Priority: {link.priority}</span>
+                        {link.active_from && (
+                          <>
+                            <span>•</span>
+                            <Calendar className="h-3 w-3" />
+                            <span>From {new Date(link.active_from).toLocaleDateString()}</span>
+                          </>
+                        )}
+                        {link.active_until && (
+                          <>
+                            <span>•</span>
+                            <span>To {new Date(link.active_until).toLocaleDateString()}</span>
+                          </>
+                        )}
+                        {link.is_active ? (
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <XCircle className="h-3 w-3 text-red-500" />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-6 text-muted-foreground">
