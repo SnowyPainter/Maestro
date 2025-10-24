@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Plus, Hash, Settings, AlertTriangle, MessageSquare, ChevronLeft, ChevronRight, Info, Tag, Zap } from "lucide-react";
-import { useReactiveCreateRuleApiOrchestratorReactiveRulesPost, useReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch, useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet, ReactionRuleCreateCommand, ReactionRuleUpdateCommand, ReactionRuleKeywordConfig, ReactionRuleActionConfig } from "@/lib/api/generated";
+import { useReactiveCreateRuleApiOrchestratorReactiveRulesPost, useReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch, useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet, useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet, ReactionRuleCreateCommand, ReactionRuleUpdateCommand, ReactionRuleKeywordConfig, ReactionRuleActionConfig } from "@/lib/api/generated";
 import { ReactionRuleStatus, ReactionMatchType, ReactionActionType, ReactionLLMMode } from "@/lib/api/generated";
 import { BasicInfoStep } from "./steps/BasicInfoStep";
 import { KeywordTagMappingStep } from "./steps/KeywordTagMappingStep";
@@ -44,6 +44,18 @@ export function RuleComposeDrawer({
   const createMutation = useReactiveCreateRuleApiOrchestratorReactiveRulesPost();
   const updateMutation = useReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch();
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  // Fetch rule data for edit mode
+  const { data: ruleData, isLoading: ruleDataLoading } = useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet(
+    ruleId || 0,
+    {
+      query: {
+        enabled: isEdit && !!ruleId,
+      },
+    }
+  );
+
+  const isLoading = ruleDataLoading;
 
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
@@ -85,6 +97,7 @@ export function RuleComposeDrawer({
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<RuleFormData>({
     defaultValues: {
@@ -114,6 +127,52 @@ export function RuleComposeDrawer({
     },
   });
 
+  // Reset form when ruleData or initialData changes
+  React.useEffect(() => {
+    const dataToUse = isEdit ? (ruleData ? {
+      name: ruleData.name,
+      description: ruleData.description,
+      status: ruleData.status,
+      priority: ruleData.priority,
+      keywords: ruleData.keywords || [],
+      actions: ruleData.actions || [],
+    } : null) : initialData;
+
+    if (dataToUse) {
+      reset({
+        name: dataToUse.name || "",
+        description: dataToUse.description || null,
+        status: dataToUse.status || ReactionRuleStatus.active,
+        priority: dataToUse.priority || 100,
+        keywords: dataToUse.keywords && dataToUse.keywords.length > 0 ? dataToUse.keywords : [{
+          tag_key: "",
+          match_type: ReactionMatchType.contains,
+          keyword: "",
+          language: null,
+          is_active: true,
+          priority: 100,
+        }],
+        actions: dataToUse.actions && dataToUse.actions.length > 0 ? dataToUse.actions.map(action => ({
+          ...action,
+          action_type: (action as any).action_type || (action.dm_template_id ? ReactionActionType.dm :
+                      action.reply_template_id ? ReactionActionType.reply :
+                      action.alert_enabled ? ReactionActionType.alert :
+                      ReactionActionType.reply)
+        })) : [{
+          tag_key: "",
+          dm_template_id: null,
+          reply_template_id: null,
+          action_type: ReactionActionType.reply,
+          alert_enabled: false,
+          alert_severity: null,
+          alert_assignee_user_id: null,
+          llm_mode: ReactionLLMMode.template_only,
+          metadata: {},
+        }],
+      });
+    }
+  }, [isEdit, ruleData, initialData, reset]);
+
   const {
     fields: keywordFields,
     append: appendKeyword,
@@ -134,11 +193,24 @@ export function RuleComposeDrawer({
 
   const onSubmit = async (data: RuleFormData) => {
     try {
-      // Remove action_type from actions before sending to API
-      const apiData = {
-        ...data,
-        actions: data.actions.map(({ action_type, ...action }) => action),
-      };
+      // Validate that all actions have unique tag_keys
+      const tagKeys = data.actions.map(action => action.tag_key).filter(Boolean);
+      const uniqueTagKeys = new Set(tagKeys);
+
+      if (tagKeys.length !== uniqueTagKeys.size) {
+        toast.error("Each action must have a unique tag key. Please ensure no duplicate tag keys exist.");
+        return;
+      }
+
+      // Check for empty tag keys
+      const emptyTagKeys = data.actions.filter(action => !action.tag_key?.trim());
+      if (emptyTagKeys.length > 0) {
+        toast.error("All actions must have a tag key. Please fill in all tag key fields.");
+        return;
+      }
+
+      // Actions are sent as-is since they can contain multiple action types
+      const apiData = data;
 
       if (isEdit && ruleId) {
         await updateMutation.mutateAsync({ ruleId, data: { ...apiData, rule_id: ruleId } });
@@ -165,6 +237,16 @@ export function RuleComposeDrawer({
   };
 
   const addAction = () => {
+    // Check if we already have an action with empty tag_key
+    const existingEmptyTagAction = actionFields.find(action =>
+      watch(`actions.${actionFields.indexOf(action)}.tag_key`) === ""
+    );
+
+    if (existingEmptyTagAction) {
+      toast.error("Please fill in the tag key for the existing action before adding a new one");
+      return;
+    }
+
     appendAction({
       tag_key: "",
       dm_template_id: null,
@@ -208,6 +290,9 @@ export function RuleComposeDrawer({
   };
 
   const canProceedToNext = () => {
+    // Don't allow proceeding if still loading data in edit mode
+    if (isEdit && isLoading) return false;
+
     switch (currentStep) {
       case 1:
         return watch("name")?.trim() !== "";
@@ -279,7 +364,16 @@ export function RuleComposeDrawer({
 
           {/* Step Content */}
           <div className="min-h-[400px]">
-            {renderStepContent()}
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-sm text-muted-foreground">Loading rule data...</p>
+                </div>
+              </div>
+            ) : (
+              renderStepContent()
+            )}
           </div>
 
           {/* Navigation */}
@@ -298,15 +392,15 @@ export function RuleComposeDrawer({
                 <button
                   type="button"
                   onClick={nextStep}
-                  disabled={!canProceedToNext()}
+                  disabled={!canProceedToNext() || isLoading}
                   className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 px-4 py-2 ${
-                    !canProceedToNext()
+                    !canProceedToNext() || isLoading
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-2" />
+                  {isLoading ? "Loading..." : "Next"}
+                  {!isLoading && <ChevronRight className="w-4 h-4 ml-2" />}
                 </button>
               ) : (
                 <Button type="submit" disabled={isPending}>

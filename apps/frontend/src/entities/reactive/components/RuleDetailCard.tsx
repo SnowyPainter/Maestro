@@ -15,7 +15,9 @@ import {
   XCircle,
   CheckCircle,
   Eye,
-  Edit
+  Edit,
+  Tag,
+  Zap
 } from "lucide-react";
 import { ReactionRuleStatus, ReactionActionType } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
@@ -96,28 +98,28 @@ export function RuleDetailCard({
     }
   };
 
-  const getActionType = (action: any) => {
-    if (action.dm_template_id) return "dm";
-    if (action.reply_template_id) return "reply";
-    return "alert";
+  const getActionTypes = (action: any) => {
+    const types = [];
+    if (action.dm_template_id) types.push("dm");
+    if (action.reply_template_id) types.push("reply");
+    if (action.alert_enabled) types.push("alert");
+    return types;
   };
 
-  const getActionTypeIcon = (action: any) => {
-    const actionType = getActionType(action);
+  const getActionTypeIcon = (actionType: string) => {
     switch (actionType) {
       case "dm":
-        return <MessageSquare className="h-4 w-4" />;
+        return <MessageSquare className="h-4 w-4 text-blue-500" />;
       case "reply":
-        return <MessageSquare className="h-4 w-4" />;
+        return <MessageSquare className="h-4 w-4 text-green-500" />;
       case "alert":
-        return <AlertTriangle className="h-4 w-4" />;
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
       default:
         return <Settings className="h-4 w-4" />;
     }
   };
 
-  const getActionTypeLabel = (action: any) => {
-    const actionType = getActionType(action);
+  const getActionTypeLabel = (actionType: string) => {
     switch (actionType) {
       case "dm":
         return "DM";
@@ -158,94 +160,124 @@ export function RuleDetailCard({
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* 키워드 섹션 */}
+        {/* Neural Network Visualization */}
         <div>
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Hash className="h-4 w-4" />
-            Keywords ({rule.keywords?.length || 0})
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Rule Logic Flow
           </h3>
           {rule.keywords && rule.keywords.length > 0 ? (
-            <div className="space-y-2">
-              {rule.keywords.map((keyword) => (
-                <div
-                  key={keyword.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{keyword.keyword}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                      <span>Tag: {keyword.tag_key}</span>
-                      <span>•</span>
-                      <span>{keyword.match_type}</span>
-                      {keyword.language && (
-                        <>
-                          <span>•</span>
-                          <span>{keyword.language}</span>
-                        </>
-                      )}
-                      {keyword.is_active ? (
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                      ) : (
-                        <XCircle className="h-3 w-3 text-red-500" />
-                      )}
-                    </div>
+            <div className="relative">
+              {/* Keywords -> Tags -> Actions Flow */}
+              <div className="grid grid-cols-3 gap-6">
+                {/* Keywords Column */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <Hash className="h-3 w-3" />
+                    Keywords ({rule.keywords.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {rule.keywords.map((keyword, index) => (
+                      <div
+                        key={keyword.id}
+                        className="relative p-2 bg-blue-50 border border-blue-200 rounded-md text-xs"
+                      >
+                        <div className="font-medium text-blue-900">{keyword.keyword}</div>
+                        <div className="text-blue-700 mt-1">
+                          {keyword.match_type} • {keyword.language || 'any'}
+                        </div>
+                        {/* Connection arrow to tags */}
+                        <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-0.5 bg-blue-300"></div>
+                        <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-0 h-0 border-l-4 border-l-blue-300 border-t-2 border-t-transparent border-b-2 border-b-transparent"></div>
+                      </div>
+                    ))}
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    Priority {keyword.priority}
-                  </Badge>
                 </div>
-              ))}
+
+                {/* Tags Column */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <Tag className="h-3 w-3" />
+                    Tags
+                  </h4>
+                  <div className="space-y-2">
+                    {Array.from(new Set((rule.keywords || []).map(k => k.tag_key).filter(Boolean))).map((tagKey) => {
+                      const keywordCount = (rule.keywords || []).filter(k => k.tag_key === tagKey).length;
+                      const actionCount = (rule.actions || []).filter(a => a.tag_key === tagKey).length;
+
+                      return (
+                        <div
+                          key={tagKey}
+                          className="relative p-3 bg-green-50 border border-green-200 rounded-md text-center"
+                        >
+                          <div className="font-medium text-green-900">{tagKey}</div>
+                          <div className="text-xs text-green-700 mt-1">
+                            {keywordCount} keywords → {actionCount} actions
+                          </div>
+                          {/* Connection arrow to actions */}
+                          <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-0.5 bg-green-300"></div>
+                          <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-0 h-0 border-l-4 border-l-green-300 border-t-2 border-t-transparent border-b-2 border-b-transparent"></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Actions Column */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <Zap className="h-3 w-3" />
+                    Actions ({rule.actions?.length || 0})
+                  </h4>
+                  <div className="space-y-2">
+                    {rule.actions && rule.actions.map((action) => {
+                      const actionTypes = getActionTypes(action);
+                      return (
+                        <div
+                          key={action.id}
+                          className="p-2 bg-orange-50 border border-orange-200 rounded-md text-xs"
+                        >
+                          <div className="flex items-center gap-1 mb-1">
+                            {actionTypes.map((type, idx) => (
+                              <React.Fragment key={type}>
+                                {idx > 0 && <span className="text-orange-400 mx-1">+</span>}
+                                {getActionTypeIcon(type)}
+                                <span className="font-medium text-orange-900">{getActionTypeLabel(type)}</span>
+                              </React.Fragment>
+                            ))}
+                          </div>
+                          <div className="text-orange-700">Tag: {action.tag_key}</div>
+                          {action.dm_template_id && (
+                            <div className="text-orange-600">DM Template: {action.dm_template_id}</div>
+                          )}
+                          {action.reply_template_id && (
+                            <div className="text-orange-600">Reply Template: {action.reply_template_id}</div>
+                          )}
+                          {action.alert_enabled && (
+                            <div className="text-orange-600">Alert: {action.alert_severity}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="text-sm text-gray-600">
+                  <strong>Flow:</strong> Keywords trigger tags, which execute corresponding actions automatically
+                </div>
+              </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No keywords configured.</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <Hash className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No keywords configured.</p>
+            </div>
           )}
         </div>
 
-        <Separator />
-
-        {/* 액션 섹션 */}
-        <div>
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Actions ({rule.actions?.length || 0})
-          </h3>
-          {rule.actions && rule.actions.length > 0 ? (
-            <div className="space-y-2">
-              {rule.actions.map((action) => (
-                <div
-                  key={action.id}
-                  className="p-3 border rounded-lg"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    {getActionTypeIcon(action)}
-                    <span className="font-medium text-sm">{getActionTypeLabel(action)}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {action.tag_key}
-                    </Badge>
-                    {action.alert_enabled && (
-                      <Badge variant="destructive" className="text-xs">
-                        Alert Enabled
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    {action.dm_template_id && (
-                      <div>DM Template ID: {action.dm_template_id}</div>
-                    )}
-                    {action.reply_template_id && (
-                      <div>Reply Template ID: {action.reply_template_id}</div>
-                    )}
-                    {action.alert_severity && (
-                      <div>Alert Severity: {action.alert_severity}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No actions configured.</p>
-          )}
-        </div>
 
         <Separator />
 

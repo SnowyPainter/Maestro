@@ -130,6 +130,16 @@ def _serialize_action_log(model: ReactionActionLog) -> ReactionActionLogOut:
     )
 
 
+def _dedupe_actions(
+    actions: Sequence[ReactionRuleActionConfig],
+) -> list[ReactionRuleActionConfig]:
+    """Ensure only one action per tag_key to satisfy unique DB constraint."""
+    unique_by_tag: dict[str, ReactionRuleActionConfig] = {}
+    for action in actions:
+        unique_by_tag[action.tag_key] = action
+    return list(unique_by_tag.values())
+
+
 async def list_reaction_rules(db: AsyncSession, *, owner_user_id: int) -> list[ReactionRuleOut]:
     stmt: Select[ReactionRule] = (
         select(ReactionRule)
@@ -313,7 +323,7 @@ async def create_reaction_rule(
     for keyword in payload.keywords:
         rule.keywords.append(_build_keyword(rule, keyword))
 
-    for action in payload.actions:
+    for action in _dedupe_actions(payload.actions):
         rule.actions.append(_build_action(rule, action))
 
     db.add(rule)
@@ -362,12 +372,14 @@ async def update_reaction_rule(
 
     if payload.keywords is not None:
         rule.keywords.clear()
+        await db.flush()
         for item in payload.keywords:
             rule.keywords.append(_build_keyword(rule, item))
 
     if payload.actions is not None:
         rule.actions.clear()
-        for item in payload.actions:
+        await db.flush()
+        for item in _dedupe_actions(payload.actions):
             rule.actions.append(_build_action(rule, item))
 
     await db.flush()
