@@ -136,7 +136,7 @@ async def _process_action(
                 "template_id": template.id,
                 "template_title": template.title,
                 "mode": action.llm_mode.value,
-                "metadata": action.metadata,
+                "metadata": action.metadata_json,
             }
             log_id = await _ensure_log(
                 session,
@@ -157,7 +157,7 @@ async def _process_action(
                             "reaction_rule_id": action.reaction_rule_id,
                             "tag_key": action.tag_key,
                             "message": template.body,
-                            "metadata": action.metadata or {},
+                            "metadata": action.metadata_json or {},
                         },
                     )
                 )
@@ -186,7 +186,7 @@ async def _process_action(
                 "template_id": template.id,
                 "template_title": template.title,
                 "mode": action.llm_mode.value,
-                "metadata": action.metadata,
+                "metadata": action.metadata_json,
             }
             log_id = await _ensure_log(
                 session,
@@ -209,7 +209,7 @@ async def _process_action(
                             "insight_comment_id": comment.id,
                             "recipient_external_id": comment.author_id,
                             "message": template.body,
-                            "metadata": action.metadata or {},
+                            "metadata": action.metadata_json or {},
                         },
                     )
                 )
@@ -224,7 +224,7 @@ async def _process_action(
             tag_key=action.tag_key,
             action_type=ReactionActionType.ALERT,
             status=ReactionActionStatus.PENDING,
-            payload={"metadata": action.metadata},
+            payload={"metadata": action.metadata_json},
         )
         if log_id is not None:
             alert = await create_alert(
@@ -234,7 +234,7 @@ async def _process_action(
                 tag_key=action.tag_key,
                 severity=action.alert_severity,
                 assignee_user_id=action.alert_assignee_user_id,
-                metadata=action.metadata,
+                metadata=action.metadata_json,
             )
             await mark_action_log_status(
                 session,

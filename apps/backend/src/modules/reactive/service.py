@@ -63,7 +63,7 @@ def _serialize_action(model: ReactionRuleAction) -> ReactionRuleActionOut:
         alert_severity=model.alert_severity,
         alert_assignee_user_id=model.alert_assignee_user_id,
         llm_mode=model.llm_mode,
-        metadata=model.metadata,
+        metadata=model.metadata_json,
     )
 
 
@@ -249,7 +249,7 @@ def _build_action(
         alert_severity=config.alert_severity,
         alert_assignee_user_id=config.alert_assignee_user_id,
         llm_mode=config.llm_mode,
-        metadata=config.metadata,
+        metadata_json=config.metadata,
     )
 
 
@@ -495,7 +495,7 @@ async def evaluate_comment(
                         alert_severity=action.alert_severity,
                         alert_assignee_user_id=action.alert_assignee_user_id,
                         llm_mode=action.llm_mode,
-                        metadata=action.metadata,
+                        metadata=action.metadata_json,
                     )
                 )
             elif tag_to_action.get(tag) is None:
@@ -552,7 +552,7 @@ async def create_alert(
         tag_key=tag_key,
         severity=severity,
         assignee_user_id=assignee_user_id,
-        metadata=metadata,
+        metadata_json=metadata,
         status=ReactionActionStatus.PENDING,
     )
     db.add(alert)

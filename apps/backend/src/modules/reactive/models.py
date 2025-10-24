@@ -19,6 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from apps.backend.src.core.db import Base
+
 from apps.backend.src.modules.common.enums import (
     ReactionActionStatus,
     ReactionActionType,
@@ -34,6 +35,7 @@ class ReactionRule(Base):
     __tablename__ = "reaction_rules"
     __table_args__ = (
         Index("ix_reaction_rules_owner_priority", "owner_user_id", "priority"),
+        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -91,6 +93,7 @@ class ReactionRuleKeyword(Base):
             "reaction_rule_id",
             "tag_key",
         ),
+        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -121,6 +124,7 @@ class ReactionRuleAction(Base):
             "tag_key",
             name="uq_rule_action_tag",
         ),
+        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -140,7 +144,7 @@ class ReactionRuleAction(Base):
         Enum(ReactionLLMMode),
         default=ReactionLLMMode.TEMPLATE_ONLY,
     )
-    metadata: Mapped[dict | None] = mapped_column(JSON)
+    metadata_json: Mapped[dict | None] = mapped_column("metadata", JSON)
 
     rule: Mapped[ReactionRule] = relationship("ReactionRule", back_populates="actions")
 
@@ -160,6 +164,7 @@ class ReactionRulePublication(Base):
             "post_publication_id",
             "priority",
         ),
+        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -189,6 +194,7 @@ class ReactionMessageTemplate(Base):
             "owner_user_id",
             "template_type",
         ),
+        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -203,7 +209,7 @@ class ReactionMessageTemplate(Base):
     title: Mapped[Optional[str]] = mapped_column(String(120))
     body: Mapped[str] = mapped_column(Text)
     language: Mapped[Optional[str]] = mapped_column(String(10))
-    metadata: Mapped[dict | None] = mapped_column(JSON)
+    template_metadata: Mapped[dict | None] = mapped_column("metadata", JSON)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
@@ -229,6 +235,7 @@ class ReactionActionLog(Base):
             "insight_comment_id",
             "status",
         ),
+        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -246,7 +253,6 @@ class ReactionActionLog(Base):
     status: Mapped[ReactionActionStatus] = mapped_column(
         Enum(ReactionActionStatus),
         default=ReactionActionStatus.PENDING,
-        index=True,
     )
     payload: Mapped[dict | None] = mapped_column(JSON)
     error: Mapped[Optional[str]] = mapped_column(Text)
@@ -265,6 +271,7 @@ class ReactionAlert(Base):
             "ix_reaction_alerts_status",
             "status",
         ),
+        {"extend_existing": True},
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -283,9 +290,8 @@ class ReactionAlert(Base):
     status: Mapped[ReactionActionStatus] = mapped_column(
         Enum(ReactionActionStatus),
         default=ReactionActionStatus.PENDING,
-        index=True,
     )
-    metadata: Mapped[dict | None] = mapped_column(JSON)
+    metadata_json: Mapped[dict | None] = mapped_column("metadata", JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     resolution_note: Mapped[Optional[str]] = mapped_column(Text)

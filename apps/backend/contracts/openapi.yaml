@@ -1266,6 +1266,148 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/reactive/rules:
+    get:
+      tags:
+      - bff
+      - bff
+      - reactive
+      - rules
+      - list
+      summary: List Reaction Rules
+      description: Retrieve all reaction rules for the current user
+      operationId: bff_reactive_list_rules_api_bff_reactive_rules_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionRuleListResult'
+  /api/bff/reactive/rules/{rule_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - reactive
+      - rules
+      - detail
+      summary: Read Reaction Rule
+      description: Retrieve a single reaction rule with keywords and actions
+      operationId: bff_reactive_read_rule_api_bff_reactive_rules__rule_id__get
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Rule Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionRuleOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/reactive/rules/{rule_id}/publications:
+    get:
+      tags:
+      - bff
+      - bff
+      - reactive
+      - rules
+      - publications
+      summary: List Reaction Rule Publication Links
+      description: Retrieve publications attached to a reaction rule
+      operationId: bff_reactive_list_rule_links_api_bff_reactive_rules__rule_id__publications_get
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Rule Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionRuleLinksResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/reactive/action-logs:
+    get:
+      tags:
+      - bff
+      - bff
+      - reactive
+      - activity
+      - logs
+      summary: List Reactive Action Logs
+      description: Retrieve recent reactive automation action logs
+      operationId: bff_reactive_list_action_logs_api_bff_reactive_action_logs_get
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ReactionActionStatus'
+          - type: 'null'
+          title: Status
+      - name: action_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ReactionActionType'
+          - type: 'null'
+          title: Action Type
+      - name: tag_key
+        in: query
+        required: false
+        schema:
+          title: Tag Key
+          type: string
+          nullable: true
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionActionLogListResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/schedules:
     get:
       tags:
@@ -6555,6 +6697,291 @@ components:
       - cancelled
       - monitoring
       title: PostStatus
+    ReactionActionLogListResult:
+      properties:
+        total:
+          type: integer
+          title: Total
+        items:
+          items:
+            $ref: '#/components/schemas/ReactionActionLogOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - total
+      title: ReactionActionLogListResult
+    ReactionActionLogOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        insight_comment_id:
+          type: integer
+          title: Insight Comment Id
+        reaction_rule_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Reaction Rule Id
+        tag_key:
+          type: string
+          title: Tag Key
+        action_type:
+          $ref: '#/components/schemas/ReactionActionType'
+        status:
+          $ref: '#/components/schemas/ReactionActionStatus'
+        payload:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Payload
+        error:
+          title: Error
+          type: string
+          nullable: true
+        executed_at:
+          title: Executed At
+          format: date-time
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - insight_comment_id
+      - reaction_rule_id
+      - tag_key
+      - action_type
+      - status
+      - payload
+      - error
+      - executed_at
+      - created_at
+      title: ReactionActionLogOut
+    ReactionActionStatus:
+      type: string
+      enum:
+      - pending
+      - success
+      - failed
+      - skipped
+      title: ReactionActionStatus
+    ReactionActionType:
+      type: string
+      enum:
+      - dm
+      - reply
+      - alert
+      title: ReactionActionType
+    ReactionLLMMode:
+      type: string
+      enum:
+      - template_only
+      - template_with_llm_augment
+      title: ReactionLLMMode
+    ReactionMatchType:
+      type: string
+      enum:
+      - exact
+      - contains
+      - regex
+      title: ReactionMatchType
+    ReactionRuleActionOut:
+      properties:
+        tag_key:
+          type: string
+          title: Tag Key
+          description: Tag key this action applies to
+        dm_template_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Dm Template Id
+        reply_template_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Reply Template Id
+        alert_enabled:
+          type: boolean
+          title: Alert Enabled
+          default: false
+        alert_severity:
+          title: Alert Severity
+          type: string
+          nullable: true
+        alert_assignee_user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Alert Assignee User Id
+        llm_mode:
+          $ref: '#/components/schemas/ReactionLLMMode'
+          default: template_only
+        metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata
+        id:
+          type: integer
+          title: Id
+      type: object
+      required:
+      - tag_key
+      - id
+      title: ReactionRuleActionOut
+    ReactionRuleKeywordOut:
+      properties:
+        tag_key:
+          type: string
+          title: Tag Key
+          description: Tag emitted when the keyword matches
+        match_type:
+          $ref: '#/components/schemas/ReactionMatchType'
+          description: Matching rule for the keyword
+          default: contains
+        keyword:
+          type: string
+          title: Keyword
+          description: Keyword or pattern to match
+        language:
+          title: Language
+          description: Optional language hint
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+          title: Is Active
+          default: true
+        priority:
+          type: integer
+          title: Priority
+          default: 100
+        id:
+          type: integer
+          title: Id
+      type: object
+      required:
+      - tag_key
+      - keyword
+      - id
+      title: ReactionRuleKeywordOut
+    ReactionRuleLinksResult:
+      items:
+        $ref: '#/components/schemas/ReactionRulePublicationLink'
+      type: array
+      title: ReactionRuleLinksResult
+    ReactionRuleListResult:
+      properties:
+        rules:
+          items:
+            $ref: '#/components/schemas/ReactionRuleOut'
+          type: array
+          title: Rules
+      type: object
+      required:
+      - rules
+      title: ReactionRuleListResult
+    ReactionRuleOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        name:
+          type: string
+          title: Name
+        description:
+          title: Description
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ReactionRuleStatus'
+        priority:
+          type: integer
+          title: Priority
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        keywords:
+          items:
+            $ref: '#/components/schemas/ReactionRuleKeywordOut'
+          type: array
+          title: Keywords
+        actions:
+          items:
+            $ref: '#/components/schemas/ReactionRuleActionOut'
+          type: array
+          title: Actions
+      type: object
+      required:
+      - id
+      - owner_user_id
+      - name
+      - description
+      - status
+      - priority
+      - created_at
+      - updated_at
+      title: ReactionRuleOut
+    ReactionRulePublicationLink:
+      properties:
+        id:
+          type: integer
+          title: Id
+        reaction_rule_id:
+          type: integer
+          title: Reaction Rule Id
+        post_publication_id:
+          type: integer
+          title: Post Publication Id
+        priority:
+          type: integer
+          title: Priority
+        active_from:
+          title: Active From
+          format: date-time
+          type: string
+          nullable: true
+        active_until:
+          title: Active Until
+          format: date-time
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+          title: Is Active
+      type: object
+      required:
+      - id
+      - reaction_rule_id
+      - post_publication_id
+      - priority
+      - active_from
+      - active_until
+      - is_active
+      title: ReactionRulePublicationLink
+    ReactionRuleStatus:
+      type: string
+      enum:
+      - active
+      - inactive
+      - archived
+      title: ReactionRuleStatus
     RenderedMediaItem:
       properties:
         type:

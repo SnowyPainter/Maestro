@@ -664,6 +664,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/reactive/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reaction Rules
+         * @description Retrieve all reaction rules for the current user
+         */
+        get: operations["bff_reactive_list_rules_api_bff_reactive_rules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/reactive/rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Reaction Rule
+         * @description Retrieve a single reaction rule with keywords and actions
+         */
+        get: operations["bff_reactive_read_rule_api_bff_reactive_rules__rule_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/reactive/rules/{rule_id}/publications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reaction Rule Publication Links
+         * @description Retrieve publications attached to a reaction rule
+         */
+        get: operations["bff_reactive_list_rule_links_api_bff_reactive_rules__rule_id__publications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/reactive/action-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reactive Action Logs
+         * @description Retrieve recent reactive automation action logs
+         */
+        get: operations["bff_reactive_list_action_logs_api_bff_reactive_action_logs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/schedules": {
         parameters: {
             query?: never;
@@ -3539,6 +3619,189 @@ export interface components {
          * @enum {string}
          */
         PostStatus: "pending" | "scheduled" | "published" | "deleted" | "failed" | "cancelled" | "monitoring";
+        /** ReactionActionLogListResult */
+        ReactionActionLogListResult: {
+            /** Total */
+            total: number;
+            /** Items */
+            items?: components["schemas"]["ReactionActionLogOut"][];
+        };
+        /** ReactionActionLogOut */
+        ReactionActionLogOut: {
+            /** Id */
+            id: number;
+            /** Insight Comment Id */
+            insight_comment_id: number;
+            /** Reaction Rule Id */
+            reaction_rule_id: number | null;
+            /** Tag Key */
+            tag_key: string;
+            action_type: components["schemas"]["ReactionActionType"];
+            status: components["schemas"]["ReactionActionStatus"];
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            } | null;
+            /** Error */
+            error: string | null;
+            /**
+             * Executed At
+             * Format: date-time
+             */
+            executed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * ReactionActionStatus
+         * @enum {string}
+         */
+        ReactionActionStatus: "pending" | "success" | "failed" | "skipped";
+        /**
+         * ReactionActionType
+         * @enum {string}
+         */
+        ReactionActionType: "dm" | "reply" | "alert";
+        /**
+         * ReactionLLMMode
+         * @enum {string}
+         */
+        ReactionLLMMode: "template_only" | "template_with_llm_augment";
+        /**
+         * ReactionMatchType
+         * @enum {string}
+         */
+        ReactionMatchType: "exact" | "contains" | "regex";
+        /** ReactionRuleActionOut */
+        ReactionRuleActionOut: {
+            /**
+             * Tag Key
+             * @description Tag key this action applies to
+             */
+            tag_key: string;
+            /** Dm Template Id */
+            dm_template_id?: number | null;
+            /** Reply Template Id */
+            reply_template_id?: number | null;
+            /**
+             * Alert Enabled
+             * @default false
+             */
+            alert_enabled: boolean;
+            /** Alert Severity */
+            alert_severity?: string | null;
+            /** Alert Assignee User Id */
+            alert_assignee_user_id?: number | null;
+            /** @default template_only */
+            llm_mode: components["schemas"]["ReactionLLMMode"];
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /** Id */
+            id: number;
+        };
+        /** ReactionRuleKeywordOut */
+        ReactionRuleKeywordOut: {
+            /**
+             * Tag Key
+             * @description Tag emitted when the keyword matches
+             */
+            tag_key: string;
+            /**
+             * @description Matching rule for the keyword
+             * @default contains
+             */
+            match_type: components["schemas"]["ReactionMatchType"];
+            /**
+             * Keyword
+             * @description Keyword or pattern to match
+             */
+            keyword: string;
+            /**
+             * Language
+             * @description Optional language hint
+             */
+            language?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+            /**
+             * Priority
+             * @default 100
+             */
+            priority: number;
+            /** Id */
+            id: number;
+        };
+        /** ReactionRuleLinksResult */
+        ReactionRuleLinksResult: components["schemas"]["ReactionRulePublicationLink"][];
+        /** ReactionRuleListResult */
+        ReactionRuleListResult: {
+            /** Rules */
+            rules: components["schemas"]["ReactionRuleOut"][];
+        };
+        /** ReactionRuleOut */
+        ReactionRuleOut: {
+            /** Id */
+            id: number;
+            /** Owner User Id */
+            owner_user_id: number;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            status: components["schemas"]["ReactionRuleStatus"];
+            /** Priority */
+            priority: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Keywords */
+            keywords?: components["schemas"]["ReactionRuleKeywordOut"][];
+            /** Actions */
+            actions?: components["schemas"]["ReactionRuleActionOut"][];
+        };
+        /** ReactionRulePublicationLink */
+        ReactionRulePublicationLink: {
+            /** Id */
+            id: number;
+            /** Reaction Rule Id */
+            reaction_rule_id: number;
+            /** Post Publication Id */
+            post_publication_id: number;
+            /** Priority */
+            priority: number;
+            /**
+             * Active From
+             * Format: date-time
+             */
+            active_from: string | null;
+            /**
+             * Active Until
+             * Format: date-time
+             */
+            active_until: string | null;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /**
+         * ReactionRuleStatus
+         * @enum {string}
+         */
+        ReactionRuleStatus: "active" | "inactive" | "archived";
         /** RenderedMediaItem */
         RenderedMediaItem: {
             /**
@@ -5269,6 +5532,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlaybookSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_reactive_list_rules_api_bff_reactive_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionRuleListResult"];
+                };
+            };
+        };
+    };
+    bff_reactive_read_rule_api_bff_reactive_rules__rule_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_reactive_list_rule_links_api_bff_reactive_rules__rule_id__publications_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionRuleLinksResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_reactive_list_action_logs_api_bff_reactive_action_logs_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ReactionActionStatus"] | null;
+                action_type?: components["schemas"]["ReactionActionType"] | null;
+                tag_key?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionActionLogListResult"];
                 };
             };
             /** @description Validation Error */

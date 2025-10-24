@@ -1146,6 +1146,139 @@ export const bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetResponse = zod.ob
 
 
 /**
+ * Retrieve all reaction rules for the current user
+ * @summary List Reaction Rules
+ */
+export const bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemKeywordsItemIsActiveDefault = true;export const bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemKeywordsItemPriorityDefault = 100;export const bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemActionsItemAlertEnabledDefault = false;
+
+export const bffReactiveListRulesApiBffReactiveRulesGetResponse = zod.object({
+  "rules": zod.array(zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'inactive', 'archived']),
+  "priority": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({}),
+  "keywords": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag emitted when the keyword matches'),
+  "match_type": zod.enum(['exact', 'contains', 'regex']).optional(),
+  "keyword": zod.string().describe('Keyword or pattern to match'),
+  "language": zod.string().nullish().describe('Optional language hint'),
+  "is_active": zod.boolean().default(bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemKeywordsItemIsActiveDefault),
+  "priority": zod.number().default(bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemKeywordsItemPriorityDefault),
+  "id": zod.number()
+})).optional(),
+  "actions": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag key this action applies to'),
+  "dm_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "reply_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "alert_enabled": zod.boolean().optional(),
+  "alert_severity": zod.string().nullish(),
+  "alert_assignee_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "llm_mode": zod.enum(['template_only', 'template_with_llm_augment']).optional(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "id": zod.number()
+})).optional()
+}))
+})
+
+
+/**
+ * Retrieve a single reaction rule with keywords and actions
+ * @summary Read Reaction Rule
+ */
+export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetParams = zod.object({
+  "rule_id": zod.number()
+})
+
+export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetResponseKeywordsItemIsActiveDefault = true;export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetResponseKeywordsItemPriorityDefault = 100;export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetResponseActionsItemAlertEnabledDefault = false;
+
+export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetResponse = zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'inactive', 'archived']),
+  "priority": zod.number(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({}),
+  "keywords": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag emitted when the keyword matches'),
+  "match_type": zod.enum(['exact', 'contains', 'regex']).optional(),
+  "keyword": zod.string().describe('Keyword or pattern to match'),
+  "language": zod.string().nullish().describe('Optional language hint'),
+  "is_active": zod.boolean().default(bffReactiveReadRuleApiBffReactiveRulesRuleIdGetResponseKeywordsItemIsActiveDefault),
+  "priority": zod.number().default(bffReactiveReadRuleApiBffReactiveRulesRuleIdGetResponseKeywordsItemPriorityDefault),
+  "id": zod.number()
+})).optional(),
+  "actions": zod.array(zod.object({
+  "tag_key": zod.string().describe('Tag key this action applies to'),
+  "dm_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "reply_template_id": zod.union([zod.number(),zod.null()]).optional(),
+  "alert_enabled": zod.boolean().optional(),
+  "alert_severity": zod.string().nullish(),
+  "alert_assignee_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "llm_mode": zod.enum(['template_only', 'template_with_llm_augment']).optional(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "id": zod.number()
+})).optional()
+})
+
+
+/**
+ * Retrieve publications attached to a reaction rule
+ * @summary List Reaction Rule Publication Links
+ */
+export const bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetParams = zod.object({
+  "rule_id": zod.number()
+})
+
+export const bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetResponseItem = zod.object({
+  "id": zod.number(),
+  "reaction_rule_id": zod.number(),
+  "post_publication_id": zod.number(),
+  "priority": zod.number(),
+  "active_from": zod.iso.datetime({}).nullable(),
+  "active_until": zod.iso.datetime({}).nullable(),
+  "is_active": zod.boolean()
+})
+export const bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetResponse = zod.array(bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetResponseItem)
+
+
+/**
+ * Retrieve recent reactive automation action logs
+ * @summary List Reactive Action Logs
+ */
+export const bffReactiveListActionLogsApiBffReactiveActionLogsGetQueryLimitDefault = 50;export const bffReactiveListActionLogsApiBffReactiveActionLogsGetQueryOffsetDefault = 0;
+
+export const bffReactiveListActionLogsApiBffReactiveActionLogsGetQueryParams = zod.object({
+  "status": zod.union([zod.enum(['pending', 'success', 'failed', 'skipped']),zod.null()]).optional(),
+  "action_type": zod.union([zod.enum(['dm', 'reply', 'alert']),zod.null()]).optional(),
+  "tag_key": zod.string().nullish(),
+  "limit": zod.number().default(bffReactiveListActionLogsApiBffReactiveActionLogsGetQueryLimitDefault),
+  "offset": zod.number().optional()
+})
+
+export const bffReactiveListActionLogsApiBffReactiveActionLogsGetResponse = zod.object({
+  "total": zod.number(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "insight_comment_id": zod.number(),
+  "reaction_rule_id": zod.union([zod.number(),zod.null()]),
+  "tag_key": zod.string(),
+  "action_type": zod.enum(['dm', 'reply', 'alert']),
+  "status": zod.enum(['pending', 'success', 'failed', 'skipped']),
+  "payload": zod.union([zod.record(zod.string(), zod.any()),zod.null()]),
+  "error": zod.string().nullable(),
+  "executed_at": zod.iso.datetime({}).nullable(),
+  "created_at": zod.iso.datetime({})
+})).optional()
+})
+
+
+/**
  * List schedules for the authenticated user with optional persona filtering and meta information.
  * @summary List Schedules
  */

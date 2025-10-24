@@ -52,18 +52,43 @@ slots:
   - bff.drafts.list_post_publications_by_variant
   - bff.drafts.list_post_publications_enriched
   - insights.ingest
+- name: action_type
+  label: Action Type
+  description: Filter by action type
+  value_type: string
+  flows:
+  - bff.reactive.list_action_logs
+- name: actions
+  label: Actions
+  description: Filter by actions
+  value_type: string_list
+  flows:
+  - reactive.create_rule
+  - reactive.update_rule
 - name: active
   label: Active
   description: Filter by active
   value_type: boolean
   flows:
   - action.coworker.update_my_coworker
+- name: active_from
+  label: Active From
+  description: Filter by active from
+  value_type: string
+  flows:
+  - reactive.link_rule_publication
 - name: active_only
   label: Active Only
   description: Filter by active only
   value_type: boolean
   flows:
   - bff.abtests.list
+- name: active_until
+  label: Active Until
+  description: Filter by active until
+  value_type: string
+  flows:
+  - reactive.link_rule_publication
 - name: add_persona_account_ids
   label: Add Persona Account Ids
   description: Filter by add persona account ids
@@ -169,6 +194,8 @@ slots:
   flows:
   - campaigns.create_campaign
   - campaigns.update_campaign
+  - reactive.create_rule
+  - reactive.update_rule
 - name: distribution
   label: Distribution
   description: Filter by distribution
@@ -305,6 +332,19 @@ slots:
   flows:
   - drafts.create
   - drafts.update_ir
+- name: is_active
+  label: Is Active
+  description: Filter by is active
+  value_type: boolean
+  flows:
+  - reactive.link_rule_publication
+- name: keywords
+  label: Keywords
+  description: Filter by keywords
+  value_type: string_list
+  flows:
+  - reactive.create_rule
+  - reactive.update_rule
 - name: last_event
   label: Last Event
   description: Filter by last event
@@ -324,6 +364,7 @@ slots:
   - bff.drafts.list_drafts
   - bff.insights.comments.list
   - bff.playbook.list_playbooks
+  - bff.reactive.list_action_logs
   - bff.schedule.get_schedule_stream
   - bff.schedule.list_schedules
   - bff.timeline.abtests
@@ -340,6 +381,12 @@ slots:
   value_type: string
   flows:
   - accounts.link.create
+- name: link_id
+  label: Link Id
+  description: Target a specific link id
+  value_type: integer
+  flows:
+  - reactive.unlink_rule_publication
 - name: mail
   label: Mail
   description: Filter by mail
@@ -372,6 +419,8 @@ slots:
   - bff.accounts.list_personas
   - campaigns.create_campaign
   - campaigns.update_campaign
+  - reactive.create_rule
+  - reactive.update_rule
 - name: notes
   label: Notes
   description: Filter by notes
@@ -390,6 +439,7 @@ slots:
   - bff.campaigns.list_campaigns
   - bff.drafts.list_drafts
   - bff.playbook.list_playbooks
+  - bff.reactive.list_action_logs
   - bff.schedule.list_schedules
 - name: on_date
   label: On Date
@@ -404,6 +454,7 @@ slots:
   flows:
   - bff.schedule.get_schedule_stream
   - insights.ingest
+  - reactive.create_rule
 - name: page
   label: Page
   description: Filter by page
@@ -516,12 +567,21 @@ slots:
   - internal.drafts.publish
   - internal.insights.list_comments
   - internal.insights.sync_metrics
+  - reactive.link_rule_publication
 - name: post_publish
   label: Post Publish
   description: Filter by post publish
   value_type: string
   flows:
   - action.schedule.compile_template
+- name: priority
+  label: Priority
+  description: Filter by priority
+  value_type: integer
+  flows:
+  - reactive.create_rule
+  - reactive.link_rule_publication
+  - reactive.update_rule
 - name: q
   label: Q
   description: Set a keyword search term
@@ -569,6 +629,16 @@ slots:
   value_type: integer
   flows:
   - action.schedule.create_from_raw_dag
+- name: rule_id
+  label: Rule Id
+  description: Target a specific rule id
+  value_type: integer
+  flows:
+  - bff.reactive.list_rule_links
+  - bff.reactive.read_rule
+  - reactive.delete_rule
+  - reactive.link_rule_publication
+  - reactive.update_rule
 - name: run_at
   label: Run At
   description: Filter by run at
@@ -669,7 +739,10 @@ slots:
   - bff.drafts.list_post_publications_by_platform_and_status
   - bff.drafts.list_post_publications_by_status
   - bff.drafts.list_post_publications_enriched
+  - bff.reactive.list_action_logs
   - bff.schedule.list_schedules
+  - reactive.create_rule
+  - reactive.update_rule
 - name: statuses
   label: Statuses
   description: Filter by statuses
@@ -689,6 +762,12 @@ slots:
   value_type: string
   flows:
   - action.schedule.compile_template
+- name: tag_key
+  label: Tag Key
+  description: Filter by tag key
+  value_type: string
+  flows:
+  - bff.reactive.list_action_logs
 - name: tags
   label: Tags
   description: Filter by tags

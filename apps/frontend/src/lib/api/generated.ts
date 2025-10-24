@@ -1549,6 +1549,155 @@ export const PostStatus = {
   monitoring: 'monitoring',
 } as const;
 
+export interface ReactionActionLogListResult {
+  total: number;
+  items?: ReactionActionLogOut[];
+}
+
+export type ReactionActionLogOutReactionRuleId = number | null;
+
+export type ReactionActionLogOutPayloadAnyOf = { [key: string]: unknown };
+
+export type ReactionActionLogOutPayload = ReactionActionLogOutPayloadAnyOf | null;
+
+export interface ReactionActionLogOut {
+  id: number;
+  insight_comment_id: number;
+  reaction_rule_id: ReactionActionLogOutReactionRuleId;
+  tag_key: string;
+  action_type: ReactionActionType;
+  status: ReactionActionStatus;
+  payload: ReactionActionLogOutPayload;
+  /** @nullable */
+  error: string | null;
+  /** @nullable */
+  executed_at: string | null;
+  created_at: string;
+}
+
+export type ReactionActionStatus = typeof ReactionActionStatus[keyof typeof ReactionActionStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReactionActionStatus = {
+  pending: 'pending',
+  success: 'success',
+  failed: 'failed',
+  skipped: 'skipped',
+} as const;
+
+export type ReactionActionType = typeof ReactionActionType[keyof typeof ReactionActionType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReactionActionType = {
+  dm: 'dm',
+  reply: 'reply',
+  alert: 'alert',
+} as const;
+
+export type ReactionLLMMode = typeof ReactionLLMMode[keyof typeof ReactionLLMMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReactionLLMMode = {
+  template_only: 'template_only',
+  template_with_llm_augment: 'template_with_llm_augment',
+} as const;
+
+export type ReactionMatchType = typeof ReactionMatchType[keyof typeof ReactionMatchType];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReactionMatchType = {
+  exact: 'exact',
+  contains: 'contains',
+  regex: 'regex',
+} as const;
+
+export type ReactionRuleActionOutDmTemplateId = number | null;
+
+export type ReactionRuleActionOutReplyTemplateId = number | null;
+
+export type ReactionRuleActionOutAlertAssigneeUserId = number | null;
+
+export type ReactionRuleActionOutMetadataAnyOf = { [key: string]: unknown };
+
+export type ReactionRuleActionOutMetadata = ReactionRuleActionOutMetadataAnyOf | null;
+
+export interface ReactionRuleActionOut {
+  /** Tag key this action applies to */
+  tag_key: string;
+  dm_template_id?: ReactionRuleActionOutDmTemplateId;
+  reply_template_id?: ReactionRuleActionOutReplyTemplateId;
+  alert_enabled?: boolean;
+  /** @nullable */
+  alert_severity?: string | null;
+  alert_assignee_user_id?: ReactionRuleActionOutAlertAssigneeUserId;
+  llm_mode?: ReactionLLMMode;
+  metadata?: ReactionRuleActionOutMetadata;
+  id: number;
+}
+
+export interface ReactionRuleKeywordOut {
+  /** Tag emitted when the keyword matches */
+  tag_key: string;
+  /** Matching rule for the keyword */
+  match_type?: ReactionMatchType;
+  /** Keyword or pattern to match */
+  keyword: string;
+  /**
+   * Optional language hint
+   * @nullable
+   */
+  language?: string | null;
+  is_active?: boolean;
+  priority?: number;
+  id: number;
+}
+
+export type ReactionRuleLinksResult = ReactionRulePublicationLink[];
+
+export interface ReactionRuleListResult {
+  rules: ReactionRuleOut[];
+}
+
+export interface ReactionRuleOut {
+  id: number;
+  owner_user_id: number;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  status: ReactionRuleStatus;
+  priority: number;
+  created_at: string;
+  updated_at: string;
+  keywords?: ReactionRuleKeywordOut[];
+  actions?: ReactionRuleActionOut[];
+}
+
+export interface ReactionRulePublicationLink {
+  id: number;
+  reaction_rule_id: number;
+  post_publication_id: number;
+  priority: number;
+  /** @nullable */
+  active_from: string | null;
+  /** @nullable */
+  active_until: string | null;
+  is_active: boolean;
+}
+
+export type ReactionRuleStatus = typeof ReactionRuleStatus[keyof typeof ReactionRuleStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ReactionRuleStatus = {
+  active: 'active',
+  inactive: 'inactive',
+  archived: 'archived',
+} as const;
+
 export type RenderedMediaItemType = typeof RenderedMediaItemType[keyof typeof RenderedMediaItemType];
 
 
@@ -2206,6 +2355,17 @@ persona_id?: number | null;
  * @nullable
  */
 last_event?: string | null;
+};
+
+export type BffReactiveListActionLogsApiBffReactiveActionLogsGetParams = {
+status?: ReactionActionStatus | null;
+action_type?: ReactionActionType | null;
+/**
+ * @nullable
+ */
+tag_key?: string | null;
+limit?: number;
+offset?: number;
 };
 
 export type BffScheduleListSchedulesApiBffSchedulesGetParams = {
@@ -5228,6 +5388,363 @@ export function useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet<TData = Aw
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve all reaction rules for the current user
+ * @summary List Reaction Rules
+ */
+export const bffReactiveListRulesApiBffReactiveRulesGet = (
+    
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionRuleListResult>(
+      {url: `/api/bff/reactive/rules`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffReactiveListRulesApiBffReactiveRulesGetQueryKey = () => {
+    return [`/api/bff/reactive/rules`] as const;
+    }
+
+    
+export const getBffReactiveListRulesApiBffReactiveRulesGetQueryOptions = <TData = Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffReactiveListRulesApiBffReactiveRulesGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>> = ({ signal }) => bffReactiveListRulesApiBffReactiveRulesGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffReactiveListRulesApiBffReactiveRulesGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>>
+export type BffReactiveListRulesApiBffReactiveRulesGetQueryError = unknown
+
+
+export function useBffReactiveListRulesApiBffReactiveRulesGet<TData = Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListRulesApiBffReactiveRulesGet<TData = Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListRulesApiBffReactiveRulesGet<TData = Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Reaction Rules
+ */
+
+export function useBffReactiveListRulesApiBffReactiveRulesGet<TData = Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRulesApiBffReactiveRulesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffReactiveListRulesApiBffReactiveRulesGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve a single reaction rule with keywords and actions
+ * @summary Read Reaction Rule
+ */
+export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGet = (
+    ruleId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionRuleOut>(
+      {url: `/api/bff/reactive/rules/${ruleId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffReactiveReadRuleApiBffReactiveRulesRuleIdGetQueryKey = (ruleId?: number,) => {
+    return [`/api/bff/reactive/rules/${ruleId}`] as const;
+    }
+
+    
+export const getBffReactiveReadRuleApiBffReactiveRulesRuleIdGetQueryOptions = <TData = Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError = HTTPValidationError>(ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffReactiveReadRuleApiBffReactiveRulesRuleIdGetQueryKey(ruleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>> = ({ signal }) => bffReactiveReadRuleApiBffReactiveRulesRuleIdGet(ruleId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(ruleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffReactiveReadRuleApiBffReactiveRulesRuleIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>>
+export type BffReactiveReadRuleApiBffReactiveRulesRuleIdGetQueryError = HTTPValidationError
+
+
+export function useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError = HTTPValidationError>(
+ ruleId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError = HTTPValidationError>(
+ ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError = HTTPValidationError>(
+ ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read Reaction Rule
+ */
+
+export function useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet<TData = Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError = HTTPValidationError>(
+ ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveReadRuleApiBffReactiveRulesRuleIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffReactiveReadRuleApiBffReactiveRulesRuleIdGetQueryOptions(ruleId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve publications attached to a reaction rule
+ * @summary List Reaction Rule Publication Links
+ */
+export const bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet = (
+    ruleId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionRuleLinksResult>(
+      {url: `/api/bff/reactive/rules/${ruleId}/publications`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetQueryKey = (ruleId?: number,) => {
+    return [`/api/bff/reactive/rules/${ruleId}/publications`] as const;
+    }
+
+    
+export const getBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError = HTTPValidationError>(ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetQueryKey(ruleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>> = ({ signal }) => bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet(ruleId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(ruleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>>
+export type BffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetQueryError = HTTPValidationError
+
+
+export function useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet<TData = Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError = HTTPValidationError>(
+ ruleId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet<TData = Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError = HTTPValidationError>(
+ ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet<TData = Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError = HTTPValidationError>(
+ ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Reaction Rule Publication Links
+ */
+
+export function useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet<TData = Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError = HTTPValidationError>(
+ ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetQueryOptions(ruleId,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Retrieve recent reactive automation action logs
+ * @summary List Reactive Action Logs
+ */
+export const bffReactiveListActionLogsApiBffReactiveActionLogsGet = (
+    params?: BffReactiveListActionLogsApiBffReactiveActionLogsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionActionLogListResult>(
+      {url: `/api/bff/reactive/action-logs`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffReactiveListActionLogsApiBffReactiveActionLogsGetQueryKey = (params?: BffReactiveListActionLogsApiBffReactiveActionLogsGetParams,) => {
+    return [`/api/bff/reactive/action-logs`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffReactiveListActionLogsApiBffReactiveActionLogsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError = HTTPValidationError>(params?: BffReactiveListActionLogsApiBffReactiveActionLogsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffReactiveListActionLogsApiBffReactiveActionLogsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>> = ({ signal }) => bffReactiveListActionLogsApiBffReactiveActionLogsGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffReactiveListActionLogsApiBffReactiveActionLogsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>>
+export type BffReactiveListActionLogsApiBffReactiveActionLogsGetQueryError = HTTPValidationError
+
+
+export function useBffReactiveListActionLogsApiBffReactiveActionLogsGet<TData = Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffReactiveListActionLogsApiBffReactiveActionLogsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListActionLogsApiBffReactiveActionLogsGet<TData = Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError = HTTPValidationError>(
+ params?: BffReactiveListActionLogsApiBffReactiveActionLogsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffReactiveListActionLogsApiBffReactiveActionLogsGet<TData = Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError = HTTPValidationError>(
+ params?: BffReactiveListActionLogsApiBffReactiveActionLogsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Reactive Action Logs
+ */
+
+export function useBffReactiveListActionLogsApiBffReactiveActionLogsGet<TData = Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError = HTTPValidationError>(
+ params?: BffReactiveListActionLogsApiBffReactiveActionLogsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffReactiveListActionLogsApiBffReactiveActionLogsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffReactiveListActionLogsApiBffReactiveActionLogsGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
