@@ -85,11 +85,16 @@
 - **CampaignKPIDef** — KPI 정의 (목표, 메트릭)
 - **CampaignKPIResult** — 실제 성과 기록
 
-##### 📖 **playbooks** — 행동 기록 및 학습
-- Persona × Campaign 단위의 브랜드 인텔리전스 컨테이너
-- 과거 행동과 결과를 **JSON 로그**로 저장 (PlaybookLog)
-- LLM 입력/출력, KPI 스냅샷, 트렌드 스냅샷 등 메타데이터 저장
-- 집계 KPI (aggregate_kpi), 최적 시간대 (best_time_window), 최적 톤 (best_tone) 자동 학습
+##### 📖 **playbooks** — 행동 기록 및 학습 (브랜드 기억 저장소)
+- **나와 CoWorker의 모든 행동 기록** — 인간 + AI의 모든 판단과 실행을 JSON 로그로 저장
+- **완전한 컨텍스트 스냅샷**:
+  - 🤖 **LLM 입력/출력** — 어떤 프롬프트로 어떤 응답을 받았는지
+  - 📊 **Campaign KPI 스냅샷** — 당시 캠페인 성과는 어땠는지
+  - 🌊 **트렌드 스냅샷** — 어떤 트렌드를 기반으로 판단했는지
+  - 🎭 **페르소나 스냅샷** — 어떤 목소리로, 어떤 금칙어를 적용했는지
+- **Persona × Campaign 단위의 브랜드 인텔리전스 컨테이너**
+- **자동 학습**: 집계 KPI, 최적 시간대, 최적 톤을 데이터로부터 추론
+- **브랜드 기억**: "이전에는 이렇게 했는데 결과는 어땠지?" 자동 회상
 
 ##### 📈 **insights** — 인사이트 수집
 - **InsightSample** — 게시물 성과, 댓글 반응 등 수집
@@ -261,33 +266,45 @@
    - `upsert_post_publication_schedule`로 예약 발행 설정
    - CoWorker가 `execute_due_schedules`로 정시 자동 발행
    - Adapter가 Threads Graph API 호출 → 실제 게시
-   - PostPublication 기록 → Playbook JSON 로그로 학습
+   - **Playbook에 완전한 기록**: 당시 트렌드, Campaign KPI, 페르소나 컨텍스트, LLM 입력/출력 모두 JSON 로그로 저장
 
-### 🤖 CoWorker 자동 루틴
+### 🤖 CoWorker 자동 루틴 (AI의 독립적 판단 기록)
 1. Celery Beat가 정기 스케줄 트리거
 2. CoWorker가 `execute_due_schedules` 실행
 3. 예약된 Draft 조회 → 자동 발행
 4. 발행 결과를 Insight로 수집
-5. Playbook에 인사이트 저장 → 다음 판단 근거로 활용
+5. **Playbook에 완전한 기록**: CoWorker의 판단 컨텍스트 (트렌드, KPI, 페르소나), 실행 결과, 성과 메트릭 모두 저장 → 다음 판단 근거로 활용
 
-### ⚡ 자동화 규칙 실행 (Reactive)
-1. **룰 설정 → 1회 설정으로 끝**
+### ⚡ 자동화 규칙 실행 (Reactive) — **유즈케이스 중심**
+
+#### 🎯 **유즈케이스 1: 키워드 기반 자동 응답 (1회 설정 → 영구 자동화)**
+1. **룰 생성 및 템플릿 설정**
    - "Create reactive rule" → 키워드 매칭 규칙 생성 (정규식/포함/동일)
    - "Create reply template" → DM/Reply 템플릿 생성
    - 게시물에 규칙 연결 (ReactionRulePublication)
 
 2. **매 5분마다 자동 실행**
    - Synchro 워커가 댓글 수집 (Adapter → InsightComment)
-   - Reactive 엔진이 키워드 매칭 → 태그 생성
-   - 태그 기반 액션 실행 (DM 전송, 댓글 답장, Alert 생성)
+   - Reactive 엔진이 키워드 매칭 → 태그 생성 → 액션 실행
+   - **결과**: DM 전송, 댓글 답장, Alert 생성
    - ReactionActionLog로 실행 결과 기록
 
-### 📊 메트릭 수집
+#### 🎯 **유즈케이스 2: 댓글 기반 후속 콘텐츠 생성**
+1. **캠페인 컨텍스트 수집**
+   - "List all campaigns" → Campaign 목록 조회
+   - Campaign 컨텍스트 주입 (Persona + 전략 정보)
+
+2. **댓글 분석 및 콘텐츠 생성**
+   - "List all post publications" → 발행된 게시물 목록
+   - "List comments post_publication_id:9 and create a new draft" → 특정 게시물 댓글 조회 후 댓글 기반 새 Draft 생성
+   - **결과**: LLM이 댓글 분석 → 관련 트렌드 검색 → 후속 콘텐츠 초안 생성
+
+### 📊 메트릭 수집 (지속적 학습 데이터 축적)
 1. Synchro 워커가 주기적으로 Adapter 호출
 2. 플랫폼별 메트릭 API 쿼리 (likes, replies, views 등)
 3. InsightSample 저장
 4. Campaign KPIResult 업데이트
-5. Playbook에 JSON 로그로 학습 데이터 저장 (persona_snapshot, kpi_snapshot 등)
+5. **Playbook에 완전한 스냅샷 기록**: persona_snapshot, kpi_snapshot, trend_snapshot, llm_context 등 모든 판단 근거를 JSON 로그로 저장
 
 ---
 
@@ -310,7 +327,7 @@
 ## 🎯 핵심 가치 (코드에 입각)
 
 1. **2단계 게시 플로우** — "Get trends and create draft" → Schedule → 정시 자동 발행
-2. **판단의 복제** — Persona + Playbook이 브랜드 리듬 기억
+2. **판단의 복제** — 나와 CoWorker의 모든 행동을 완전하게 기록 (트렌드, KPI, 페르소나, LLM 컨텍스트)하여 브랜드 리듬을 기억하고 재현
 3. **결정론적 실행** — DAG 기반 추적 가능한 액션 체인
 4. **기억하는 자동화** — Trends RAG로 유사 인사이트 기반 학습
 5. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (1회 설정 → 영구 자동화)
@@ -344,5 +361,5 @@ pnpm dev:backend:and:frontend
 
 ---
 
-> **"이 루프는 끊임없이 당신의 판단을 복제하고 정제합니다."**
+> **"나와 CoWorker의 모든 행동은 기록됩니다. 트렌드가 무엇이었는지, Campaign KPI들은 어땠는지, 페르소나는 무엇을 썼는지 — 이 루프는 끊임없이 당신의 판단을 복제하고 정제합니다."**
 
