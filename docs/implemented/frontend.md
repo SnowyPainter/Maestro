@@ -143,6 +143,14 @@ src/
 - Winner 자동 선정
 - 통계 그래프
 
+#### ⚡ **reactive**
+- **키워드 기반 자동 응답 규칙 관리** — 키워드 → 태그 → DM/댓글 자동 응답
+- **Rule 생성** — 정규식/포함/동일 매칭 규칙 설정
+- **Template 관리** — DM/Reply 템플릿 생성 및 편집
+- **Action Log 모니터링** — 자동화 실행 결과 실시간 확인
+- **Rule Overview** — 모든 규칙 목록 및 상태 관리
+- **매 5분마다 자동 실행** — 설정 한번으로 영구 자동화
+
 #### ✉️ **mail** (백엔드 자동화)
 - 이메일 기반 Draft 자동 생성 (IMAP)
 - Pipeline ID 기반 자동 플로우 실행
@@ -260,6 +268,23 @@ src/
    - Adapter가 Threads Graph API 호출 → 실제 게시
    - `post-publication.detail` 카드 반환 (permalink 포함)
 
+### ⚡ 자동화 규칙 설정 및 모니터링 (Reactive)
+1. **룰 생성 → 1회 설정으로 끝**
+   - "Create reactive rule" → 키워드 매칭 규칙 생성 (정규식/포함/동일)
+   - "Create reply template" → DM/Reply 템플릿 생성
+   - 게시물에 규칙 연결 (RulePublication)
+
+2. **실시간 모니터링**
+   - ActionLogCard에서 실행 결과 실시간 확인
+   - Payload JSON을 예쁘게 표시 (링크 클릭 가능)
+   - Context Registry에 rule_id 자동 등록
+
+3. **댓글 기반 후속 글 생성**
+   - "List all campaigns" → Campaign 목록 조회
+   - Campaign 컨텍스트 주입
+   - "List comments post_publication_id:9" → 특정 게시물 댓글 조회
+   - "Create a new draft" → 댓글 기반 새 Draft 생성
+
 ### 📊 실시간 스케줄 스트림 (SSE)
 1. `useEffect`에서 `/api/sse/scheduler/stream` 연결
 2. 백엔드가 예약된 게시물 상태 변화 스트림
@@ -317,17 +342,17 @@ src/
 2. **Ctrl + K 중심 UX** — 어디서든 Maestro 호출, 맥락 인식 입력
 3. **카드 기반 인터페이스** — 모든 응답을 액션 가능한 카드로 시각화
 4. **실시간 동기화** — SSE로 백엔드 상태 실시간 반영
-5. **Trends RAG** — 벡터 검색으로 유사 트렌드 기반 인사이트 제공
-6. **타입 안전성** — OpenAPI 자동 생성으로 프론트/백엔드 계약 보장
-7. **접근성 우선** — Radix UI로 키보드 내비게이션, 스크린 리더 지원
+5. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (1회 설정 → 영구 자동화)
+6. **Trends RAG** — 벡터 검색으로 유사 트렌드 기반 인사이트 제공
+7. **타입 안전성** — OpenAPI 자동 생성으로 프론트/백엔드 계약 보장
 
 ---
 
 ## 📊 컴포넌트 통계
 - **Pages:** 7+
 - **Widgets:** 5
-- **Features:** 11+ (백엔드 모듈 15개 연동)
-- **Entities:** 12+
+- **Features:** 12+ (백엔드 모듈 16개 연동)
+- **Entities:** 13+
 - **UI Components:** 30+
 - **자동 생성 API Hooks:** 50+
 

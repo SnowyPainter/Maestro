@@ -129,6 +129,16 @@
 ##### 🤝 **injectors** — 의존성 주입
 - LLM 프롬프트 생성, 토큰 관리
 
+##### ⚡ **reactive** — 자동화 규칙 엔진
+- **키워드 기반 자동 응답** — 댓글/메시지에서 키워드 감지 → 태그 생성 → DM/댓글 자동 응답
+- **ReactionRule** — 키워드 매칭 규칙 (정규식/포함/동일 매칭 지원)
+- **ReactionRuleKeyword** — 키워드 → 태그 매핑
+- **ReactionRuleAction** — 태그 → DM 템플릿/Reply 템플릿/Alert 액션
+- **ReactionMessageTemplate** — 재사용 가능한 메시지 템플릿
+- **ReactionActionLog** — 자동화 실행 로그 및 상태 추적
+- **매 5분마다 Sync Metrics** — 댓글 수집 → 규칙 평가 → 자동 응답 실행
+- **LLM 지원 모드** — 템플릿 전용(LLM도 염두에 두고 설계는 함)
+
 ##### ✉️ **mail** — 이메일 기반 자동화
 - **IMAP 폴링** — 이메일 기반 Draft 자동 생성
 - **Mail Parser** — 이메일 본문을 구조화된 Draft IR로 변환
@@ -260,6 +270,18 @@
 4. 발행 결과를 Insight로 수집
 5. Playbook에 인사이트 저장 → 다음 판단 근거로 활용
 
+### ⚡ 자동화 규칙 실행 (Reactive)
+1. **룰 설정 → 1회 설정으로 끝**
+   - "Create reactive rule" → 키워드 매칭 규칙 생성 (정규식/포함/동일)
+   - "Create reply template" → DM/Reply 템플릿 생성
+   - 게시물에 규칙 연결 (ReactionRulePublication)
+
+2. **매 5분마다 자동 실행**
+   - Synchro 워커가 댓글 수집 (Adapter → InsightComment)
+   - Reactive 엔진이 키워드 매칭 → 태그 생성
+   - 태그 기반 액션 실행 (DM 전송, 댓글 답장, Alert 생성)
+   - ReactionActionLog로 실행 결과 기록
+
 ### 📊 메트릭 수집
 1. Synchro 워커가 주기적으로 Adapter 호출
 2. 플랫폼별 메트릭 API 쿼리 (likes, replies, views 등)
@@ -291,8 +313,9 @@
 2. **판단의 복제** — Persona + Playbook이 브랜드 리듬 기억
 3. **결정론적 실행** — DAG 기반 추적 가능한 액션 체인
 4. **기억하는 자동화** — Trends RAG로 유사 인사이트 기반 학습
-5. **플랫폼 중립성** — Adapter 패턴으로 확장 가능한 구조
-6. **프론트엔드 융화** — BFF + OpenAPI 자동 동기화로 타입 안전성 보장
+5. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (1회 설정 → 영구 자동화)
+6. **플랫폼 중립성** — Adapter 패턴으로 확장 가능한 구조
+7. **프론트엔드 융화** — BFF + OpenAPI 자동 동기화로 타입 안전성 보장
 
 ---
 
@@ -312,7 +335,7 @@ pnpm dev:backend:and:frontend
 ---
 
 ## 📊 모델 통계
-- **총 모듈 개수:** 16+ (users, accounts, drafts, campaigns, playbooks, insights, scheduler, trends, adapters, abtests, injectors, mail, timeline, common)
+- **총 모듈 개수:** 16+ (users, accounts, drafts, campaigns, playbooks, insights, scheduler, trends, adapters, abtests, injectors, mail, timeline, common, reactive)
 - **총 Worker 종류:** 4 (CoWorker, Sniffer, Synchro, Adapter)
 - **지원 플랫폼:** Threads (완전), Instagram (Placeholder)
 - **데이터베이스 테이블:** 20+
