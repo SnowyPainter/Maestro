@@ -33,32 +33,6 @@ from apps.backend.src.modules.drafts.models import PostPublication, DraftVariant
 logger = logging.getLogger(__name__)
 ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
 SyncSessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
-_LOOP: Optional[asyncio.AbstractEventLoop] = None
-_LOOP_THREAD: Optional[threading.Thread] = None
-_LOOP_LOCK = threading.Lock()
-
-
-def _loop_runner(loop: asyncio.AbstractEventLoop) -> None:
-    asyncio.set_event_loop(loop)
-    loop.run_forever()
-
-
-def _ensure_loop() -> asyncio.AbstractEventLoop:
-    global _LOOP, _LOOP_THREAD
-    with _LOOP_LOCK:
-        needs_start = False
-        if _LOOP is None or _LOOP.is_closed():
-            _LOOP = asyncio.new_event_loop()
-            needs_start = True
-        if needs_start or _LOOP_THREAD is None or not _LOOP_THREAD.is_alive():
-            _LOOP_THREAD = threading.Thread(
-                target=_loop_runner,
-                name="coworker-generate-loop",
-                args=(_LOOP,),
-                daemon=True,
-            )
-            _LOOP_THREAD.start()
-    return _LOOP  # type: ignore[return-value]
 
 
 def _parse_int(value: Optional[str]) -> Optional[int]:
@@ -394,10 +368,13 @@ def generate_contextual_text(self, prompt_text: str) -> str:
         )
         return generated_text
 
-    loop = _ensure_loop()
-    future = asyncio.run_coroutine_threadsafe(_execute(), loop)
     try:
-        return future.result()
+        # Celery가 제공하는 이벤트 루프에서 직접 실행
+        loop = asyncio.get_running_loop()
+        return loop.run_until_complete(_execute())
+    except RuntimeError:
+        # 이벤트 루프가 실행 중이 아닌 경우 asyncio.run 사용
+        return asyncio.run(_execute())
     except Exception as exc:
         logger.exception("generate_contextual_text failed")
         if self.request.retries < self.max_retries:

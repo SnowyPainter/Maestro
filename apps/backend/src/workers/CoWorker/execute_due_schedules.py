@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import threading
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 from typing import Any, Optional, TYPE_CHECKING
@@ -35,32 +34,6 @@ logger = logging.getLogger(__name__)
 
 ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
-_LOOP: Optional[asyncio.AbstractEventLoop] = None
-_LOOP_THREAD: Optional[threading.Thread] = None
-_LOOP_LOCK = threading.Lock()
-
-
-def _loop_runner(loop: asyncio.AbstractEventLoop) -> None:
-    asyncio.set_event_loop(loop)
-    loop.run_forever()
-
-
-def _ensure_loop() -> asyncio.AbstractEventLoop:
-    global _LOOP, _LOOP_THREAD
-    with _LOOP_LOCK:
-        needs_start = False
-        if _LOOP is None or _LOOP.is_closed():
-            _LOOP = asyncio.new_event_loop()
-            needs_start = True
-        if needs_start or _LOOP_THREAD is None or not _LOOP_THREAD.is_alive():
-            _LOOP_THREAD = threading.Thread(
-                target=_loop_runner,
-                name="coworker-execute-loop",
-                args=(_LOOP,),
-                daemon=True,
-            )
-            _LOOP_THREAD.start()
-    return _LOOP  # type: ignore[return-value]
 
 
 def _emit_schedule_event(event: ScheduleEvent) -> None:
@@ -243,7 +216,7 @@ async def _execute_due_schedules(owner_user_id: Optional[int], task) -> dict[str
                     logger.exception("Failed to mark schedule %s as failed", schedule.id)
         rescheduled = False
         if owner_user_id is not None:
-            rescheduled = await _reschedule_self(task, owner_user_id)
+            rescheduled = _reschedule_self(task, owner_user_id)
         return {"processed": processed, "rescheduled": rescheduled}
 
 
@@ -254,13 +227,14 @@ async def _execute_due_schedules(owner_user_id: Optional[int], task) -> dict[str
     max_retries=0,
 )
 def execute_due_schedules(self, owner_user_id: Optional[int] = None):
-    async def _execute() -> dict[str, Any]:
-        return await _execute_due_schedules(owner_user_id, self)
-
-    loop = _ensure_loop()
-    future = asyncio.run_coroutine_threadsafe(_execute(), loop)
+    """Execute due schedules using the current event loop."""
     try:
-        return future.result()
+        # Celery가 제공하는 이벤트 루프에서 직접 실행
+        loop = asyncio.get_running_loop()
+        return loop.run_until_complete(_execute_due_schedules(owner_user_id, self))
+    except RuntimeError:
+        # 이벤트 루프가 실행 중이 아닌 경우 asyncio.run 사용
+        return asyncio.run(_execute_due_schedules(owner_user_id, self))
     except Exception as exc:
         logger.exception("execute_due_schedules failed")
         if self.request.retries < self.max_retries:
@@ -391,7 +365,17 @@ def ensure_coworker_polls() -> dict[str, int]:
     return {"inspected": len(leases), "started": restarted, "cleared": cleared}
 
 
-async def _reschedule_self(task, owner_user_id: int) -> bool:
+def _reschedule_self(task, owner_user_id: int) -> bool:
+    """Reschedule the task synchronously."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(_async_reschedule_self(task, owner_user_id))
+    finally:
+        loop.close()
+
+
+async def _async_reschedule_self(task, owner_user_id: int) -> bool:
     lease = await _fetch_lease(owner_user_id)
     if lease is None or not lease.active:
         await _store_task_id(owner_user_id, None)

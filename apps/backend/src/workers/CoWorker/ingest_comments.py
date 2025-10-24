@@ -314,8 +314,14 @@ async def _ingest(window_minutes: int, limit: int) -> Dict[str, int]:
 )
 def ingest_reactive_comments(self, *, window_minutes: int = 10, limit: int = 200) -> Dict[str, int]:
     """Entry point for Celery beat to evaluate recent insight comments."""
+    try:
+        # Celery가 제공하는 이벤트 루프에서 직접 실행
+        loop = asyncio.get_running_loop()
+        result = loop.run_until_complete(_ingest(window_minutes=window_minutes, limit=limit))
+    except RuntimeError:
+        # 이벤트 루프가 실행 중이 아닌 경우 asyncio.run 사용
+        result = asyncio.run(_ingest(window_minutes=window_minutes, limit=limit))
 
-    result = asyncio.run(_ingest(window_minutes=window_minutes, limit=limit))
     logger.info(
         "Reactive comment ingest complete",
         extra={"window_minutes": window_minutes, "limit": limit, **result},
