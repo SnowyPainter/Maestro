@@ -7,6 +7,9 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.reactive.schemas import (
+    ReactionMessageTemplateCreate,
+    ReactionMessageTemplateOut,
+    ReactionMessageTemplateUpdate,
     ReactionRuleCreate,
     ReactionRuleOut,
     ReactionRulePublicationCreate,
@@ -14,10 +17,13 @@ from apps.backend.src.modules.reactive.schemas import (
     ReactionRuleUpdate,
 )
 from apps.backend.src.modules.reactive.service import (
+    create_message_template,
     create_reaction_rule,
+    delete_message_template,
     delete_reaction_rule,
     link_rule_to_publication,
     unlink_rule_from_publication,
+    update_message_template,
     update_reaction_rule,
 )
 from apps.backend.src.modules.users.models import User
@@ -47,6 +53,18 @@ class ReactionRulePublicationDeleteCommand(BaseModel):
 
 class OperationResult(BaseModel):
     ok: bool
+
+
+class ReactionMessageTemplateCreateCommand(ReactionMessageTemplateCreate):
+    pass
+
+
+class ReactionMessageTemplateUpdateCommand(ReactionMessageTemplateUpdate):
+    template_id: int
+
+
+class ReactionMessageTemplateDeleteCommand(BaseModel):
+    template_id: int
 
 
 @operator(
@@ -116,6 +134,77 @@ async def op_delete_reaction_rule(
     )
     if not ok:
         raise HTTPException(status_code=404, detail="Reaction rule not found")
+    await db.commit()
+    return OperationResult(ok=True)
+
+
+@operator(
+    key="reactive.create_message_template",
+    title="Create reaction message template",
+    side_effect="write",
+)
+async def op_create_message_template(
+    payload: ReactionMessageTemplateCreateCommand,
+    ctx: TaskContext,
+) -> ReactionMessageTemplateOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    template = await create_message_template(
+        db,
+        payload,
+        owner_user_id=user.id,
+    )
+    await db.commit()
+    return template
+
+
+@operator(
+    key="reactive.update_message_template",
+    title="Update reaction message template",
+    side_effect="write",
+)
+async def op_update_message_template(
+    payload: ReactionMessageTemplateUpdateCommand,
+    ctx: TaskContext,
+) -> ReactionMessageTemplateOut:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    update_payload = ReactionMessageTemplateUpdate(
+        **payload.model_dump(
+            exclude={"template_id"},
+            exclude_unset=True,
+        )
+    )
+    template = await update_message_template(
+        db,
+        template_id=payload.template_id,
+        owner_user_id=user.id,
+        payload=update_payload,
+    )
+    if not template:
+        raise HTTPException(status_code=404, detail="Reaction message template not found")
+    await db.commit()
+    return template
+
+
+@operator(
+    key="reactive.delete_message_template",
+    title="Delete reaction message template",
+    side_effect="write",
+)
+async def op_delete_message_template(
+    payload: ReactionMessageTemplateDeleteCommand,
+    ctx: TaskContext,
+) -> OperationResult:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+    ok = await delete_message_template(
+        db,
+        template_id=payload.template_id,
+        owner_user_id=user.id,
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="Reaction message template not found")
     await db.commit()
     return OperationResult(ok=True)
 
@@ -213,6 +302,51 @@ def _flow_reactive_update_rule(builder: FlowBuilder):
 )
 def _flow_reactive_delete_rule(builder: FlowBuilder):
     task = builder.task("delete_rule", "reactive.delete_rule")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="reactive.create_message_template",
+    title="Create Reaction Message Template",
+    description="Create a reusable message template for reactive automations",
+    input_model=ReactionMessageTemplateCreateCommand,
+    output_model=ReactionMessageTemplateOut,
+    method="post",
+    path="/reactive/message-templates",
+    tags=("action", "reactive", "templates", "create"),
+)
+def _flow_reactive_create_message_template(builder: FlowBuilder):
+    task = builder.task("create_message_template", "reactive.create_message_template")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="reactive.update_message_template",
+    title="Update Reaction Message Template",
+    description="Update an existing reaction message template",
+    input_model=ReactionMessageTemplateUpdateCommand,
+    output_model=ReactionMessageTemplateOut,
+    method="patch",
+    path="/reactive/message-templates/{template_id}",
+    tags=("action", "reactive", "templates", "update"),
+)
+def _flow_reactive_update_message_template(builder: FlowBuilder):
+    task = builder.task("update_message_template", "reactive.update_message_template")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="reactive.delete_message_template",
+    title="Delete Reaction Message Template",
+    description="Delete an existing reaction message template",
+    input_model=ReactionMessageTemplateDeleteCommand,
+    output_model=OperationResult,
+    method="delete",
+    path="/reactive/message-templates/{template_id}",
+    tags=("action", "reactive", "templates", "delete"),
+)
+def _flow_reactive_delete_message_template(builder: FlowBuilder):
+    task = builder.task("delete_message_template", "reactive.delete_message_template")
     builder.expect_terminal(task)
 
 

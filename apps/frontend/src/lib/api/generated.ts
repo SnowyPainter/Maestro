@@ -1619,6 +1619,26 @@ export const ReactionMatchType = {
   regex: 'regex',
 } as const;
 
+export type ReactionMessageTemplateCreateCommandPersonaAccountId = number | null;
+
+export type ReactionMessageTemplateCreateCommandMetadataAnyOf = { [key: string]: unknown };
+
+export type ReactionMessageTemplateCreateCommandMetadata = ReactionMessageTemplateCreateCommandMetadataAnyOf | null;
+
+export interface ReactionMessageTemplateCreateCommand {
+  persona_account_id?: ReactionMessageTemplateCreateCommandPersonaAccountId;
+  template_type: ReactionActionType;
+  /** @nullable */
+  tag_key?: string | null;
+  /** @nullable */
+  title?: string | null;
+  body: string;
+  /** @nullable */
+  language?: string | null;
+  metadata?: ReactionMessageTemplateCreateCommandMetadata;
+  is_active?: boolean;
+}
+
 export interface ReactionMessageTemplateListResult {
   items?: ReactionMessageTemplateOut[];
 }
@@ -1645,6 +1665,32 @@ export interface ReactionMessageTemplateOut {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export type ReactionMessageTemplateUpdateCommandPersonaAccountId = number | null;
+
+export type ReactionMessageTemplateUpdateCommandTemplateType = ReactionActionType | null;
+
+export type ReactionMessageTemplateUpdateCommandMetadataAnyOf = { [key: string]: unknown };
+
+export type ReactionMessageTemplateUpdateCommandMetadata = ReactionMessageTemplateUpdateCommandMetadataAnyOf | null;
+
+export type ReactionMessageTemplateUpdateCommandIsActive = boolean | null;
+
+export interface ReactionMessageTemplateUpdateCommand {
+  persona_account_id?: ReactionMessageTemplateUpdateCommandPersonaAccountId;
+  template_type?: ReactionMessageTemplateUpdateCommandTemplateType;
+  /** @nullable */
+  tag_key?: string | null;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  body?: string | null;
+  /** @nullable */
+  language?: string | null;
+  metadata?: ReactionMessageTemplateUpdateCommandMetadata;
+  is_active?: ReactionMessageTemplateUpdateCommandIsActive;
+  template_id: number;
 }
 
 export type ReactionRuleActionConfigDmTemplateId = number | null;
@@ -9578,6 +9624,201 @@ export const useReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete = <TE
       > => {
 
       const mutationOptions = getReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Create a reusable message template for reactive automations
+ * @summary Create Reaction Message Template
+ */
+export const reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost = (
+    reactionMessageTemplateCreateCommand: ReactionMessageTemplateCreateCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<ReactionMessageTemplateOut>(
+      {url: `/api/orchestrator/reactive/message-templates`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: reactionMessageTemplateCreateCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getReactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost>>, TError,{data: ReactionMessageTemplateCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost>>, TError,{data: ReactionMessageTemplateCreateCommand}, TContext> => {
+
+const mutationKey = ['reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost>>, {data: ReactionMessageTemplateCreateCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost>>>
+    export type ReactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostMutationBody = ReactionMessageTemplateCreateCommand
+    export type ReactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Reaction Message Template
+ */
+export const useReactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost>>, TError,{data: ReactionMessageTemplateCreateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost>>,
+        TError,
+        {data: ReactionMessageTemplateCreateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Update an existing reaction message template
+ * @summary Update Reaction Message Template
+ */
+export const reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch = (
+    templateId: number,
+    reactionMessageTemplateUpdateCommand: ReactionMessageTemplateUpdateCommand,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<ReactionMessageTemplateOut>(
+      {url: `/api/orchestrator/reactive/message-templates/${templateId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: reactionMessageTemplateUpdateCommand
+    },
+      options);
+    }
+  
+
+
+export const getReactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch>>, TError,{templateId: number;data: ReactionMessageTemplateUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch>>, TError,{templateId: number;data: ReactionMessageTemplateUpdateCommand}, TContext> => {
+
+const mutationKey = ['reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch>>, {templateId: number;data: ReactionMessageTemplateUpdateCommand}> = (props) => {
+          const {templateId,data} = props ?? {};
+
+          return  reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch(templateId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch>>>
+    export type ReactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchMutationBody = ReactionMessageTemplateUpdateCommand
+    export type ReactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Reaction Message Template
+ */
+export const useReactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch>>, TError,{templateId: number;data: ReactionMessageTemplateUpdateCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch>>,
+        TError,
+        {templateId: number;data: ReactionMessageTemplateUpdateCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Delete an existing reaction message template
+ * @summary Delete Reaction Message Template
+ */
+export const reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete = (
+    templateId: number,
+ options?: SecondParameter<typeof apiFetch>,) => {
+      
+      
+      return apiFetch<OperationResult>(
+      {url: `/api/orchestrator/reactive/message-templates/${templateId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getReactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete>>, TError,{templateId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete>>, TError,{templateId: number}, TContext> => {
+
+const mutationKey = ['reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete>>, {templateId: number}> = (props) => {
+          const {templateId} = props ?? {};
+
+          return  reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete(templateId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete>>>
+    
+    export type ReactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Reaction Message Template
+ */
+export const useReactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete>>, TError,{templateId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete>>,
+        TError,
+        {templateId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getReactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDeleteMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

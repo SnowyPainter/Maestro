@@ -136,6 +136,32 @@ class ReactionActionLogListResult(BaseModel):
     items: List[ReactionActionLogOut] = Field(default_factory=list)
 
 
+class ReactionMessageTemplateBase(BaseModel):
+    persona_account_id: Optional[int] = Field(default=None)
+    template_type: ReactionActionType
+    tag_key: Optional[str] = Field(default=None)
+    title: Optional[str] = Field(default=None)
+    body: str
+    language: Optional[str] = Field(default=None)
+    metadata: Optional[dict] = Field(default=None)
+    is_active: bool = True
+
+
+class ReactionMessageTemplateCreate(ReactionMessageTemplateBase):
+    pass
+
+
+class ReactionMessageTemplateUpdate(BaseModel):
+    persona_account_id: Optional[int] = Field(default=None)
+    template_type: Optional[ReactionActionType] = Field(default=None)
+    tag_key: Optional[str] = Field(default=None)
+    title: Optional[str] = Field(default=None)
+    body: Optional[str] = Field(default=None)
+    language: Optional[str] = Field(default=None)
+    metadata: Optional[dict] = Field(default=None)
+    is_active: Optional[bool] = Field(default=None)
+
+
 class ReactionMessageTemplateOut(BaseModel):
     id: int
     owner_user_id: int

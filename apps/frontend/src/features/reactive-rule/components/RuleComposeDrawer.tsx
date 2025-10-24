@@ -10,9 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Plus, Hash, Settings, AlertTriangle, MessageSquare } from "lucide-react";
+import { Trash2, Plus, Hash, Settings, AlertTriangle, MessageSquare, ChevronLeft, ChevronRight, Info, Tag, Zap } from "lucide-react";
 import { useReactiveCreateRuleApiOrchestratorReactiveRulesPost, useReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch, useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet, ReactionRuleCreateCommand, ReactionRuleUpdateCommand, ReactionRuleKeywordConfig, ReactionRuleActionConfig } from "@/lib/api/generated";
 import { ReactionRuleStatus, ReactionMatchType, ReactionActionType, ReactionLLMMode } from "@/lib/api/generated";
+import { BasicInfoStep } from "./steps/BasicInfoStep";
+import { KeywordTagMappingStep } from "./steps/KeywordTagMappingStep";
+import { ActionConfigurationStep } from "./steps/ActionConfigurationStep";
 import { toast } from "sonner";
 
 // Extended interface for UI needs
@@ -41,6 +44,34 @@ export function RuleComposeDrawer({
   const createMutation = useReactiveCreateRuleApiOrchestratorReactiveRulesPost();
   const updateMutation = useReactiveUpdateRuleApiOrchestratorReactiveRulesRuleIdPatch();
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  // Step management
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
+
+  const steps = [
+    {
+      id: 1,
+      title: "Basic Information",
+      description: "Set up your rule's basic details",
+      icon: Info,
+    },
+    {
+      id: 2,
+      title: "Keyword-Tag Mapping",
+      description: "Define keywords and their corresponding tags",
+      icon: Tag,
+    },
+    {
+      id: 3,
+      title: "Action Configuration",
+      description: "Configure what actions to take when keywords match",
+      icon: Zap,
+    },
+  ];
+
+  const nextStep = () => setCurrentStep(Math.min(currentStep + 1, totalSteps));
+  const prevStep = () => setCurrentStep(Math.max(currentStep - 1, 1));
 
   // Fetch template list
   const { data: templatesData } = useBffReactiveListTemplatesApiBffReactiveMessageTemplatesGet({
@@ -147,9 +178,51 @@ export function RuleComposeDrawer({
     });
   };
 
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return <BasicInfoStep register={register} watch={watch} setValue={setValue} errors={errors} />;
+      case 2:
+        return <KeywordTagMappingStep
+          fields={keywordFields}
+          register={register}
+          watch={watch}
+          setValue={setValue}
+          addKeyword={addKeyword}
+          removeKeyword={removeKeyword}
+        />;
+      case 3:
+        return <ActionConfigurationStep
+          fields={actionFields}
+          register={register}
+          watch={watch}
+          setValue={setValue}
+          addAction={addAction}
+          removeAction={removeAction}
+          templates={templates}
+          availableTags={keywordFields.map((_, index) => watch(`keywords.${index}.tag_key`)).filter(Boolean)}
+        />;
+      default:
+        return null;
+    }
+  };
+
+  const canProceedToNext = () => {
+    switch (currentStep) {
+      case 1:
+        return watch("name")?.trim() !== "";
+      case 2:
+        return keywordFields.length > 0;
+      case 3:
+        return actionFields.length > 0;
+      default:
+        return true;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-4xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -157,315 +230,90 @@ export function RuleComposeDrawer({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 p-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Rule Name *</Label>
-                  <Input
-                    id="name"
-                    {...register("name")}
-                    placeholder="Enter rule name"
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+        {/* Progress Indicator */}
+        <form onSubmit={handleSubmit(onSubmit)} className="px-6 pb-6">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between mb-4">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const isActive = step.id === currentStep;
+              const isCompleted = step.id < currentStep;
+
+              return (
+                <div key={step.id} className="flex items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                    isCompleted
+                      ? "bg-green-500 border-green-500 text-white"
+                      : isActive
+                        ? "border-blue-500 text-blue-500"
+                        : "border-gray-300 text-gray-400"
+                  }`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className={`w-12 h-0.5 mx-2 ${
+                      step.id < currentStep ? "bg-green-500" : "bg-gray-300"
+                    }`} />
                   )}
                 </div>
-                <div>
-                  <Label htmlFor="priority">Priority</Label>
-                  <Input
-                    id="priority"
-                    type="number"
-                    min={0}
-                    max={100}
-                    {...register("priority", { valueAsNumber: true })}
-                  />
-                  {errors.priority && (
-                    <p className="text-sm text-destructive mt-1">{errors.priority.message}</p>
-                  )}
-                </div>
-              </div>
+              );
+            })}
+          </div>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  {...register("description")}
-                  placeholder="Enter rule description"
-                  rows={3}
-                />
-              </div>
+          <div className="text-center mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {steps[currentStep - 1].title}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              {steps[currentStep - 1].description}
+            </p>
+          </div>
 
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={watch("status")}
-                  onValueChange={(value: ReactionRuleStatus) => setValue("status", value)}
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
+          </div>
+        </div>
+
+          {/* Step Content */}
+          <div className="min-h-[400px]">
+            {renderStepContent()}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-between items-center pt-6 border-t">
+            <div className="flex gap-2">
+              {currentStep > 1 && (
+                <Button type="button" variant="outline" onClick={prevStep}>
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              {currentStep < totalSteps ? (
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={!canProceedToNext()}
+                  className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 px-4 py-2 ${
+                    !canProceedToNext()
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ReactionRuleStatus.active}>Active</SelectItem>
-                    <SelectItem value={ReactionRuleStatus.inactive}>Inactive</SelectItem>
-                    <SelectItem value={ReactionRuleStatus.archived}>Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Keyword Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Hash className="h-4 w-4" />
-                  Keyword Settings
-                </span>
-                <Button type="button" variant="outline" size="sm" onClick={addKeyword}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Keyword
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </button>
+              ) : (
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Saving..." : (isEdit ? "Update Rule" : "Create Rule")}
                 </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {keywordFields.map((field, index) => (
-                <div key={field.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Keyword {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeKeyword(index)}
-                      disabled={keywordFields.length === 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Tag Key *</Label>
-                      <Input
-                        {...register(`keywords.${index}.tag_key`)}
-                        placeholder="Tag key"
-                      />
-                    </div>
-                    <div>
-                      <Label>Match Type</Label>
-                      <Select
-                        value={watch(`keywords.${index}.match_type`)}
-                        onValueChange={(value: ReactionMatchType) =>
-                          setValue(`keywords.${index}.match_type`, value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={ReactionMatchType.contains}>Contains</SelectItem>
-                          <SelectItem value={ReactionMatchType.exact}>Exact Match</SelectItem>
-                          <SelectItem value={ReactionMatchType.regex}>Regex</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2">
-                      <Label>Keyword *</Label>
-                      <Input
-                        {...register(`keywords.${index}.keyword`)}
-                        placeholder="Enter keyword"
-                      />
-                    </div>
-                    <div>
-                      <Label>Language</Label>
-                      <Input
-                        {...register(`keywords.${index}.language`)}
-                        placeholder="ko, en, etc."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          checked={watch(`keywords.${index}.is_active`)}
-                          onCheckedChange={(checked) =>
-                            setValue(`keywords.${index}.is_active`, checked)
-                          }
-                        />
-                        <Label>Active</Label>
-                      </div>
-                      <div className="w-20">
-                        <Label>Priority</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={100}
-                          {...register(`keywords.${index}.priority`, { valueAsNumber: true })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Action Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  Action Settings
-                </span>
-                <Button type="button" variant="outline" size="sm" onClick={addAction}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Action
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {actionFields.map((field, index) => (
-                <div key={field.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Action {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeAction(index)}
-                      disabled={actionFields.length === 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Tag Key *</Label>
-                      <Input
-                        {...register(`actions.${index}.tag_key`)}
-                        placeholder="Tag key"
-                      />
-                    </div>
-                    <div>
-                      <Label>Action Type</Label>
-                      <Select
-                        value={watch(`actions.${index}.action_type`)}
-                        onValueChange={(value: ReactionActionType) =>
-                          setValue(`actions.${index}.action_type`, value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={ReactionActionType.dm}>DM</SelectItem>
-                          <SelectItem value={ReactionActionType.reply}>Reply</SelectItem>
-                          <SelectItem value={ReactionActionType.alert}>Alert</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {(watch(`actions.${index}.action_type`) === ReactionActionType.dm ||
-                    watch(`actions.${index}.action_type`) === ReactionActionType.reply) && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label>DM Template</Label>
-                        <Select
-                          value={watch(`actions.${index}.dm_template_id`)?.toString() || ""}
-                          onValueChange={(value) =>
-                            setValue(`actions.${index}.dm_template_id`, value ? parseInt(value) : null)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select DM template" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {templates
-                              .filter(template => template.template_type === ReactionActionType.dm)
-                              .map((template) => (
-                                <SelectItem key={template.id} value={template.id.toString()}>
-                                  {template.title || template.tag_key || `Template ${template.id}`}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Reply Template</Label>
-                        <Select
-                          value={watch(`actions.${index}.reply_template_id`)?.toString() || ""}
-                          onValueChange={(value) =>
-                            setValue(`actions.${index}.reply_template_id`, value ? parseInt(value) : null)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select reply template" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {templates
-                              .filter(template => template.template_type === ReactionActionType.reply)
-                              .map((template) => (
-                                <SelectItem key={template.id} value={template.id.toString()}>
-                                  {template.title || template.tag_key || `Template ${template.id}`}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={watch(`actions.${index}.alert_enabled`)}
-                        onCheckedChange={(checked) =>
-                          setValue(`actions.${index}.alert_enabled`, checked)
-                        }
-                      />
-                      <Label className="flex items-center gap-1">
-                        <AlertTriangle className="h-4 w-4" />
-                        Alert Enabled
-                      </Label>
-                    </div>
-
-                    {watch(`actions.${index}.alert_enabled`) && (
-                      <div className="flex-1">
-                        <Label>Alert Severity</Label>
-                        <Input
-                          {...register(`actions.${index}.alert_severity`)}
-                          placeholder="high, medium, low, etc."
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end gap-2 pt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving..." : (isEdit ? "Update" : "Create")}
-            </Button>
+              )}
+            </div>
           </div>
         </form>
       </DialogContent>

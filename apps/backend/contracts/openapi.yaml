@@ -3433,6 +3433,103 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/reactive/message-templates:
+    post:
+      tags:
+      - action
+      - action
+      - reactive
+      - templates
+      - create
+      summary: Create Reaction Message Template
+      description: Create a reusable message template for reactive automations
+      operationId: reactive_create_message_template_api_orchestrator_reactive_message_templates_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionMessageTemplateCreateCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionMessageTemplateOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/reactive/message-templates/{template_id}:
+    patch:
+      tags:
+      - action
+      - action
+      - reactive
+      - templates
+      - update
+      summary: Update Reaction Message Template
+      description: Update an existing reaction message template
+      operationId: reactive_update_message_template_api_orchestrator_reactive_message_templates__template_id__patch
+      parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Template Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionMessageTemplateUpdateCommand'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionMessageTemplateOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - action
+      - action
+      - reactive
+      - templates
+      - delete
+      summary: Delete Reaction Message Template
+      description: Delete an existing reaction message template
+      operationId: reactive_delete_message_template_api_orchestrator_reactive_message_templates__template_id__delete
+      parameters:
+      - name: template_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Template Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/reactive/rules/{rule_id}/publications:
     post:
       tags:
@@ -7060,6 +7157,45 @@ components:
       - contains
       - regex
       title: ReactionMatchType
+    ReactionMessageTemplateCreateCommand:
+      properties:
+        persona_account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+        template_type:
+          $ref: '#/components/schemas/ReactionActionType'
+        tag_key:
+          title: Tag Key
+          type: string
+          nullable: true
+        title:
+          title: Title
+          type: string
+          nullable: true
+        body:
+          type: string
+          title: Body
+        language:
+          title: Language
+          type: string
+          nullable: true
+        metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata
+        is_active:
+          type: boolean
+          title: Is Active
+          default: true
+      type: object
+      required:
+      - template_type
+      - body
+      title: ReactionMessageTemplateCreateCommand
     ReactionMessageTemplateListResult:
       properties:
         items:
@@ -7131,6 +7267,51 @@ components:
       - created_at
       - updated_at
       title: ReactionMessageTemplateOut
+    ReactionMessageTemplateUpdateCommand:
+      properties:
+        persona_account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+        template_type:
+          anyOf:
+          - $ref: '#/components/schemas/ReactionActionType'
+          - type: 'null'
+        tag_key:
+          title: Tag Key
+          type: string
+          nullable: true
+        title:
+          title: Title
+          type: string
+          nullable: true
+        body:
+          title: Body
+          type: string
+          nullable: true
+        language:
+          title: Language
+          type: string
+          nullable: true
+        metadata:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Metadata
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+        template_id:
+          type: integer
+          title: Template Id
+      type: object
+      required:
+      - template_id
+      title: ReactionMessageTemplateUpdateCommand
     ReactionRuleActionConfig:
       properties:
         tag_key:

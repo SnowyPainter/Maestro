@@ -108,6 +108,8 @@ slots:
   value_type: string
   flows:
   - internal.event.mail.ingest_draft_mail
+  - reactive.create_message_template
+  - reactive.update_message_template
 - name: campaign_id
   label: Campaign Id
   description: Target a specific campaign id
@@ -344,7 +346,9 @@ slots:
   description: Filter by is active
   value_type: boolean
   flows:
+  - reactive.create_message_template
   - reactive.link_rule_publication
+  - reactive.update_message_template
 - name: keywords
   label: Keywords
   description: Filter by keywords
@@ -352,6 +356,13 @@ slots:
   flows:
   - reactive.create_rule
   - reactive.update_rule
+- name: language
+  label: Language
+  description: Filter by language
+  value_type: string
+  flows:
+  - reactive.create_message_template
+  - reactive.update_message_template
 - name: last_event
   label: Last Event
   description: Filter by last event
@@ -412,6 +423,13 @@ slots:
   value_type: string
   flows:
   - action.schedule.create_from_raw_dag
+- name: metadata
+  label: Metadata
+  description: Filter by metadata
+  value_type: string
+  flows:
+  - reactive.create_message_template
+  - reactive.update_message_template
 - name: metrics
   label: Metrics
   description: Filter by metrics
@@ -506,6 +524,8 @@ slots:
   - internal.insights.list_comments
   - internal.insights.sync_metrics
   - internal.mail.compose_trends_email
+  - reactive.create_message_template
+  - reactive.update_message_template
 - name: persona_account_ids
   label: Persona Account Ids
   description: Filter by persona account ids
@@ -777,6 +797,8 @@ slots:
   flows:
   - bff.reactive.list_action_logs
   - bff.reactive.list_templates
+  - reactive.create_message_template
+  - reactive.update_message_template
 - name: tags
   label: Tags
   description: Filter by tags
@@ -804,12 +826,20 @@ slots:
   value_type: integer
   flows:
   - bff.reactive.read_template
+  - reactive.delete_message_template
+  - reactive.update_message_template
 - name: template_type
   label: Template Type
   description: Filter by template type
-  value_type: string
+  value_type: enum
+  choices:
+  - dm
+  - reply
+  - alert
   flows:
   - bff.reactive.list_templates
+  - reactive.create_message_template
+  - reactive.update_message_template
 - name: text
   label: Text
   description: Filter by text
@@ -844,6 +874,8 @@ slots:
   - action.schedule.create_trends_mail_schedule
   - drafts.create
   - drafts.update_ir
+  - reactive.create_message_template
+  - reactive.update_message_template
 - name: ts
   label: Ts
   description: Filter by ts

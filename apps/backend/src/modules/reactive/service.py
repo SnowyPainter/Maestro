@@ -39,7 +39,9 @@ from apps.backend.src.modules.reactive.schemas import (
     ReactionRulePublicationCreate,
     ReactionRulePublicationLink,
     ReactionRuleUpdate,
+    ReactionMessageTemplateCreate,
     ReactionMessageTemplateOut,
+    ReactionMessageTemplateUpdate,
 )
 
 
@@ -187,6 +189,87 @@ async def get_message_template(
     if template is None:
         return None
     return _serialize_message_template(template)
+
+
+async def create_message_template(
+    db: AsyncSession,
+    payload: ReactionMessageTemplateCreate,
+    *,
+    owner_user_id: int,
+) -> ReactionMessageTemplateOut:
+    template = ReactionMessageTemplate(
+        owner_user_id=owner_user_id,
+        persona_account_id=payload.persona_account_id,
+        template_type=payload.template_type,
+        tag_key=payload.tag_key,
+        title=payload.title,
+        body=payload.body,
+        language=payload.language,
+        template_metadata=payload.metadata,
+        is_active=payload.is_active,
+    )
+    db.add(template)
+    await db.flush()
+    await db.refresh(template)
+    return _serialize_message_template(template)
+
+
+async def update_message_template(
+    db: AsyncSession,
+    *,
+    template_id: int,
+    owner_user_id: int,
+    payload: ReactionMessageTemplateUpdate,
+) -> Optional[ReactionMessageTemplateOut]:
+    stmt = select(ReactionMessageTemplate).where(
+        ReactionMessageTemplate.id == template_id,
+        ReactionMessageTemplate.owner_user_id == owner_user_id,
+    )
+    result = await db.execute(stmt)
+    template = result.scalar_one_or_none()
+    if template is None:
+        return None
+
+    fields_set = payload.model_fields_set
+    if "persona_account_id" in fields_set:
+        template.persona_account_id = payload.persona_account_id
+    if "template_type" in fields_set:
+        template.template_type = payload.template_type
+    if "tag_key" in fields_set:
+        template.tag_key = payload.tag_key
+    if "title" in fields_set:
+        template.title = payload.title
+    if "body" in fields_set and payload.body is not None:
+        template.body = payload.body
+    if "language" in fields_set:
+        template.language = payload.language
+    if "metadata" in fields_set:
+        template.template_metadata = payload.metadata
+    if "is_active" in fields_set:
+        template.is_active = payload.is_active if payload.is_active is not None else template.is_active
+
+    await db.flush()
+    await db.refresh(template)
+    return _serialize_message_template(template)
+
+
+async def delete_message_template(
+    db: AsyncSession,
+    *,
+    template_id: int,
+    owner_user_id: int,
+) -> bool:
+    stmt = select(ReactionMessageTemplate).where(
+        ReactionMessageTemplate.id == template_id,
+        ReactionMessageTemplate.owner_user_id == owner_user_id,
+    )
+    result = await db.execute(stmt)
+    template = result.scalar_one_or_none()
+    if template is None:
+        return False
+    await db.delete(template)
+    await db.flush()
+    return True
 
 
 async def get_reaction_rule(

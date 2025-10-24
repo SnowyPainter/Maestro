@@ -1681,6 +1681,50 @@ export interface paths {
         patch: operations["reactive_update_rule_api_orchestrator_reactive_rules__rule_id__patch"];
         trace?: never;
     };
+    "/api/orchestrator/reactive/message-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Reaction Message Template
+         * @description Create a reusable message template for reactive automations
+         */
+        post: operations["reactive_create_message_template_api_orchestrator_reactive_message_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/reactive/message-templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Reaction Message Template
+         * @description Delete an existing reaction message template
+         */
+        delete: operations["reactive_delete_message_template_api_orchestrator_reactive_message_templates__template_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Reaction Message Template
+         * @description Update an existing reaction message template
+         */
+        patch: operations["reactive_update_message_template_api_orchestrator_reactive_message_templates__template_id__patch"];
+        trace?: never;
+    };
     "/api/orchestrator/reactive/rules/{rule_id}/publications": {
         parameters: {
             query?: never;
@@ -3804,6 +3848,29 @@ export interface components {
          * @enum {string}
          */
         ReactionMatchType: "exact" | "contains" | "regex";
+        /** ReactionMessageTemplateCreateCommand */
+        ReactionMessageTemplateCreateCommand: {
+            /** Persona Account Id */
+            persona_account_id?: number | null;
+            template_type: components["schemas"]["ReactionActionType"];
+            /** Tag Key */
+            tag_key?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body: string;
+            /** Language */
+            language?: string | null;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
         /** ReactionMessageTemplateListResult */
         ReactionMessageTemplateListResult: {
             /** Items */
@@ -3842,6 +3909,28 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** ReactionMessageTemplateUpdateCommand */
+        ReactionMessageTemplateUpdateCommand: {
+            /** Persona Account Id */
+            persona_account_id?: number | null;
+            template_type?: components["schemas"]["ReactionActionType"] | null;
+            /** Tag Key */
+            tag_key?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body?: string | null;
+            /** Language */
+            language?: string | null;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /** Is Active */
+            is_active?: boolean | null;
+            /** Template Id */
+            template_id: number;
         };
         /** ReactionRuleActionConfig */
         ReactionRuleActionConfig: {
@@ -7652,6 +7741,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReactionRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_create_message_template_api_orchestrator_reactive_message_templates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionMessageTemplateCreateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionMessageTemplateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_delete_message_template_api_orchestrator_reactive_message_templates__template_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reactive_update_message_template_api_orchestrator_reactive_message_templates__template_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionMessageTemplateUpdateCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReactionMessageTemplateOut"];
                 };
             };
             /** @description Validation Error */

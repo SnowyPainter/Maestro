@@ -3248,6 +3248,88 @@ export const reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteResponse 
 
 
 /**
+ * Create a reusable message template for reactive automations
+ * @summary Create Reaction Message Template
+ */
+export const reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostBodyIsActiveDefault = true;
+
+export const reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostBody = zod.object({
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "template_type": zod.enum(['dm', 'reply', 'alert']),
+  "tag_key": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "body": zod.string(),
+  "language": zod.string().nullish(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "is_active": zod.boolean().default(reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostBodyIsActiveDefault)
+})
+
+export const reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostResponse = zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]),
+  "template_type": zod.enum(['dm', 'reply', 'alert']),
+  "tag_key": zod.string().nullable(),
+  "title": zod.string().nullable(),
+  "body": zod.string(),
+  "language": zod.string().nullable(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]),
+  "is_active": zod.boolean(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * Update an existing reaction message template
+ * @summary Update Reaction Message Template
+ */
+export const reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchParams = zod.object({
+  "template_id": zod.number()
+})
+
+export const reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchBody = zod.object({
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "template_type": zod.union([zod.enum(['dm', 'reply', 'alert']),zod.null()]).optional(),
+  "tag_key": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "body": zod.string().nullish(),
+  "language": zod.string().nullish(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "is_active": zod.union([zod.boolean(),zod.null()]).optional(),
+  "template_id": zod.number()
+})
+
+export const reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchResponse = zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]),
+  "template_type": zod.enum(['dm', 'reply', 'alert']),
+  "tag_key": zod.string().nullable(),
+  "title": zod.string().nullable(),
+  "body": zod.string(),
+  "language": zod.string().nullable(),
+  "metadata": zod.union([zod.record(zod.string(), zod.any()),zod.null()]),
+  "is_active": zod.boolean(),
+  "created_at": zod.iso.datetime({}),
+  "updated_at": zod.iso.datetime({})
+})
+
+
+/**
+ * Delete an existing reaction message template
+ * @summary Delete Reaction Message Template
+ */
+export const reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDeleteParams = zod.object({
+  "template_id": zod.number()
+})
+
+export const reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDeleteResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * Connect a reaction rule to a post publication
  * @summary Attach Reaction Rule to Publication
  */
