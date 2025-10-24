@@ -17,6 +17,7 @@ celery_app = Celery(
         "apps.backend.src.workers.Adapter.tasks",
         "apps.backend.src.workers.CoWorker.execute_due_schedules",
         "apps.backend.src.workers.CoWorker.generate_texts",
+        "apps.backend.src.workers.CoWorker.ingest_comments",
     ],
 )
 
@@ -74,6 +75,12 @@ beat_schedule["sniff_mailbox"] = {
 beat_schedule["ensure_coworker_polls"] = {
     "task": "apps.backend.src.workers.coworker.ensure_coworker_polls",
     "schedule": timedelta(seconds=45),
+    "options": {"queue": "coworker"},
+}
+
+beat_schedule["ingest_reactive_comments"] = {
+    "task": "apps.backend.src.workers.CoWorker.ingest_comments.ingest_reactive_comments",
+    "schedule": timedelta(minutes=5),
     "options": {"queue": "coworker"},
 }
 

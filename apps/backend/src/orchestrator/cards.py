@@ -38,6 +38,11 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "PlaybookListResponse": "playbook.list",
     "PlaybookSearchResponse": "playbook.list",
     "MessageOut": "info",
+    "ReactionRuleListResult": "reactive.rule.overview",
+    "ReactionRuleOut": "reactive.rule.detail",
+    "ReactionRuleLinksResult": "reactive.rule.publications",
+    "ReactionActionLogListResult": "reactive.activity.log",
+    "OperationResult": "info",
 }
 
 CARD_TYPE_RULES: Sequence[Tuple[re.Pattern[str], str]] = (

@@ -80,3 +80,28 @@ class ScheduleStatus(str, enum.Enum):
     DONE = "done"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+class ReactionRuleStatus(str, enum.Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    ARCHIVED = "archived"
+
+class ReactionMatchType(str, enum.Enum):
+    EXACT = "exact"
+    CONTAINS = "contains"
+    REGEX = "regex"
+
+class ReactionActionType(str, enum.Enum):
+    DM = "dm"
+    REPLY = "reply"
+    ALERT = "alert"
+
+class ReactionActionStatus(str, enum.Enum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+class ReactionLLMMode(str, enum.Enum):
+    TEMPLATE_ONLY = "template_only"
+    TEMPLATE_WITH_LLM_AUGMENT = "template_with_llm_augment"

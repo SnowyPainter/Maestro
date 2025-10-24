@@ -83,6 +83,22 @@ class ThreadsAdapter(CapabilityAdapter[SpecCompiler]):
             comment_reader=comment_reader,
         )
 
+    async def send_direct_message(
+        self,
+        *,
+        recipient_external_id: str,
+        credentials: dict,
+        text: str,
+        options: dict | None = None,
+    ) -> dict[str, Any]:
+        """Threads API does not currently support direct message automation."""
+
+        return {
+            "ok": False,
+            "skipped": True,
+            "reason": "threads_direct_message_not_supported",
+        }
+
 
 # Compile ----------------------------------------------------------------------------------------
 def _threads_metric_hook(state: CompileState) -> None:

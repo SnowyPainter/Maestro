@@ -6,17 +6,26 @@ from typing import Iterable, Optional, Union
 
 from apps.backend.src.core.celery_app import celery_app
 from celery import shared_task
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from apps.backend.src.core.config import settings
-from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus
+from apps.backend.src.modules.common.enums import (
+    PlatformKind,
+    ReactionActionStatus,
+    ReactionActionType,
+    VariantStatus,
+)
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant
 from apps.backend.src.modules.adapters.service import compile_variant
 from apps.backend.src.core.context import get_persona_account_id
 from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
 from apps.backend.src.modules.adapters.core.types import PublishResult, RenderedVariantBlocks, MetricsResult
+from apps.backend.src.modules.reactive.models import ReactionActionLog
+from apps.backend.src.modules.insights.models import InsightComment
+from apps.backend.src.modules.accounts.models import PlatformAccount
+from sqlalchemy.exc import IntegrityError
 
 _ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=_ENGINE, autocommit=False, autoflush=False)
@@ -35,6 +44,77 @@ def _load_persona(session, persona_account_id: Optional[int]) -> Optional[Person
 
     persona_account = session.get(PersonaAccount, persona_account_id)
     return persona_account.persona if persona_account else None
+
+
+def _load_persona_account_with_platform(session, persona_account_id: int) -> tuple[Optional[PersonaAccount], Optional[PlatformAccount]]:
+    if persona_account_id is None:
+        return None, None
+    persona_account = session.get(PersonaAccount, persona_account_id)
+    if not persona_account:
+        return None, None
+    platform_account = session.get(PlatformAccount, persona_account.account_id)
+    return persona_account, platform_account
+
+
+def _get_or_create_reaction_log(
+    session,
+    *,
+    insight_comment_id: int,
+    reaction_rule_id: Optional[int],
+    tag_key: str,
+    action_type: ReactionActionType,
+    payload: Optional[dict] = None,
+) -> ReactionActionLog:
+    stmt = (
+        select(ReactionActionLog)
+        .where(
+            ReactionActionLog.insight_comment_id == insight_comment_id,
+            ReactionActionLog.tag_key == tag_key,
+            ReactionActionLog.action_type == action_type,
+        )
+        .limit(1)
+    )
+    log = session.execute(stmt).scalar_one_or_none()
+    if log:
+        return log
+
+    log = ReactionActionLog(
+        insight_comment_id=insight_comment_id,
+        reaction_rule_id=reaction_rule_id,
+        tag_key=tag_key,
+        action_type=action_type,
+        status=ReactionActionStatus.PENDING,
+        payload=payload,
+    )
+    session.add(log)
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        # Another worker inserted the log concurrently; fetch it.
+        log = session.execute(stmt).scalar_one_or_none()
+        if log:
+            return log
+        raise
+    session.refresh(log)
+    return log
+
+
+def _mark_reaction_log(
+    session,
+    *,
+    log: ReactionActionLog,
+    status: ReactionActionStatus,
+    payload: Optional[dict] = None,
+    error: Optional[str] = None,
+) -> None:
+    log.status = status
+    log.payload = payload
+    log.error = error
+    log.executed_at = datetime.now(timezone.utc)
+    session.add(log)
+    session.commit()
+    session.refresh(log)
 
 
 def enqueue_variant_compile(
@@ -150,9 +230,339 @@ async def sync_metrics_with_adapter(
     adapter = ADAPTER_REGISTRY.create_instance(platform)
     return await adapter.sync_metrics(external_id, credentials=credentials)
 
+
+@celery_app.task(
+    name="apps.backend.src.workers.Adapter.tasks.reactive_reply_to_comment",
+    queue="coworker",
+    bind=True
+)
+def reactive_reply_to_comment(
+    self,
+    *,
+    insight_comment_id: int,
+    persona_account_id: int,
+    reaction_rule_id: Optional[int],
+    tag_key: str,
+    message: str,
+    metadata: Optional[dict] = None,
+):
+    """Post a reply to a comment while guarding against duplicate replies."""
+
+    with SessionLocal() as session:
+        comment: InsightComment | None = session.get(InsightComment, insight_comment_id)
+        if comment is None:
+            return {
+                "ok": False,
+                "reason": "comment_not_found",
+                "insight_comment_id": insight_comment_id,
+            }
+
+        log = _get_or_create_reaction_log(
+            session,
+            insight_comment_id=insight_comment_id,
+            reaction_rule_id=reaction_rule_id,
+            tag_key=tag_key,
+            action_type=ReactionActionType.REPLY,
+            payload={"message": message, "metadata": metadata},
+        )
+
+        if log.status == ReactionActionStatus.SUCCESS:
+            return {
+                "ok": True,
+                "skipped": True,
+                "reason": "already_executed",
+            }
+
+        if comment.is_owned_by_me:
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.SKIPPED,
+                error="comment_authored_by_me",
+            )
+            return {
+                "ok": True,
+                "skipped": True,
+                "reason": "comment_authored_by_me",
+            }
+
+        # Guard against duplicate replies already posted by us.
+        existing_reply_stmt = (
+            select(InsightComment)
+            .where(
+                InsightComment.platform == comment.platform,
+                InsightComment.parent_external_id == comment.comment_external_id,
+                InsightComment.is_owned_by_me.is_(True),
+            )
+            .limit(1)
+        )
+        existing_reply = session.execute(existing_reply_stmt).scalar_one_or_none()
+        if existing_reply:
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.SKIPPED,
+                payload={
+                    "existing_comment_id": existing_reply.id,
+                    "existing_comment_external_id": existing_reply.comment_external_id,
+                },
+                error="reply_already_exists",
+            )
+            return {
+                "ok": True,
+                "skipped": True,
+                "reason": "reply_already_exists",
+            }
+
+        persona_account, platform_account = _load_persona_account_with_platform(
+            session,
+            persona_account_id,
+        )
+        if not persona_account or not platform_account:
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.FAILED,
+                error="persona_account_not_found",
+            )
+            return {
+                "ok": False,
+                "reason": "persona_account_not_found",
+            }
+
+        credentials = {}
+        if platform_account.access_token:
+            credentials["access_token"] = platform_account.access_token
+        if platform_account.external_id:
+            credentials["threads_user_id"] = platform_account.external_id
+            credentials["user_id"] = platform_account.external_id
+
+        if comment.platform not in (PlatformKind.THREADS,):
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.SKIPPED,
+                error=f"comment_reply_not_supported_for_{comment.platform.value}",
+            )
+            return {
+                "ok": True,
+                "skipped": True,
+                "reason": "unsupported_platform",
+            }
+
+        adapter = ADAPTER_REGISTRY.create_instance(comment.platform)
+
+        try:
+            result = asyncio.run(
+                adapter.create_comment(
+                    comment.comment_external_id,
+                    credentials=credentials,
+                    text=message,
+                    options=metadata or None,
+                )
+            )
+        except Exception as exc:  # pragma: no cover - safety guard
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.FAILED,
+                error=str(exc),
+            )
+            raise
+
+        if result.ok:
+            payload = {
+                "external_id": result.external_id,
+                "permalink": result.permalink,
+                "warnings": result.warnings,
+            }
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.SUCCESS,
+                payload=payload,
+            )
+            return {
+                "ok": True,
+                "external_id": result.external_id,
+                "permalink": result.permalink,
+                "warnings": result.warnings,
+            }
+
+        payload = {
+            "warnings": result.warnings,
+        }
+        _mark_reaction_log(
+            session,
+            log=log,
+            status=ReactionActionStatus.FAILED,
+            payload=payload,
+            error="; ".join(result.errors),
+        )
+        return {
+            "ok": False,
+            "errors": result.errors,
+            "warnings": result.warnings,
+        }
+
+
+@celery_app.task(
+    name="apps.backend.src.workers.Adapter.tasks.reactive_send_dm",
+    queue="coworker",
+    bind=True,
+    max_retries=3,
+)
+def reactive_send_dm(
+    self,
+    *,
+    platform: str,
+    persona_account_id: int,
+    reaction_rule_id: Optional[int],
+    tag_key: str,
+    insight_comment_id: int,
+    recipient_external_id: str,
+    message: str,
+    metadata: Optional[dict] = None,
+):
+    """Send a direct message if supported; otherwise mark as skipped."""
+
+    with SessionLocal() as session:
+        platform_kind = PlatformKind(platform)
+        log = _get_or_create_reaction_log(
+            session,
+            insight_comment_id=insight_comment_id,
+            reaction_rule_id=reaction_rule_id,
+            tag_key=tag_key,
+            action_type=ReactionActionType.DM,
+            payload={
+                "recipient": recipient_external_id,
+                "message": message,
+                "metadata": metadata,
+            },
+        )
+
+        if log.status == ReactionActionStatus.SUCCESS:
+            return {
+                "ok": True,
+                "skipped": True,
+                "reason": "already_executed",
+            }
+
+        persona_account, platform_account = _load_persona_account_with_platform(
+            session,
+            persona_account_id,
+        )
+        if not persona_account or not platform_account:
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.FAILED,
+                error="persona_account_not_found",
+            )
+            return {
+                "ok": False,
+                "reason": "persona_account_not_found",
+            }
+
+        adapter = ADAPTER_REGISTRY.create_instance(platform_kind)
+        send_dm_callable = getattr(adapter, "send_direct_message", None)
+
+        if not callable(send_dm_callable):
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.SKIPPED,
+                error=f"dm_not_supported_for_{platform_kind.value}",
+            )
+            return {
+                "ok": True,
+                "skipped": True,
+                "reason": "unsupported_platform",
+            }
+
+        credentials = {}
+        if platform_account.access_token:
+            credentials["access_token"] = platform_account.access_token
+        if platform_account.external_id:
+            credentials["threads_user_id"] = platform_account.external_id
+            credentials["user_id"] = platform_account.external_id
+
+        try:
+            result = asyncio.run(
+                send_dm_callable(
+                    recipient_external_id=recipient_external_id,
+                    credentials=credentials,
+                    text=message,
+                    options=metadata or None,
+                )
+            )
+        except Exception as exc:  # pragma: no cover - safety guard
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.FAILED,
+                error=str(exc),
+            )
+            raise
+
+        if isinstance(result, dict):
+            ok = result.get("ok", False)
+            if ok:
+                _mark_reaction_log(
+                    session,
+                    log=log,
+                    status=ReactionActionStatus.SUCCESS,
+                    payload=result,
+                )
+                return result
+            if result.get("skipped"):
+                _mark_reaction_log(
+                    session,
+                    log=log,
+                    status=ReactionActionStatus.SKIPPED,
+                    payload=result,
+                    error=result.get("reason"),
+                )
+                return result
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.FAILED,
+                payload=result,
+                error=result.get("error") or "dm_send_failed",
+            )
+            return result
+
+        # Fallback handling if adapter returns custom dataclass
+        ok = getattr(result, "ok", False)
+        payload = {
+            "result": getattr(result, "__dict__", {}),
+        }
+        if ok:
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.SUCCESS,
+                payload=payload,
+            )
+        else:
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.FAILED,
+                payload=payload,
+                error="dm_send_failed",
+            )
+        return {
+            "ok": ok,
+            "payload": payload,
+        }
+
 __all__ = [
     "enqueue_variant_compile",
     "compile_draft_variant",
     "publish_variant_with_adapter",
     "sync_metrics_with_adapter",
+    "reactive_reply_to_comment",
+    "reactive_send_dm",
 ]
