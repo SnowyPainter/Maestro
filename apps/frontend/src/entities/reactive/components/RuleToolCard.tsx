@@ -1,19 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlusCircle, Activity, List } from "lucide-react";
+import { PlusCircle, Activity, List, BookTemplate } from "lucide-react";
 
 interface RuleToolCardProps {
   onCreateRule: () => void;
   onViewActivity: () => void;
   onSelectRule: () => void;
+  onManageTemplates: () => void;
 }
 
-export function RuleToolCard({ onCreateRule, onViewActivity, onSelectRule }: RuleToolCardProps) {
+export function RuleToolCard({ onCreateRule, onViewActivity, onSelectRule, onManageTemplates }: RuleToolCardProps) {
   return (
     <Card className="rounded-2xl border bg-card text-card-foreground shadow-md">
       <CardHeader>
-        <CardTitle>Manage Reactive Rules</CardTitle>
-        <CardDescription>Create automation rules or view activity logs.</CardDescription>
+        <CardTitle>Manage Reactive Rules & Templates</CardTitle>
+        <CardDescription>Create automation rules, manage message templates, or view activity logs.</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-4">
         <Button onClick={onCreateRule} variant="outline">
@@ -24,7 +25,11 @@ export function RuleToolCard({ onCreateRule, onViewActivity, onSelectRule }: Rul
           <List className="mr-2 h-4 w-4" />
           Select Rule
         </Button>
-        <Button onClick={onViewActivity} variant="outline" className="col-span-2">
+        <Button onClick={onManageTemplates} variant="outline">
+          <BookTemplate className="mr-2 h-4 w-4" />
+          Templates
+        </Button>
+        <Button onClick={onViewActivity} variant="outline">
           <Activity className="mr-2 h-4 w-4" />
           View Activity
         </Button>

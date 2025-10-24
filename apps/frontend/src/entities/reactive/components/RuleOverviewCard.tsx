@@ -4,19 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Activity, Settings, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Activity, Settings, AlertCircle, CheckCircle, XCircle, FileText } from "lucide-react";
 import { ReactionRuleStatus } from "@/lib/api/generated";
 
 interface RuleOverviewCardProps {
   onCreateRule?: () => void;
   onViewActivity?: () => void;
   onSelectRule?: (ruleId: number) => void;
+  onManageTemplates?: () => void;
 }
 
 export function RuleOverviewCard({
   onCreateRule,
   onViewActivity,
   onSelectRule,
+  onManageTemplates,
 }: RuleOverviewCardProps) {
   const { data: response, isLoading, error } = useBffReactiveListRulesApiBffReactiveRulesGet();
 
@@ -136,24 +138,30 @@ export function RuleOverviewCard({
         )}
 
         {/* 액션 버튼들 */}
-        <div className="flex gap-2 pt-4 border-t">
+        <div className="grid grid-cols-3 gap-2 pt-4 border-t">
           <Button
             variant="default"
             size="sm"
             onClick={onCreateRule}
-            className="flex-1"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Rule
+            <Plus className="h-4 w-4 mr-1" />
+            New Rule
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onManageTemplates}
+          >
+            <FileText className="h-4 w-4 mr-1" />
+            Templates
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={onViewActivity}
-            className="flex-1"
           >
-            <Activity className="h-4 w-4 mr-2" />
-            View Activity
+            <Activity className="h-4 w-4 mr-1" />
+            Activity
           </Button>
         </div>
       </CardContent>

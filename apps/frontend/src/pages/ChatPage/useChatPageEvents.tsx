@@ -54,6 +54,7 @@ import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
 import { RuleToolCard } from "@/entities/reactive/components/RuleToolCard";
 import { RuleComposeDrawer } from "@/features/reactive-rule/components/RuleComposeDrawer";
 import { RulePublicationModal } from "@/features/reactive-rule/components/RulePublicationModal";
+import { TemplateManager } from "@/features/reactive-rule/components/template/TemplateManager";
 
 const isMessageOfComponent = (content: Message["content"], component: React.ComponentType<any>): boolean => (
   React.isValidElement(content) && content.type === component
@@ -678,6 +679,11 @@ export function useChatPageEvents() {
     addCardMessage(() => <ActionLogCard />);
   }, [addCardMessage]);
 
+  const handleManageTemplates = useCallback(() => {
+    removeMessagesByComponent(RuleToolCard);
+    addCardMessage(() => <TemplateManager />);
+  }, [addCardMessage, removeMessagesByComponent]);
+
   const handleReactiveSelectRule = useCallback(() => {
     removeMessagesByComponent(RuleToolCard);
     addCardMessage(() => (
@@ -699,9 +705,10 @@ export function useChatPageEvents() {
         }}
         onViewActivity={() => addCardMessage(() => <ActionLogCard />)}
         onSelectRule={handleReactiveRuleSelect}
+        onManageTemplates={handleManageTemplates}
       />
     ));
-  }, [addCardMessage, removeMessagesByComponent, getNextMessageId, appendMessage, removeMessage, handleReactiveRuleSelect]);
+  }, [addCardMessage, removeMessagesByComponent, getNextMessageId, appendMessage, removeMessage, handleReactiveRuleSelect, handleManageTemplates]);
 
   const handleToolClick = useCallback(
     (toolId: string) => {
@@ -802,6 +809,7 @@ export function useChatPageEvents() {
               }}
               onViewActivity={() => addCardMessage(() => <ActionLogCard />)}
               onSelectRule={handleReactiveSelectRule}
+              onManageTemplates={handleManageTemplates}
             />
           ));
           break;
@@ -830,6 +838,7 @@ export function useChatPageEvents() {
       handleSelectListPublications,
       handleSelectPlaybook,
       handleReactiveSelectRule,
+      handleManageTemplates,
       PlaybookToolCard,
       RuleToolCard,
     ]
