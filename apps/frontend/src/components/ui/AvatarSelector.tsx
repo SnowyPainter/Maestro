@@ -50,8 +50,10 @@ const recommendedAvatars = [
   { name: "DevOps Engineer", url: "https://randomuser.me/api/portraits/men/48.jpg" },
 ];
 
-import { useState, useCallback, useMemo, memo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useCallback, useMemo, memo, useRef } from "react";
+import { ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { useUploadFileApiFilesFilesPost } from "@/lib/api/generated";
+import { toast } from "sonner";
 
 interface AvatarSelectorProps {
   selectedAvatarUrl: string;
@@ -63,12 +65,28 @@ export function AvatarSelector({
   onAvatarSelect
 }: AvatarSelectorProps) {
   const [currentPage, setCurrentPage] = useState(0);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 3x3 그리드 형태로 아바타들을 그룹화 (48개 → 5.33페이지 → 6페이지)
+  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFileApiFilesFilesPost({
+    request: { headers: {} },
+    mutation: {
+      onSuccess: (data) => {
+        setUploadedUrl(data.url);
+        onAvatarSelect(data.url);
+      },
+      onError: (error) => {
+        console.error('File upload failed:', error);
+        toast.error('Failed to upload file. Please try again.');
+      },
+    }
+  });
+
+  // 3x3 그리드 형태로 아바타들을 그룹화 (첫 번째 셀은 업로드 버튼, 나머지 8개는 아바타)
   const groupedAvatars = useMemo(() => {
     const groups = [];
-    for (let i = 0; i < recommendedAvatars.length; i += 9) {
-      groups.push(recommendedAvatars.slice(i, i + 9));
+    for (let i = 0; i < recommendedAvatars.length; i += 8) {
+      groups.push(recommendedAvatars.slice(i, i + 8));
     }
     return groups;
   }, []);
@@ -87,12 +105,39 @@ export function AvatarSelector({
     setCurrentPage(pageIndex);
   }, []);
 
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // 파일 크기 제한 (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB');
+        return;
+      }
+
+      // 이미지 파일만 허용
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      try {
+        // API를 사용해서 파일 업로드
+        await uploadFile({ data: { file } });
+      } catch (error) {
+        // 에러는 mutation의 onError에서 처리됨
+        console.error('Upload error:', error);
+      }
+    }
+  }, [uploadFile]);
+
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   const currentGroup = groupedAvatars[currentPage] || [];
 
   return (
     <div className="grid gap-3">
-      <p className="text-xs text-muted-foreground">Or choose from recommended avatars:</p>
-
       <div className="relative">
         {/* 3x3 그리드 캐로셀 */}
         <div className="flex items-center justify-center gap-2">
@@ -108,9 +153,68 @@ export function AvatarSelector({
 
           {/* 3x3 그리드 */}
           <div className="grid grid-cols-3 gap-2 w-48">
+            {/* 첫 번째 셀: 파일 업로드 버튼 또는 업로드된 이미지 미리보기 */}
+            <div className="relative aspect-square">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              {uploadedUrl && uploadedUrl === selectedAvatarUrl ? (
+                // 업로드된 이미지가 선택된 경우: 이미지 미리보기 표시
+                <button
+                  type="button"
+                  onClick={handleUploadClick}
+                  disabled={isUploading}
+                  className="relative w-full h-full rounded-md overflow-hidden border-2 border-primary bg-primary/10 ring-2 ring-primary/30"
+                  title="Uploaded avatar - click to change"
+                >
+                  <img
+                    src={uploadedUrl}
+                    alt="Uploaded avatar"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // 이미지 로드 실패 시 업로드 버튼으로 돌아감
+                      setUploadedUrl(null);
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-primary/15 flex items-center justify-center">
+                    <div className="w-3 h-3 bg-primary rounded-full border-2 border-background flex items-center justify-center">
+                      <div className="w-1 h-1 bg-background rounded-full" />
+                    </div>
+                  </div>
+                  {/* 호버 시 변경 아이콘 표시 */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Upload className="w-5 h-5 text-white" />
+                  </div>
+                </button>
+              ) : (
+                // 업로드 버튼 표시
+                <button
+                  type="button"
+                  onClick={handleUploadClick}
+                  disabled={isUploading}
+                  className={`relative w-full h-full rounded-md overflow-hidden border-2 transition-all flex flex-col items-center justify-center p-2 border-muted hover:border-primary/50 hover:bg-muted/30 ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Upload your own avatar"
+                >
+                  {isUploading ? (
+                    <div className="animate-spin w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full mb-1" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-muted-foreground mb-1" />
+                  )}
+                  <span className="text-xs text-muted-foreground leading-tight">
+                    {isUploading ? 'Uploading...' : 'Upload'}
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* 나머지 8개 셀: 추천 아바타들 */}
             {currentGroup.map((avatar, index) => (
               <button
-                key={currentPage * 9 + index}
+                key={currentPage * 8 + index}
                 type="button"
                 onClick={() => onAvatarSelect(avatar.url)}
                 className={`relative aspect-square rounded-md overflow-hidden border-2 transition-all ${
@@ -135,8 +239,9 @@ export function AvatarSelector({
                 )}
               </button>
             ))}
-            {/* 빈 셀들로 그리드 유지 */}
-            {Array.from({ length: 9 - currentGroup.length }).map((_, index) => (
+
+            {/* 빈 셀들로 그리드 유지 (업로드 버튼 제외하고 총 8개 셀) */}
+            {Array.from({ length: 8 - currentGroup.length }).map((_, index) => (
               <div key={`empty-${index}`} className="aspect-square" />
             ))}
           </div>
@@ -168,7 +273,7 @@ export function AvatarSelector({
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-1">
-          Page {currentPage + 1} of {totalPages}
+          Choose your avatar • Page {currentPage + 1} of {totalPages}
         </p>
       </div>
     </div>
