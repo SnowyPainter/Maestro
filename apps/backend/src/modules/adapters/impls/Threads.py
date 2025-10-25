@@ -43,6 +43,7 @@ from apps.backend.src.modules.common.enums import (
     PlatformKind,
 )
 from apps.backend.src.services.storage import ensure_public_media_url
+from apps.backend.src.modules.files.image_utils import normalize_images_for_ratio
 from apps.backend.src.services.http_clients import ASYNC_FETCH
 
 
@@ -186,7 +187,7 @@ class ThreadsPublishingCapability(ThreadsCapabilityBase, PublishingCapability):
             )
 
         blocks_media = (rendered_blocks or {}).get("media") or []
-        media_payload, media_warnings = prepare_media_payload(blocks_media)
+        media_payload, media_warnings, extra_media = prepare_media_payload(blocks_media)
         warnings.extend(media_warnings)
 
         text = (caption or "").strip()
@@ -243,13 +244,36 @@ class ThreadsPublishingCapability(ThreadsCapabilityBase, PublishingCapability):
             warnings.append("threads publish response missing post id; using creation id")
 
         external_id: Optional[str] = published_id
+        if extra_media and published_id and resolved_credentials.user_id:
+            for media in extra_media:
+                reply_payload = {
+                    "reply_to_id": published_id,
+                    "media_type": "IMAGE",
+                    "image_url": media.get("image_url"),
+                }
+                if media.get("image_alt_text"):
+                    reply_payload["image_alt_text"] = media["image_alt_text"]
+                if not reply_payload.get("image_url"):
+                    warnings.append("threads adapter skipped additional image due to missing normalized url")
+                    continue
+                try:
+                    reply_creation = await client.create_thread(resolved_credentials.user_id, reply_payload)
+                    reply_creation_id = resolve_creation_id(reply_creation)
+                    if reply_creation_id:
+                        await client.publish_thread(resolved_credentials.user_id, reply_creation_id)
+                    else:
+                        warnings.append("threads adapter failed to obtain reply creation id for additional image")
+                except ThreadsAPIError as exc:
+                    warnings.append(f"failed to publish additional image reply: {exc.as_message()}")
+
+        permalink = None
         try:
             details = await client.fetch_thread(published_id)
         except ThreadsAPIError as exc:
             warnings.append(f"failed to fetch thread permalink: {exc.as_message()}")
         else:
             permalink = (details or {}).get("permalink")
-            
+
         return PublishResult(ok=True, external_id=external_id, permalink=permalink, errors=[], warnings=warnings)
 
 
@@ -660,10 +684,10 @@ def extract_publish_options(options: dict | None) -> Dict[str, Any]:
 
 def prepare_media_payload(
     media_items: Iterable[Dict[str, Any]],
-) -> tuple[Dict[str, Any], List[str]]:
+) -> tuple[Dict[str, Any], List[str], List[Dict[str, Any]]]:
     media_list = list(media_items)
     if not media_list:
-        return {}, []
+        return {}, [], []
 
     warnings: List[str] = []
     image_items: List[Dict[str, Any]] = []
@@ -703,31 +727,45 @@ def prepare_media_payload(
         )
 
     if not image_items:
-        return {}, warnings
+        return {}, warnings, []
 
-    if len(image_items) > 1:
-        warnings.append(
-            f"threads adapter only supports the first image; dropped {len(image_items) - 1} additional image(s)",
-        )
+    normalized_images, ratio_warnings = normalize_images_for_ratio(
+        image_items,
+        4 / 5,
+        16 / 9,
+    )
+    warnings.extend(ratio_warnings)
 
-    image = image_items[0]
-    url = image.get("url")
+    primary = normalized_images[0]
+    url = primary.get("url")
     if not isinstance(url, str):
         warnings.append("threads adapter image missing url; dropped selected image")
-        return {}, warnings
+        return {}, warnings, []
 
     payload: Dict[str, Any] = {
         "media_type": "IMAGE",
-        "image_url": url.strip(),
+        "image_url": url,
     }
 
-    alt_text_raw = image.get("alt") or image.get("caption")
-    if isinstance(alt_text_raw, str):
-        alt_text = alt_text_raw.strip()
-        if alt_text:
-            payload["image_alt_text"] = alt_text
+    alt_text_raw = primary.get("alt") or primary.get("caption")
+    if isinstance(alt_text_raw, str) and alt_text_raw.strip():
+        payload["image_alt_text"] = alt_text_raw.strip()
 
-    return payload, warnings
+    extra_media: List[Dict[str, Any]] = []
+    for extra in normalized_images[1:]:
+        extra_url = extra.get("url")
+        if not isinstance(extra_url, str):
+            warnings.append("threads adapter dropped additional image due to missing url")
+            continue
+        media_payload: Dict[str, Any] = {
+            "image_url": extra_url,
+        }
+        extra_alt = extra.get("alt") or extra.get("caption")
+        if isinstance(extra_alt, str) and extra_alt.strip():
+            media_payload["image_alt_text"] = extra_alt.strip()
+        extra_media.append(media_payload)
+
+    return payload, warnings, extra_media
 
 
 def resolve_creation_id(payload: Dict[str, Any] | None) -> Optional[str]:

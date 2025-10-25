@@ -37,6 +37,7 @@ from apps.backend.src.modules.adapters.http.graph import (
 from apps.backend.src.modules.common.enums import ContentKind, MetricsScope, PlatformKind
 from apps.backend.src.services.http_clients import ASYNC_FETCH
 from apps.backend.src.services.storage import ensure_public_media_url
+from apps.backend.src.modules.files.image_utils import normalize_instagram_images
 
 
 def _utcnow() -> datetime:
@@ -714,13 +715,19 @@ def prepare_instagram_media_payload(
     if len(carousel_candidates) == 1:
         item = carousel_candidates[0]
         mode = "video" if item["type"] == "video" else "image"
+        if mode == "image":
+            normalized_single, extra_warnings = normalize_instagram_images([item])
+            warnings.extend(extra_warnings)
+            return mode, normalized_single, warnings
         return mode, [item], warnings
 
     if len(carousel_candidates) > 10:
         warnings.append("instagram carousel supports up to 10 media items; extra items were dropped")
         carousel_candidates = carousel_candidates[:10]
 
-    return "carousel", carousel_candidates, warnings
+    normalized_images, extra_warnings = normalize_instagram_images(carousel_candidates)
+    warnings.extend(extra_warnings)
+    return "carousel", normalized_images, warnings
 
 
 async def _create_carousel_container(

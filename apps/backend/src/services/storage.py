@@ -6,7 +6,7 @@ import mimetypes
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -71,6 +71,33 @@ def public_media_url(bucket: str, object_name: str) -> str:
     return f"{base}/api/media/{bucket_part}/{object_part}"
 
 
+def resolve_object_from_public_url(url: str) -> Optional[Tuple[str, str]]:
+    if not url:
+        return None
+    normalized = url.strip()
+    media_base = settings.MEDIA_PUBLIC_BASE.rstrip("/")
+    api_base = settings.API_PUBLIC_BASE.rstrip("/")
+
+    path: Optional[str] = None
+    if media_base and normalized.startswith(media_base + "/"):
+        path = normalized[len(media_base) + 1 :]
+    elif api_base and normalized.startswith(api_base + "/api/media/"):
+        path = normalized[len(api_base) + len("/api/media/") :]
+    else:
+        parsed = urlparse(normalized)
+        if parsed.path.startswith("/api/media/"):
+            path = parsed.path[len("/api/media/") :]
+
+    if not path:
+        return None
+
+    parts = path.split("/", 1)
+    if len(parts) != 2:
+        return None
+    bucket, object_name = parts[0], parts[1]
+    return bucket, object_name
+
+
 def ensure_public_media_url(url: str | None) -> str | None:
     if not url:
         return url
@@ -119,6 +146,18 @@ def store_bytes(
         content_type=clean_content_type,
         size=len(data),
     )
+
+
+def fetch_object_bytes(bucket: str, object_name: str) -> Tuple[bytes, Optional[str]]:
+    client = get_object_storage_client()
+    response = client.get_object(bucket, object_name)
+    try:
+        data = response.read()
+        content_type = response.headers.get("Content-Type") if hasattr(response, "headers") else None
+    finally:
+        response.close()
+        response.release_conn()
+    return data, content_type
 
 
 def store_remote_asset(
@@ -201,6 +240,8 @@ __all__ = [
     "object_url",
     "public_media_url",
     "ensure_public_media_url",
+    "resolve_object_from_public_url",
+    "fetch_object_bytes",
     "store_bytes",
     "store_remote_asset",
 ]
