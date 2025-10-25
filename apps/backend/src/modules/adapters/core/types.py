@@ -90,6 +90,19 @@ class DeleteResult:
     ok: bool
     errors: List[str]
 
+
+@dataclass
+class MessageSendResult:
+    ok: bool
+    skipped: bool = False
+    reason: Optional[str] = None
+    recipient_id: Optional[str] = None
+    message_id: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
+    raw: Dict[str, Any] = field(default_factory=dict)
+
+
 @dataclass
 class MetricsResult:
     ok: bool
@@ -147,6 +160,49 @@ class ThreadsCredentials:
             missing.append("access_token")
         if require_user_id and not user_id:
             missing.append("threads user id")
+
+        if missing:
+            return None, missing
+
+        return cls(access_token=access_token, user_id=user_id), []
+
+
+@dataclass(frozen=True)
+class InstagramCredentials:
+    access_token: str
+    user_id: Optional[str]
+
+    @classmethod
+    def from_mapping(
+        cls,
+        raw: Mapping[str, Any] | None,
+        *,
+        require_user_id: bool = True,
+    ) -> tuple[Optional["InstagramCredentials"], List[str]]:
+        if not isinstance(raw, Mapping):
+            missing = ["access_token"]
+            if require_user_id:
+                missing.append("instagram user id")
+            return None, missing
+
+        access_token = _coerce_str(raw, ["access_token", "token"])
+        user_id = _coerce_str(
+            raw,
+            [
+                "instagram_user_id",
+                "ig_user_id",
+                "ig_id",
+                "user_id",
+                "profile_id",
+                "external_id",
+            ],
+        )
+
+        missing: List[str] = []
+        if not access_token:
+            missing.append("access_token")
+        if require_user_id and not user_id:
+            missing.append("instagram user id")
 
         if missing:
             return None, missing

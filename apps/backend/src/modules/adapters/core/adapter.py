@@ -10,6 +10,7 @@ from .capabilities import (
     CommentReadCapability,
     CompileCapability,
     DeletionCapability,
+    MessageSendCapability,
     MetricsCapability,
     PublishingCapability,
 )
@@ -36,6 +37,7 @@ class CapabilitySupport:
     comment_create: bool
     comment_delete: bool
     comment_read: bool
+    direct_message: bool
 
 
 CompileCapabilityT = TypeVar("CompileCapabilityT", bound=CompileCapability)
@@ -57,6 +59,7 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
         comment_creator: CommentCreateCapability | None = None,
         comment_deleter: CommentDeleteCapability | None = None,
         comment_reader: CommentReadCapability | None = None,
+        message_sender: MessageSendCapability | None = None,
     ) -> None:
         self.platform = platform
         self._compiler = compiler
@@ -66,6 +69,7 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
         self._comment_creator = comment_creator
         self._comment_deleter = comment_deleter
         self._comment_reader = comment_reader
+        self._message_sender = message_sender
 
     # Adapter protocol compat -----------------------------------------------------------------
     @property
@@ -153,6 +157,7 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
             comment_create=self._comment_creator is not None,
             comment_delete=self._comment_deleter is not None,
             comment_read=self._comment_reader is not None,
+            direct_message=self._message_sender is not None,
         )
 
     async def create_comment(
@@ -203,5 +208,29 @@ class CapabilityAdapter(Generic[CompileCapabilityT]):
         return await self._comment_reader.list_comments(
             parent_external_id,
             credentials=credentials,
+            options=options,
+        )
+
+    async def send_direct_message(
+        self,
+        *,
+        recipient_external_id: str,
+        credentials: dict,
+        text: str,
+        options: dict | None = None,
+    ):
+        if not self._message_sender:
+            from apps.backend.src.modules.adapters.core.types import MessageSendResult
+
+            return MessageSendResult(
+                ok=False,
+                skipped=True,
+                reason=f"{self.platform.value}_dm_not_supported",
+                errors=[f"{self.platform.value} direct message not supported"],
+            )
+        return await self._message_sender.send_message(
+            recipient_external_id=recipient_external_id,
+            credentials=credentials,
+            text=text,
             options=options,
         )

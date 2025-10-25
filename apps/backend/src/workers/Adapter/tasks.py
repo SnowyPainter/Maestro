@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Union
 
 from apps.backend.src.core.celery_app import celery_app
 from celery import shared_task
@@ -21,7 +21,12 @@ from apps.backend.src.modules.drafts.models import Draft, DraftVariant
 from apps.backend.src.modules.adapters.service import compile_variant
 from apps.backend.src.core.context import get_persona_account_id
 from apps.backend.src.modules.adapters.registry import ADAPTER_REGISTRY
-from apps.backend.src.modules.adapters.core.types import PublishResult, RenderedVariantBlocks, MetricsResult
+from apps.backend.src.modules.adapters.core.types import (
+    MessageSendResult,
+    MetricsResult,
+    PublishResult,
+    RenderedVariantBlocks,
+)
 from apps.backend.src.modules.reactive.models import ReactionActionLog
 from apps.backend.src.modules.insights.models import InsightComment
 from apps.backend.src.modules.accounts.models import PlatformAccount
@@ -465,9 +470,8 @@ def reactive_send_dm(
             }
 
         adapter = ADAPTER_REGISTRY.create_instance(platform_kind)
-        send_dm_callable = getattr(adapter, "send_direct_message", None)
-
-        if not callable(send_dm_callable):
+        capability_support = adapter.supports()
+        if not capability_support.direct_message:
             _mark_reaction_log(
                 session,
                 log=log,
@@ -480,16 +484,20 @@ def reactive_send_dm(
                 "reason": "unsupported_platform",
             }
 
-        credentials = {}
+        credentials: dict[str, Any] = {}
         if platform_account.access_token:
             credentials["access_token"] = platform_account.access_token
         if platform_account.external_id:
-            credentials["threads_user_id"] = platform_account.external_id
-            credentials["user_id"] = platform_account.external_id
+            if platform_kind is PlatformKind.THREADS:
+                credentials["threads_user_id"] = platform_account.external_id
+                credentials["user_id"] = platform_account.external_id
+            elif platform_kind is PlatformKind.INSTAGRAM:
+                credentials["instagram_user_id"] = platform_account.external_id
+                credentials["user_id"] = platform_account.external_id
 
         try:
             result = asyncio.run(
-                send_dm_callable(
+                adapter.send_direct_message(
                     recipient_external_id=recipient_external_id,
                     credentials=credentials,
                     text=message,
@@ -505,8 +513,47 @@ def reactive_send_dm(
             )
             raise
 
+        if isinstance(result, MessageSendResult):
+            payload = {
+                "recipient_id": result.recipient_id,
+                "message_id": result.message_id,
+                "warnings": result.warnings,
+                "errors": result.errors,
+                "raw": result.raw,
+                "skipped": result.skipped,
+                "reason": result.reason,
+            }
+            if result.ok:
+                _mark_reaction_log(
+                    session,
+                    log=log,
+                    status=ReactionActionStatus.SUCCESS,
+                    payload=payload,
+                )
+                return {"ok": True, **payload}
+            if result.skipped:
+                _mark_reaction_log(
+                    session,
+                    log=log,
+                    status=ReactionActionStatus.SKIPPED,
+                    payload=payload,
+                    error=result.reason,
+                )
+                return {"ok": False, "skipped": True, **payload}
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.FAILED,
+                payload=payload,
+                error=result.reason or "dm_send_failed",
+            )
+            return {"ok": False, **payload}
+
+        # Fallback for dict or custom response types
         if isinstance(result, dict):
-            ok = result.get("ok", False)
+            ok = bool(result.get("ok"))
+            skipped = bool(result.get("skipped"))
+            reason = result.get("reason")
             if ok:
                 _mark_reaction_log(
                     session,
@@ -515,13 +562,13 @@ def reactive_send_dm(
                     payload=result,
                 )
                 return result
-            if result.get("skipped"):
+            if skipped:
                 _mark_reaction_log(
                     session,
                     log=log,
                     status=ReactionActionStatus.SKIPPED,
                     payload=result,
-                    error=result.get("reason"),
+                    error=reason,
                 )
                 return result
             _mark_reaction_log(
@@ -529,15 +576,14 @@ def reactive_send_dm(
                 log=log,
                 status=ReactionActionStatus.FAILED,
                 payload=result,
-                error=result.get("error") or "dm_send_failed",
+                error=reason or result.get("error") or "dm_send_failed",
             )
             return result
 
-        # Fallback handling if adapter returns custom dataclass
         ok = getattr(result, "ok", False)
-        payload = {
-            "result": getattr(result, "__dict__", {}),
-        }
+        skipped = getattr(result, "skipped", False)
+        reason = getattr(result, "reason", None)
+        payload = getattr(result, "__dict__", {})
         if ok:
             _mark_reaction_log(
                 session,
@@ -545,18 +591,23 @@ def reactive_send_dm(
                 status=ReactionActionStatus.SUCCESS,
                 payload=payload,
             )
+        elif skipped:
+            _mark_reaction_log(
+                session,
+                log=log,
+                status=ReactionActionStatus.SKIPPED,
+                payload=payload,
+                error=reason,
+            )
         else:
             _mark_reaction_log(
                 session,
                 log=log,
                 status=ReactionActionStatus.FAILED,
                 payload=payload,
-                error="dm_send_failed",
+                error=reason or "dm_send_failed",
             )
-        return {
-            "ok": ok,
-            "payload": payload,
-        }
+        return {"ok": ok, "skipped": skipped, "reason": reason, "payload": payload}
 
 __all__ = [
     "enqueue_variant_compile",

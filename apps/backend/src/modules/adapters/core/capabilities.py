@@ -7,6 +7,7 @@ from apps.backend.src.modules.adapters.core.types import (
     DeleteResult,
     CommentCreateResult,
     CommentListResult,
+    MessageSendResult,
     MetricsResult,
     PublishResult,
     RenderedVariantBlocks,
@@ -81,3 +82,16 @@ class CommentReadCapability(Protocol):
         credentials: dict,
         options: dict | None = None,
     ) -> CommentListResult: ...
+
+
+class MessageSendCapability(Protocol):
+    """Capability for sending direct/messages to individuals on a platform."""
+
+    async def send_message(
+        self,
+        *,
+        recipient_external_id: str,
+        credentials: dict,
+        text: str,
+        options: dict | None = None,
+    ) -> MessageSendResult: ...

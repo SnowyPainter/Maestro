@@ -13,6 +13,7 @@ from apps.backend.src.modules.adapters.core.capabilities import (
     CommentDeleteCapability,
     CommentReadCapability,
     DeletionCapability,
+    MessageSendCapability,
     MetricsCapability,
     PublishingCapability,
 )
@@ -29,6 +30,7 @@ from apps.backend.src.modules.adapters.core.types import (
     CommentListResult,
     Comment,
     DeleteResult,
+    MessageSendResult,
     MetricsResult,
     PublishResult,
     RenderedVariantBlocks,
@@ -72,6 +74,7 @@ class ThreadsAdapter(CapabilityAdapter[SpecCompiler]):
         comment_creator = ThreadsCommentCreateCapability(context=context, credentials=credentials)
         comment_deleter = ThreadsCommentDeleteCapability(context=context, credentials=credentials)
         comment_reader = ThreadsCommentReadCapability(context=context, credentials=credentials)
+        message_sender = ThreadsMessageSendCapability()
         super().__init__(
             platform=self.platform,
             compiler=compiler,
@@ -81,23 +84,10 @@ class ThreadsAdapter(CapabilityAdapter[SpecCompiler]):
             comment_creator=comment_creator,
             comment_deleter=comment_deleter,
             comment_reader=comment_reader,
+            message_sender=message_sender,
         )
 
-    async def send_direct_message(
-        self,
-        *,
-        recipient_external_id: str,
-        credentials: dict,
-        text: str,
-        options: dict | None = None,
-    ) -> dict[str, Any]:
-        """Threads API does not currently support direct message automation."""
-
-        return {
-            "ok": False,
-            "skipped": True,
-            "reason": "threads_direct_message_not_supported",
-        }
+    # rest unchanged
 
 
 # Compile ----------------------------------------------------------------------------------------
@@ -544,6 +534,23 @@ class ThreadsCommentReadCapability(ThreadsCapabilityBase, CommentReadCapability)
             next_cursor=next_cursor,
             errors=[],
             warnings=warnings,
+        )
+
+
+class ThreadsMessageSendCapability(MessageSendCapability):
+    async def send_message(
+        self,
+        *,
+        recipient_external_id: str,
+        credentials: dict,
+        text: str,
+        options: dict | None = None,
+    ) -> MessageSendResult:
+        return MessageSendResult(
+            ok=False,
+            skipped=True,
+            reason="threads_direct_message_not_supported",
+            errors=["threads direct message not supported"],
         )
 
 
