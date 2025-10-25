@@ -98,7 +98,7 @@ PROMPT_METADATA_REGISTRY: Dict[PromptKey, PromptMetadata] = {
     PromptKey.DRAFT_FROM_TREND: PromptMetadata(
         key=PromptKey.DRAFT_FROM_TREND,
         required_vars={"trend_data"},
-        optional_vars={"product_name", "audience", "tone", "goal", "text"},
+        optional_vars={"product_name", "audience", "tone", "goal", "text", "persona_brief"},
         output_schema=DraftFromTrendOutput,
         description="트렌드데이터를 바탕으로 글 작성"
     ),

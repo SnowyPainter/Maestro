@@ -8,7 +8,12 @@ from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
 from apps.backend.src.modules.llm.schemas import DraftFromTrendOutput, LlmResult, PromptKey, PromptVars
 from apps.backend.src.modules.llm.service import LLMService
 from apps.backend.src.modules.trends.schemas import TrendItem, TrendsListResponse
-from apps.backend.src.orchestrator.adapters.utils import _ensure_trends_model, _ensure_draft_ir_props
+from apps.backend.src.orchestrator.adapters.utils import (
+    _ensure_draft_ir_props,
+    _ensure_trends_model,
+    build_persona_brief,
+    select_persona_aligned_trend,
+)
 
 from apps.backend.src.core.logging import setup_logging
 setup_logging()
@@ -53,13 +58,32 @@ async def _draft_from_trends_llm(trends: TrendsListResponse, payload: Dict[str, 
     if not items:
         return None
 
+    persona_brief = await build_persona_brief(payload)
+    try:
+        selected_trend = select_persona_aligned_trend(items, persona_brief)
+    except ValueError:
+        return None
+
+    logger.info(
+        "selected trend for persona-aligned draft",
+        extra={
+            "trend_title": selected_trend.title,
+            "trend_rank": getattr(selected_trend, "rank", None),
+            "persona_id": payload.get("persona_id"),
+        },
+    )
+
     prompt_vars = PromptVars(
-        trend_data=items,
+        trend_data=[selected_trend],
         product_name=payload.get("product_name", "not specified"),
         audience=payload.get("audience", "general"),
         tone=payload.get("tone", "casual"),
         goal=payload.get("goal", "social"),
-        text=payload.get("text", "think hard about the best way to write this content"),
+        text=payload.get(
+            "text",
+            "Deliver a rich, story-driven draft that compares this trend to the persona's own hobbies or passions while staying practical.",
+        ),
+        persona_brief=persona_brief or {},
     )
 
     try:

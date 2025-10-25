@@ -103,13 +103,17 @@ DesiredTone: {{ tone or "neutral" }}
 Goal: {{ goal or "engagement" }}
 AdditionalNotes: {{ text or "None" }}
 
+PersonaBrief (JSON):
+{{ persona_brief | tojson(indent=2) if persona_brief else "{}" }}
+
 TrendData (JSON):
 {{ trend_data | tojson(indent=2) if trend_data else "[]" }}
 
 Instructions:
-- Create a DraftIR that highlights the most relevant trends.
-- Include compelling hook, body, and clear call-to-action.
-- Reflect the desired tone and product positioning.
+- Study PersonaBrief to align tone, guardrails, and priorities with the persona.
+- Focus on the single provided trend; do not introduce additional trends.
+- Create a DraftIR with a compelling hook, persona-aligned body, and clear call-to-action.
+- Enrich the narrative by relating the trend to the persona's hobbies or lived experiences so the copy feels personal and substantial.
 - Suggest supporting hashtags in the DraftIR metadata if appropriate.
 
 Return ONLY JSON. Do not include prose.

@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Dict, Mapping, Optional
 
-from apps.backend.src.core.db import SessionLocal as AsyncSessionLocal
-from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.drafts.schemas import DraftIR, DraftSaveRequest
 from apps.backend.src.modules.insights.schemas import InsightCommentList
 from apps.backend.src.modules.llm.schemas import DraftFromCommentOutput, LlmResult, PromptKey, PromptVars
 from apps.backend.src.modules.llm.service import LLMService
-from apps.backend.src.orchestrator.adapters.utils import _ensure_draft_ir_props
+from apps.backend.src.orchestrator.adapters.utils import build_persona_brief, _ensure_draft_ir_props
 from apps.backend.src.core.logging import setup_logging
-from sqlalchemy.ext.asyncio import AsyncSession
 
 setup_logging()
 import logging
@@ -60,7 +57,7 @@ async def _draft_from_comments_llm(
     comment_list: InsightCommentList,
     payload: Dict[str, Any],
 ) -> Optional[DraftSaveRequest]:
-    persona_brief = await _build_persona_brief(comment_list, payload)
+    persona_brief = await build_persona_brief(payload, comment_list=comment_list)
     prompt_vars = PromptVars(
         comment_data=comment_list.comments,
         product_name=payload.get("product_name", "not specified"),
@@ -134,96 +131,6 @@ def _draft_from_comments_fallback(
 def _default_comment_title(comment_list: InsightCommentList) -> str:
     total = len(comment_list.comments)
     return f"Community insights ({total} comments)" if total else "Community insights"
-
-
-def _coerce_int(value: Any) -> Optional[int]:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def _persona_to_brief(persona: Optional[Persona]) -> Optional[Dict[str, Any]]:
-    if persona is None:
-        return None
-    return {
-        "id": persona.id,
-        "name": persona.name,
-        "language": persona.language,
-        "tone": persona.tone,
-        "style_guide": persona.style_guide,
-        "pillars": persona.pillars,
-        "banned_words": persona.banned_words,
-        "default_hashtags": persona.default_hashtags,
-        "hashtag_rules": persona.hashtag_rules,
-        "link_policy": persona.link_policy,
-        "media_preferences": persona.media_prefs,
-        "posting_windows": persona.posting_windows,
-        "bio": persona.bio,
-    }
-
-
-async def _build_persona_brief(
-    comment_list: InsightCommentList,
-    payload: Dict[str, Any],
-) -> Dict[str, Any]:
-    existing = payload.get("persona_brief")
-    if isinstance(existing, dict):
-        return existing
-
-    persona_account_id = _extract_persona_account_id(comment_list, payload)
-    persona_id = _coerce_int(payload.get("persona_id"))
-
-    if persona_account_id is None and persona_id is None:
-        return {}
-
-    try:
-        async with AsyncSessionLocal() as session:
-            persona = await _load_persona(session, persona_id, persona_account_id)
-    except Exception:
-        logger.exception(
-            "failed to load persona brief for comment draft adapter",
-            extra={"persona_id": persona_id, "persona_account_id": persona_account_id},
-        )
-        return {}
-
-    return _persona_to_brief(persona) or {}
-
-
-async def _load_persona(
-    session: AsyncSession,
-    persona_id: Optional[int],
-    persona_account_id: Optional[int],
-) -> Optional[Persona]:
-    persona: Optional[Persona] = None
-    if persona_id is not None:
-        persona = await session.get(Persona, persona_id)
-        if persona is not None:
-            return persona
-
-    if persona_account_id is None:
-        return None
-
-    persona_account = await session.get(PersonaAccount, persona_account_id)
-    if persona_account is None:
-        return None
-    return await session.get(Persona, persona_account.persona_id)
-
-
-def _extract_persona_account_id(
-    comment_list: InsightCommentList,
-    payload: Dict[str, Any],
-) -> Optional[int]:
-    for key in ("persona_account_id", "account_persona_id"):
-        value = _coerce_int(payload.get(key))
-        if value is not None:
-            return value
-
-    for comment in comment_list.comments:
-        value = _coerce_int(getattr(comment, "account_persona_id", None))
-        if value is not None:
-            return value
-    return None
 
 
 __all__ = ["comments_to_draft_adapter"]

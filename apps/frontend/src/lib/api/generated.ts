@@ -6979,8 +6979,8 @@ export function useBffTimelineAbtestsApiBffTimelineAbtestsGet<TData = Awaited<Re
 
 
 /**
- * Retrieve trend analysis data for content strategy and market insights dashboard
- * @summary Get Trend Analysis Data
+ * Get trend list for currently hot issue trend
+ * @summary Get Trend List
  */
 export const bffTrendsListTrendsApiBffTrendsGet = (
     params?: BffTrendsListTrendsApiBffTrendsGetParams,
@@ -7048,7 +7048,7 @@ export function useBffTrendsListTrendsApiBffTrendsGet<TData = Awaited<ReturnType
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get Trend Analysis Data
+ * @summary Get Trend List
  */
 
 export function useBffTrendsListTrendsApiBffTrendsGet<TData = Awaited<ReturnType<typeof bffTrendsListTrendsApiBffTrendsGet>>, TError = HTTPValidationError>(

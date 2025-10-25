@@ -1712,8 +1712,8 @@ export const bffTimelineAbtestsApiBffTimelineAbtestsGetResponse = zod.object({
 
 
 /**
- * Retrieve trend analysis data for content strategy and market insights dashboard
- * @summary Get Trend Analysis Data
+ * Get trend list for currently hot issue trend
+ * @summary Get Trend List
  */
 export const bffTrendsListTrendsApiBffTrendsGetQueryCountryDefault = "US";export const bffTrendsListTrendsApiBffTrendsGetQueryLimitDefault = 20;
 

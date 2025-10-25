@@ -972,8 +972,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Trend Analysis Data
-         * @description Retrieve trend analysis data for content strategy and market insights dashboard
+         * Get Trend List
+         * @description Get trend list for currently hot issue trend
          */
         get: operations["bff_trends_list_trends_api_bff_trends_get"];
         put?: never;
