@@ -91,6 +91,9 @@ def resolve_object_from_public_url(url: str) -> Optional[Tuple[str, str]]:
     if not path:
         return None
 
+    if path.startswith("api/media/"):
+        path = path[len("api/media/") :]
+
     parts = path.split("/", 1)
     if len(parts) != 2:
         return None
