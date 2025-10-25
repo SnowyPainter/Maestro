@@ -7349,6 +7349,165 @@ export function useGetFileInfoApiFilesFilesFileIdGet<TData = Awaited<ReturnType<
 
 
 /**
+ * @summary Get Media
+ */
+export const getMediaApiMediaBucketObjectPathGet = (
+    bucket: string,
+    objectPath: string,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<null>(
+      {url: `/api/media/${bucket}/${objectPath}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getGetMediaApiMediaBucketObjectPathGetQueryKey = (bucket?: string,
+    objectPath?: string,) => {
+    return [`/api/media/${bucket}/${objectPath}`] as const;
+    }
+
+    
+export const getGetMediaApiMediaBucketObjectPathGetQueryOptions = <TData = Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError = HTTPValidationError>(bucket: string,
+    objectPath: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMediaApiMediaBucketObjectPathGetQueryKey(bucket,objectPath);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>> = ({ signal }) => getMediaApiMediaBucketObjectPathGet(bucket,objectPath, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(bucket && objectPath), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMediaApiMediaBucketObjectPathGetQueryResult = NonNullable<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>>
+export type GetMediaApiMediaBucketObjectPathGetQueryError = HTTPValidationError
+
+
+export function useGetMediaApiMediaBucketObjectPathGet<TData = Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError = HTTPValidationError>(
+ bucket: string,
+    objectPath: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>,
+          TError,
+          Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMediaApiMediaBucketObjectPathGet<TData = Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError = HTTPValidationError>(
+ bucket: string,
+    objectPath: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>,
+          TError,
+          Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMediaApiMediaBucketObjectPathGet<TData = Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError = HTTPValidationError>(
+ bucket: string,
+    objectPath: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Media
+ */
+
+export function useGetMediaApiMediaBucketObjectPathGet<TData = Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError = HTTPValidationError>(
+ bucket: string,
+    objectPath: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaApiMediaBucketObjectPathGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMediaApiMediaBucketObjectPathGetQueryOptions(bucket,objectPath,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Head Media
+ */
+export const headMediaApiMediaBucketObjectPathHead = (
+    bucket: string,
+    objectPath: string,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<null>(
+      {url: `/api/media/${bucket}/${objectPath}`, method: 'HEAD', signal
+    },
+      options);
+    }
+  
+
+
+export const getHeadMediaApiMediaBucketObjectPathHeadMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof headMediaApiMediaBucketObjectPathHead>>, TError,{bucket: string;objectPath: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof headMediaApiMediaBucketObjectPathHead>>, TError,{bucket: string;objectPath: string}, TContext> => {
+
+const mutationKey = ['headMediaApiMediaBucketObjectPathHead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof headMediaApiMediaBucketObjectPathHead>>, {bucket: string;objectPath: string}> = (props) => {
+          const {bucket,objectPath} = props ?? {};
+
+          return  headMediaApiMediaBucketObjectPathHead(bucket,objectPath,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HeadMediaApiMediaBucketObjectPathHeadMutationResult = NonNullable<Awaited<ReturnType<typeof headMediaApiMediaBucketObjectPathHead>>>
+    
+    export type HeadMediaApiMediaBucketObjectPathHeadMutationError = HTTPValidationError
+
+    /**
+ * @summary Head Media
+ */
+export const useHeadMediaApiMediaBucketObjectPathHead = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof headMediaApiMediaBucketObjectPathHead>>, TError,{bucket: string;objectPath: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof headMediaApiMediaBucketObjectPathHead>>,
+        TError,
+        {bucket: string;objectPath: string},
+        TContext
+      > => {
+
+      const mutationOptions = getHeadMediaApiMediaBucketObjectPathHeadMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
  * Create a new AB test pairing two drafts under a persona and campaign
  * @summary Create AB Test
  */

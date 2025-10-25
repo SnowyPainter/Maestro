@@ -1780,6 +1780,24 @@ export const getFileInfoApiFilesFilesFileIdGetResponse = zod.object({
 
 
 /**
+ * @summary Get Media
+ */
+export const getMediaApiMediaBucketObjectPathGetParams = zod.object({
+  "bucket": zod.string(),
+  "object_path": zod.string()
+})
+
+
+/**
+ * @summary Head Media
+ */
+export const headMediaApiMediaBucketObjectPathHeadParams = zod.object({
+  "bucket": zod.string(),
+  "object_path": zod.string()
+})
+
+
+/**
  * Create a new AB test pairing two drafts under a persona and campaign
  * @summary Create AB Test
  */

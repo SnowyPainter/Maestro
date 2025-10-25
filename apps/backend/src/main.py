@@ -8,6 +8,7 @@ from apps.backend.src.orchestrator.action_router import router as orchestrator_a
 from apps.backend.src.orchestrator.helper_router import router as orchestrator_helper_router
 from apps.backend.src.orchestrator.internal_router import router as orchestrator_internal_router
 from apps.backend.src.modules.files.file_router import router as file_router
+from apps.backend.src.modules.files.public_router import router as public_media_router
 from apps.backend.src.modules.scheduler.router import router as scheduler_stream_router
 from apps.backend.src.core.logging import setup_logging
 
@@ -47,6 +48,8 @@ api.include_router(orchestrator_bff_router, prefix="/bff")
 api.include_router(scheduler_stream_router, prefix="/sse")
 # 파일 라우터 등록
 api.include_router(file_router, prefix="/files")
+# 퍼블릭 미디어 프록시 라우터 등록
+api.include_router(public_media_router, prefix="/media")
 # Action 라우터(오케스트레이터 기반) 등록
 api.include_router(orchestrator_action_router, prefix="/orchestrator")
 # Internal 라우터(오케스트레이터 기반) 등록 (절대로 하지마라잉!)

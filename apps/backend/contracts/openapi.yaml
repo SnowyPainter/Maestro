@@ -2183,6 +2183,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/media/{bucket}/{object_path}:
+    get:
+      tags:
+      - files
+      - media
+      summary: Get Media
+      operationId: get_media_api_media__bucket___object_path__get
+      parameters:
+      - name: bucket
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Bucket
+      - name: object_path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Object Path
+      responses:
+        '200':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    head:
+      tags:
+      - files
+      - media
+      summary: Head Media
+      operationId: head_media_api_media__bucket___object_path__head
+      parameters:
+      - name: bucket
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Bucket
+      - name: object_path
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Object Path
+      responses:
+        '200':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/abtests:
     post:
       tags:

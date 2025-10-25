@@ -1035,6 +1035,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/media/{bucket}/{object_path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Media */
+        get: operations["get_media_api_media__bucket___object_path__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        /** Head Media */
+        head: operations["head_media_api_media__bucket___object_path__head"];
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/abtests": {
         parameters: {
             query?: never;
@@ -6630,6 +6648,66 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["FileInfo"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_media_api_media__bucket___object_path__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bucket: string;
+                object_path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    head_media_api_media__bucket___object_path__head: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bucket: string;
+                object_path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
