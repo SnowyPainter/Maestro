@@ -7358,7 +7358,7 @@ export const getMediaApiMediaBucketObjectPathGet = (
 ) => {
       
       
-      return apiFetch<null>(
+      return apiFetch<unknown>(
       {url: `/api/media/${bucket}/${objectPath}`, method: 'GET', signal
     },
       options);
@@ -7453,7 +7453,7 @@ export const headMediaApiMediaBucketObjectPathHead = (
 ) => {
       
       
-      return apiFetch<null>(
+      return apiFetch<unknown>(
       {url: `/api/media/${bucket}/${objectPath}`, method: 'HEAD', signal
     },
       options);

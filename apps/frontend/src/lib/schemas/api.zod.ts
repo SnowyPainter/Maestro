@@ -1787,6 +1787,8 @@ export const getMediaApiMediaBucketObjectPathGetParams = zod.object({
   "object_path": zod.string()
 })
 
+export const getMediaApiMediaBucketObjectPathGetResponse = zod.any()
+
 
 /**
  * @summary Head Media
@@ -1795,6 +1797,8 @@ export const headMediaApiMediaBucketObjectPathHeadParams = zod.object({
   "bucket": zod.string(),
   "object_path": zod.string()
 })
+
+export const headMediaApiMediaBucketObjectPathHeadResponse = zod.any()
 
 
 /**

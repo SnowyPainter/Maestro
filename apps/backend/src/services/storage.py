@@ -24,6 +24,7 @@ class StoredObject:
     bucket: str
     object_name: str
     url: str
+    raw_url: str
     content_type: Optional[str]
     size: int
 
@@ -63,6 +64,33 @@ def object_url(bucket: str, object_name: str) -> str:
     return f"{base}/{bucket_part}/{object_part}"
 
 
+def public_media_url(bucket: str, object_name: str) -> str:
+    base = settings.API_PUBLIC_BASE.rstrip("/")
+    bucket_part = bucket.strip("/")
+    object_part = object_name.lstrip("/")
+    return f"{base}/api/media/{bucket_part}/{object_part}"
+
+
+def ensure_public_media_url(url: str | None) -> str | None:
+    if not url:
+        return url
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return url
+    if not parsed.scheme or not parsed.netloc:
+        return url
+
+    seaweed_base = settings.SEAWEEDFS_PUBLIC_BASE.rstrip("/")
+    if seaweed_base and url.startswith(seaweed_base + "/"):
+        remainder = url[len(seaweed_base) + 1 :]
+        parts = remainder.split("/", 1)
+        if len(parts) == 2:
+            bucket, object_name = parts
+            return public_media_url(bucket, object_name)
+    return url
+
+
 def store_bytes(
     bucket: str,
     *,
@@ -86,7 +114,8 @@ def store_bytes(
     return StoredObject(
         bucket=bucket,
         object_name=key,
-        url=object_url(bucket, key),
+        url=public_media_url(bucket, key),
+        raw_url=object_url(bucket, key),
         content_type=clean_content_type,
         size=len(data),
     )
@@ -170,6 +199,8 @@ __all__ = [
     "get_object_storage_client",
     "ensure_bucket",
     "object_url",
+    "public_media_url",
+    "ensure_public_media_url",
     "store_bytes",
     "store_remote_asset",
 ]

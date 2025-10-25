@@ -121,6 +121,15 @@ class Settings(BaseSettings):
         scheme = "https" if self.SEAWEEDFS_SECURE else "http"
         return f"{scheme}://{self.SEAWEEDFS_ENDPOINT}".rstrip("/")
 
+    @computed_field  # type: ignore[misc]
+    @property
+    def API_PUBLIC_BASE(self) -> str:
+        if isinstance(self.PRD_DOMAIN, str) and self.PRD_DOMAIN.strip():
+            return self.PRD_DOMAIN.rstrip("/")
+        if isinstance(self.TEST_DOMAIN, str) and self.TEST_DOMAIN.strip():
+            return self.TEST_DOMAIN.rstrip("/")
+        return "http://localhost:8000"
+
     class Config:
         env_file = BACKEND_DIR / ".env"
         extra = "allow"  # 알 수 없는 환경변수도 허용

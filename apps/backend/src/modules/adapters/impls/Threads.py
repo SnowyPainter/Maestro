@@ -42,6 +42,7 @@ from apps.backend.src.modules.common.enums import (
     MetricsScope,
     PlatformKind,
 )
+from apps.backend.src.services.storage import ensure_public_media_url
 from apps.backend.src.services.http_clients import ASYNC_FETCH
 
 
@@ -678,7 +679,13 @@ def prepare_media_payload(
         if kind == "image":
             url = item.get("url")
             if isinstance(url, str) and url.strip():
-                image_items.append(item)
+                normalized = ensure_public_media_url(url.strip())
+                if normalized:
+                    image_copy = dict(item)
+                    image_copy["url"] = normalized
+                    image_items.append(image_copy)
+                else:
+                    invalid_count += 1
             else:
                 invalid_count += 1
         elif kind == "video":

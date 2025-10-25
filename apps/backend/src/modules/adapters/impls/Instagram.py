@@ -36,6 +36,7 @@ from apps.backend.src.modules.adapters.http.graph import (
 )
 from apps.backend.src.modules.common.enums import ContentKind, MetricsScope, PlatformKind
 from apps.backend.src.services.http_clients import ASYNC_FETCH
+from apps.backend.src.services.storage import ensure_public_media_url
 
 
 def _utcnow() -> datetime:
@@ -187,6 +188,7 @@ class InstagramPublishingCapability(InstagramCapabilityBase, PublishingCapabilit
         text = (caption or "").strip()
         extra = extract_publish_options(options)
 
+        media_kind: Optional[str] = None
         try:
             if media_mode == "carousel":
                 creation_id, carousel_warnings = await _create_carousel_container(
@@ -683,10 +685,18 @@ def prepare_instagram_media_payload(
         if not isinstance(url, str) or not url.strip():
             warnings.append("instagram adapter dropped media item missing url")
             continue
+        normalized_url = ensure_public_media_url(url.strip())
+        if not normalized_url:
+            warnings.append("instagram adapter dropped media item with invalid url")
+            continue
         if kind == "image":
-            image_items.append(item)
+            image_copy = dict(item)
+            image_copy["url"] = normalized_url
+            image_items.append(image_copy)
         elif kind == "video":
-            video_items.append(item)
+            video_copy = dict(item)
+            video_copy["url"] = normalized_url
+            video_items.append(video_copy)
         else:
             warnings.append(f"instagram adapter dropped unsupported media kind '{kind}'")
 
