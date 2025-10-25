@@ -3,88 +3,111 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DraftPostScheduleRequest, useBffDraftsListDraftsApiBffDraftsGet, useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet, DraftVariantRender, useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost } from "@/lib/api/generated";
+import { DraftPostScheduleRequest, useBffDraftsListDraftsApiBffDraftsGet, useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet, DraftVariantRender, useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost, useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Instagram, Twitter, Facebook, Linkedin, Newspaper, CheckCircle2, ChevronLeft, ChevronRight, Clock, FileText, Eye, Calendar, Search, Grid3X3 } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, FileText, Search, Grid3X3, Calendar, AlertTriangle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const platformIcons: { [key: string]: React.ReactNode } = {
-    instagram: <Instagram className="h-5 w-5 text-muted-foreground" />,
-    twitter: <Twitter className="h-5 w-5 text-muted-foreground" />,
-    facebook: <Facebook className="h-5 w-5 text-muted-foreground" />,
-    linkedin: <Linkedin className="h-5 w-5 text-muted-foreground" />,
-    web: <Newspaper className="h-5 w-5 text-muted-foreground" />,
-};
-
-function PlatformSpecificPreview({ variant }: { variant: DraftVariantRender }) {
-    const media = variant.rendered_blocks?.media?.filter(r => r.type === 'image' || r.type === 'video') || [];
-    const caption = variant.rendered_caption || '';
-    const platform = variant.platform.toLowerCase();
-    const Icon = platformIcons[platform] || platformIcons.web;
-
-    const Header = () => (
-        <div className="flex items-center gap-2 p-3 border-b bg-muted/50">
-            {Icon}
-            <span className="font-semibold capitalize text-foreground">{variant.platform}</span>
-        </div>
-    );
-
-    const Caption = () => (
-        <p className="text-sm whitespace-pre-wrap text-foreground/90">{caption}</p>
-    );
-
-    const MediaGrid = () => (
-        <div className="grid gap-2 grid-cols-2">
-            {media.map((block, index) => (
-                <img key={index} src={block.url} alt="variant media" className="rounded-lg object-cover w-full aspect-square" />
-            ))}
-        </div>
-    );
-    
-    const SingleMedia = () => (
-        media.length > 0 ? <img src={media[0].url} alt="variant media" className="rounded-lg object-cover w-full" /> : null
-    );
-
-    return (
-        <div className="rounded-lg border bg-card overflow-hidden">
-            <Header />
-            <div className="p-3">
-                {media.length > 0 && (media.length > 1 ? <MediaGrid /> : <SingleMedia />)}
-                <div className={cn(media.length > 0 ? "mt-2" : "mt-0")}>
-                    <Caption />
-                </div>
-            </div>
-        </div>
-    );
-}
+import { DraftVariantPreview } from "./DraftVariantPreview";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds: number[]) => void }) {
-    const [currentStep, setCurrentStep] = useState(1);
     const [draftId, setDraftId] = useState<number | null>(null);
     const [selectedVariant, setSelectedVariant] = useState<DraftVariantRender | null>(null);
-    const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
     const [time, setTime] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(0);
-    const { personaAccountId } = usePersonaContextStore();
+    const { personaAccountId, accountPlatform, campaignId } = usePersonaContextStore();
 
     const { data: drafts, isLoading: isLoadingDrafts } = useBffDraftsListDraftsApiBffDraftsGet();
     const { data: variants, isLoading: isLoadingVariants } = useBffDraftsListVariantsApiBffDraftsDraftIdVariantsGet(draftId!, {
         query: { enabled: !!draftId }
     });
 
+    // 플레이북 정보를 가져와서 best_window 활용
+    const { data: playbooks } = useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet(
+        { campaign_id: campaignId || undefined },
+        { query: { enabled: !!campaignId } }
+    );
+
     const createScheduleMutation = useActionScheduleCreateDraftPostScheduleApiOrchestratorActionsSchedulesCreateDraftPostPost();
 
-    // Filter drafts based on search query
+    // best_time_window를 활용하여 최적 시간을 계산하는 함수
+    const calculateBestWindowTime = (): Date | null => {
+        if (!playbooks?.items || playbooks.items.length === 0) return null;
+
+        // 현재 활성화된 플레이북 찾기 (첫 번째 플레이북 사용)
+        const activePlaybook = playbooks.items[0];
+
+        // best_time_window 정보가 있는지 확인 (API에 best_window 대신 best_time_window로 저장됨)
+        const bestTimeWindow = (activePlaybook as any)?.best_time_window;
+        if (!bestTimeWindow) return null;
+
+        try {
+            // best_time_window가 "Sat 09:00" 형식이라고 가정
+            const [dayOfWeek, timeStr] = bestTimeWindow.split(' ');
+            const [hours, minutes] = timeStr.split(':').map(Number);
+
+            // 요일을 숫자로 변환 (0 = 일요일, 1 = 월요일, ..., 6 = 토요일)
+            const dayMap: Record<string, number> = {
+                'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6
+            };
+
+            const targetDayOfWeek = dayMap[dayOfWeek];
+            if (targetDayOfWeek === undefined) {
+                throw new Error(`Invalid day of week: ${dayOfWeek}`);
+            }
+
+            const now = new Date();
+            const currentDayOfWeek = now.getDay();
+            let daysToAdd = targetDayOfWeek - currentDayOfWeek;
+
+            // 이미 지난 요일이면 다음 주로
+            if (daysToAdd < 0) {
+                daysToAdd += 7;
+            }
+
+            // 같은 요일인 경우
+            if (daysToAdd === 0) {
+                // 오늘의 해당 시간으로 설정해보고
+                const todayTime = new Date(now);
+                todayTime.setHours(hours, minutes, 0, 0);
+
+                // 이미 지났으면 다음 주로
+                if (todayTime <= now) {
+                    daysToAdd = 7;
+                }
+            }
+
+            // 최적 시간 계산
+            const bestTime = new Date(now);
+            bestTime.setDate(now.getDate() + daysToAdd);
+            bestTime.setHours(hours, minutes, 0, 0);
+
+            // 2주 이내로 제한 (다음 주까지만)
+            const twoWeeksLater = new Date(now);
+            twoWeeksLater.setDate(now.getDate() + 14);
+
+            return bestTime <= twoWeeksLater ? bestTime : null;
+        } catch (error) {
+            console.error('Failed to parse best_time_window:', error, bestTimeWindow);
+            return null;
+        }
+    };
+
+    useEffect(() => {
+        if (variants && accountPlatform) {
+            const matchingVariant = variants.find(v => v.platform.toLowerCase() === accountPlatform.toLowerCase());
+            setSelectedVariant(matchingVariant || null);
+        } else {
+            setSelectedVariant(null);
+        }
+    }, [variants, accountPlatform]);
+
     const filteredDrafts = useMemo(() => {
         if (!drafts) return [];
         if (!searchQuery.trim()) return drafts;
-
         const query = searchQuery.toLowerCase();
         return drafts.filter(draft =>
             (draft.title?.toLowerCase().includes(query)) ||
@@ -93,7 +116,6 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
         );
     }, [drafts, searchQuery]);
 
-    // Paginate filtered drafts (9 per page for 3x3 grid)
     const draftsPerPage = 9;
     const totalPages = Math.ceil(filteredDrafts.length / draftsPerPage);
     const startIndex = currentPage * draftsPerPage;
@@ -101,43 +123,29 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
 
     const handleDraftSelect = (id: number) => {
         setDraftId(id);
-        setSelectedVariant(null);
-        setCurrentVariantIndex(0);
-        setCurrentStep(2);
-        setCurrentPage(0); // Reset pagination when selecting a draft
+        setCurrentPage(0);
     };
 
-    const handlePrevPage = () => {
-        setCurrentPage(prev => Math.max(0, prev - 1));
+    const handleBackToDraftSelection = () => {
+        setDraftId(null);
+        setSearchQuery("");
+        setCurrentPage(0);
     };
 
-    const handleNextPage = () => {
-        setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
-    };
-
-    const handleVariantSelect = (variant: DraftVariantRender) => {
-        setSelectedVariant(variant);
-        setCurrentStep(3);
-    };
-
-    const handleTimeSelect = () => {
-        setCurrentStep(4);
-    };
+    const handlePrevPage = () => setCurrentPage(prev => Math.max(0, prev - 1));
+    const handleNextPage = () => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
 
     const handleSchedule = async () => {
         if (!selectedVariant || !personaAccountId || !time) {
-            toast.error("Please complete all steps: select a draft, a variant, and a time.");
+            toast.error("Please select a draft, and a time.");
             return;
         }
-
         const runAt = new Date(time).toISOString();
-
         const payload: DraftPostScheduleRequest = {
             variant_id: selectedVariant.variant_id,
             persona_account_id: personaAccountId,
             run_at: runAt,
         };
-
         try {
             const result = await createScheduleMutation.mutateAsync({ data: payload });
             toast.success("Post successfully scheduled.");
@@ -151,9 +159,6 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
     const isPending = createScheduleMutation.isPending;
     const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    const progressValue = (currentStep / 4) * 100;
-    const selectedDraft = drafts?.find(d => d.id === draftId);
-
     return (
         <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-5xl mx-auto">
             <CardHeader className="pb-4">
@@ -161,398 +166,167 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                     <div>
                         <CardTitle className="text-2xl">Schedule a New Post</CardTitle>
                         <CardDescription className="text-base mt-1">
-                            Create and schedule content across multiple platforms
+                            {draftId ? "Set the time and confirm your post" : "Choose a draft to get started"}
                         </CardDescription>
                     </div>
-                    <Badge variant="outline" className="text-sm">
-                        Step {currentStep} of 4
-                    </Badge>
+                    {draftId && (
+                        <Button variant="outline" onClick={handleBackToDraftSelection} disabled={isPending}>
+                            <ChevronLeft className="h-4 w-4 mr-2" />
+                            Change Draft
+                        </Button>
+                    )}
                 </div>
-                <Progress value={progressValue} className="mt-4" />
             </CardHeader>
 
             <CardContent className="p-6">
-                {currentStep === 1 && (
-                    /* Step 1: Draft Selection with Search & Carousel */
+                {!draftId ? (
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
-                                <FileText className="h-4 w-4" />
-                            </div>
+                            <FileText className="h-5 w-5 text-primary" />
                             <Label className="text-lg font-semibold">Choose a Draft</Label>
                         </div>
-
-                        {/* Search Bar */}
                         <div className="relative max-w-md">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                             <Input
                                 placeholder="Search drafts by title, goal, or ID..."
                                 value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setCurrentPage(0); // Reset to first page when searching
-                                }}
+                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
                                 className="pl-10"
                             />
                         </div>
-
-                        {/* Results Summary */}
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <span>
-                                {isLoadingDrafts ? "Loading..." :
-                                 `${filteredDrafts.length} draft${filteredDrafts.length !== 1 ? 's' : ''} found`}
-                            </span>
-                            {filteredDrafts.length > 0 && (
-                                <span className="flex items-center gap-1">
-                                    <Grid3X3 className="h-4 w-4" />
-                                    Page {currentPage + 1} of {totalPages}
-                                </span>
+                            <span>{isLoadingDrafts ? "Loading..." : `${filteredDrafts.length} draft${filteredDrafts.length !== 1 ? 's' : ''} found`}</span>
+                            {filteredDrafts.length > draftsPerPage && (
+                                <span className="flex items-center gap-1"><Grid3X3 className="h-4 w-4" /> Page {currentPage + 1} of {totalPages}</span>
                             )}
                         </div>
-
-                        {/* Draft Grid Carousel */}
-                        {isLoadingDrafts && (
-                            <div className="grid grid-cols-3 gap-3">
-                                {Array.from({ length: 9 }).map((_, index) => (
-                                    <Card key={index} className="animate-pulse">
-                                        <CardContent className="p-4">
-                                            <div className="space-y-2">
-                                                <div className="h-4 bg-muted rounded"></div>
-                                                <div className="h-3 bg-muted rounded w-3/4"></div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                        {isLoadingDrafts ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {Array.from({ length: 9 }).map((_, index) => <Skeleton key={index} className="h-24" />)}
                             </div>
-                        )}
-
-                        {!isLoadingDrafts && filteredDrafts.length > 0 && (
+                        ) : filteredDrafts.length > 0 ? (
                             <>
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     {paginatedDrafts.map(draft => (
-                                        <Card
-                                            key={draft.id}
-                                            className={cn(
-                                                "cursor-pointer transition-all hover:shadow-md",
-                                                draftId === draft.id
-                                                    ? "ring-2 ring-primary bg-primary/5"
-                                                    : "hover:bg-muted/50"
-                                            )}
-                                            onClick={() => handleDraftSelect(draft.id)}
-                                        >
+                                        <Card key={draft.id} className="cursor-pointer transition-all hover:shadow-md hover:bg-muted/50" onClick={() => handleDraftSelect(draft.id)}>
                                             <CardContent className="p-4">
                                                 <div className="space-y-2">
-                                                    <h3 className="font-semibold text-sm leading-tight line-clamp-2">
-                                                        {draft.title || `Draft #${draft.id}`}
-                                                    </h3>
-                                                    <p className="text-xs text-muted-foreground line-clamp-2">
-                                                        {draft.goal || "No goal specified"}
-                                                    </p>
-                                                    {draftId === draft.id && (
-                                                        <div className="flex justify-end">
-                                                            <CheckCircle2 className="h-4 w-4 text-primary" />
-                                                        </div>
-                                                    )}
+                                                    <h3 className="font-semibold text-sm leading-tight line-clamp-2">{draft.title || `Draft #${draft.id}`}</h3>
+                                                    <p className="text-xs text-muted-foreground line-clamp-2">{draft.goal || "No goal specified"}</p>
                                                 </div>
                                             </CardContent>
                                         </Card>
                                     ))}
-
-                                    {/* Fill empty slots for consistent grid */}
-                                    {Array.from({ length: draftsPerPage - paginatedDrafts.length }).map((_, index) => (
-                                        <div key={`empty-${index}`} className="invisible"></div>
-                                    ))}
                                 </div>
-
-                                {/* Pagination Controls */}
                                 {totalPages > 1 && (
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handlePrevPage}
-                                            disabled={currentPage === 0}
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                            Previous
-                                        </Button>
-
-                                        <div className="flex items-center gap-1">
-                                            {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
-                                                const pageIndex = Math.max(0, Math.min(totalPages - 5, currentPage - 2)) + index;
-                                                if (pageIndex >= totalPages) return null;
-
-                                                return (
-                                                    <Button
-                                                        key={pageIndex}
-                                                        variant={currentPage === pageIndex ? "default" : "outline"}
-                                                        size="sm"
-                                                        onClick={() => setCurrentPage(pageIndex)}
-                                                        className="w-8 h-8 p-0"
-                                                    >
-                                                        {pageIndex + 1}
-                                                    </Button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleNextPage}
-                                            disabled={currentPage === totalPages - 1}
-                                        >
-                                            Next
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
+                                    <div className="flex items-center justify-center gap-2 pt-4">
+                                        <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /> Previous</Button>
+                                        <span className="text-sm text-muted-foreground">Page {currentPage + 1} of {totalPages}</span>
+                                        <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages - 1}>Next <ChevronRight className="h-4 w-4" /></Button>
                                     </div>
                                 )}
                             </>
-                        )}
-
-                        {!isLoadingDrafts && filteredDrafts.length === 0 && (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                <p className="text-lg font-medium mb-2">No drafts found</p>
-                                <p className="text-sm">
-                                    {searchQuery ? "Try adjusting your search terms" : "Create your first draft to get started"}
-                                </p>
-                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground"><FileText className="h-12 w-12 mx-auto mb-4 opacity-50" /><p className="text-lg font-medium mb-2">No drafts found</p><p className="text-sm">{searchQuery ? "Try adjusting your search terms" : "Create your first draft to get started"}</p></div>
                         )}
                     </div>
-                )}
-
-                {currentStep === 2 && draftId && (
-                    /* Step 2: Variant Selection */
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
-                                <Eye className="h-4 w-4" />
-                            </div>
-                            <Label className="text-lg font-semibold">Select Platform Variant</Label>
-                        </div>
-
-                        {isLoadingVariants && (
-                            <div className="p-8 text-center text-muted-foreground">
-                                <div className="animate-pulse">Loading variants...</div>
-                            </div>
-                        )}
-
-                        {variants && variants.length > 0 && (
-                            <div className="space-y-4">
-                                {/* Current variant preview - larger and more prominent */}
-                                <div className="flex justify-center">
-                                    <div className="w-full max-w-md">
-                                        <PlatformSpecificPreview variant={variants[currentVariantIndex]} />
-                                    </div>
-                                </div>
-
-                                {/* Variant selector buttons */}
-                                <div className="flex items-center justify-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setCurrentVariantIndex(prev =>
-                                            prev === 0 ? variants.length - 1 : prev - 1
-                                        )}
-                                        disabled={variants.length <= 1}
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-
-                                    <div className="flex items-center gap-2 min-w-32 justify-center">
-                                        {variants.map((variant, index) => (
-                                            <button
-                                                key={variant.variant_id}
-                                                className={cn(
-                                                    "w-2 h-2 rounded-full transition-colors",
-                                                    index === currentVariantIndex
-                                                        ? "bg-primary"
-                                                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                                                )}
-                                                onClick={() => setCurrentVariantIndex(index)}
-                                            />
-                                        ))}
-                                    </div>
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setCurrentVariantIndex(prev =>
-                                            prev === variants.length - 1 ? 0 : prev + 1
-                                        )}
-                                        disabled={variants.length <= 1}
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-
-                                <div className="text-center text-sm text-muted-foreground">
-                                    {variants[currentVariantIndex].platform} • Variant {currentVariantIndex + 1} of {variants.length}
-                                </div>
-
-                                <div className="flex justify-center">
-                                    <Button
-                                        onClick={() => handleVariantSelect(variants[currentVariantIndex])}
-                                        className="w-full max-w-sm"
-                                    >
-                                        Select This Variant
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {variants && variants.length === 0 && !isLoadingVariants && (
-                            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
-                                No variants found for this draft.
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {currentStep === 3 && selectedVariant && (
-                    /* Step 3: Time Selection */
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
-                                <Calendar className="h-4 w-4" />
-                            </div>
-                            <Label className="text-lg font-semibold">Schedule Time</Label>
-                        </div>
-
-                        <div className="max-w-md mx-auto">
-                            <Card>
-                                <CardContent className="p-6 space-y-4">
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                            <Label htmlFor="schedule-time" className="text-sm font-medium">
-                                                Publication Time
-                                            </Label>
-                                            <Button variant="link" size="sm" onClick={() => {
-                                                const now = new Date();
-                                                now.setMinutes(now.getMinutes() + 10);
-                                                now.setSeconds(0, 0);
-                                                const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-                                                setTime(local.toISOString().slice(0, 16));
-                                            }} className="p-0 h-auto" type="button">
-                                                Now
-                                            </Button>
-                                        </div>
-                                        <Input
-                                            id="schedule-time"
-                                            type="datetime-local"
-                                            value={time}
-                                            onChange={e => setTime(e.target.value)}
-                                            disabled={!personaAccountId}
-                                            className="text-base"
-                                        />
-                                        <p className="text-xs text-muted-foreground">
-                                            Timezone: {timezoneName}
-                                        </p>
-                                    </div>
-
-                                    <Button
-                                        onClick={handleTimeSelect}
-                                        disabled={!time || !personaAccountId}
-                                        className="w-full"
-                                    >
-                                        <Clock className="h-4 w-4 mr-2" />
-                                        Set Time & Continue
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                )}
-
-                {currentStep === 4 && time && selectedVariant && (
-                    /* Step 4: Confirmation */
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
-                                <CheckCircle2 className="h-4 w-4" />
-                            </div>
-                            <Label className="text-lg font-semibold">Confirm & Schedule</Label>
-                        </div>
-
-                        <Card className="bg-muted/20">
-                            <CardContent className="p-6">
-                                <div className="grid md:grid-cols-2 gap-6">
+                ) : (
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <Label className="text-lg font-semibold flex items-center gap-2">
+                                Preview for <Badge variant="outline" className="capitalize">{accountPlatform}</Badge>
+                            </Label>
+                            <div className="w-full max-w-md mx-auto">
+                                {isLoadingVariants && (
                                     <div className="space-y-4">
-                                        <div>
-                                            <h3 className="font-semibold mb-2">Draft Details</h3>
-                                            <div className="text-sm text-muted-foreground space-y-1">
-                                                <p><strong>Title:</strong> {selectedDraft?.title || `Draft #${selectedDraft?.id}`}</p>
-                                                <p><strong>Platform:</strong> {selectedVariant.platform}</p>
-                                                <p><strong>Time:</strong> {new Date(time).toLocaleString()}</p>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <h3 className="font-semibold mb-2">Preview</h3>
-                                            <div className="max-w-sm">
-                                                <PlatformSpecificPreview variant={selectedVariant} />
-                                            </div>
-                                        </div>
+                                        <Skeleton className="h-8 w-1/3" />
+                                        <Skeleton className="w-full aspect-square" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-2/3" />
                                     </div>
+                                )}
+                                {!isLoadingVariants && selectedVariant && <DraftVariantPreview variant={selectedVariant} />}
+                                {!isLoadingVariants && !selectedVariant && (
+                                    <Card className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 border-dashed">
+                                        <AlertTriangle className="h-10 w-10 text-destructive mb-4" />
+                                        <CardTitle className="text-lg text-destructive">No Compatible Variant</CardTitle>
+                                        <CardDescription className="mt-2">
+                                            This draft does not have a variant for the selected persona's platform ({accountPlatform}).
+                                        </CardDescription>
+                                    </Card>
+                                )}
+                            </div>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="schedule-time" className="text-lg font-semibold flex items-center gap-2"><Calendar className="h-5 w-5 text-primary" /> Schedule Time</Label>
+                                <Input id="schedule-time" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} disabled={!personaAccountId || !selectedVariant} className="text-base" />
+                                <div className="flex gap-2 pt-1">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const now = new Date();
+                                            // 최소 5분 후로 설정 (즉시 실행 방지)
+                                            now.setMinutes(now.getMinutes() + 5);
+                                            setTime(now.toISOString().slice(0, 16));
+                                        }}
+                                        disabled={!personaAccountId || !selectedVariant}
+                                        className="text-xs"
+                                    >
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        Now
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const bestTime = calculateBestWindowTime();
+                                            if (bestTime) {
+                                                setTime(bestTime.toISOString().slice(0, 16));
+                                                toast.success("Best window time set!", {
+                                                    description: `Scheduled for ${bestTime.toLocaleDateString()} at ${bestTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                                });
+                                            } else {
+                                                // best_window 정보가 없으면 기본값으로 설정
+                                                const tomorrow = new Date();
+                                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                                tomorrow.setHours(10, 0, 0, 0);
+                                                setTime(tomorrow.toISOString().slice(0, 16));
+                                                toast.info("Using default optimal time", {
+                                                    description: "Best window data not available. Using tomorrow at 10 AM as default."
+                                                });
+                                            }
+                                        }}
+                                        disabled={!personaAccountId || !selectedVariant}
+                                        className="text-xs"
+                                    >
+                                        <Zap className="h-3 w-3 mr-1" />
+                                        Set Best Window
+                                    </Button>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-                )}
-
-                {!personaAccountId && (
-                    <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
-                        <p className="text-sm text-destructive font-medium">
-                            A persona must be active to schedule a post.
-                        </p>
+                                <p className="text-xs text-muted-foreground">Timezone: {timezoneName}</p>
+                            </div>
+                            {!personaAccountId && (
+                                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+                                    <p className="text-sm text-destructive font-medium">A persona must be active to schedule a post.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </CardContent>
 
-            <CardFooter className="p-6 border-t bg-muted/20 flex justify-between">
-                <div className="flex gap-2">
-                    {currentStep > 1 && (
-                        <Button
-                            variant="outline"
-                            onClick={() => setCurrentStep(prev => prev - 1)}
-                            disabled={isPending}
-                        >
-                            Previous
-                        </Button>
-                    )}
-                </div>
-
-                <div className="flex gap-2">
-                    {currentStep === 2 && variants && variants.length > 0 && (
-                        <Button
-                            onClick={() => handleVariantSelect(variants[currentVariantIndex])}
-                            disabled={isPending}
-                        >
-                            Select This Variant
-                        </Button>
-                    )}
-
-                    {currentStep === 3 && (
-                        <Button
-                            onClick={handleTimeSelect}
-                            disabled={isPending || !time || !personaAccountId}
-                        >
-                            Set Time & Continue
-                        </Button>
-                    )}
-
-                    {currentStep === 4 && (
-                        <Button
-                            onClick={handleSchedule}
-                            disabled={isPending || !time || !selectedVariant || !personaAccountId}
-                            className="min-w-32"
-                        >
-                            {isPending ? "Scheduling..." : "Schedule Post"}
-                        </Button>
-                    )}
-                </div>
-            </CardFooter>
+            {draftId && (
+                <CardFooter className="p-6 border-t bg-muted/20 flex justify-end">
+                    <Button onClick={handleSchedule} disabled={isPending || !time || !selectedVariant || !personaAccountId} className="min-w-40">
+                        {isPending ? "Scheduling..." : "Schedule Post"}
+                        <Clock className="h-4 w-4 ml-2" />
+                    </Button>
+                </CardFooter>
+            )}
         </Card>
     );
 }

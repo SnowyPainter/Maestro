@@ -79,15 +79,23 @@ export function ContextCard({
                         </Avatar>
                     </div>
 
-                    {/* Top Right: Account Handle */}
+                    {/* Top Right: Account Handle & Platform */}
                     <div className="flex items-center justify-end">
                         {accountHandle && accountPlatform && (
-                            <p className={cn(
-                                "text-xs font-medium truncate",
-                                platformGradient ? "text-white/90" : "text-foreground"
-                            )}>
-                                @{accountHandle}
-                            </p>
+                            <div className="text-right">
+                                <p className={cn(
+                                    "text-xs font-medium truncate",
+                                    platformGradient ? "text-white/90" : "text-foreground"
+                                )}>
+                                    @{accountHandle}
+                                </p>
+                                <p className={cn(
+                                    "text-[10px] text-muted-foreground truncate",
+                                    platformGradient ? "text-white/70" : "text-muted-foreground"
+                                )}>
+                                    {accountPlatform}
+                                </p>
+                            </div>
                         )}
                     </div>
 

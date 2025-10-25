@@ -13,6 +13,18 @@ import { cn } from "@/lib/utils";
 import { FileText, RefreshCw, StickyNote, Target, X, AlertTriangle, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { toast } from "sonner";
 
+// 플랫폼 이름을 사람이 읽기 쉬운 형태로 변환
+function formatPlatformName(platform: string): string {
+  switch (platform.toLowerCase()) {
+    case 'instagram':
+      return 'Instagram';
+    case 'threads':
+      return 'Threads';
+    default:
+      return platform.charAt(0).toUpperCase() + platform.slice(1);
+  }
+}
+
 export function PersonaAccountContext() {
     const {
         personaAccountId,
@@ -175,7 +187,7 @@ export function PersonaAccountContext() {
                             variant="persona"
                             personaAvatarUrl={personaAvatarUrl || undefined}
                             accountHandle={accountHandle || undefined}
-                            accountPlatform={accountPlatform || undefined}
+                            accountPlatform={accountPlatform ? formatPlatformName(accountPlatform) : undefined}
                             isValid={isValidOut?.is_valid}
                             onReconnect={handleReconnect}
                             isReconnecting={isReconnecting}
