@@ -31,71 +31,38 @@ services:
 
   seaweed-master:
     image: chrislusf/seaweedfs:3.59
-    container_name: maestro-seaweed-master
-    command: master -ip=seaweed-master -ip.bind=0.0.0.0
+    command: master -ip=seaweed-master -ip.bind=0.0.0.0 -volumeSizeLimitMB=1024
     ports:
       - "9333:9333"
     volumes:
       - seaweed-master-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9333/cluster/status?pretty=y >/dev/null"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-    restart: unless-stopped
 
   seaweed-volume:
     image: chrislusf/seaweedfs:3.59
-    container_name: maestro-seaweed-volume
-    command: volume -mserver=seaweed-master:9333 -ip=seaweed-volume -ip.bind=0.0.0.0 -dir=/data -max=30
+    command: volume -mserver=seaweed-master:9333 -ip=seaweed-volume -ip.bind=0.0.0.0
     depends_on:
       - seaweed-master
-    ports:
-      - "8081:8080"
     volumes:
       - seaweed-volume-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/status >/dev/null"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-    restart: unless-stopped
 
   seaweed-filer:
     image: chrislusf/seaweedfs:3.59
-    container_name: maestro-seaweed-filer
     command: filer -master=seaweed-master:9333 -ip=seaweed-filer -ip.bind=0.0.0.0
+    ports:
+      - "8888:8888"
     depends_on:
       - seaweed-master
       - seaweed-volume
-    ports:
-      - "8888:8888"
     volumes:
-      - seaweed-filer-config:/etc/seaweedfs
       - seaweed-filer-data:/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8888/?prefix=/ >/dev/null"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-    restart: unless-stopped
 
   seaweed-s3:
     image: chrislusf/seaweedfs:3.59
-    container_name: maestro-seaweed-s3
-    command: s3 -filer=seaweed-filer:8888 -ip=seaweed-s3 -ip.bind=0.0.0.0 -port=8333 -accessKey=maestro -secretKey=maestrosecret
-    environment:
-      - S3_USE_HTTPS=false
-    depends_on:
-      - seaweed-filer
+    command: s3 -filer=seaweed-filer:8888 -ip=seaweed-s3 -ip.bind=0.0.0.0
     ports:
       - "8333:8333"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8333/?comp=service >/dev/null"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-    restart: unless-stopped
+    depends_on:
+      - seaweed-filer
 
 volumes:
   pgdata:

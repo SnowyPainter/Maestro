@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     EMBED_NORMALIZE: bool = True
 
     # ----- Object storage / SeaweedFS -----
-    SEAWEEDFS_ENDPOINT: str = "localhost:8333"
+    SEAWEEDFS_ENDPOINT: str = "http://localhost:8333"
     SEAWEEDFS_ACCESS_KEY: str = "maestro"
     SEAWEEDFS_SECRET_KEY: str = "maestrosecret"
     SEAWEEDFS_REGION: Optional[str] = "us-east-1"
