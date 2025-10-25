@@ -134,7 +134,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
           item.label.toLowerCase().includes(activeComposer.query.toLowerCase()) ||
           item.value.toLowerCase().includes(activeComposer.query.toLowerCase())
         ) : registryValues;
-      setSuggestions(filtered.slice(0, 8));
+      setSuggestions(filtered);
     }
     setHighlightIndex(0);
     updateSuggestionPosition();

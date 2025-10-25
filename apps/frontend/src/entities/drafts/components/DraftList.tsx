@@ -8,7 +8,9 @@ import { usePersonaContextStore } from "@/store/persona-context";
 import { useContextRegistryStore } from "@/store/chat-context-registry";
 
 export function DraftList({ onSelectDraft }: { onSelectDraft: (draftId: number) => void }) {
-  const { data: drafts, isLoading, isError } = useBffDraftsListDraftsApiBffDraftsGet();
+  const { data: drafts, isLoading, isError } = useBffDraftsListDraftsApiBffDraftsGet({
+    limit: 100, // 더 많은 draft를 가져와서 서제스트에 등록
+  });
   const [isExpanded, setIsExpanded] = useState(false);
   const setDraftContext = usePersonaContextStore((state) => state.setDraftContext);
   const registerEmission = useContextRegistryStore((state) => state.registerEmission);

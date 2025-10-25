@@ -1,5 +1,5 @@
 import React from "react";
-import { ChatCard, TrendsListResponse, DraftVariantRender, InsightCommentList, ReactionMessageTemplateOut } from "@/lib/api/generated";
+import { ChatCard, TrendsListResponse, DraftVariantRender, InsightCommentList, ReactionMessageTemplateOut, DraftVariantRenderDetail } from "@/lib/api/generated";
 import { TableCard } from "./components/Table";
 import { ChartCard } from "./components/ChartCard";
 import { EditorCard } from "./components/EditorCard";
@@ -113,6 +113,16 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     );
   }
 
+  if (card_type === 'draft.variant.detail' && data.variant_id) {
+    return (
+      <DraftVariantDetail
+        draftId={data.draft_id as number}
+        platform={data.platform as string}
+        variantData={data as unknown as DraftVariantRenderDetail}
+      />
+    );
+  }
+
   // Persona 관련 특수 처리
   if (card_type === 'account.persona.detail' && data?.id) {
     return (
@@ -219,7 +229,6 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
 
     case 'editor':
     case 'draft':
-    case 'draft.variant.detail':
       return <EditorCard title={title || "Data"} data={data || card} />;
 
     case 'profile':
