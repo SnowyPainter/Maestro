@@ -77,6 +77,8 @@ class Settings(BaseSettings):
     PRD_DOMAIN: Optional[str] = None
     THREADS_CLIENT_ID: str = ""
     THREADS_CLIENT_SECRET: str = ""
+    INSTAGRAM_CLIENT_ID: str = ""
+    INSTAGRAM_CLIENT_SECRET: str = ""
 
     # ----- LLM -----
     LLM_PRIMARY_MODEL: str = "gemini-2.0-flash-lite"

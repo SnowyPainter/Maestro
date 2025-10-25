@@ -34,8 +34,9 @@ from apps.backend.src.modules.users.schemas import (
     UserResponse,
 )
 from apps.backend.src.modules.users.service import authenticate, create_user, get_user_by_id
-from apps.backend.src.services.oauth.base import OAuthAccessToken, OAuthProfile
+from apps.backend.src.services.oauth.base import BaseOAuthProvider, OAuthAccessToken, OAuthProfile
 from apps.backend.src.services.oauth_threads import ThreadsOAuthProvider
+from apps.backend.src.services.oauth_instagram import InstagramOAuthProvider
 from pydantic import BaseModel
 
 
@@ -71,16 +72,21 @@ STATE_TTL_SECONDS = 600
 STATE_KEY = settings.JWT_SECRET.encode("utf-8")
 
 
-def _get_oauth_provider(platform: PlatformKind) -> ThreadsOAuthProvider:
-    if platform is not PlatformKind.THREADS:
-        raise HTTPException(status_code=404, detail=f"Unsupported OAuth platform: {platform.value}")
+def _get_oauth_provider(platform: PlatformKind) -> BaseOAuthProvider:
     try:
-        return ThreadsOAuthProvider(
-            client_id=settings.THREADS_CLIENT_ID,
-            client_secret=settings.THREADS_CLIENT_SECRET,
-        )
+        if platform is PlatformKind.THREADS:
+            return ThreadsOAuthProvider(
+                client_id=settings.THREADS_CLIENT_ID,
+                client_secret=settings.THREADS_CLIENT_SECRET,
+            )
+        if platform is PlatformKind.INSTAGRAM:
+            return InstagramOAuthProvider(
+                client_id=settings.INSTAGRAM_CLIENT_ID,
+                client_secret=settings.INSTAGRAM_CLIENT_SECRET,
+            )
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    raise HTTPException(status_code=404, detail=f"Unsupported OAuth platform: {platform.value}")
 
 
 class OAuthStartResponse(BaseModel):
