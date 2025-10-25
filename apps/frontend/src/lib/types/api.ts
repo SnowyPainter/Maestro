@@ -1001,7 +1001,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/files": {
+    "/api/files/files": {
         parameters: {
             query?: never;
             header?: never;
@@ -1011,14 +1011,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Upload a media file */
-        post: operations["upload_file_api_files_post"];
+        post: operations["upload_file_api_files_files_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/files/{file_id}": {
+    "/api/files/files/{file_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1026,7 +1026,7 @@ export interface paths {
             cookie?: never;
         };
         /** Retrieve metadata for a media file */
-        get: operations["get_file_info_api_files__file_id__get"];
+        get: operations["get_file_info_api_files_files__file_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2344,8 +2344,8 @@ export interface components {
             /** Statuses */
             statuses?: string[] | null;
         };
-        /** Body_upload_file_api_files_post */
-        Body_upload_file_api_files_post: {
+        /** Body_upload_file_api_files_files_post */
+        Body_upload_file_api_files_files_post: {
             /**
              * File
              * Format: binary
@@ -6578,7 +6578,7 @@ export interface operations {
             };
         };
     };
-    upload_file_api_files_post: {
+    upload_file_api_files_files_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -6587,7 +6587,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["Body_upload_file_api_files_post"];
+                "multipart/form-data": components["schemas"]["Body_upload_file_api_files_files_post"];
             };
         };
         responses: {
@@ -6611,7 +6611,7 @@ export interface operations {
             };
         };
     };
-    get_file_info_api_files__file_id__get: {
+    get_file_info_api_files_files__file_id__get: {
         parameters: {
             query?: never;
             header?: never;

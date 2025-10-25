@@ -1753,7 +1753,7 @@ export const bffTrendsListTrendsApiBffTrendsGetResponse = zod.object({
 /**
  * @summary Upload a media file
  */
-export const uploadFileApiFilesPostBody = zod.object({
+export const uploadFileApiFilesFilesPostBody = zod.object({
   "file": zod.instanceof(File).describe('Image or video file'),
   "draft_id": zod.union([zod.number(),zod.null()]).optional()
 })
@@ -1762,11 +1762,11 @@ export const uploadFileApiFilesPostBody = zod.object({
 /**
  * @summary Retrieve metadata for a media file
  */
-export const getFileInfoApiFilesFileIdGetParams = zod.object({
+export const getFileInfoApiFilesFilesFileIdGetParams = zod.object({
   "file_id": zod.number()
 })
 
-export const getFileInfoApiFilesFileIdGetResponse = zod.object({
+export const getFileInfoApiFilesFilesFileIdGetResponse = zod.object({
   "id": zod.number(),
   "owner_user_id": zod.number(),
   "draft_id": zod.union([zod.number(),zod.null()]).optional(),

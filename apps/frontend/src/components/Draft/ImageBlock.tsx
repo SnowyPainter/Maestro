@@ -1,17 +1,22 @@
 import { useRef, useEffect } from "react";
+import type { ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
-import { ImageIcon, X } from "lucide-react";
+import { ImageIcon, Upload, Loader2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+
+import { useUploadFileApiFilesFilesPost } from "@/lib/api/generated";
 
 interface ImageBlockProps {
     blockId: string;
     url: string;
+    assetId?: number;
     alt: string;
     expanded: boolean;
     isLastBlock: boolean;
     onUrlChange: (value: string) => void;
     onAltChange: (value: string) => void;
+    onAssetIdChange: (value: number | undefined) => void;
     onDeleteBlock: () => void;
     onBlur: () => void;
     onToggleExpand: () => void;
@@ -20,16 +25,20 @@ interface ImageBlockProps {
 export function ImageBlock({
     blockId,
     url,
+    assetId,
     alt,
     expanded,
     isLastBlock,
     onUrlChange,
     onAltChange,
+    onAssetIdChange,
     onDeleteBlock,
     onBlur,
     onToggleExpand
 }: ImageBlockProps) {
     const urlInputRef = useRef<HTMLInputElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const uploadMutation = useUploadFileApiFilesFilesPost({ request: { headers: {} } });
 
     useEffect(() => {
         if (expanded && urlInputRef.current) {
@@ -46,10 +55,69 @@ export function ImageBlock({
         }
     };
 
+    const handleUploadButtonClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const result = await uploadMutation.mutateAsync({ data: { file } });
+            onUrlChange(result.url);
+            onAssetIdChange(result.id);
+            if (!alt?.trim() && result.original_filename) {
+                onAltChange(result.original_filename);
+            }
+            toast.success("이미지를 업로드했어요.");
+        } catch (error) {
+            const message =
+                (error as any)?.data?.detail ??
+                (error as any)?.message ??
+                "이미지 업로드에 실패했어요.";
+            toast.error(message);
+        } finally {
+            if (event.target) {
+                event.target.value = "";
+            }
+        }
+    };
+
+    const isUploading = uploadMutation.isPending;
+
     if (expanded) {
         return (
             <div className="p-3 bg-muted/30 rounded-lg">
                 <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileChange}
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleUploadButtonClick}
+                            disabled={isUploading}
+                        >
+                            {isUploading ? (
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                            ) : (
+                                <Upload className="mr-2 h-3 w-3" />
+                            )}
+                            {isUploading ? "Uploading..." : "Upload Image"}
+                        </Button>
+                        {typeof assetId === "number" && (
+                            <span className="text-xs text-muted-foreground">
+                                Asset #{assetId}
+                            </span>
+                        )}
+                    </div>
                     <Input
                         ref={urlInputRef}
                         placeholder="Enter image URL..."

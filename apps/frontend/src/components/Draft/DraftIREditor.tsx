@@ -55,7 +55,7 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
             props: type === 'text'
                 ? { markdown: '' }
                 : type === 'image'
-                ? { url: '', alt: '' }
+                ? { url: '', alt: '', asset_id: undefined }
                 : { asset_id: undefined, caption: '', ratio: '' }
         };
 
@@ -181,7 +181,12 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
         updateBlockProps(blockId, { alt: value });
     };
 
+    const handleImageAssetIdChange = (blockId: string, assetId: number | undefined) => {
+        updateBlockProps(blockId, { asset_id: assetId });
+    };
+
     const handleBlockBlur = (blockId: string) => {
+        return;
         if ((window as any).isGeneratingText) return;
         updateBlock(blockId, { expanded: false });
     };
@@ -197,6 +202,10 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
 
     const handleVideoRatioChange = (blockId: string, value: string) => {
         updateBlockProps(blockId, { ratio: value });
+    };
+
+    const handleVideoUrlChange = (blockId: string, value: string) => {
+        updateBlockProps(blockId, { url: value });
     };
 
     useEffect(() => {
@@ -286,11 +295,13 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
                             <ImageBlock
                                 blockId={block.id}
                                 url={block.props.url || ''}
+                                assetId={block.props.asset_id}
                                 alt={block.props.alt || ''}
                                 expanded={block.expanded}
                                 isLastBlock={index === blocks.length - 1}
                                 onUrlChange={(value) => handleImageUrlChange(block.id, value)}
                                 onAltChange={(value) => handleImageAltChange(block.id, value)}
+                                onAssetIdChange={(assetId) => handleImageAssetIdChange(block.id, assetId)}
                                 onDeleteBlock={() => handleDeleteBlock(block.id, index)}
                                 onBlur={() => handleBlockBlur(block.id)}
                                 onToggleExpand={() => toggleBlockExpansion(block.id)}
@@ -299,11 +310,13 @@ export function DraftIREditor({ initialBlocks = [], onBlocksChange }: DraftIREdi
                             <VideoBlock
                                 blockId={block.id}
                                 assetId={block.props.asset_id}
+                                url={block.props.url || ''}
                                 caption={block.props.caption || ''}
                                 ratio={block.props.ratio || ''}
                                 expanded={block.expanded}
                                 isLastBlock={index === blocks.length - 1}
                                 onAssetIdChange={(value) => handleVideoAssetIdChange(block.id, value)}
+                                onUrlChange={(value) => handleVideoUrlChange(block.id, value)}
                                 onCaptionChange={(value) => handleVideoCaptionChange(block.id, value)}
                                 onRatioChange={(value) => handleVideoRatioChange(block.id, value)}
                                 onDeleteBlock={() => handleDeleteBlock(block.id, index)}
