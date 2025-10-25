@@ -58,11 +58,13 @@ services:
 
   seaweed-s3:
     image: chrislusf/seaweedfs:3.59
-    command: s3 -filer=seaweed-filer:8888 -ip=seaweed-s3 -ip.bind=0.0.0.0
+    command: s3 -filer=seaweed-filer:8888 -ip.bind=0.0.0.0 -port=8333
     ports:
       - "8333:8333"
     depends_on:
       - seaweed-filer
+    restart: always
+
 
 volumes:
   pgdata:

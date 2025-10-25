@@ -70,12 +70,12 @@ export function ImageBlock({
             if (!alt?.trim() && result.original_filename) {
                 onAltChange(result.original_filename);
             }
-            toast.success("이미지를 업로드했어요.");
+            toast.success("Image uploaded successfully.");
         } catch (error) {
             const message =
                 (error as any)?.data?.detail ??
                 (error as any)?.message ??
-                "이미지 업로드에 실패했어요.";
+                "Image upload failed.";
             toast.error(message);
         } finally {
             if (event.target) {

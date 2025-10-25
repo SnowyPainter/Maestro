@@ -72,12 +72,12 @@ export function VideoBlock({
             const result = await uploadMutation.mutateAsync({ data: { file } });
             onAssetIdChange(String(result.id));
             onUrlChange(result.url);
-            toast.success("비디오를 업로드했어요.");
+            toast.success("Video uploaded successfully.");
         } catch (error) {
             const message =
                 (error as any)?.data?.detail ??
                 (error as any)?.message ??
-                "비디오 업로드에 실패했어요.";
+                "Video upload failed.";
             toast.error(message);
         } finally {
             if (event.target) {
