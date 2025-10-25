@@ -73,12 +73,15 @@ class Settings(BaseSettings):
     MAIL_IMAP_FOLDER: str = "INBOX"
 
     # ----- SNS -----
-    TEST_DOMAIN: str = ""
-    PRD_DOMAIN: Optional[str] = None
     THREADS_CLIENT_ID: str = ""
     THREADS_CLIENT_SECRET: str = ""
     INSTAGRAM_CLIENT_ID: str = ""
     INSTAGRAM_CLIENT_SECRET: str = ""
+
+    CLOUDFLARE_TUNNEL_NAME: str = "maestro-local"
+    API_DOMAIN: str = "https://api.yukiscale.work"
+    MEDIA_DOMAIN: str = "https://media.yukiscale.work"
+    FRONTEND_DOMAIN: str = "https://app.yukiscale.work"
 
     # ----- LLM -----
     LLM_PRIMARY_MODEL: str = "gemini-2.0-flash-lite"
@@ -124,11 +127,14 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[misc]
     @property
     def API_PUBLIC_BASE(self) -> str:
-        if isinstance(self.PRD_DOMAIN, str) and self.PRD_DOMAIN.strip():
-            return self.PRD_DOMAIN.rstrip("/")
-        if isinstance(self.TEST_DOMAIN, str) and self.TEST_DOMAIN.strip():
-            return self.TEST_DOMAIN.rstrip("/")
-        return "http://localhost:8000"
+        base = self.API_DOMAIN.strip()
+        return base.rstrip("/") if base else "http://localhost:8000"
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def MEDIA_PUBLIC_BASE(self) -> str:
+        base = self.MEDIA_DOMAIN.strip()
+        return base.rstrip("/") if base else self.API_PUBLIC_BASE
 
     class Config:
         env_file = BACKEND_DIR / ".env"

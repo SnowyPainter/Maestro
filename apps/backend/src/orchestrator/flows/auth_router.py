@@ -140,10 +140,13 @@ def _append_query_params(url: str, params: Dict[str, str]) -> str:
 
 
 def _default_return_url() -> str:
-    return settings.PRD_DOMAIN+"/chat" or "https://localhost:5173/chat"
+    base = settings.FRONTEND_DOMAIN.strip() if settings.FRONTEND_DOMAIN else "https://localhost:5173"
+    return f"{base.rstrip('/')}/chat"
+
 
 def _get_redirect_uri(platform: PlatformKind) -> str:
-    return settings.TEST_DOMAIN + f"/api/orchestrator/auth/oauth/{platform.value}/callback"
+    base = settings.API_DOMAIN.strip() if settings.API_DOMAIN else "http://localhost:8000"
+    return f"{base.rstrip('/')}/api/orchestrator/auth/oauth/{platform.value}/callback"
 
 
 def _resolve_persona_account_id() -> int:

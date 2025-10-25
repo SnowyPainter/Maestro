@@ -65,7 +65,7 @@ def object_url(bucket: str, object_name: str) -> str:
 
 
 def public_media_url(bucket: str, object_name: str) -> str:
-    base = settings.API_PUBLIC_BASE.rstrip("/")
+    base = settings.MEDIA_PUBLIC_BASE.rstrip("/")
     bucket_part = bucket.strip("/")
     object_part = object_name.lstrip("/")
     return f"{base}/api/media/{bucket_part}/{object_part}"
