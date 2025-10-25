@@ -21,6 +21,11 @@
     "celery:start": "pnpm redis:restart && pnpm dev:celery",
     "celery:restart": "pnpm celery:stop && pnpm celery:start",
 
+    "db:migrate": "cd apps/backend && alembic upgrade head",
+    "db:migrate:generate": "cd apps/backend && alembic revision --autogenerate -m 'Update models'",
+    "db:migrate:status": "cd apps/backend && alembic current",
+    "db:migrate:history": "cd apps/backend && alembic history",
+
     "dev:all": "pnpm dev:infra && concurrently --no-auto-exit -n APP,CELERY \"pnpm dev:backend:and:frontend\" \"pnpm celery:start\""
   },
   "devDependencies": {
