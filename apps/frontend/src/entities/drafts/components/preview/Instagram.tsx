@@ -9,11 +9,13 @@ import { usePersonaContextStore } from '@/store/persona-context';
 interface InstagramPreviewProps {
   caption: string;
   mediaItems: RenderedMediaItem[];
+  size?: 'md' | 'sm';
 }
 
 export function InstagramPreview({
   caption,
   mediaItems,
+  size = 'md',
 }: InstagramPreviewProps) {
   const { accountHandle, personaName, accountAvatarUrl, personaAvatarUrl } = usePersonaContextStore();
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -32,17 +34,21 @@ export function InstagramPreview({
   };
 
   const currentMedia = mediaItems[currentMediaIndex];
+  const isSmall = size === 'sm';
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white dark:bg-black rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+    <div className={cn(
+      "w-full mx-auto bg-white dark:bg-black rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800",
+      isSmall ? 'max-w-[21rem]' : 'max-w-md'
+    )}>
       {/* Header */}
-      <div className="flex items-center p-3">
-        <Avatar className="h-8 w-8">
+      <div className={cn("flex items-center", isSmall ? 'p-2' : 'p-3')}>
+        <Avatar className={cn(isSmall ? 'h-6 w-6' : 'h-8 w-8')}>
           <AvatarImage src={displayAvatar || undefined} alt={displayName!} />
           <AvatarFallback>{displayName?.charAt(0)}</AvatarFallback>
         </Avatar>
-        <span className="ml-3 font-semibold text-sm">{displayName}</span>
-        <MoreHorizontal className="ml-auto h-5 w-5 text-gray-500" />
+        <span className={cn("font-semibold", isSmall ? 'text-xs ml-2' : 'text-sm ml-3')}>{displayName}</span>
+        <MoreHorizontal className={cn("ml-auto text-gray-500", isSmall ? 'h-4 w-4' : 'h-5 w-5')} />
       </div>
 
       {/* Media */}
@@ -63,26 +69,27 @@ export function InstagramPreview({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-black/50 text-white hover:bg-black/70"
+              className={cn("absolute top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70", isSmall ? 'left-1 h-5 w-5' : 'left-2 h-6 w-6')}
               onClick={goToPrev}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className={cn(isSmall ? 'h-3 w-3' : 'h-4 w-4')} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-black/50 text-white hover:bg-black/70"
+              className={cn("absolute top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70", isSmall ? 'right-1 h-5 w-5' : 'right-2 h-6 w-6')}
               onClick={goToNext}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className={cn(isSmall ? 'h-3 w-3' : 'h-4 w-4')} />
             </Button>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+            <div className={cn("absolute left-1/2 -translate-x-1/2 flex", isSmall ? 'bottom-2 gap-1' : 'bottom-4 gap-1.5')}>
               {mediaItems.map((_, index) => (
                 <div
                   key={index}
                   className={cn(
-                    'h-1.5 w-1.5 rounded-full',
-                    currentMediaIndex === index ? 'bg-white' : 'bg-white/50'
+                    'rounded-full',
+                    currentMediaIndex === index ? 'bg-white' : 'bg-white/50',
+                    isSmall ? 'h-1 w-1' : 'h-1.5 w-1.5'
                   )}
                 />
               ))}
@@ -92,21 +99,21 @@ export function InstagramPreview({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center p-3">
-        <Heart className="h-6 w-6 mr-3" />
-        <MessageCircle className="h-6 w-6 mr-3" />
-        <Send className="h-6 w-6" />
-        <Bookmark className="h-6 w-6 ml-auto" />
+      <div className={cn("flex items-center", isSmall ? 'p-2' : 'p-3')}>
+        <Heart className={cn(isSmall ? 'h-5 w-5 mr-2' : 'h-6 w-6 mr-3')} />
+        <MessageCircle className={cn(isSmall ? 'h-5 w-5 mr-2' : 'h-6 w-6 mr-3')} />
+        <Send className={cn(isSmall ? 'h-5 w-5' : 'h-6 w-6')} />
+        <Bookmark className={cn("ml-auto", isSmall ? 'h-5 w-5' : 'h-6 w-6')} />
       </div>
 
       {/* Likes & Caption */}
-      <div className="px-3 pb-3 text-sm">
+      <div className={cn(isSmall ? 'px-2 pb-2 text-xs' : 'px-3 pb-3 text-sm')}>
         <p className="font-semibold">1,234 likes</p>
         <p className="whitespace-pre-wrap">
           <span className="font-semibold">{displayName}</span>{' '}
           {caption}
         </p>
-        <p className="text-gray-500 text-xs mt-2">View all 56 comments</p>
+        <p className={cn("text-gray-500", isSmall ? 'text-[10px] mt-1' : 'text-xs mt-2')}>View all 56 comments</p>
       </div>
     </div>
   );

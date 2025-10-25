@@ -259,9 +259,9 @@ export function DraftVariantDetail({
 
       switch (platform) {
         case PlatformKind.instagram:
-          return <InstagramPreview caption={caption} mediaItems={media} />;
+          return <InstagramPreview caption={caption} mediaItems={media} size="sm" />;
         case PlatformKind.threads:
-          return <ThreadsPreview caption={caption} mediaItems={media} />;
+          return <ThreadsPreview caption={caption} mediaItems={media} size="sm" />;
         default:
           return (
             <div className="space-y-4">
