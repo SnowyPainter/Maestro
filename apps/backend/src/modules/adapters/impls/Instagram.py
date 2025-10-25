@@ -50,7 +50,7 @@ class InstagramAdapter(CapabilityAdapter[SpecCompiler]):
         self,
         *,
         http_client: httpx.AsyncClient | None = None,
-        base_url: str = "https://graph.facebook.com/v24.0",
+        base_url: str = "https://graph.instagram.com/v24.0",
     ) -> None:
         http = http_client or ASYNC_FETCH
         context = InstagramContext(http=http, base_url=base_url)

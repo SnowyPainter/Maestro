@@ -19,6 +19,15 @@ from apps.backend.src.modules.common.enums import PlatformKind, Permission
 from fastapi import HTTPException
 from apps.backend.src.core.config import settings
 from apps.backend.src.services.oauth_threads import ThreadsOAuthProvider
+from apps.backend.src.services.oauth_instagram import InstagramOAuthProvider
+
+
+class TokenRefreshError(RuntimeError):
+    """Raised when an automatic token refresh cannot be completed."""
+
+    def __init__(self, message: str, *, platform: PlatformKind | None = None) -> None:
+        super().__init__(message)
+        self.platform = platform
 
 
 # ------------------------
@@ -29,6 +38,7 @@ def _utcnow() -> datetime:
 
 
 _THREADS_OAUTH_PROVIDER: ThreadsOAuthProvider | None = None
+_INSTAGRAM_OAUTH_PROVIDER: InstagramOAuthProvider | None = None
 
 
 def _get_threads_oauth_provider() -> ThreadsOAuthProvider | None:
@@ -45,12 +55,18 @@ def _get_threads_oauth_provider() -> ThreadsOAuthProvider | None:
     return _THREADS_OAUTH_PROVIDER
 
 
-class TokenRefreshError(RuntimeError):
-    """Raised when an automatic token refresh cannot be completed."""
-
-    def __init__(self, message: str, *, platform: PlatformKind | None = None) -> None:
-        super().__init__(message)
-        self.platform = platform
+def _get_instagram_oauth_provider() -> InstagramOAuthProvider | None:
+    global _INSTAGRAM_OAUTH_PROVIDER
+    if _INSTAGRAM_OAUTH_PROVIDER is not None:
+        return _INSTAGRAM_OAUTH_PROVIDER
+    try:
+        _INSTAGRAM_OAUTH_PROVIDER = InstagramOAuthProvider(
+            client_id=settings.INSTAGRAM_CLIENT_ID,
+            client_secret=settings.INSTAGRAM_CLIENT_SECRET,
+        )
+    except RuntimeError:
+        return None
+    return _INSTAGRAM_OAUTH_PROVIDER
 
 
 # ------------------------
@@ -123,16 +139,7 @@ async def is_valid_platform_account(
         return False
 
     try:
-        if not (account.access_token or "").strip() or (
-            account.token_expires_at is not None and account.token_expires_at <= _utcnow()
-        ):
-            account = await ensure_platform_account_credentials(
-                db,
-                account=account,
-                force_refresh=True,
-            )
-        else:
-            account = await ensure_platform_account_credentials(db, account=account)
+        account = await ensure_platform_account_credentials(db, account=account)
     except TokenRefreshError:
         # refresh helper already recorded the failure on the account
         pass
@@ -165,8 +172,7 @@ async def ensure_platform_account_credentials(
     now = _utcnow()
     expires_at = account.token_expires_at
     refresh_token = (account.refresh_token or "").strip()
-    if not refresh_token and account.platform == PlatformKind.THREADS:
-        # Legacy Threads records stored only the access token; treat it as refresh handle.
+    if not refresh_token and account.platform in {PlatformKind.THREADS, PlatformKind.INSTAGRAM}:
         refresh_token = (account.access_token or "").strip()
 
     should_refresh = force_refresh
@@ -189,9 +195,11 @@ async def ensure_platform_account_credentials(
             raise TokenRefreshError(message, platform=account.platform)
         return account
 
-    provider: ThreadsOAuthProvider | None = None
+    provider: ThreadsOAuthProvider | InstagramOAuthProvider | None = None
     if account.platform == PlatformKind.THREADS:
         provider = _get_threads_oauth_provider()
+    elif account.platform == PlatformKind.INSTAGRAM:
+        provider = _get_instagram_oauth_provider()
 
     if provider is None:
         message = "oauth refresh provider not configured"
