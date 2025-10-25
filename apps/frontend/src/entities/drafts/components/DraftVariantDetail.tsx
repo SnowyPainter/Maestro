@@ -14,6 +14,8 @@ import {
   formatOptionValue,
 } from "../draftVariant";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InstagramPreview } from "./preview/Instagram";
+import { ThreadsPreview } from "./preview/Threads";
 
 function formatMetricKey(key: string): string {
   const keyMappings: Record<string, string> = {
@@ -249,333 +251,295 @@ export function DraftVariantDetail({
     setMediaStartIndex(Math.min(mediaItems.length - maxVisibleMedia, mediaStartIndex + maxVisibleMedia));
   };
 
-  const renderVariantContent = () => (
-    <Tabs defaultValue="content" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="content">Content</TabsTrigger>
-        <TabsTrigger value="analysis">Analysis</TabsTrigger>
-        <TabsTrigger value="persona">Persona</TabsTrigger>
-        <TabsTrigger value="details">Details</TabsTrigger>
-      </TabsList>
+  const renderVariantContent = () => {
+    const renderPreview = () => {
+      const platform = ensurePlatformKind(displayData.platform);
+      const caption = displayData.rendered_caption || '';
+      const media = mediaItems || [];
 
-      <TabsContent value="content" className="mt-4 space-y-4">
-        {displayData.rendered_caption && (
-          <div>
-            <h4 className="text-sm font-medium mb-1">Caption</h4>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85 break-words overflow-wrap-anywhere">
-              {displayData.rendered_caption}
-            </p>
-          </div>
-        )}
-
-        {mediaItems.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium">Media ({mediaItems.length})</h4>
-              {mediaItems.length > maxVisibleMedia && (
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={goToPrevMedia}
-                    disabled={!canGoPrev}
-                    className="h-6 w-6 p-0"
-                  >
-                    <ChevronLeft className="h-3 w-3" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground">
-                    {mediaStartIndex + 1}-{Math.min(mediaStartIndex + maxVisibleMedia, mediaItems.length)}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={goToNextMedia}
-                    disabled={!canGoNext}
-                    className="h-6 w-6 p-0"
-                  >
-                    <ChevronRight className="h-3 w-3" />
-                  </Button>
+      switch (platform) {
+        case PlatformKind.instagram:
+          return <InstagramPreview caption={caption} mediaItems={media} />;
+        case PlatformKind.threads:
+          return <ThreadsPreview caption={caption} mediaItems={media} />;
+        default:
+          return (
+            <div className="space-y-4">
+              {displayData.rendered_caption && (
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Caption</h4>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/85 break-words overflow-wrap-anywhere">
+                    {displayData.rendered_caption}
+                  </p>
+                </div>
+              )}
+              {mediaItems.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Media ({mediaItems.length})</h4>
+                  <div className="flex gap-3 overflow-x-auto">
+                    {mediaItems.map((item: RenderedMediaItem, index) => (
+                      <div key={`${item.url}-${index}`} className="flex-shrink-0 w-40">
+                        <div className="aspect-square bg-muted/20 rounded border overflow-hidden mb-2">
+                          {item.type === 'image' && item.url ? (
+                            <img
+                              src={item.url}
+                              alt={item.alt || `Media ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                              <ImageIcon className="h-6 w-6" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="break-all text-xs text-muted-foreground/80 leading-tight truncate">
+                          {item.url || 'No URL'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-            <div className="flex gap-3 overflow-hidden">
-              {visibleMediaItems.map((item: RenderedMediaItem, index) => {
-                const globalIndex = mediaStartIndex + index;
-                const preferredRatio = personaMediaPrefs?.preferred_ratio;
-                const ratioMismatch = preferredRatio && item.type === 'image' && item.ratio && item.ratio !== preferredRatio;
-                return (
-                  <div key={`${item.url}-${globalIndex}`} className="flex-1 min-w-0">
-                    <div className="aspect-square bg-muted/20 rounded border overflow-hidden mb-2">
-                      {item.type === 'image' && item.url ? (
-                        <img
-                          src={item.url}
-                          alt={item.alt || `Media ${globalIndex + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <div className={`w-full h-full flex items-center justify-center text-muted-foreground text-xs ${item.type === 'image' && item.url ? 'hidden' : ''}`}>
-                        <div className="text-center">
-                          <ImageIcon className="h-6 w-6 mx-auto mb-1" />
-                          <div>{item.type?.toUpperCase() || 'MEDIA'}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span className="uppercase tracking-wide font-medium">{item.type}</span>
-                        {item.ratio && (
-                          <span className={ratioMismatch ? 'text-amber-600 font-semibold' : ''}>
-                            • {item.ratio}
-                          </span>
-                        )}
-                        {preferredRatio && item.type === 'image' ? (
-                          <span className="text-xs text-muted-foreground/80">
-                            target {preferredRatio}
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="break-all text-xs text-muted-foreground/80 leading-tight" title={item.url || undefined}>
-                        {item.url && item.url.length > 40 ? `${item.url.slice(0, 40)}...` : (item.url || 'No URL')}
-                      </p>
-                      {item.caption && (
-                        <p className="text-xs italic text-muted-foreground leading-tight" title={item.caption}>
-                          {item.caption.length > 60 ? `${item.caption.slice(0, 60)}...` : item.caption}
-                        </p>
-                      )}
-                    </div>
+          );
+      }
+    };
+
+    return (
+      <Tabs defaultValue="preview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="analysis">Analysis</TabsTrigger>
+          <TabsTrigger value="persona">Persona</TabsTrigger>
+          <TabsTrigger value="details">Details</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="preview" className="mt-4">
+          {renderPreview()}
+        </TabsContent>
+
+        <TabsContent value="analysis" className="mt-4 space-y-4">
+          {Boolean(displayData.metrics && Object.keys(displayData.metrics ?? {}).length) && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Metrics Snapshot</h4>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {Object.entries(displayData.metrics ?? {}).map(([key, value]) => (
+                  <div key={key} className="rounded bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground/80">{formatMetricKey(key)}</span>: {formatMetricValue(value)}
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </TabsContent>
+          )}
 
-      <TabsContent value="analysis" className="mt-4 space-y-4">
-        {Boolean(displayData.metrics && Object.keys(displayData.metrics ?? {}).length) && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Metrics Snapshot</h4>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {Object.entries(displayData.metrics ?? {}).map(([key, value]) => (
-                <div key={key} className="rounded bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground/80">{formatMetricKey(key)}</span>: {formatMetricValue(value)}
+          {(warningCount > 0 || errorCount > 0) && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Validation</h4>
+              {errorCount > 0 && (
+                <div className="rounded border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+                  <p className="mb-2 font-semibold uppercase tracking-wide">Errors</p>
+                  <ul className="list-disc space-y-1 pl-4">
+                    {(displayData.errors ?? []).map((err, idx) => (
+                      <li key={`err-${idx}`} className="break-words overflow-wrap-anywhere">{err}</li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
+              {warningCount > 0 && (
+                <div className="rounded border border-amber-300 bg-amber-100/40 p-3 text-xs text-amber-900">
+                  <p className="mb-2 font-semibold uppercase tracking-wide">Warnings</p>
+                  <ul className="list-disc space-y-1 pl-4">
+                    {(displayData.warnings ?? []).map((warn, idx) => (
+                      <li key={`warn-${idx}`} className="break-words overflow-wrap-anywhere">{warn}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </TabsContent>
 
-        {(warningCount > 0 || errorCount > 0) && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Validation</h4>
-            {errorCount > 0 && (
-              <div className="rounded border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
-                <p className="mb-2 font-semibold uppercase tracking-wide">Errors</p>
-                <ul className="list-disc space-y-1 pl-4">
-                  {(displayData.errors ?? []).map((err, idx) => (
-                    <li key={`err-${idx}`} className="break-words overflow-wrap-anywhere">{err}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {warningCount > 0 && (
-              <div className="rounded border border-amber-300 bg-amber-100/40 p-3 text-xs text-amber-900">
-                <p className="mb-2 font-semibold uppercase tracking-wide">Warnings</p>
-                <ul className="list-disc space-y-1 pl-4">
-                  {(displayData.warnings ?? []).map((warn, idx) => (
-                    <li key={`warn-${idx}`} className="break-words overflow-wrap-anywhere">{warn}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="persona" className="mt-4 space-y-4">
-        {personaAdjustments && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Persona Adjustments</h4>
-            {personaHashtags?.appended?.length ? (
-              <div className="space-y-1 text-xs">
-                <p className="text-muted-foreground uppercase tracking-wide">Appended Hashtags</p>
-                <div className="flex flex-wrap gap-1">
-                  {personaHashtags.appended.map((tag) => (
-                    <Badge key={tag} variant="secondary">{tag}</Badge>
-                  ))}
+        <TabsContent value="persona" className="mt-4 space-y-4">
+          {personaAdjustments && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Persona Adjustments</h4>
+              {personaHashtags?.appended?.length ? (
+                <div className="space-y-1 text-xs">
+                  <p className="text-muted-foreground uppercase tracking-wide">Appended Hashtags</p>
+                  <div className="flex flex-wrap gap-1">
+                    {personaHashtags.appended.map((tag) => (
+                      <Badge key={tag} variant="secondary">{tag}</Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            {personaHashtags?.skipped?.length ? (
-              <p className="text-xs text-muted-foreground">
-                Skipped default hashtags: {personaHashtags.skipped.join(', ')}
-              </p>
-            ) : null}
-            {personaReplace?.applied?.length ? (
-              <div className="space-y-1 text-xs">
-                <p className="text-muted-foreground uppercase tracking-wide">Replace Map</p>
-                <div className="space-y-1">
-                  {personaReplace.applied.map((pair, index) => (
-                    <div key={`${pair.source}-${index}`} className="flex items-center gap-2">
-                      <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{pair.source}</code>
-                      <span className="text-muted-foreground">→</span>
-                      <span className="text-sm">{pair.target}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-            {personaReplace?.skipped?.length ? (
-              <p className="text-xs text-muted-foreground">
-                Placeholders not found: {personaReplace.skipped.join(', ')}
-              </p>
-            ) : null}
-            {personaLinkPolicy ? (
-              <div className="space-y-1 text-xs">
-                <p className="text-muted-foreground uppercase tracking-wide">Link Policy</p>
-                {personaLinkPolicy.link_in_bio ? (
-                  <p className="flex items-center gap-2">
-                    <span className="font-semibold text-foreground/80">Link In Bio:</span>
-                    <span>{personaLinkPolicy.link_in_bio}</span>
-                  </p>
-                ) : null}
-              {personaLinkPolicy.utm && Object.keys(personaLinkPolicy.utm).length ? (
-                <div className="space-y-1">
-                  <span className="font-semibold text-foreground/80">UTM Params</span>
-                  <div className="grid gap-1">
-                    {Object.entries(personaLinkPolicy.utm).map(([key, value]) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{key}</code>
-                        <span className="text-muted-foreground">{value}</span>
+              ) : null}
+              {personaHashtags?.skipped?.length ? (
+                <p className="text-xs text-muted-foreground">
+                  Skipped default hashtags: {personaHashtags.skipped.join(', ')}
+                </p>
+              ) : null}
+              {personaReplace?.applied?.length ? (
+                <div className="space-y-1 text-xs">
+                  <p className="text-muted-foreground uppercase tracking-wide">Replace Map</p>
+                  <div className="space-y-1">
+                    {personaReplace.applied.map((pair, index) => (
+                      <div key={`${pair.source}-${index}`} className="flex items-center gap-2">
+                        <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{pair.source}</code>
+                        <span className="text-muted-foreground">→</span>
+                        <span className="text-sm">{pair.target}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : null}
-              {personaLinkPolicy.inline_link ? (
-                <div className="space-y-1">
-                  <span className="font-semibold text-foreground/80">Inline Links</span>
-                  <p className="text-muted-foreground">
-                    Strategy: {personaLinkPolicy.inline_link.strategy || 'keep'}
-                  </p>
-                  {personaLinkPolicy.inline_link.replacement_text ? (
-                    <p className="text-muted-foreground">
-                      Replacement: "{personaLinkPolicy.inline_link.replacement_text}"
+              {personaReplace?.skipped?.length ? (
+                <p className="text-xs text-muted-foreground">
+                  Placeholders not found: {personaReplace.skipped.join(', ')}
+                </p>
+              ) : null}
+              {personaLinkPolicy ? (
+                <div className="space-y-1 text-xs">
+                  <p className="text-muted-foreground uppercase tracking-wide">Link Policy</p>
+                  {personaLinkPolicy.link_in_bio ? (
+                    <p className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground/80">Link In Bio:</span>
+                      <span>{personaLinkPolicy.link_in_bio}</span>
                     </p>
                   ) : null}
-                  {personaLinkPolicy.inline_link.processed_urls?.length ? (
+                  {personaLinkPolicy.utm && Object.keys(personaLinkPolicy.utm).length ? (
                     <div className="space-y-1">
-                      <span className="text-muted-foreground">Processed URLs:</span>
-                      <ul className="list-disc pl-4 text-xs text-muted-foreground">
-                        {personaLinkPolicy.inline_link.processed_urls.map((url) => (
-                          <li key={url} className="break-all">{url}</li>
+                      <span className="font-semibold text-foreground/80">UTM Params</span>
+                      <div className="grid gap-1">
+                        {Object.entries(personaLinkPolicy.utm).map(([key, value]) => (
+                          <div key={key} className="flex items-center gap-2">
+                            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{key}</code>
+                            <span className="text-muted-foreground">{value}</span>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
+                    </div>
+                  ) : null}
+                  {personaLinkPolicy.inline_link ? (
+                    <div className="space-y-1">
+                      <span className="font-semibold text-foreground/80">Inline Links</span>
+                      <p className="text-muted-foreground">
+                        Strategy: {personaLinkPolicy.inline_link.strategy || 'keep'}
+                      </p>
+                      {personaLinkPolicy.inline_link.replacement_text ? (
+                        <p className="text-muted-foreground">
+                          Replacement: "{personaLinkPolicy.inline_link.replacement_text}"
+                        </p>
+                      ) : null}
+                      {personaLinkPolicy.inline_link.processed_urls?.length ? (
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground">Processed URLs:</span>
+                          <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                            {personaLinkPolicy.inline_link.processed_urls.map((url) => (
+                              <li key={url} className="break-all">{url}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
               ) : null}
+              {personaMediaPrefs?.preferred_ratio ? (
+                <div className="space-y-1 text-xs">
+                  <p className="text-muted-foreground uppercase tracking-wide">Preferred Image Ratio</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{personaMediaPrefs.preferred_ratio}</Badge>
+                    {mediaItems.some((item) => item.type === 'image' && item.ratio && item.ratio !== personaMediaPrefs.preferred_ratio) ? (
+                      <span className="text-amber-600">Check media crops</span>
+                    ) : (
+                      <span className="text-green-600">All matching</span>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              {personaMediaPrefs?.allow_carousel !== undefined ? (
+                <p className="text-xs text-muted-foreground">Carousel allowed: {personaMediaPrefs.allow_carousel ? 'Yes' : 'No'}</p>
+              ) : null}
+              {personaMisc.length ? (
+                <div className="space-y-1 text-xs">
+                  {personaMisc.map(([key, value]) => (
+                    <div key={key} className="rounded bg-muted/30 px-2 py-1">
+                      <span className="font-semibold mr-1">{key}:</span>
+                      {renderOptionValue(value)}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="details" className="mt-4 space-y-4">
+          {policyOptions && Object.keys(policyOptions).length ? (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Platform Policy</h4>
+              <div className="grid gap-1 text-xs">
+                {Object.entries(policyOptions).map(([key, value]) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="uppercase tracking-wide text-muted-foreground min-w-[110px]">{key}</span>
+                    <div>{renderOptionValue(value)}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : null}
-            {personaMediaPrefs?.preferred_ratio ? (
+
+          {compileMetaEntries.length ? (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Compile Insights</h4>
               <div className="space-y-1 text-xs">
-                <p className="text-muted-foreground uppercase tracking-wide">Preferred Image Ratio</p>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{personaMediaPrefs.preferred_ratio}</Badge>
-                  {mediaItems.some((item) => item.type === 'image' && item.ratio && item.ratio !== personaMediaPrefs.preferred_ratio) ? (
-                    <span className="text-amber-600">Check media crops</span>
-                  ) : (
-                    <span className="text-green-600">All matching</span>
-                  )}
-                </div>
-              </div>
-            ) : null}
-            {personaMediaPrefs?.allow_carousel !== undefined ? (
-              <p className="text-xs text-muted-foreground">Carousel allowed: {personaMediaPrefs.allow_carousel ? 'Yes' : 'No'}</p>
-            ) : null}
-            {personaMisc.length ? (
-              <div className="space-y-1 text-xs">
-                {personaMisc.map(([key, value]) => (
-                  <div key={key} className="rounded bg-muted/30 px-2 py-1">
-                    <span className="font-semibold mr-1">{key}:</span>
+                {compileMetaEntries.map(([key, value]) => (
+                  <div key={key} className="rounded bg-muted/30 px-3 py-2">
+                    <span className="font-semibold text-foreground/80 mr-2">{key}</span>
                     {renderOptionValue(value)}
                   </div>
                 ))}
               </div>
-            ) : null}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="details" className="mt-4 space-y-4">
-        {policyOptions && Object.keys(policyOptions).length ? (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Platform Policy</h4>
-            <div className="grid gap-1 text-xs">
-              {Object.entries(policyOptions).map(([key, value]) => (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="uppercase tracking-wide text-muted-foreground min-w-[110px]">{key}</span>
-                  <div>{renderOptionValue(value)}</div>
-                </div>
-              ))}
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {compileMetaEntries.length ? (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Compile Insights</h4>
-            <div className="space-y-1 text-xs">
-              {compileMetaEntries.map(([key, value]) => (
-                <div key={key} className="rounded bg-muted/30 px-3 py-2">
-                  <span className="font-semibold text-foreground/80 mr-2">{key}</span>
-                  {renderOptionValue(value)}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {extraOptionEntries.length ? (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Options</h4>
+          {extraOptionEntries.length ? (
             <div className="space-y-2">
-              {extraOptionEntries.map(([key, value]) => (
-                <div key={key} className="rounded bg-muted/30 px-3 py-3 text-xs">
-                  <div className="flex items-start gap-2">
-                    <span className="font-semibold text-foreground/80 min-w-0 flex-shrink-0">{key}:</span>
-                    <div className="min-w-0 flex-1">
-                      {renderOptionValue(value)}
+              <h4 className="text-sm font-medium">Options</h4>
+              <div className="space-y-2">
+                {extraOptionEntries.map(([key, value]) => (
+                  <div key={key} className="rounded bg-muted/30 px-3 py-3 text-xs">
+                    <div className="flex items-start gap-2">
+                      <span className="font-semibold text-foreground/80 min-w-0 flex-shrink-0">{key}:</span>
+                      <div className="min-w-0 flex-1">
+                        {renderOptionValue(value)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {otherBlockEntries.length ? (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Additional Blocks</h4>
+          {otherBlockEntries.length ? (
             <div className="space-y-2">
-              {otherBlockEntries.map(([key, value]) => (
-                <div key={key} className="rounded bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
-                  <p className="font-semibold text-foreground/80 mb-1 uppercase tracking-wide">{key}</p>
-                  <pre className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                    {JSON.stringify(value, null, 2)}
-                  </pre>
-                </div>
-              ))}
+              <h4 className="text-sm font-medium">Additional Blocks</h4>
+              <div className="space-y-2">
+                {otherBlockEntries.map(([key, value]) => (
+                  <div key={key} className="rounded bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
+                    <p className="font-semibold text-foreground/80 mb-1 uppercase tracking-wide">{key}</p>
+                    <pre className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                      {JSON.stringify(value, null, 2)}
+                    </pre>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : null}
-      </TabsContent>
-    </Tabs>
-  );
+          ) : null}
+        </TabsContent>
+      </Tabs>
+    );
+  };
 
   return (
     <Card className={cn("shadow-sm", platformMeta?.accentClass ?? "border-border/70")}>
