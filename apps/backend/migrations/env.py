@@ -1,9 +1,15 @@
 from logging.config import fileConfig
+import sys
+import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+# Add the backend directory to the Python path so that apps.backend.src can be imported
+sys.path.insert(0, '/home/snowypainter/Maestro/apps/backend')
+print("sys.path:", sys.path)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -13,6 +19,22 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Import all models to register them with Base
+import core.db  # This will create Base
+
+# Import all model modules to register tables
+from modules.abtests import models
+from modules.accounts import models
+from modules.campaigns import models
+from modules.drafts import models
+from modules.files import models
+from modules.insights import models
+from modules.llm import models
+from modules.playbooks import models
+from modules.scheduler import models
+from modules.trends import models
+from modules.users import models
 
 from core.db import Base
 target_metadata = Base.metadata

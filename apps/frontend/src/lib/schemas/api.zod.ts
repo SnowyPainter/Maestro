@@ -1751,6 +1751,35 @@ export const bffTrendsListTrendsApiBffTrendsGetResponse = zod.object({
 
 
 /**
+ * @summary Upload a media file
+ */
+export const uploadFileApiFilesPostBody = zod.object({
+  "file": zod.instanceof(File).describe('Image or video file'),
+  "draft_id": zod.union([zod.number(),zod.null()]).optional()
+})
+
+
+/**
+ * @summary Retrieve metadata for a media file
+ */
+export const getFileInfoApiFilesFileIdGetParams = zod.object({
+  "file_id": zod.number()
+})
+
+export const getFileInfoApiFilesFileIdGetResponse = zod.object({
+  "id": zod.number(),
+  "owner_user_id": zod.number(),
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "kind": zod.enum(['image', 'video', 'text']),
+  "url": zod.string(),
+  "content_type": zod.string().nullish(),
+  "size": zod.number(),
+  "original_filename": zod.string().nullish(),
+  "created_at": zod.iso.datetime({})
+})
+
+
+/**
  * Create a new AB test pairing two drafts under a persona and campaign
  * @summary Create AB Test
  */

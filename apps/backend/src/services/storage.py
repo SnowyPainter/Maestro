@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import logging
 import mimetypes
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
@@ -18,20 +19,29 @@ from apps.backend.src.services.http_clients import SYNC_FETCH
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, slots=True)
+class StoredObject:
+    bucket: str
+    object_name: str
+    url: str
+    content_type: Optional[str]
+    size: int
+
+
 @lru_cache(maxsize=1)
-def get_minio_client() -> Minio:
+def get_object_storage_client() -> Minio:
     return Minio(
-        settings.MINIO_ENDPOINT,
-        access_key=settings.MINIO_ACCESS_KEY,
-        secret_key=settings.MINIO_SECRET_KEY,
-        secure=settings.MINIO_SECURE,
-        region=settings.MINIO_REGION or None,
+        settings.SEAWEEDFS_ENDPOINT,
+        access_key=settings.SEAWEEDFS_ACCESS_KEY,
+        secret_key=settings.SEAWEEDFS_SECRET_KEY,
+        secure=settings.SEAWEEDFS_SECURE,
+        region=settings.SEAWEEDFS_REGION or None,
     )
 
 
 @lru_cache(maxsize=None)
 def _ensure_bucket_once(bucket: str) -> bool:
-    client = get_minio_client()
+    client = get_object_storage_client()
     try:
         if not client.bucket_exists(bucket):
             client.make_bucket(bucket)
@@ -47,7 +57,7 @@ def ensure_bucket(bucket: str) -> None:
 
 
 def object_url(bucket: str, object_name: str) -> str:
-    base = settings.MINIO_PUBLIC_BASE.rstrip("/")
+    base = settings.SEAWEEDFS_PUBLIC_BASE.rstrip("/")
     bucket_part = bucket.strip("/")
     object_part = object_name.lstrip("/")
     return f"{base}/{bucket_part}/{object_part}"
@@ -60,9 +70,9 @@ def store_bytes(
     content_type: Optional[str] = None,
     prefix: Optional[str] = None,
     object_name: Optional[str] = None,
-) -> str:
+) -> StoredObject:
     ensure_bucket(bucket)
-    client = get_minio_client()
+    client = get_object_storage_client()
     clean_content_type = _clean_content_type(content_type)
     key = object_name or _generate_object_name(prefix=prefix, content_type=clean_content_type)
 
@@ -73,7 +83,13 @@ def store_bytes(
         length=len(data),
         content_type=clean_content_type,
     )
-    return object_url(bucket, key)
+    return StoredObject(
+        bucket=bucket,
+        object_name=key,
+        url=object_url(bucket, key),
+        content_type=clean_content_type,
+        size=len(data),
+    )
 
 
 def store_remote_asset(
@@ -105,12 +121,13 @@ def store_remote_asset(
         source_suffix=source_ext,
     )
     try:
-        return store_bytes(
+        stored = store_bytes(
             bucket,
             data=payload,
             content_type=content_type,
             object_name=object_name,
         )
+        return stored.url
     except Exception as exc:  # pragma: no cover - IO issues
         logger.warning("Failed to store remote asset", exc_info=True, extra={"url": url, "error": str(exc)})
         return None
@@ -149,7 +166,8 @@ def _guess_suffix(content_type: Optional[str], source_suffix: Optional[str]) -> 
 
 
 __all__ = [
-    "get_minio_client",
+    "StoredObject",
+    "get_object_storage_client",
     "ensure_bucket",
     "object_url",
     "store_bytes",

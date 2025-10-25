@@ -32,7 +32,7 @@ def _store_trend_picture(url: str | None, prefix: str) -> str | None:
         return None
     stored = store_remote_asset(
         url,
-        bucket=settings.MINIO_BUCKET_TRENDS,
+        bucket=settings.SEAWEEDFS_BUCKET_TRENDS,
         prefix=prefix,
         timeout=10.0,
     )

@@ -1001,6 +1001,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a media file */
+        post: operations["upload_file_api_files_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/files/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Retrieve metadata for a media file */
+        get: operations["get_file_info_api_files__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/abtests": {
         parameters: {
             query?: never;
@@ -2310,6 +2344,17 @@ export interface components {
             /** Statuses */
             statuses?: string[] | null;
         };
+        /** Body_upload_file_api_files_post */
+        Body_upload_file_api_files_post: {
+            /**
+             * File
+             * Format: binary
+             * @description Image or video file
+             */
+            file: string;
+            /** Draft Id */
+            draft_id?: number | null;
+        };
         /** CampaignAggregationCommand */
         CampaignAggregationCommand: {
             /** Campaign Id */
@@ -2948,6 +2993,34 @@ export interface components {
             /** Campaign Id */
             campaign_id?: number | null;
         };
+        /** FileInfo */
+        FileInfo: {
+            /** Id */
+            id: number;
+            /** Owner User Id */
+            owner_user_id: number;
+            /** Draft Id */
+            draft_id?: number | null;
+            kind: components["schemas"]["FileKind"];
+            /** Url */
+            url: string;
+            /** Content Type */
+            content_type?: string | null;
+            /** Size */
+            size: number;
+            /** Original Filename */
+            original_filename?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * FileKind
+         * @enum {string}
+         */
+        FileKind: "image" | "video" | "text";
         /** FlowInfo */
         FlowInfo: {
             /** Key */
@@ -6502,6 +6575,70 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    upload_file_api_files_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_file_api_files_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_file_info_api_files__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

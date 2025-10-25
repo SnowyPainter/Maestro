@@ -280,6 +280,14 @@ export interface BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGet {
   statuses?: BodyBffScheduleGetScheduleStreamApiBffScheduleStreamGetStatuses;
 }
 
+export type BodyUploadFileApiFilesPostDraftId = number | null;
+
+export interface BodyUploadFileApiFilesPost {
+  /** Image or video file */
+  file: Blob;
+  draft_id?: BodyUploadFileApiFilesPostDraftId;
+}
+
 export type CampaignAggregationCommandCampaignId = number | null;
 
 export interface CampaignAggregationCommand {
@@ -804,6 +812,32 @@ export interface EnrichedPostPublicationOut {
   goal?: string | null;
   campaign_id?: EnrichedPostPublicationOutCampaignId;
 }
+
+export type FileInfoDraftId = number | null;
+
+export interface FileInfo {
+  id: number;
+  owner_user_id: number;
+  draft_id?: FileInfoDraftId;
+  kind: FileKind;
+  url: string;
+  /** @nullable */
+  content_type?: string | null;
+  size: number;
+  /** @nullable */
+  original_filename?: string | null;
+  created_at: string;
+}
+
+export type FileKind = typeof FileKind[keyof typeof FileKind];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FileKind = {
+  image: 'image',
+  video: 'video',
+  text: 'text',
+} as const;
 
 export interface FlowInfo {
   key: string;
@@ -7145,6 +7179,164 @@ export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnTy
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSchedulerSseApiSseSchedulesEventsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Upload a media file
+ */
+export const uploadFileApiFilesPost = (
+    bodyUploadFileApiFilesPost: BodyUploadFileApiFilesPost,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      const formData = new FormData();
+formData.append(`file`, bodyUploadFileApiFilesPost.file)
+if(bodyUploadFileApiFilesPost.draft_id !== undefined && bodyUploadFileApiFilesPost.draft_id !== null) {
+ formData.append(`draft_id`, bodyUploadFileApiFilesPost.draft_id.toString())
+ }
+
+      return apiFetch<FileInfo>(
+      {url: `/api/files`, method: 'POST',
+      headers: {'Content-Type': 'multipart/form-data', },
+       data: formData, signal
+    },
+      options);
+    }
+  
+
+
+export const getUploadFileApiFilesPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadFileApiFilesPost>>, TError,{data: BodyUploadFileApiFilesPost}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadFileApiFilesPost>>, TError,{data: BodyUploadFileApiFilesPost}, TContext> => {
+
+const mutationKey = ['uploadFileApiFilesPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadFileApiFilesPost>>, {data: BodyUploadFileApiFilesPost}> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadFileApiFilesPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadFileApiFilesPostMutationResult = NonNullable<Awaited<ReturnType<typeof uploadFileApiFilesPost>>>
+    export type UploadFileApiFilesPostMutationBody = BodyUploadFileApiFilesPost
+    export type UploadFileApiFilesPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Upload a media file
+ */
+export const useUploadFileApiFilesPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadFileApiFilesPost>>, TError,{data: BodyUploadFileApiFilesPost}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof uploadFileApiFilesPost>>,
+        TError,
+        {data: BodyUploadFileApiFilesPost},
+        TContext
+      > => {
+
+      const mutationOptions = getUploadFileApiFilesPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * @summary Retrieve metadata for a media file
+ */
+export const getFileInfoApiFilesFileIdGet = (
+    fileId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<FileInfo>(
+      {url: `/api/files/${fileId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getGetFileInfoApiFilesFileIdGetQueryKey = (fileId?: number,) => {
+    return [`/api/files/${fileId}`] as const;
+    }
+
+    
+export const getGetFileInfoApiFilesFileIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError = HTTPValidationError>(fileId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFileInfoApiFilesFileIdGetQueryKey(fileId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>> = ({ signal }) => getFileInfoApiFilesFileIdGet(fileId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(fileId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFileInfoApiFilesFileIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>>
+export type GetFileInfoApiFilesFileIdGetQueryError = HTTPValidationError
+
+
+export function useGetFileInfoApiFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError = HTTPValidationError>(
+ fileId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFileInfoApiFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError = HTTPValidationError>(
+ fileId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFileInfoApiFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError = HTTPValidationError>(
+ fileId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Retrieve metadata for a media file
+ */
+
+export function useGetFileInfoApiFilesFileIdGet<TData = Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError = HTTPValidationError>(
+ fileId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFileInfoApiFilesFileIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFileInfoApiFilesFileIdGetQueryOptions(fileId,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

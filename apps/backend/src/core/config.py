@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from optparse import Option
 from pathlib import Path
 from typing import Optional
 
@@ -41,14 +40,15 @@ class Settings(BaseSettings):
     EMBED_DIM: int = 1024  # bge-m3=1024, e5/multilingual-base=768, MiniLM=384
     EMBED_NORMALIZE: bool = True
 
-    # ----- Object storage / MinIO -----
-    MINIO_ENDPOINT: str = "localhost:9000"
-    MINIO_ACCESS_KEY: str = "minioadmin"
-    MINIO_SECRET_KEY: str = "minioadmin"
-    MINIO_REGION: Optional[str] = "us-east-1"
-    MINIO_SECURE: bool = False
-    MINIO_PUBLIC_ENDPOINT: Optional[str] = None
-    MINIO_BUCKET_TRENDS: str = "maestro-trends"
+    # ----- Object storage / SeaweedFS -----
+    SEAWEEDFS_ENDPOINT: str = "localhost:8333"
+    SEAWEEDFS_ACCESS_KEY: str = "maestro"
+    SEAWEEDFS_SECRET_KEY: str = "maestrosecret"
+    SEAWEEDFS_REGION: Optional[str] = "us-east-1"
+    SEAWEEDFS_SECURE: bool = False
+    SEAWEEDFS_PUBLIC_ENDPOINT: Optional[str] = None
+    SEAWEEDFS_BUCKET_TRENDS: str = "maestro-trends"
+    SEAWEEDFS_BUCKET_DRAFT_MEDIA: str = "maestro-drafts-media"
 
     # 내부적으로 sync URL도 필요할 수 있음 (예: Alembic 마이그레이션)
     _ASYNC_DRIVER: str = "postgresql+asyncpg"
@@ -112,12 +112,12 @@ class Settings(BaseSettings):
 
     @computed_field  # type: ignore[misc]
     @property
-    def MINIO_PUBLIC_BASE(self) -> str:
-        base = self.MINIO_PUBLIC_ENDPOINT
+    def SEAWEEDFS_PUBLIC_BASE(self) -> str:
+        base = self.SEAWEEDFS_PUBLIC_ENDPOINT
         if base:
             return base.rstrip("/")
-        scheme = "https" if self.MINIO_SECURE else "http"
-        return f"{scheme}://{self.MINIO_ENDPOINT}".rstrip("/")
+        scheme = "https" if self.SEAWEEDFS_SECURE else "http"
+        return f"{scheme}://{self.SEAWEEDFS_ENDPOINT}".rstrip("/")
 
     class Config:
         env_file = BACKEND_DIR / ".env"

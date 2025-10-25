@@ -2132,6 +2132,57 @@ paths:
       responses:
         '200':
           description: Successful Response
+  /api/files:
+    post:
+      tags:
+      - files
+      summary: Upload a media file
+      operationId: upload_file_api_files_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_file_api_files_post'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileInfo'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/files/{file_id}:
+    get:
+      tags:
+      - files
+      summary: Retrieve metadata for a media file
+      operationId: get_file_info_api_files__file_id__get
+      parameters:
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: File Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileInfo'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/abtests:
     post:
       tags:
@@ -4528,6 +4579,22 @@ components:
           title: Statuses
       type: object
       title: Body_bff_schedule_get_schedule_stream_api_bff_schedule_stream_get
+    Body_upload_file_api_files_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+          description: Image or video file
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+      type: object
+      required:
+      - file
+      title: Body_upload_file_api_files_post
     CampaignAggregationCommand:
       properties:
         campaign_id:
@@ -5636,6 +5703,55 @@ components:
       - updated_at
       title: EnrichedPostPublicationOut
       description: Enriched post publication with variant and draft information.
+    FileInfo:
+      properties:
+        id:
+          type: integer
+          title: Id
+        owner_user_id:
+          type: integer
+          title: Owner User Id
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        kind:
+          $ref: '#/components/schemas/FileKind'
+        url:
+          type: string
+          title: Url
+        content_type:
+          title: Content Type
+          type: string
+          nullable: true
+        size:
+          type: integer
+          title: Size
+        original_filename:
+          title: Original Filename
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - owner_user_id
+      - kind
+      - url
+      - size
+      - created_at
+      title: FileInfo
+    FileKind:
+      type: string
+      enum:
+      - image
+      - video
+      - text
+      title: FileKind
     FlowInfo:
       properties:
         key:
