@@ -510,6 +510,37 @@ class InstagramCommentReadCapability(InstagramCapabilityBase, CommentReadCapabil
                 cursor = raw_cursor.strip()
 
         client = self._client(access_token=resolved_credentials.access_token)
+
+        own_username_candidate: Optional[str] = None
+        if isinstance(credentials, dict):
+            raw_handle = credentials.get("handle")
+            if isinstance(raw_handle, str):
+                stripped_handle = raw_handle.strip()
+                if stripped_handle:
+                    own_username_candidate = stripped_handle.lstrip("@") or None
+
+        if not own_username_candidate:
+            viewer_id = resolved_credentials.user_id
+            if viewer_id:
+                try:
+                    profile = await client.fetch_user_profile(user_id=viewer_id)
+                except InstagramAPIError as exc:
+                    warnings.append(f"instagram comment list failed to fetch profile: {exc.as_message()}")
+                else:
+                    fetched_username = profile.get("username")
+                    if isinstance(fetched_username, str):
+                        stripped_username = fetched_username.strip()
+                        if stripped_username:
+                            own_username_candidate = stripped_username.lstrip("@") or stripped_username
+                    if not own_username_candidate:
+                        warnings.append("instagram comment list profile missing username")
+
+        normalized_own_username: Optional[str] = None
+        if own_username_candidate:
+            cleaned = own_username_candidate.strip().lstrip("@")
+            if cleaned:
+                normalized_own_username = cleaned.casefold()
+
         try:
             payload = await client.list_comments(
                 media_id=parent_external_id,
@@ -525,7 +556,11 @@ class InstagramCommentReadCapability(InstagramCapabilityBase, CommentReadCapabil
                 warnings=warnings,
             )
 
-        comments, parse_warnings = parse_comment_nodes(payload, parent_id=parent_external_id)
+        comments, parse_warnings = parse_comment_nodes(
+            payload,
+            parent_id=parent_external_id,
+            own_username=normalized_own_username,
+        )
         warnings.extend(parse_warnings)
         next_cursor = extract_next_cursor(payload)
         # Some media return an empty first page while providing a cursor; perform one best-effort follow-up page.
@@ -542,6 +577,7 @@ class InstagramCommentReadCapability(InstagramCapabilityBase, CommentReadCapabil
                 next_comments, follow_warnings = parse_comment_nodes(
                     follow_payload,
                     parent_id=parent_external_id,
+                    own_username=normalized_own_username,
                 )
                 warnings.extend(follow_warnings)
                 if next_comments:
@@ -653,6 +689,15 @@ class InstagramAPI:
             return await self._client.get_json(
                 f"{media_id}/insights",
                 params={"metric": metrics},
+            )
+        except GraphAPIError as exc:
+            raise InstagramAPIError.from_graph_error(exc) from exc
+
+    async def fetch_user_profile(self, *, user_id: str) -> Dict[str, Any]:
+        try:
+            return await self._client.get_json(
+                str(user_id),
+                params={"fields": "id,username"},
             )
         except GraphAPIError as exc:
             raise InstagramAPIError.from_graph_error(exc) from exc
@@ -995,7 +1040,12 @@ def map_media_type_to_content_kind(media_type: Any) -> ContentKind:
     return ContentKind.POST
 
 
-def parse_comment_nodes(payload: Dict[str, Any] | None, *, parent_id: str) -> Tuple[List[Comment], List[str]]:
+def parse_comment_nodes(
+    payload: Dict[str, Any] | None,
+    *,
+    parent_id: str,
+    own_username: Optional[str] = None,
+) -> Tuple[List[Comment], List[str]]:
     comments: List[Comment] = []
     warnings: List[str] = []
 
@@ -1010,14 +1060,23 @@ def parse_comment_nodes(payload: Dict[str, Any] | None, *, parent_id: str) -> Tu
         return comments, warnings
 
     for item in data:
-        parsed, node_warnings = _parse_comment_node(item, parent_id=parent_id)
+        parsed, node_warnings = _parse_comment_node(
+            item,
+            parent_id=parent_id,
+            own_username=own_username,
+        )
         warnings.extend(node_warnings)
         comments.extend(parsed)
 
     return comments, warnings
 
 
-def _parse_comment_node(node: Dict[str, Any], *, parent_id: str) -> Tuple[List[Comment], List[str]]:
+def _parse_comment_node(
+    node: Dict[str, Any],
+    *,
+    parent_id: str,
+    own_username: Optional[str],
+) -> Tuple[List[Comment], List[str]]:
     comments: List[Comment] = []
     warnings: List[str] = []
 
@@ -1025,7 +1084,12 @@ def _parse_comment_node(node: Dict[str, Any], *, parent_id: str) -> Tuple[List[C
         warnings.append("instagram comment payload contained invalid node")
         return comments, warnings
 
-    comment = _build_comment(node, parent_id=parent_id, warnings=warnings)
+    comment = _build_comment(
+        node,
+        parent_id=parent_id,
+        own_username=own_username,
+        warnings=warnings,
+    )
     if comment:
         comments.append(comment)
         replies = node.get("replies")
@@ -1033,7 +1097,12 @@ def _parse_comment_node(node: Dict[str, Any], *, parent_id: str) -> Tuple[List[C
             reply_data = replies.get("data")
             if isinstance(reply_data, list):
                 for reply_node in reply_data:
-                    reply_comment = _build_comment(reply_node, parent_id=comment.external_id, warnings=warnings)
+                    reply_comment = _build_comment(
+                        reply_node,
+                        parent_id=comment.external_id,
+                        own_username=own_username,
+                        warnings=warnings,
+                    )
                     if reply_comment:
                         comments.append(reply_comment)
     else:
@@ -1042,7 +1111,13 @@ def _parse_comment_node(node: Dict[str, Any], *, parent_id: str) -> Tuple[List[C
     return comments, warnings
 
 
-def _build_comment(node: Dict[str, Any], *, parent_id: str, warnings: List[str]) -> Optional[Comment]:
+def _build_comment(
+    node: Dict[str, Any],
+    *,
+    parent_id: str,
+    own_username: Optional[str],
+    warnings: List[str],
+) -> Optional[Comment]:
     if not isinstance(node, dict):
         warnings.append("instagram comment payload contained invalid node")
         return None
@@ -1064,7 +1139,8 @@ def _build_comment(node: Dict[str, Any], *, parent_id: str, warnings: List[str])
 
     text = node.get("text") if isinstance(node.get("text"), str) else None
     created_at = parse_iso_datetime(node.get("timestamp"))
-    username = node.get("username") if isinstance(node.get("username"), str) else None
+    username_raw = node.get("username")
+    username = username_raw.strip() if isinstance(username_raw, str) else None
     permalink = node.get("permalink") if isinstance(node.get("permalink"), str) else None
 
     metrics: Dict[str, float] = {}
@@ -1074,6 +1150,16 @@ def _build_comment(node: Dict[str, Any], *, parent_id: str, warnings: List[str])
             metrics["likes"] = float(like_count)
         except (TypeError, ValueError):
             pass
+
+    author_normalized: Optional[str] = None
+    if username:
+        sanitized = username.lstrip("@")
+        if sanitized:
+            author_normalized = sanitized.casefold()
+
+    is_owned_by_me: Optional[bool] = None
+    if own_username and author_normalized:
+        is_owned_by_me = author_normalized == own_username
 
     return Comment(
         external_id=comment_id,
@@ -1085,7 +1171,7 @@ def _build_comment(node: Dict[str, Any], *, parent_id: str, warnings: List[str])
         permalink=permalink,
         raw=node,
         metrics=metrics,
-        is_owned_by_me=None,
+        is_owned_by_me=is_owned_by_me,
     )
 
 
