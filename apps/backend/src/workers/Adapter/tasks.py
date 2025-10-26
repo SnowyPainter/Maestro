@@ -121,6 +121,27 @@ def _mark_reaction_log(
     session.commit()
     session.refresh(log)
 
+def _is_dm_window_closed(result: MessageSendResult) -> bool:
+    if not isinstance(result, MessageSendResult):
+        return False
+    candidates = list(result.errors or [])
+    raw = result.raw or {}
+    for value in raw.values():
+        if isinstance(value, str):
+            candidates.append(value)
+        elif isinstance(value, list):
+            candidates.extend(str(item) for item in value if item is not None)
+    for error in candidates:
+        if not isinstance(error, str):
+            continue
+        lowered = error.lower()
+        if "허용되는 창" in error:
+            return True
+        if "outside the allowed window" in lowered:
+            return True
+        if "subcode=2534022" in lowered or "2534022" in lowered:
+            return True
+    return False
 
 def enqueue_variant_compile(
     *,
@@ -523,7 +544,7 @@ def reactive_send_dm(
             raise
 
         if isinstance(result, MessageSendResult):
-            payload = {
+            base_payload = {
                 "recipient_id": result.recipient_id,
                 "message_id": result.message_id,
                 "warnings": result.warnings,
@@ -531,68 +552,91 @@ def reactive_send_dm(
                 "raw": result.raw,
                 "skipped": result.skipped,
                 "reason": result.reason,
+                "message": message,
+                "metadata": metadata,
+                "persona_account_id": persona_account_id,
+                "recipient_external_id": recipient_external_id,
             }
+            if _is_dm_window_closed(result):
+                payload = {**base_payload, "window_closed": True}
+                _mark_reaction_log(
+                    session,
+                    log=log,
+                    status=ReactionActionStatus.SKIPPED,
+                    payload=payload,
+                    error="dm_window_closed",
+                )
+                return {"ok": False, "skipped": True, "reason": "dm_window_closed", **payload}
             if result.ok:
                 _mark_reaction_log(
                     session,
                     log=log,
                     status=ReactionActionStatus.SUCCESS,
-                    payload=payload,
+                    payload=base_payload,
                 )
-                return {"ok": True, **payload}
+                return {"ok": True, **base_payload}
             if result.skipped:
                 _mark_reaction_log(
                     session,
                     log=log,
                     status=ReactionActionStatus.SKIPPED,
-                    payload=payload,
+                    payload=base_payload,
                     error=result.reason,
                 )
-                return {"ok": False, "skipped": True, **payload}
+                return {"ok": False, "skipped": True, **base_payload}
             _mark_reaction_log(
                 session,
                 log=log,
                 status=ReactionActionStatus.FAILED,
-                payload=payload,
+                payload=base_payload,
                 error=result.reason or "dm_send_failed",
             )
-            return {"ok": False, **payload}
+            return {"ok": False, **base_payload}
 
         # Fallback for dict or custom response types
         if isinstance(result, dict):
-            ok = bool(result.get("ok"))
-            skipped = bool(result.get("skipped"))
-            reason = result.get("reason")
+            augmented = dict(result)
+            augmented.setdefault("message", message)
+            augmented.setdefault("metadata", metadata)
+            augmented.setdefault("recipient_external_id", recipient_external_id)
+            augmented.setdefault("persona_account_id", persona_account_id)
+            ok = bool(augmented.get("ok"))
+            skipped = bool(augmented.get("skipped"))
+            reason = augmented.get("reason")
             if ok:
                 _mark_reaction_log(
                     session,
                     log=log,
                     status=ReactionActionStatus.SUCCESS,
-                    payload=result,
+                    payload=augmented,
                 )
-                return result
+                return augmented
             if skipped:
                 _mark_reaction_log(
                     session,
                     log=log,
                     status=ReactionActionStatus.SKIPPED,
-                    payload=result,
+                    payload=augmented,
                     error=reason,
                 )
-                return result
+                return augmented
             _mark_reaction_log(
                 session,
                 log=log,
                 status=ReactionActionStatus.FAILED,
-                payload=result,
-                error=reason or result.get("error") or "dm_send_failed",
+                payload=augmented,
+                error=reason or augmented.get("error") or "dm_send_failed",
             )
-            return result
+            return augmented
 
         ok = getattr(result, "ok", False)
         skipped = getattr(result, "skipped", False)
         reason = getattr(result, "reason", None)
-        payload = getattr(result, "__dict__", {})
+        payload = getattr(result, "__dict__", {}).copy()
+        payload.setdefault("message", message)
+        payload.setdefault("metadata", metadata)
+        payload.setdefault("recipient_external_id", recipient_external_id)
+        payload.setdefault("persona_account_id", persona_account_id)
         if ok:
             _mark_reaction_log(
                 session,

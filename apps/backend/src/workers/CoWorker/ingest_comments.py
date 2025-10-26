@@ -28,6 +28,9 @@ from apps.backend.src.workers.Adapter.tasks import (
     reactive_reply_to_comment,
     reactive_send_dm,
 )
+from apps.backend.src.modules.reactive.models import ReactionActionLog
+from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
+from apps.backend.src.modules.adapters.engine import apply_persona_policies_to_message
 
 import logging
 from apps.backend.src.core.logging import setup_logging
@@ -127,6 +130,33 @@ async def _ensure_log(
     )
 
 
+async def _load_persona_directives(
+    session,
+    *,
+    persona_account_id: Optional[int],
+) -> Dict[str, Any]:
+    if persona_account_id is None:
+        return {}
+
+    stmt = (
+        select(Persona)
+        .join(PersonaAccount, PersonaAccount.persona_id == Persona.id)
+        .where(PersonaAccount.id == persona_account_id)
+        .limit(1)
+    )
+    result = await session.execute(stmt)
+    persona = result.scalar_one_or_none()
+    if not persona:
+        return {}
+
+    directives: Dict[str, Any] = {}
+    for field in ("extras", "link_policy", "banned_words"):
+        value = getattr(persona, field, None)
+        if value not in (None, "", [], {}):
+            directives[field] = value
+    return directives
+
+
 async def _process_action(
     session,
     comment: InsightComment,
@@ -197,55 +227,111 @@ async def _process_action(
 
     # DM automation
     if action.dm_template_id and comment.account_persona_id and comment.author_id:
-        template = await _load_template(
-            session,
-            action.dm_template_id,
-            persona_account_id=comment.account_persona_id,
+        existing_dm_log_stmt = (
+            select(ReactionActionLog)
+            .where(
+                ReactionActionLog.insight_comment_id == comment.id,
+                ReactionActionLog.tag_key == action.tag_key,
+                ReactionActionLog.action_type == ReactionActionType.DM,
+            )
+            .limit(1)
         )
-        if template is None:
-            await _ensure_log(
-                session,
-                insight_comment_id=comment.id,
-                rule_id=action.reaction_rule_id,
-                tag_key=action.tag_key,
-                action_type=ReactionActionType.DM,
-                status=ReactionActionStatus.SKIPPED,
-                payload={"template_id": action.dm_template_id},
-                error="dm_template_unavailable",
+        existing_dm_log_result = await session.execute(existing_dm_log_stmt)
+        existing_dm_log = existing_dm_log_result.scalar_one_or_none()
+        skip_dm = (
+            existing_dm_log
+            and existing_dm_log.status == ReactionActionStatus.SKIPPED
+            and existing_dm_log.error == "dm_window_closed"
+        )
+        if skip_dm:
+            logger.info(
+                "Skipping DM action for comment %s due to prior dm_window_closed status (log_id=%s)",
+                comment.id,
+                existing_dm_log.id,
             )
         else:
-            payload = {
-                "template_id": template.id,
-                "template_title": template.title,
-                "mode": action.llm_mode.value,
-                "metadata": action.metadata,
-            }
-            log_id = await _ensure_log(
+            template = await _load_template(
                 session,
-                insight_comment_id=comment.id,
-                rule_id=action.reaction_rule_id,
-                tag_key=action.tag_key,
-                action_type=ReactionActionType.DM,
-                status=ReactionActionStatus.PENDING,
-                payload=payload,
+                action.dm_template_id,
+                persona_account_id=comment.account_persona_id,
             )
-            if log_id is not None:
-                dispatch_queue.append(
-                    (
-                        "dm",
-                        {
-                            "platform": comment.platform.value,
-                            "persona_account_id": comment.account_persona_id,
-                            "reaction_rule_id": action.reaction_rule_id,
-                            "tag_key": action.tag_key,
-                            "insight_comment_id": comment.id,
-                            "recipient_external_id": comment.author_id,
-                            "message": template.body,
-                            "metadata": action.metadata or {},
-                        },
-                    )
+            if template is None:
+                await _ensure_log(
+                    session,
+                    insight_comment_id=comment.id,
+                    rule_id=action.reaction_rule_id,
+                    tag_key=action.tag_key,
+                    action_type=ReactionActionType.DM,
+                    status=ReactionActionStatus.SKIPPED,
+                    payload={"template_id": action.dm_template_id},
+                    error="dm_template_unavailable",
                 )
-                dispatch_count += 1
+            else:
+                dm_message = template.body or ""
+                persona_directives = await _load_persona_directives(
+                    session,
+                    persona_account_id=comment.account_persona_id,
+                )
+                policy_summary: Dict[str, Any] = {}
+                policy_warnings: List[str] = []
+                if persona_directives:
+                    try:
+                        dm_message, policy_summary, policy_warnings = apply_persona_policies_to_message(
+                            dm_message,
+                            directives=persona_directives,
+                        )
+                    except Exception as exc:  # pragma: no cover - defensive
+                        policy_warnings.append(f"persona policy application failed: {exc}")
+
+                if policy_warnings:
+                    logger.warning(
+                        "DM persona policy warnings for comment %s: %s",
+                        comment.id,
+                        "; ".join(policy_warnings),
+                    )
+
+                payload = {
+                    "template_id": template.id,
+                    "template_title": template.title,
+                    "mode": action.llm_mode.value,
+                    "metadata": action.metadata,
+                    "message": dm_message,
+                    "recipient_external_id": comment.author_id,
+                    "persona_policy_summary": policy_summary or None,
+                    "persona_policy_warnings": policy_warnings or None,
+                }
+                log_id = await _ensure_log(
+                    session,
+                    insight_comment_id=comment.id,
+                    rule_id=action.reaction_rule_id,
+                    tag_key=action.tag_key,
+                    action_type=ReactionActionType.DM,
+                    status=ReactionActionStatus.PENDING,
+                    payload=payload,
+                )
+                if log_id is not None:
+                    dm_metadata: Dict[str, Any] = dict(action.metadata or {})
+                    if policy_summary:
+                        dm_metadata["persona_policy_summary"] = policy_summary
+                    if policy_warnings:
+                        dm_metadata["persona_policy_warnings"] = policy_warnings
+                    
+                    dispatch_queue.append(
+                        (
+                            "dm",
+                            {
+                                "platform": comment.platform.value,
+                                "persona_account_id": comment.account_persona_id,
+                                "reaction_rule_id": action.reaction_rule_id,
+                                "tag_key": action.tag_key,
+                                "insight_comment_id": comment.id,
+                                "recipient_external_id": comment.author_id,
+                                "message": dm_message,
+                                "metadata": dm_metadata,
+                            },
+                        )
+                    )
+                    dispatch_count += 1
 
     # Alert creation
     if action.alert_enabled:

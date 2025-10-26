@@ -30,7 +30,7 @@ interface ActionLogDetailCardProps {
 
 export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCardProps) {
   const { data: actionLog, isLoading, error, refetch } = useBffReactiveReadActionLogApiBffReactiveActionLogsActionLogIdGet(actionLogId);
-  const [isPayloadExpanded, setIsPayloadExpanded] = useState(true);
+  const [isPayloadExpanded, setIsPayloadExpanded] = useState(false);
   const { registerEmission } = useContextRegistryStore();
 
   // Register rule_id to context registry when actionLog is loaded
@@ -105,7 +105,9 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
     }
   };
 
-  const renderJsonValue = (value: any, key?: string): React.ReactNode => {
+  const renderJsonValue = (value: any, key?: string, indent: number = 0): React.ReactNode => {
+    const indentPx = indent * 12; // 12px per indent level
+
     if (value === null) {
       return <span className="text-gray-500">null</span>;
     }
@@ -136,18 +138,15 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
         return <span className="text-gray-500">[]</span>;
       }
       return (
-        <div className="ml-4">
-          <span className="text-gray-700">[</span>
-          <div className="ml-4 space-y-1">
-            {value.map((item, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <span className="text-gray-500">{index}:</span>
-                {renderJsonValue(item)}
-                {index < value.length - 1 && <span className="text-gray-700">,</span>}
-              </div>
-            ))}
-          </div>
-          <span className="text-gray-700">]</span>
+        <div>
+          <div>[</div>
+          {value.map((item, index) => (
+            <div key={index} style={{ paddingLeft: `${indentPx + 12}px` }}>
+              {index}: {renderJsonValue(item, undefined, indent + 1)}
+              {index < value.length - 1 && <span className="text-gray-700">,</span>}
+            </div>
+          ))}
+          <div>]</div>
         </div>
       );
     }
@@ -157,19 +156,15 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
         return <span className="text-gray-500">{"{}"}</span>;
       }
       return (
-        <div className="ml-4">
-          <span className="text-gray-700">{"{"}</span>
-          <div className="ml-4 space-y-1">
-            {entries.map(([k, v], index) => (
-              <div key={k} className="flex items-start gap-2">
-                <span className="text-orange-600">"{k}"</span>
-                <span className="text-gray-700">:</span>
-                {renderJsonValue(v, k)}
-                {index < entries.length - 1 && <span className="text-gray-700">,</span>}
-              </div>
-            ))}
-          </div>
-          <span className="text-gray-700">{"}"}</span>
+        <div>
+          <div>{"{"}</div>
+          {entries.map(([k, v], index) => (
+            <div key={k} style={{ paddingLeft: `${indentPx + 12}px` }}>
+              "{k}": {renderJsonValue(v, k, indent + 1)}
+              {index < entries.length - 1 && <span className="text-gray-700">,</span>}
+            </div>
+          ))}
+          <div>{"}"}</div>
         </div>
       );
     }
@@ -305,8 +300,15 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
               )}
             </Button>
             {isPayloadExpanded && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-96 overflow-y-auto">
-                {renderCompactJson(actionLog.payload)}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="max-h-32 overflow-auto p-2 text-xs font-mono leading-tight">
+                  {renderCompactJson(actionLog.payload)}
+                </div>
+                {JSON.stringify(actionLog.payload).length > 300 && (
+                  <div className="px-3 pb-2 text-xs text-gray-500 border-t border-gray-200 bg-gray-100">
+                    Long JSON data - scroll to see all
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -480,6 +480,40 @@ def _apply_link_policy(
     return text, summary, warnings
 
 
+def apply_persona_policies_to_message(
+    message: str,
+    *,
+    directives: Optional[Dict[str, Any]] = None,
+) -> Tuple[str, Dict[str, Any], List[str]]:
+    """
+    Apply a subset of persona directives (replace map, link policy, banned words)
+    to ad-hoc messages such as direct replies or DMs. Returns the transformed
+    message, a summary of applied policies, and any warnings produced.
+    """
+    directives = dict(directives or {})
+    text = message or ""
+    applied: Dict[str, Any] = {}
+    warnings: List[str] = []
+
+    text, replace_summary, replace_warnings = _apply_replace_map(text, directives)
+    if replace_summary:
+        applied["replace_map"] = replace_summary
+    if replace_warnings:
+        warnings.extend(replace_warnings)
+
+    text, link_summary, link_warnings = _apply_link_policy(text, directives.get("link_policy"))
+    if link_summary:
+        applied["link_policy"] = link_summary
+    if link_warnings:
+        warnings.extend(link_warnings)
+
+    banned_words = directives.get("banned_words") or []
+    if banned_words:
+        warnings.extend(_check_banned_words(text, banned_words))
+
+    return text, applied, warnings
+
+
 def get_compile_spec(platform: PlatformKind, compiler_version: int, hooks: Sequence[CompileHook] | None = None) -> CompileSpec:
     policy = PLATFORM_POLICIES.get(platform)
     if not policy:
@@ -497,6 +531,7 @@ __all__ = [
     "CompileHook",
     "CompileState",
     "StyleScoringConfig",
+    "apply_persona_policies_to_message",
     "compile_with_spec",
     "get_compile_spec",
 ]
