@@ -622,5 +622,28 @@
       "post_title": "New Draft: 'Eco-Mug'",
       "optimal_badge": "Optimal Time"
     }
+  },
+  "how_to_get_started": {
+    "title": "How to Get Started",
+    "description": "Follow these steps to teach Maestro your brand's unique rhythm and unlock its full potential.",
+    "steps": {
+      "1": {
+        "title": "Define Your Persona",
+        "description": "Create a Persona to set your brand’s unique voice, tone, and rules. This is the soul of your content."
+      },
+      "2": {
+        "title": "Connect Your Channels",
+        "description": "Securely connect your social media accounts like Instagram and Threads."
+      },
+      "3": {
+        "title": "Link Persona to Account",
+        "description": "Assign a specific Persona to each connected account. You can use different voices for different channels."
+      },
+      "4": {
+        "title": "Activate Your CoWorker",
+        "description": "Enable your AI CoWorker to start performing autonomous tasks, like generating drafts and publishing scheduled content based on your Persona."
+      }
+    },
+    "final_note": "Once set up, all actions become part of a seamless, organic workflow."
   }
 }

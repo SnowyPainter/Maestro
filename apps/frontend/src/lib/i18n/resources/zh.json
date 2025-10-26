@@ -622,5 +622,28 @@
       "post_title": "新草稿：'环保杯'",
       "optimal_badge": "最佳时间"
     }
+  },
+  "how_to_get_started": {
+    "title": "如何开始",
+    "description": "请按照以下步骤，教会 Maestro 您品牌的独特节奏，并释放其全部潜力。",
+    "steps": {
+      "1": {
+        "title": "定义您的 Persona",
+        "description": "创建一个 Persona，以设定您品牌独特的声音、语调和规则。这是您内容的灵魂。"
+      },
+      "2": {
+        "title": "连接您的渠道",
+        "description": "安全地连接您的社交媒体帐户，如 Instagram 和 Threads。"
+      },
+      "3": {
+        "title": "将 Persona 链接到帐户",
+        "description": "为每个连接的帐户分配一个特定的 Persona。您可以为不同的渠道使用不同的声音。"
+      },
+      "4": {
+        "title": "激活您的 CoWorker",
+        "description": "启用您的 AI CoWorker，让它开始执行自主任务，例如根据您的 Persona 生成草稿和发布预定内容。"
+      }
+    },
+    "final_note": "设置完成后，所有操作都将成为无缝、有机工作流的一部分。"
   }
 }

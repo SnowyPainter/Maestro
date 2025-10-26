@@ -19,6 +19,7 @@ import { PhilosophySection } from './components/v2/PhilosophySection';
 import { TestimonialsSection } from './components/v2/TestimonialsSection';
 import { CtaSection } from './components/v2/CtaSection';
 import { UseCasesSection } from './components/v2/UseCasesSection';
+import { HowToGetStartedSection } from './components/v2/HowToGetStartedSection';
 
 export function LandingPage() {
   const { t } = useTranslation();
@@ -109,6 +110,7 @@ export function LandingPage() {
         <InsightSection />
         <PhilosophySection />
         <TestimonialsSection />
+        <HowToGetStartedSection />
         <CtaSection />
       </main>
 
