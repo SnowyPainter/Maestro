@@ -226,7 +226,7 @@ async def op_get_dashboard_overview(
 
 @operator(
     key="bff.playbook.get_dashboard_event_chain",
-    title="Get Dashboard Event Chain Data",
+    title="Get Playbook Dashboard Event Chain Data",
     side_effect="read",
 )
 async def op_get_dashboard_event_chain(
@@ -251,7 +251,7 @@ async def op_get_dashboard_event_chain(
 
 @operator(
     key="bff.playbook.get_dashboard_performance",
-    title="Get Dashboard Performance Data",
+    title="Get Playbook Dashboard Performance Data",
     side_effect="read",
 )
 async def op_get_dashboard_performance(
@@ -276,7 +276,7 @@ async def op_get_dashboard_performance(
 
 @operator(
     key="bff.playbook.get_dashboard_insights",
-    title="Get Dashboard Insights Data",
+    title="Get Playbook Dashboard Insights Data",
     side_effect="read",
 )
 async def op_get_dashboard_insights(
@@ -301,7 +301,7 @@ async def op_get_dashboard_insights(
 
 @operator(
     key="bff.playbook.get_dashboard_recommendations",
-    title="Get Dashboard Recommendations Data",
+    title="Get Playbook Dashboard Recommendations Data",
     side_effect="read",
 )
 async def op_get_dashboard_recommendations(
@@ -328,7 +328,7 @@ async def op_get_dashboard_recommendations(
 
 @FLOWS.flow(
     key="bff.playbook.dashboard_overview",
-    title="Get Dashboard Overview Data",
+    title="Get Playbook Dashboard Overview Data",
     description="Get overview metrics for playbook dashboard",
     input_model=PlaybookSearchPayload,
     output_model=DashboardOverviewResponse,
@@ -343,7 +343,7 @@ def _flow_bff_dashboard_overview(builder: FlowBuilder) -> None:
 
 @FLOWS.flow(
     key="bff.playbook.dashboard_event_chain",
-    title="Get Dashboard Event Chain Data",
+    title="Get Playbook Dashboard Event Chain Data",
     description="Get event chain analysis for playbook dashboard",
     input_model=PlaybookSearchPayload,
     output_model=DashboardEventChainResponse,
@@ -358,7 +358,7 @@ def _flow_bff_dashboard_event_chain(builder: FlowBuilder) -> None:
 
 @FLOWS.flow(
     key="bff.playbook.dashboard_performance",
-    title="Get Dashboard Performance Data",
+    title="Get Playbook Dashboard Performance Data",
     description="Get performance metrics for playbook dashboard",
     input_model=PlaybookSearchPayload,
     output_model=DashboardPerformanceResponse,
@@ -373,7 +373,7 @@ def _flow_bff_dashboard_performance(builder: FlowBuilder) -> None:
 
 @FLOWS.flow(
     key="bff.playbook.dashboard_insights",
-    title="Get Dashboard Insights Data",
+    title="Get Playbook Dashboard Insights Data",
     description="Get insights data for playbook dashboard",
     input_model=PlaybookSearchPayload,
     output_model=DashboardInsightsResponse,
@@ -388,7 +388,7 @@ def _flow_bff_dashboard_insights(builder: FlowBuilder) -> None:
 
 @FLOWS.flow(
     key="bff.playbook.dashboard_recommendations",
-    title="Get Dashboard Recommendations Data",
+    title="Get Playbook Dashboard Recommendations Data",
     description="Get recommendations for playbook dashboard",
     input_model=PlaybookSearchPayload,
     output_model=DashboardRecommendationsResponse,

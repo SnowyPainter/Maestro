@@ -1079,7 +1079,7 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
 
 /**
  * Get overview metrics for playbook dashboard
- * @summary Get Dashboard Overview Data
+ * @summary Get Playbook Dashboard Overview Data
  */
 export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryIncludeLogsDefault = false;
 
@@ -1094,6 +1094,7 @@ export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQuer
 export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetResponseHourlyActivityItemSyncMetricsDefault = 0;export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetResponseHourlyActivityItemScheduleDefault = 0;
 
 export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetResponse = zod.object({
+  "playbook_id": zod.number(),
   "total_logs": zod.number(),
   "success_rate": zod.number(),
   "hourly_activity": zod.array(zod.object({
@@ -1107,7 +1108,7 @@ export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetResp
 
 /**
  * Get event chain analysis for playbook dashboard
- * @summary Get Dashboard Event Chain Data
+ * @summary Get Playbook Dashboard Event Chain Data
  */
 export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryIncludeLogsDefault = false;
 
@@ -1120,6 +1121,7 @@ export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet
 })
 
 export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetResponse = zod.object({
+  "playbook_id": zod.number(),
   "event_types": zod.array(zod.object({
   "name": zod.string(),
   "value": zod.number()
@@ -1131,7 +1133,7 @@ export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet
 
 /**
  * Get performance metrics for playbook dashboard
- * @summary Get Dashboard Performance Data
+ * @summary Get Playbook Dashboard Performance Data
  */
 export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryIncludeLogsDefault = false;
 
@@ -1144,6 +1146,7 @@ export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceG
 })
 
 export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetResponse = zod.object({
+  "playbook_id": zod.number(),
   "success_rate": zod.number(),
   "failure_rate": zod.number(),
   "action_stats": zod.record(zod.string(), zod.object({
@@ -1156,7 +1159,7 @@ export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceG
 
 /**
  * Get insights data for playbook dashboard
- * @summary Get Dashboard Insights Data
+ * @summary Get Playbook Dashboard Insights Data
  */
 export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryIncludeLogsDefault = false;
 
@@ -1169,6 +1172,7 @@ export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQuer
 })
 
 export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetResponse = zod.object({
+  "playbook_id": zod.number(),
   "persona_name": zod.string(),
   "creator": zod.object({
   "engagement_improvement": zod.number(),
@@ -1212,7 +1216,7 @@ export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetResp
 
 /**
  * Get recommendations for playbook dashboard
- * @summary Get Dashboard Recommendations Data
+ * @summary Get Playbook Dashboard Recommendations Data
  */
 export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryIncludeLogsDefault = false;
 
@@ -1225,6 +1229,7 @@ export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommen
 })
 
 export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetResponse = zod.object({
+  "playbook_id": zod.number(),
   "phases": zod.array(zod.object({
   "id": zod.number(),
   "title": zod.string(),

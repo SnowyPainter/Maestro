@@ -105,6 +105,7 @@ class HourlyActivityItem(BaseModel):
 
 
 class DashboardOverviewResponse(BaseModel):
+    playbook_id: int
     total_logs: int
     success_rate: int  # percentage 0-100
     hourly_activity: List[HourlyActivityItem]
@@ -116,6 +117,7 @@ class EventTypeItem(BaseModel):
 
 
 class DashboardEventChainResponse(BaseModel):
+    playbook_id: int
     event_types: List[EventTypeItem]
     avg_sync_interval_seconds: float
     latest_kpi: Optional[Dict[str, float]] = None
@@ -128,6 +130,7 @@ class ActionStatsItem(BaseModel):
 
 
 class DashboardPerformanceResponse(BaseModel):
+    playbook_id: int
     success_rate: int  # percentage 0-100
     failure_rate: int  # percentage 0-100
     action_stats: Dict[str, ActionStatsItem]  # {"ALERT": {...}, "REPLY": {...}, "DM": {...}}
@@ -151,6 +154,7 @@ class OverallROI(BaseModel):
 
 
 class DashboardInsightsResponse(BaseModel):
+    playbook_id: int
     persona_name: str
     creator: InsightsMetrics
     manager: InsightsMetrics
@@ -167,6 +171,7 @@ class PhaseItem(BaseModel):
 
 
 class DashboardRecommendationsResponse(BaseModel):
+    playbook_id: int
     phases: List[PhaseItem]
     overall_roi: OverallROI
     dynamic_recommendations: List[str]

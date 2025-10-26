@@ -24,6 +24,7 @@ import { TimelineEvent } from "@/entities/timeline/model/types";
 import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
 import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
 import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
+import { PlaybookAnalysisDashboard } from "@/entities/playbooks/components/PlaybookAnalysisDashboard";
 import PostPublicationList from "@/entities/post-publications/components/PostPublicationList";
 import CommentList from "@/entities/comments/components/CommentList";
 import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
@@ -186,6 +187,48 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     return (
       <PlaybookList
         onSelectPlaybook={playbookId => callbacks.onPlaybookSelect?.(playbookId, messageId)}
+      />
+    );
+  }
+
+  // Playbook Dashboard 관련 특수 처리
+  if (card_type === 'playbook.dashboard.overview' && data && typeof data === 'object' && 'playbook_id' in data) {
+    return (
+      <PlaybookAnalysisDashboard
+        playbookId={data.playbook_id as number}
+        initialPage="overview"
+      />
+    );
+  }
+  if (card_type === 'playbook.dashboard.event_chain' && data && typeof data === 'object' && 'playbook_id' in data) {
+    return (
+      <PlaybookAnalysisDashboard
+        playbookId={data.playbook_id as number}
+        initialPage="eventChain"
+      />
+    );
+  }
+  if (card_type === 'playbook.dashboard.performance' && data && typeof data === 'object' && 'playbook_id' in data) {
+    return (
+      <PlaybookAnalysisDashboard
+        playbookId={data.playbook_id as number}
+        initialPage="performance"
+      />
+    );
+  }
+  if (card_type === 'playbook.dashboard.insights' && data && typeof data === 'object' && 'playbook_id' in data) {
+    return (
+      <PlaybookAnalysisDashboard
+        playbookId={data.playbook_id as number}
+        initialPage="insights"
+      />
+    );
+  }
+  if (card_type === 'playbook.dashboard.recommendations' && data && typeof data === 'object' && 'playbook_id' in data) {
+    return (
+      <PlaybookAnalysisDashboard
+        playbookId={data.playbook_id as number}
+        initialPage="recommendations"
       />
     );
   }

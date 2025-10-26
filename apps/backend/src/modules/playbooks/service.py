@@ -663,6 +663,7 @@ async def get_dashboard_overview_data(
     success_rate = int((success_events / total_events * 100)) if total_events > 0 else 0
 
     return DashboardOverviewResponse(
+        playbook_id=playbook_id,
         total_logs=total_logs,
         success_rate=success_rate,
         hourly_activity=hourly_data,
@@ -731,6 +732,7 @@ async def get_dashboard_event_chain_data(
         latest_kpi = {k: float(v) for k, v in kpi_row.kpi_snapshot.items() if isinstance(v, (int, float))}
 
     return DashboardEventChainResponse(
+        playbook_id=playbook_id,
         event_types=event_types,
         avg_sync_interval_seconds=avg_interval,
         latest_kpi=latest_kpi,
@@ -752,6 +754,7 @@ async def get_dashboard_performance_data(
     if not playbook:
         # 기본값 반환
         return DashboardPerformanceResponse(
+            playbook_id=playbook_id,
             success_rate=0,
             failure_rate=100,
             action_stats={
@@ -860,6 +863,7 @@ async def get_dashboard_performance_data(
 
 
     return DashboardPerformanceResponse(
+        playbook_id=playbook_id,
         success_rate=success_rate,
         failure_rate=failure_rate,
         action_stats=action_stats,
@@ -989,6 +993,7 @@ async def get_dashboard_insights_data(
     )
 
     return DashboardInsightsResponse(
+        playbook_id=playbook_id,
         persona_name=persona.name if persona else "Unknown",
         creator=creator_metrics,
         manager=manager_metrics,
@@ -1238,6 +1243,7 @@ async def get_dashboard_recommendations_data(
     )
 
     return DashboardRecommendationsResponse(
+        playbook_id=playbook_id,
         phases=phases,
         overall_roi=overall_roi,
         dynamic_recommendations=recommendations

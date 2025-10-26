@@ -9,15 +9,26 @@ import { InsightsPage } from "./dashboard/InsightsPage";
 import { RecommendationsPage } from "./dashboard/RecommendationsPage";
 
 const pages = [
-  { component: OverviewPage, title: "Overview" },
-  { component: EventChainPage, title: "Event Chain" },
-  { component: PerformancePage, title: "Performance" },
-  { component: InsightsPage, title: "Insights" },
-  { component: RecommendationsPage, title: "Recommendations" },
+  { component: OverviewPage, title: "Overview", key: "overview" },
+  { component: EventChainPage, title: "Event Chain", key: "eventChain" },
+  { component: PerformancePage, title: "Performance", key: "performance" },
+  { component: InsightsPage, title: "Insights", key: "insights" },
+  { component: RecommendationsPage, title: "Recommendations", key: "recommendations" },
 ];
 
-export function PlaybookAnalysisDashboard({ playbookId }: { playbookId: number }) {
-  const [currentPage, setCurrentPage] = useState(0);
+export function PlaybookAnalysisDashboard({
+  playbookId,
+  initialPage = "overview"
+}: {
+  playbookId: number;
+  initialPage?: string;
+}) {
+  const getInitialPageIndex = (pageKey: string) => {
+    const index = pages.findIndex(page => page.key === pageKey);
+    return index >= 0 ? index : 0;
+  };
+
+  const [currentPage, setCurrentPage] = useState(getInitialPageIndex(initialPage));
   const CurrentPageComponent = pages[currentPage].component;
 
   const goToPrev = () => {

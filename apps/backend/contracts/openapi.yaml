@@ -1162,7 +1162,7 @@ paths:
       - analytics
       - ui
       - frontend
-      summary: Get Dashboard Overview Data
+      summary: Get Playbook Dashboard Overview Data
       description: Get overview metrics for playbook dashboard
       operationId: bff_playbook_dashboard_overview_api_bff_playbooks_dashboard_overview_get
       parameters:
@@ -1227,7 +1227,7 @@ paths:
       - analytics
       - ui
       - frontend
-      summary: Get Dashboard Event Chain Data
+      summary: Get Playbook Dashboard Event Chain Data
       description: Get event chain analysis for playbook dashboard
       operationId: bff_playbook_dashboard_event_chain_api_bff_playbooks_dashboard_event_chain_get
       parameters:
@@ -1292,7 +1292,7 @@ paths:
       - analytics
       - ui
       - frontend
-      summary: Get Dashboard Performance Data
+      summary: Get Playbook Dashboard Performance Data
       description: Get performance metrics for playbook dashboard
       operationId: bff_playbook_dashboard_performance_api_bff_playbooks_dashboard_performance_get
       parameters:
@@ -1357,7 +1357,7 @@ paths:
       - analytics
       - ui
       - frontend
-      summary: Get Dashboard Insights Data
+      summary: Get Playbook Dashboard Insights Data
       description: Get insights data for playbook dashboard
       operationId: bff_playbook_dashboard_insights_api_bff_playbooks_dashboard_insights_get
       parameters:
@@ -1422,7 +1422,7 @@ paths:
       - analytics
       - ui
       - frontend
-      summary: Get Dashboard Recommendations Data
+      summary: Get Playbook Dashboard Recommendations Data
       description: Get recommendations for playbook dashboard
       operationId: bff_playbook_dashboard_recommendations_api_bff_playbooks_dashboard_recommendations_get
       parameters:
@@ -5601,6 +5601,9 @@ components:
       title: CoworkerTaskInfo
     DashboardEventChainResponse:
       properties:
+        playbook_id:
+          type: integer
+          title: Playbook Id
         event_types:
           items:
             $ref: '#/components/schemas/EventTypeItem'
@@ -5618,11 +5621,15 @@ components:
           title: Latest Kpi
       type: object
       required:
+      - playbook_id
       - event_types
       - avg_sync_interval_seconds
       title: DashboardEventChainResponse
     DashboardInsightsResponse:
       properties:
+        playbook_id:
+          type: integer
+          title: Playbook Id
         persona_name:
           type: string
           title: Persona Name
@@ -5636,6 +5643,7 @@ components:
           $ref: '#/components/schemas/OverallROI'
       type: object
       required:
+      - playbook_id
       - persona_name
       - creator
       - manager
@@ -5644,6 +5652,9 @@ components:
       title: DashboardInsightsResponse
     DashboardOverviewResponse:
       properties:
+        playbook_id:
+          type: integer
+          title: Playbook Id
         total_logs:
           type: integer
           title: Total Logs
@@ -5657,12 +5668,16 @@ components:
           title: Hourly Activity
       type: object
       required:
+      - playbook_id
       - total_logs
       - success_rate
       - hourly_activity
       title: DashboardOverviewResponse
     DashboardPerformanceResponse:
       properties:
+        playbook_id:
+          type: integer
+          title: Playbook Id
         success_rate:
           type: integer
           title: Success Rate
@@ -5676,12 +5691,16 @@ components:
           title: Action Stats
       type: object
       required:
+      - playbook_id
       - success_rate
       - failure_rate
       - action_stats
       title: DashboardPerformanceResponse
     DashboardRecommendationsResponse:
       properties:
+        playbook_id:
+          type: integer
+          title: Playbook Id
         phases:
           items:
             $ref: '#/components/schemas/PhaseItem'
@@ -5696,6 +5715,7 @@ components:
           title: Dynamic Recommendations
       type: object
       required:
+      - playbook_id
       - phases
       - overall_roi
       - dynamic_recommendations

@@ -632,7 +632,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Dashboard Overview Data
+         * Get Playbook Dashboard Overview Data
          * @description Get overview metrics for playbook dashboard
          */
         get: operations["bff_playbook_dashboard_overview_api_bff_playbooks_dashboard_overview_get"];
@@ -652,7 +652,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Dashboard Event Chain Data
+         * Get Playbook Dashboard Event Chain Data
          * @description Get event chain analysis for playbook dashboard
          */
         get: operations["bff_playbook_dashboard_event_chain_api_bff_playbooks_dashboard_event_chain_get"];
@@ -672,7 +672,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Dashboard Performance Data
+         * Get Playbook Dashboard Performance Data
          * @description Get performance metrics for playbook dashboard
          */
         get: operations["bff_playbook_dashboard_performance_api_bff_playbooks_dashboard_performance_get"];
@@ -692,7 +692,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Dashboard Insights Data
+         * Get Playbook Dashboard Insights Data
          * @description Get insights data for playbook dashboard
          */
         get: operations["bff_playbook_dashboard_insights_api_bff_playbooks_dashboard_insights_get"];
@@ -712,7 +712,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Dashboard Recommendations Data
+         * Get Playbook Dashboard Recommendations Data
          * @description Get recommendations for playbook dashboard
          */
         get: operations["bff_playbook_dashboard_recommendations_api_bff_playbooks_dashboard_recommendations_get"];
@@ -2819,6 +2819,8 @@ export interface components {
         };
         /** DashboardEventChainResponse */
         DashboardEventChainResponse: {
+            /** Playbook Id */
+            playbook_id: number;
             /** Event Types */
             event_types: components["schemas"]["EventTypeItem"][];
             /** Avg Sync Interval Seconds */
@@ -2830,6 +2832,8 @@ export interface components {
         };
         /** DashboardInsightsResponse */
         DashboardInsightsResponse: {
+            /** Playbook Id */
+            playbook_id: number;
             /** Persona Name */
             persona_name: string;
             creator: components["schemas"]["InsightsMetrics"];
@@ -2839,6 +2843,8 @@ export interface components {
         };
         /** DashboardOverviewResponse */
         DashboardOverviewResponse: {
+            /** Playbook Id */
+            playbook_id: number;
             /** Total Logs */
             total_logs: number;
             /** Success Rate */
@@ -2848,6 +2854,8 @@ export interface components {
         };
         /** DashboardPerformanceResponse */
         DashboardPerformanceResponse: {
+            /** Playbook Id */
+            playbook_id: number;
             /** Success Rate */
             success_rate: number;
             /** Failure Rate */
@@ -2859,6 +2867,8 @@ export interface components {
         };
         /** DashboardRecommendationsResponse */
         DashboardRecommendationsResponse: {
+            /** Playbook Id */
+            playbook_id: number;
             /** Phases */
             phases: components["schemas"]["PhaseItem"][];
             overall_roi: components["schemas"]["OverallROI"];

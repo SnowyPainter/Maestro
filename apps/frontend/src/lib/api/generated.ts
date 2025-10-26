@@ -576,12 +576,14 @@ export type DashboardEventChainResponseLatestKpiAnyOf = {[key: string]: number};
 export type DashboardEventChainResponseLatestKpi = DashboardEventChainResponseLatestKpiAnyOf | null;
 
 export interface DashboardEventChainResponse {
+  playbook_id: number;
   event_types: EventTypeItem[];
   avg_sync_interval_seconds: number;
   latest_kpi?: DashboardEventChainResponseLatestKpi;
 }
 
 export interface DashboardInsightsResponse {
+  playbook_id: number;
   persona_name: string;
   creator: InsightsMetrics;
   manager: InsightsMetrics;
@@ -590,6 +592,7 @@ export interface DashboardInsightsResponse {
 }
 
 export interface DashboardOverviewResponse {
+  playbook_id: number;
   total_logs: number;
   success_rate: number;
   hourly_activity: HourlyActivityItem[];
@@ -598,12 +601,14 @@ export interface DashboardOverviewResponse {
 export type DashboardPerformanceResponseActionStats = {[key: string]: ActionStatsItem};
 
 export interface DashboardPerformanceResponse {
+  playbook_id: number;
   success_rate: number;
   failure_rate: number;
   action_stats: DashboardPerformanceResponseActionStats;
 }
 
 export interface DashboardRecommendationsResponse {
+  playbook_id: number;
   phases: PhaseItem[];
   overall_roi: OverallROI;
   dynamic_recommendations: string[];
@@ -5655,7 +5660,7 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
 
 /**
  * Get overview metrics for playbook dashboard
- * @summary Get Dashboard Overview Data
+ * @summary Get Playbook Dashboard Overview Data
  */
 export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet = (
     params?: BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams,
@@ -5723,7 +5728,7 @@ export function useBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewG
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get Dashboard Overview Data
+ * @summary Get Playbook Dashboard Overview Data
  */
 
 export function useBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError = HTTPValidationError>(
@@ -5745,7 +5750,7 @@ export function useBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewG
 
 /**
  * Get event chain analysis for playbook dashboard
- * @summary Get Dashboard Event Chain Data
+ * @summary Get Playbook Dashboard Event Chain Data
  */
 export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet = (
     params?: BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams,
@@ -5813,7 +5818,7 @@ export function useBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventCh
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get Dashboard Event Chain Data
+ * @summary Get Playbook Dashboard Event Chain Data
  */
 
 export function useBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError = HTTPValidationError>(
@@ -5835,7 +5840,7 @@ export function useBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventCh
 
 /**
  * Get performance metrics for playbook dashboard
- * @summary Get Dashboard Performance Data
+ * @summary Get Playbook Dashboard Performance Data
  */
 export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet = (
     params?: BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams,
@@ -5903,7 +5908,7 @@ export function useBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerfor
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get Dashboard Performance Data
+ * @summary Get Playbook Dashboard Performance Data
  */
 
 export function useBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError = HTTPValidationError>(
@@ -5925,7 +5930,7 @@ export function useBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerfor
 
 /**
  * Get insights data for playbook dashboard
- * @summary Get Dashboard Insights Data
+ * @summary Get Playbook Dashboard Insights Data
  */
 export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet = (
     params?: BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams,
@@ -5993,7 +5998,7 @@ export function useBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsG
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get Dashboard Insights Data
+ * @summary Get Playbook Dashboard Insights Data
  */
 
 export function useBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError = HTTPValidationError>(
@@ -6015,7 +6020,7 @@ export function useBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsG
 
 /**
  * Get recommendations for playbook dashboard
- * @summary Get Dashboard Recommendations Data
+ * @summary Get Playbook Dashboard Recommendations Data
  */
 export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet = (
     params?: BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams,
@@ -6083,7 +6088,7 @@ export function useBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRe
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get Dashboard Recommendations Data
+ * @summary Get Playbook Dashboard Recommendations Data
  */
 
 export function useBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError = HTTPValidationError>(
