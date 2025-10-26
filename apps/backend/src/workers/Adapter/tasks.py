@@ -455,7 +455,8 @@ def reactive_send_dm(
     reaction_rule_id: Optional[int],
     tag_key: str,
     insight_comment_id: int,
-    recipient_external_id: str,
+    comment_external_id: str,
+    recipient_author_id: Optional[str] = None,
     message: str,
     metadata: Optional[dict] = None,
 ):
@@ -470,7 +471,8 @@ def reactive_send_dm(
             tag_key=tag_key,
             action_type=ReactionActionType.DM,
             payload={
-                "recipient": recipient_external_id,
+                "comment_external_id": comment_external_id,
+                "recipient_author_id": recipient_author_id,
                 "message": message,
                 "metadata": metadata,
             },
@@ -526,12 +528,14 @@ def reactive_send_dm(
                 credentials["user_id"] = platform_account.external_id
 
         try:
+            dm_options = dict(metadata or {})
+            dm_options.setdefault("comment_external_id", comment_external_id)
             result = asyncio.run(
                 adapter.send_direct_message(
-                    recipient_external_id=recipient_external_id,
+                    recipient_external_id=comment_external_id,
                     credentials=credentials,
                     text=message,
-                    options=metadata or None,
+                    options=dm_options or None,
                 )
             )
         except Exception as exc:  # pragma: no cover - safety guard
@@ -555,7 +559,9 @@ def reactive_send_dm(
                 "message": message,
                 "metadata": metadata,
                 "persona_account_id": persona_account_id,
-                "recipient_external_id": recipient_external_id,
+                "comment_external_id": comment_external_id,
+                "recipient_external_id": comment_external_id,
+                "recipient_author_id": recipient_author_id,
             }
             if _is_dm_window_closed(result):
                 payload = {**base_payload, "window_closed": True}
@@ -598,7 +604,10 @@ def reactive_send_dm(
             augmented = dict(result)
             augmented.setdefault("message", message)
             augmented.setdefault("metadata", metadata)
-            augmented.setdefault("recipient_external_id", recipient_external_id)
+            augmented.setdefault("comment_external_id", comment_external_id)
+            augmented.setdefault("recipient_external_id", comment_external_id)
+            if recipient_author_id is not None:
+                augmented.setdefault("recipient_author_id", recipient_author_id)
             augmented.setdefault("persona_account_id", persona_account_id)
             ok = bool(augmented.get("ok"))
             skipped = bool(augmented.get("skipped"))
@@ -635,7 +644,10 @@ def reactive_send_dm(
         payload = getattr(result, "__dict__", {}).copy()
         payload.setdefault("message", message)
         payload.setdefault("metadata", metadata)
-        payload.setdefault("recipient_external_id", recipient_external_id)
+        payload.setdefault("comment_external_id", comment_external_id)
+        payload.setdefault("recipient_external_id", comment_external_id)
+        if recipient_author_id is not None:
+            payload.setdefault("recipient_author_id", recipient_author_id)
         payload.setdefault("persona_account_id", persona_account_id)
         if ok:
             _mark_reaction_log(

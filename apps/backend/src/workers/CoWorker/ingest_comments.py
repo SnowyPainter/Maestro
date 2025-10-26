@@ -17,7 +17,7 @@ from apps.backend.src.modules.common.enums import (
 )
 from apps.backend.src.modules.reactive.schemas import ReactionEvaluationAction
 from apps.backend.src.modules.insights.models import InsightComment
-from apps.backend.src.modules.reactive.models import ReactionMessageTemplate
+from apps.backend.src.modules.reactive.models import ReactionActionLog, ReactionMessageTemplate
 from apps.backend.src.modules.reactive.service import (
     create_alert,
     ensure_action_log,
@@ -28,7 +28,6 @@ from apps.backend.src.workers.Adapter.tasks import (
     reactive_reply_to_comment,
     reactive_send_dm,
 )
-from apps.backend.src.modules.reactive.models import ReactionActionLog
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.adapters.engine import apply_persona_policies_to_message
 
@@ -226,7 +225,7 @@ async def _process_action(
                 dispatch_count += 1
 
     # DM automation
-    if action.dm_template_id and comment.account_persona_id and comment.author_id:
+    if action.dm_template_id and comment.account_persona_id and comment.comment_external_id:
         existing_dm_log_stmt = (
             select(ReactionActionLog)
             .where(
@@ -296,7 +295,9 @@ async def _process_action(
                     "mode": action.llm_mode.value,
                     "metadata": action.metadata,
                     "message": dm_message,
-                    "recipient_external_id": comment.author_id,
+                    "recipient_external_id": comment.comment_external_id,
+                    "comment_external_id": comment.comment_external_id,
+                    "recipient_author_id": comment.author_id,
                     "persona_policy_summary": policy_summary or None,
                     "persona_policy_warnings": policy_warnings or None,
                 }
@@ -315,7 +316,29 @@ async def _process_action(
                         dm_metadata["persona_policy_summary"] = policy_summary
                     if policy_warnings:
                         dm_metadata["persona_policy_warnings"] = policy_warnings
-                    
+                    dm_metadata.setdefault("comment_external_id", comment.comment_external_id)
+                    if comment.author_id:
+                        dm_metadata.setdefault("recipient_author_id", comment.author_id)
+                    if comment.author_username:
+                        dm_metadata.setdefault("recipient_author_username", comment.author_username)
+
+                    logger.info(f"DM metadata: {dm_metadata}")
+                    logger.info(f"DM message: {dm_message}")
+                    logger.info(f"DM template: {template.id}, {template.title}, {template.body}")
+                    logger.info(f"DM persona directives: {persona_directives}")
+                    logger.info(f"DM policy summary: {policy_summary}")
+                    logger.info(f"DM policy warnings: {policy_warnings}")
+                    logger.info(f"DM action: {action.reaction_rule_id}, {action.tag_key}, {action.llm_mode.value}, {action.metadata}")
+                    logger.info(
+                        "DM comment: %s, %s, author_id=%s, author_username=%s, platform=%s, persona_account_id=%s",
+                        comment.id,
+                        comment.comment_external_id,
+                        comment.author_id,
+                        comment.author_username,
+                        comment.platform.value,
+                        comment.account_persona_id,
+                    )
+
                     dispatch_queue.append(
                         (
                             "dm",
@@ -325,7 +348,8 @@ async def _process_action(
                                 "reaction_rule_id": action.reaction_rule_id,
                                 "tag_key": action.tag_key,
                                 "insight_comment_id": comment.id,
-                                "recipient_external_id": comment.author_id,
+                                "comment_external_id": comment.comment_external_id,
+                                "recipient_author_id": comment.author_id,
                                 "message": dm_message,
                                 "metadata": dm_metadata,
                             },

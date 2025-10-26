@@ -612,45 +612,49 @@ class InstagramMessageSendCapability(InstagramCapabilityBase, MessageSendCapabil
         text: str,
         options: dict | None = None,
     ) -> MessageSendResult:
-        resolved_credentials, missing = self._resolve_credentials(credentials, require_user_id=True)
+        resolved_credentials, missing = self._resolve_credentials(credentials, require_user_id=False)
         if missing or not resolved_credentials:
             return MessageSendResult(
                 ok=False,
-                errors=["missing credentials: " + ", ".join(missing or ["access_token", "instagram user id"])],
+                errors=["missing credentials: " + ", ".join(missing or ["access_token"])],
                 reason="missing_credentials",
             )
 
-        user_id = resolved_credentials.user_id
-        if not user_id:
+        message_warnings: List[str] = []
+        body = (text or "").strip()
+        if not body:
             return MessageSendResult(
                 ok=False,
-                errors=["instagram direct message requires instagram user id"],
-                reason="missing_instagram_user_id",
+                errors=["instagram private reply requires text"],
+                reason="missing_message_payload",
             )
 
-        message_payload: Dict[str, Any] = {}
-        body = (text or "").strip()
-        if body:
-            message_payload["text"] = body
-
+        comment_id: Optional[str] = None
         if isinstance(options, dict):
+            override = options.get("comment_external_id") or options.get("reply_to_comment_id")
+            if isinstance(override, str) and override.strip():
+                comment_id = override.strip()
+            elif isinstance(override, (int, float)):
+                comment_id = format(override, ".0f")
             attachment = options.get("attachment")
-            if isinstance(attachment, dict):
-                message_payload.update({k: v for k, v in attachment.items() if v is not None})
-
-        if not message_payload:
+            if attachment:
+                message_warnings.append("instagram private replies ignore attachments")
+        if not comment_id:
+            raw_candidate = recipient_external_id
+            if isinstance(raw_candidate, str) and raw_candidate.strip():
+                comment_id = raw_candidate.strip()
+        if not comment_id:
             return MessageSendResult(
                 ok=False,
-                errors=["instagram direct message requires text or attachment"],
-                reason="missing_message_payload",
+                errors=["instagram private reply requires comment id"],
+                reason="missing_comment_id",
             )
 
         client = self._client(access_token=resolved_credentials.access_token)
         try:
-            response = await client.send_message(
-                user_id=user_id,
-                recipient_id=recipient_external_id,
-                message=message_payload,
+            response = await client.send_private_reply(
+                comment_id=comment_id,
+                message_text=body,
             )
         except InstagramAPIError as exc:
             return MessageSendResult(
@@ -659,11 +663,14 @@ class InstagramMessageSendCapability(InstagramCapabilityBase, MessageSendCapabil
                 reason="dm_send_failed",
             )
 
+        message_id = response.get("id") if isinstance(response, dict) else None
+
         return MessageSendResult(
             ok=True,
-            recipient_id=response.get("recipient_id"),
-            message_id=response.get("message_id") or response.get("id"),
-            raw=response,
+            recipient_id=comment_id,
+            message_id=message_id,
+            raw=response if isinstance(response, dict) else {},
+            warnings=message_warnings,
         )
 
 # API wrapper -----------------------------------------------------------------------------------
@@ -771,19 +778,12 @@ class InstagramAPI:
             logger.error(f"Instagram comments API error for {media_id}: {exc.as_message()}")
             raise InstagramAPIError.from_graph_error(exc) from exc
 
-    async def send_message(
-        self,
-        *,
-        user_id: str,
-        recipient_id: str,
-        message: Dict[str, Any],
-    ) -> Dict[str, Any]:
-        data = {
-            "recipient": json.dumps({"id": recipient_id}),
-            "message": json.dumps(message),
-        }
+    async def send_private_reply(self, *, comment_id: str, message_text: str) -> Dict[str, Any]:
         try:
-            return await self._client.post_json(f"{user_id}/messages", data=data)
+            return await self._client.post_json(
+                f"{comment_id}/private_replies",
+                data={"message": message_text},
+            )
         except GraphAPIError as exc:
             raise InstagramAPIError.from_graph_error(exc) from exc
 
