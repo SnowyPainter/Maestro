@@ -558,77 +558,69 @@
     }
   },
   "use_cases": {
-    "section_title": "Maestro 的实际运作方式",
+    "section_title": "Maestro 的演奏方式",
     "section_description": "从单一命令到全自动工作流，了解 Maestro 如何复制您的判断力。",
     "tabs": {
-      "ai_creation": "AI 内容创作",
-      "community_management": "自动化社区管理",
-      "data_strategy": "数据驱动策略",
-      "scheduling": "智能排程",
-      "playbook": "品牌剧本"
+      "publishing_flow": "两步式发布",
+      "reactive_automation": "自动化反应",
+      "brand_memory": "品牌记忆"
     },
     "common": {
       "user": "您",
       "bot": "Maestro",
       "card_title_draft": "生成的草稿",
       "card_title_insight": "核心洞察",
+      "card_title_trend": "当前趋势",
       "action_schedule": "排程",
       "action_publish": "立即发布",
       "action_edit": "编辑",
       "replay_animation": "重播动画"
     },
-    "ai_creation": {
-      "title": "基于趋势的 AI 内容创作",
-      "description": "Maestro 的嗅探器 (Sniffer) 检测市场趋势，然后 AI 会根据您品牌的 Persona 生成相关内容草稿。",
+    "publishing_flow": {
+      "title": "从单一命令到多平台内容",
+      "description": "用自然语言下达命令。Maestro 的编排器会理解意图、收集上下文，并为您的所有渠道生成可直接发布的草稿。",
       "chat": {
-        "user_message": "获取关于 #可持续生活 的热门趋势，并为 Instagram 创建一个新草稿。"
+        "user_message": "获取 #复古科技 的趋势并创建新草稿！",
+        "bot_thinking": "收到。正在分析趋势和您的 Persona...",
+        "bot_response": "我发现 #复古科技 的趋势正在上升。根据您的 Persona，我为 Threads 和 Instagram 编译了草稿。"
       },
       "draft_card": {
-        "platform": "Instagram",
-        "content": "可持续生活不仅是一种趋势，更是一种生活方式！🌿 我们的最新系列旨在让环保选择变得更简单。您本周做出了什么小改变？",
-        "hashtags": "#可持续生活 #环保 #绿色选择"
+        "threads_content": "还记得这个吗？经典回归了！你的第一台游戏机是什么？🕹️ #复古科技 #怀旧游戏",
+        "instagram_content": "那种怀旧的感觉与众不同。我们正在深入 #复古科技 的世界。你最怀念哪个经典小工具？",
+        "schedule_all": "全部排程"
       }
     },
-    "community_management": {
-      "title": "自动化社区管理",
-      "description": "一次性设置规则，让 Maestro 处理重复性互动。反应引擎 (Reactive Engine) 会检测评论中的关键词并触发自动回复。",
+    "reactive_automation": {
+      "title": "一次设定规则，永久自动化",
+      "description": "反应引擎 7x24 小时工作。定义一个规则，Maestro 的同步工作器将监控评论并触发操作，每个回复都由您的 Persona 进行质量检查。",
       "rule_card": {
         "title": "自动化规则",
         "if_label": "如果评论包含",
         "keyword": "价格？",
-        "then_label": "则使用模板回复",
+        "then_label": "则使用模板自动回复",
         "template": "定价信息"
       },
       "interaction": {
         "comment_author": "好奇的顾客",
         "comment_text": "这看起来太棒了！多少钱？",
         "bot_reply_author": "您的品牌 (通过 Maestro)",
-        "bot_reply_text": "感谢您的询问！您可以在我们的网站上找到所有定价详情：[链接]"
+        "bot_reply_text": "感谢您的询问！您可以在我们的网站上找到所有定价详情。我们还为您申请了 10% 的折扣：[链接]",
+        "persona_badge": "Persona 校正"
       }
     },
-    "data_strategy": {
-      "title": "数据驱动的内容策略",
-      "description": "Maestro 分析帖子表现和评论，为您的下一步行动提供可行的见解。",
-      "chat": {
-        "user_message": "分析上次活动帖子的评论，并起草一篇后续帖子。"
-      },
-      "insight_card": {
-        "themes_title": "热门评论主题",
-        "themes": "定价, 配送, 材料质量"
-      },
-      "draft_card": {
-        "platform": "Threads",
-        "content": "您问，我们听！我们看到了您关于材料和配送的问题。我们很自豪能使用 100% 有机棉并提供碳中和配送。透明度是关键！",
-        "hashtags": "#品牌背后 #可持续性"
-      }
-    },
-    "scheduling": {
-      "title": "智能排程",
-      "description": "Maestro 帮助您在最佳时间发布内容。安排您的帖子，让您的 CoWorker 处理剩下的事情，确保您的品牌保持一致的存在感。"
-    },
-    "playbook": {
-      "title": "品牌剧本",
-      "description": "每一个行动、决策和结果都记录在剧本中。这个品牌的活记忆确保了一致性，并为未来的判断提供数据。"
+    "brand_memory": {
+      "title": "您的判断，被记录和提炼",
+      "description": "剧本 (Playbook) 是您品牌的记忆。它记录了每个行动的完整上下文，从结果中学习，并帮助您的 CoWorker 做出更明智的决定。",
+      "actions_title": "过去的操作与结果",
+      "action_1": "帖子 A (机智语气) -> 1,200 点赞",
+      "action_2": "帖子 B (正式语气) -> 450 点赞",
+      "action_3": "趋势: #环保 -> 高互动率",
+      "insights_title": "剧本洞察",
+      "insight_1": "机智的语气可将互动率提高 140%。",
+      "insight_2": "最佳发帖时间是上午 9:30。",
+      "schedule_title": "CoWorker 的自动排程",
+      "post_title": "新草稿：'环保杯'",
+      "optimal_badge": "最佳时间"
     }
   }
 }

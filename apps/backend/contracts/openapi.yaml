@@ -1253,6 +1253,13 @@ paths:
           title: Last Event
           type: string
           nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
       responses:
         '200':
           description: Successful Response
@@ -1260,6 +1267,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlaybookSearchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/detail:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - detail
+      - logs
+      - ui
+      - frontend
+      summary: Get Playbook Detail with Logs
+      description: Get detailed playbook information including logs.
+      operationId: bff_playbook_get_playbook_detail_api_bff_playbooks_detail_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybookDetailResponse'
         '422':
           description: Validation Error
           content:
@@ -7036,6 +7108,19 @@ components:
       - instagram
       - threads
       title: PlatformKind
+    PlaybookDetailResponse:
+      properties:
+        playbook:
+          $ref: '#/components/schemas/PlaybookEnrichedOut'
+        logs:
+          items:
+            $ref: '#/components/schemas/PlaybookLogOut'
+          type: array
+          title: Logs
+      type: object
+      required:
+      - playbook
+      title: PlaybookDetailResponse
     PlaybookEnrichedOut:
       properties:
         id:
@@ -7129,6 +7214,93 @@ components:
       - limit
       - offset
       title: PlaybookListResponse
+    PlaybookLogOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        playbook_id:
+          type: integer
+          title: Playbook Id
+        event:
+          type: string
+          title: Event
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        schedule_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Schedule Id
+        abtest_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Abtest Id
+        ref_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ref Id
+        persona_snapshot:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Persona Snapshot
+        trend_snapshot:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Trend Snapshot
+        llm_input:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Llm Input
+        llm_output:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Llm Output
+        kpi_snapshot:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Kpi Snapshot
+        meta:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Meta
+        message:
+          title: Message
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - playbook_id
+      - event
+      - timestamp
+      - created_at
+      title: PlaybookLogOut
     PlaybookSearchResponse:
       properties:
         items:

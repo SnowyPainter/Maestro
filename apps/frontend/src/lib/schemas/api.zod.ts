@@ -1117,11 +1117,14 @@ export const bffPlaybookListPlaybooksApiBffPlaybooksGetResponse = zod.object({
  * Search playbooks with optional filtering.
  * @summary Search Playbooks
  */
+export const bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryIncludeLogsDefault = false;
+
 export const bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryParams = zod.object({
   "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
   "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
   "persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "last_event": zod.string().nullish()
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
 })
 
 export const bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetResponse = zod.object({
@@ -1142,6 +1145,58 @@ export const bffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetResponse = zod.ob
   "persona_bio": zod.string().nullish()
 }).describe('Enriched Playbook schema with campaign and persona names.')),
   "total": zod.number()
+})
+
+
+/**
+ * Get detailed playbook information including logs.
+ * @summary Get Playbook Detail with Logs
+ */
+export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryIncludeLogsDefault = false;
+
+export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryParams = zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
+})
+
+export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetResponse = zod.object({
+  "playbook": zod.object({
+  "id": zod.number(),
+  "persona_id": zod.number(),
+  "campaign_id": zod.number(),
+  "aggregate_kpi": zod.union([zod.record(zod.string(), zod.number()),zod.null()]).optional(),
+  "best_time_window": zod.string().nullish(),
+  "best_tone": zod.string().nullish(),
+  "top_hashtags": zod.union([zod.array(zod.string()),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "last_updated": zod.iso.datetime({}),
+  "created_at": zod.iso.datetime({}),
+  "campaign_name": zod.string(),
+  "campaign_description": zod.string().nullish(),
+  "persona_name": zod.string(),
+  "persona_bio": zod.string().nullish()
+}).describe('Enriched Playbook schema with campaign and persona names.'),
+  "logs": zod.array(zod.object({
+  "id": zod.number(),
+  "playbook_id": zod.number(),
+  "event": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "schedule_id": zod.union([zod.number(),zod.null()]).optional(),
+  "abtest_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ref_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_snapshot": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "trend_snapshot": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "llm_input": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "llm_output": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "kpi_snapshot": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "message": zod.string().nullish(),
+  "created_at": zod.iso.datetime({})
+})).optional()
 })
 
 

@@ -1,54 +1,17 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import {
-  TrendBasedAiContentCreation,
-  SmartSchedulingAndAutomation,
-  AutomatedCommunityManagement,
-  DataDrivenContentStrategy,
-  BrandPlaybook,
-} from './use-cases';
-import { Sparkles, CalendarClock, MessageCircleReply, LineChart, BookMarked } from 'lucide-react';
-
-const useCases = [
-  {
-    id: 'ai-creation',
-    name: 'use_cases.tabs.ai_creation',
-    component: <TrendBasedAiContentCreation />,
-    icon: <Sparkles className="h-5 w-5" />,
-  },
-  {
-    id: 'community',
-    name: 'use_cases.tabs.community_management',
-    component: <AutomatedCommunityManagement />,
-    icon: <MessageCircleReply className="h-5 w-5" />,
-  },
-  {
-    id: 'data-driven',
-    name: 'use_cases.tabs.data_strategy',
-    component: <DataDrivenContentStrategy />,
-    icon: <LineChart className="h-5 w-5" />,
-  },
-  {
-    id: 'scheduling',
-    name: 'use_cases.tabs.scheduling',
-    component: <SmartSchedulingAndAutomation />,
-    icon: <CalendarClock className="h-5 w-5" />,
-  },
-  {
-    id: 'playbook',
-    name: 'use_cases.tabs.playbook',
-    component: <BrandPlaybook />,
-    icon: <BookMarked className="h-5 w-5" />,
-  },
-];
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PublishingFlow } from './use-cases/PublishingFlow';
+import { ReactiveAutomation } from './use-cases/ReactiveAutomation';
+import { BrandMemory } from './use-cases/BrandMemory';
 
 export function UseCasesSection() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState(useCases[0].id);
 
-  const activeComponent = useCases.find((uc) => uc.id === activeTab)?.component;
+  const tabs = [
+    { id: 'publishing', key: 'use_cases.tabs.publishing_flow', component: <PublishingFlow /> },
+    { id: 'automation', key: 'use_cases.tabs.reactive_automation', component: <ReactiveAutomation /> },
+    { id: 'memory', key: 'use_cases.tabs.brand_memory', component: <BrandMemory /> },
+  ];
 
   return (
     <section id="use-cases" className="py-16 sm:py-24 bg-muted/30">
@@ -62,33 +25,18 @@ export function UseCasesSection() {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-2 mb-10">
-          {useCases.map((uc) => (
-            <Button
-              key={uc.id}
-              variant={activeTab === uc.id ? 'default' : 'outline'}
-              onClick={() => setActiveTab(uc.id)}
-              className="gap-2"
-            >
-              {uc.icon}
-              {t(uc.name)}
-            </Button>
+        <Tabs defaultValue={tabs[0].id} className="w-full">
+          <TabsList className="grid max-w-md mx-auto w-full grid-cols-3">
+            {tabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>{t(tab.key)}</TabsTrigger>
+            ))}
+          </TabsList>
+          {tabs.map(tab => (
+            <TabsContent key={tab.id} value={tab.id} className="mt-10">
+              {tab.component}
+            </TabsContent>
           ))}
-        </div>
-
-        <div className="relative min-h-[450px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {activeComponent}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        </Tabs>
       </div>
     </section>
   );

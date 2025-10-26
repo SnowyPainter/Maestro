@@ -558,77 +558,69 @@
     }
   },
   "use_cases": {
-    "section_title": "How Maestro Works in Practice",
+    "section_title": "This is Maestro's Orchestra",
     "section_description": "From a single command to a fully automated workflow, see how Maestro replicates your judgment.",
     "tabs": {
-      "ai_creation": "AI Content Creation",
-      "community_management": "Auto-Community",
-      "data_strategy": "Data-Driven Strategy",
-      "scheduling": "Smart Scheduling",
-      "playbook": "Brand Playbook"
+      "publishing_flow": "2-Step Publishing",
+      "reactive_automation": "Reactive Automation",
+      "brand_memory": "Brand Memory"
     },
     "common": {
       "user": "You",
       "bot": "Maestro",
       "card_title_draft": "Generated Draft",
       "card_title_insight": "Key Insights",
+      "card_title_trend": "Trending Now",
       "action_schedule": "Schedule",
       "action_publish": "Publish Now",
       "action_edit": "Edit",
       "replay_animation": "Replay Animation"
     },
-    "ai_creation": {
-      "title": "Trend-Based AI Content Creation",
-      "description": "Maestro's Sniffer detects market trends, and the AI generates relevant content drafts reflecting your brand's Persona.",
+    "publishing_flow": {
+      "title": "From a Single Command to Multi-Platform Content",
+      "description": "Issue a command in plain language. Maestro's Orchestrator understands the intent, gathers context, and generates ready-to-publish drafts for all your channels.",
       "chat": {
-        "user_message": "Get top trends for #SustainableLiving and create a new draft for Instagram."
+        "user_message": "Get trends for #VintageTech and create a new draft!",
+        "bot_thinking": "Understood. Analyzing trends and your Persona...",
+        "bot_response": "I've found a rising trend in #VintageTech. Based on your Persona, I've compiled drafts for Threads and Instagram."
       },
       "draft_card": {
-        "platform": "Instagram",
-        "content": "Living sustainably isn't just a trend, it's a lifestyle! 🌿 Our latest collection is all about making eco-friendly choices easier. What's one small change you've made this week?",
-        "hashtags": "#SustainableLiving #EcoFriendly #GreenChoice"
+        "threads_content": "Remember this? The classics are back! What was your first gaming console? 🕹️ #VintageTech #RetroGaming",
+        "instagram_content": "That feeling of nostalgia hits different. We're diving into the world of #VintageTech. What classic gadget do you miss the most?",
+        "schedule_all": "Schedule All"
       }
     },
-    "community_management": {
-      "title": "Automated Community Management",
-      "description": "Set up rules once, and let Maestro handle repetitive interactions. The Reactive Engine detects keywords in comments and triggers automatic replies.",
+    "reactive_automation": {
+      "title": "Set a Rule Once, Automate Forever",
+      "description": "The Reactive Engine works 24/7. Define a rule, and Maestro's Synchro worker will monitor comments and trigger actions, with every response quality-checked by your Persona.",
       "rule_card": {
         "title": "Automation Rule",
-        "if_label": "IF comment includes",
+        "if_label": "IF comment contains",
         "keyword": "price?",
-        "then_label": "THEN reply with template",
+        "then_label": "THEN auto-reply with template",
         "template": "Pricing Info"
       },
       "interaction": {
         "comment_author": "CuriousCustomer",
         "comment_text": "This looks amazing! How much is it?",
         "bot_reply_author": "YourBrand (via Maestro)",
-        "bot_reply_text": "Thanks for asking! You can find all pricing details on our website: [link]"
+        "bot_reply_text": "Thanks for asking! You can find all pricing details on our website. We've also applied a 10% discount for you: [link]",
+        "persona_badge": "Persona Corrected"
       }
     },
-    "data_strategy": {
-      "title": "Data-Driven Content Strategy",
-      "description": "Maestro analyzes post performance and comments to provide actionable insights for your next move.",
-      "chat": {
-        "user_message": "Analyze comments from the last campaign and draft a follow-up post."
-      },
-      "insight_card": {
-        "themes_title": "Top Comment Themes",
-        "themes": "Pricing, Shipping, Material Quality"
-      },
-      "draft_card": {
-        "platform": "Threads",
-        "content": "You asked, we listened! We've seen your questions about our materials and shipping. We're proud to use 100% organic cotton and offer carbon-neutral shipping. Transparency is key!",
-        "hashtags": "#BehindTheBrand #Sustainability"
-      }
-    },
-    "scheduling": {
-      "title": "Intelligent Scheduling",
-      "description": "Maestro helps you publish content at the optimal time. Schedule your posts and let your CoWorker handle the rest, ensuring your brand maintains a consistent presence."
-    },
-    "playbook": {
-      "title": "The Brand Playbook",
-      "description": "Every action, decision, and result is recorded in the Playbook. This living memory of your brand ensures consistency and provides data for future judgments."
+    "brand_memory": {
+      "title": "Your Judgment, Recorded and Refined",
+      "description": "The Playbook is your brand's memory. It records the full context of every action, learns from the results, and helps your CoWorker make smarter decisions.",
+      "actions_title": "Past Actions & Results",
+      "action_1": "Post A (Witty Tone) -> 1,200 Likes",
+      "action_2": "Post B (Formal Tone) -> 450 Likes",
+      "action_3": "Trend: #EcoFriendly -> High Engagement",
+      "insights_title": "Playbook Insights",
+      "insight_1": "Witty tone boosts engagement by 140%.",
+      "insight_2": "Optimal post time is 9:30 AM.",
+      "schedule_title": "CoWorker's Auto-Schedule",
+      "post_title": "New Draft: 'Eco-Mug'",
+      "optimal_badge": "Optimal Time"
     }
   }
 }

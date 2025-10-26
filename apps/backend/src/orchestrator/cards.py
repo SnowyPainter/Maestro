@@ -37,6 +37,7 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "CoworkerLeaseOut": "coworker.detail",
     "PlaybookListResponse": "playbook.list",
     "PlaybookSearchResponse": "playbook.list",
+    "PlaybookDetailResponse": "playbook.detail",
     "MessageOut": "info",
     "ReactionRuleListResult": "reactive.rule.overview",
     "ReactionRuleOut": "reactive.rule.detail",

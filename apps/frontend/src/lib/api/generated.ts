@@ -1482,6 +1482,11 @@ export const PlatformKind = {
   threads: 'threads',
 } as const;
 
+export interface PlaybookDetailResponse {
+  playbook: PlaybookEnrichedOut;
+  logs?: PlaybookLogOut[];
+}
+
 export type PlaybookEnrichedOutAggregateKpiAnyOf = {[key: string]: number};
 
 export type PlaybookEnrichedOutAggregateKpi = PlaybookEnrichedOutAggregateKpiAnyOf | null;
@@ -1518,6 +1523,58 @@ export interface PlaybookListResponse {
   total: number;
   limit: number;
   offset: number;
+}
+
+export type PlaybookLogOutDraftId = number | null;
+
+export type PlaybookLogOutScheduleId = number | null;
+
+export type PlaybookLogOutAbtestId = number | null;
+
+export type PlaybookLogOutRefId = number | null;
+
+export type PlaybookLogOutPersonaSnapshotAnyOf = { [key: string]: unknown };
+
+export type PlaybookLogOutPersonaSnapshot = PlaybookLogOutPersonaSnapshotAnyOf | null;
+
+export type PlaybookLogOutTrendSnapshotAnyOf = { [key: string]: unknown };
+
+export type PlaybookLogOutTrendSnapshot = PlaybookLogOutTrendSnapshotAnyOf | null;
+
+export type PlaybookLogOutLlmInputAnyOf = { [key: string]: unknown };
+
+export type PlaybookLogOutLlmInput = PlaybookLogOutLlmInputAnyOf | null;
+
+export type PlaybookLogOutLlmOutputAnyOf = { [key: string]: unknown };
+
+export type PlaybookLogOutLlmOutput = PlaybookLogOutLlmOutputAnyOf | null;
+
+export type PlaybookLogOutKpiSnapshotAnyOf = { [key: string]: unknown };
+
+export type PlaybookLogOutKpiSnapshot = PlaybookLogOutKpiSnapshotAnyOf | null;
+
+export type PlaybookLogOutMetaAnyOf = { [key: string]: unknown };
+
+export type PlaybookLogOutMeta = PlaybookLogOutMetaAnyOf | null;
+
+export interface PlaybookLogOut {
+  id: number;
+  playbook_id: number;
+  event: string;
+  timestamp: string;
+  draft_id?: PlaybookLogOutDraftId;
+  schedule_id?: PlaybookLogOutScheduleId;
+  abtest_id?: PlaybookLogOutAbtestId;
+  ref_id?: PlaybookLogOutRefId;
+  persona_snapshot?: PlaybookLogOutPersonaSnapshot;
+  trend_snapshot?: PlaybookLogOutTrendSnapshot;
+  llm_input?: PlaybookLogOutLlmInput;
+  llm_output?: PlaybookLogOutLlmOutput;
+  kpi_snapshot?: PlaybookLogOutKpiSnapshot;
+  meta?: PlaybookLogOutMeta;
+  /** @nullable */
+  message?: string | null;
+  created_at: string;
 }
 
 export interface PlaybookSearchResponse {
@@ -2554,6 +2611,18 @@ persona_id?: number | null;
  * @nullable
  */
 last_event?: string | null;
+include_logs?: boolean;
+};
+
+export type BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
+include_logs?: boolean;
 };
 
 export type BffReactiveListActionLogsApiBffReactiveActionLogsGetParams = {
@@ -5601,6 +5670,96 @@ export function useBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGet<TData = Aw
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffPlaybookSearchPlaybooksApiBffPlaybooksSearchGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get detailed playbook information including logs.
+ * @summary Get Playbook Detail with Logs
+ */
+export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet = (
+    params?: BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PlaybookDetailResponse>(
+      {url: `/api/bff/playbooks/detail`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryKey = (params?: BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams,) => {
+    return [`/api/bff/playbooks/detail`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError = HTTPValidationError>(params?: BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>> = ({ signal }) => bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>>
+export type BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Playbook Detail with Logs
+ */
+
+export function useBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

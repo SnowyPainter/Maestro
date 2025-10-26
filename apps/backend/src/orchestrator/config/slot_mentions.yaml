@@ -127,6 +127,7 @@ slots:
   - bff.campaigns.list_kpi_results
   - bff.campaigns.read_campaign
   - bff.drafts.list_drafts
+  - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
   - campaigns.aggregate_kpis
@@ -322,6 +323,13 @@ slots:
   flows:
   - bff.reactive.list_templates
   - bff.reactive.read_template
+- name: include_logs
+  label: Include Logs
+  description: Filter by include logs
+  value_type: boolean
+  flows:
+  - bff.playbook.get_playbook_detail
+  - bff.playbook.search_playbooks
 - name: ingest_key
   label: Ingest Key
   description: Filter by ingest key
@@ -374,6 +382,7 @@ slots:
   description: Filter by last event
   value_type: string
   flows:
+  - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: limit
   label: Limit
@@ -552,6 +561,7 @@ slots:
   - bff.abtests.list
   - bff.accounts.list_accounts_for_persona
   - bff.accounts.read_persona
+  - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
   - internal.mail.compose_trends_email
@@ -590,6 +600,7 @@ slots:
   description: Target a specific playbook id
   value_type: integer
   flows:
+  - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: post_publication_id
   label: Post Publication Id

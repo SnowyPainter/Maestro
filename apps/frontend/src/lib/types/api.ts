@@ -664,6 +664,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/playbooks/detail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Playbook Detail with Logs
+         * @description Get detailed playbook information including logs.
+         */
+        get: operations["bff_playbook_get_playbook_detail_api_bff_playbooks_detail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/reactive/rules": {
         parameters: {
             query?: never;
@@ -3758,6 +3778,12 @@ export interface components {
          * @enum {string}
          */
         PlatformKind: "instagram" | "threads";
+        /** PlaybookDetailResponse */
+        PlaybookDetailResponse: {
+            playbook: components["schemas"]["PlaybookEnrichedOut"];
+            /** Logs */
+            logs?: components["schemas"]["PlaybookLogOut"][];
+        };
         /**
          * PlaybookEnrichedOut
          * @description Enriched Playbook schema with campaign and persona names.
@@ -3810,6 +3836,59 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+        };
+        /** PlaybookLogOut */
+        PlaybookLogOut: {
+            /** Id */
+            id: number;
+            /** Playbook Id */
+            playbook_id: number;
+            /** Event */
+            event: string;
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /** Draft Id */
+            draft_id?: number | null;
+            /** Schedule Id */
+            schedule_id?: number | null;
+            /** Abtest Id */
+            abtest_id?: number | null;
+            /** Ref Id */
+            ref_id?: number | null;
+            /** Persona Snapshot */
+            persona_snapshot?: {
+                [key: string]: unknown;
+            } | null;
+            /** Trend Snapshot */
+            trend_snapshot?: {
+                [key: string]: unknown;
+            } | null;
+            /** Llm Input */
+            llm_input?: {
+                [key: string]: unknown;
+            } | null;
+            /** Llm Output */
+            llm_output?: {
+                [key: string]: unknown;
+            } | null;
+            /** Kpi Snapshot */
+            kpi_snapshot?: {
+                [key: string]: unknown;
+            } | null;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
+            /** Message */
+            message?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** PlaybookSearchResponse */
         PlaybookSearchResponse: {
@@ -6012,6 +6091,7 @@ export interface operations {
                 campaign_id?: number | null;
                 persona_id?: number | null;
                 last_event?: string | null;
+                include_logs?: boolean;
             };
             header?: never;
             path?: never;
@@ -6026,6 +6106,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlaybookSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_get_playbook_detail_api_bff_playbooks_detail_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+                include_logs?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaybookDetailResponse"];
                 };
             };
             /** @description Validation Error */
