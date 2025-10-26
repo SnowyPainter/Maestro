@@ -624,6 +624,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/playbooks/dashboard/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Overview Data
+         * @description Get overview metrics for playbook dashboard
+         */
+        get: operations["bff_playbook_dashboard_overview_api_bff_playbooks_dashboard_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/playbooks/dashboard/event-chain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Event Chain Data
+         * @description Get event chain analysis for playbook dashboard
+         */
+        get: operations["bff_playbook_dashboard_event_chain_api_bff_playbooks_dashboard_event_chain_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/playbooks/dashboard/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Performance Data
+         * @description Get performance metrics for playbook dashboard
+         */
+        get: operations["bff_playbook_dashboard_performance_api_bff_playbooks_dashboard_performance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/playbooks/dashboard/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Insights Data
+         * @description Get insights data for playbook dashboard
+         */
+        get: operations["bff_playbook_dashboard_insights_api_bff_playbooks_dashboard_insights_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/playbooks/dashboard/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Dashboard Recommendations Data
+         * @description Get recommendations for playbook dashboard
+         */
+        get: operations["bff_playbook_dashboard_recommendations_api_bff_playbooks_dashboard_recommendations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/playbooks": {
         parameters: {
             query?: never;
@@ -2334,6 +2434,15 @@ export interface components {
          * @enum {string}
          */
         ABTestWinnerEnum: "A" | "B";
+        /** ActionStatsItem */
+        ActionStatsItem: {
+            /** Total */
+            total: number;
+            /** Success */
+            success: number;
+            /** Rate */
+            rate: number;
+        };
         /**
          * Aggregation
          * @enum {string}
@@ -2708,6 +2817,54 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** DashboardEventChainResponse */
+        DashboardEventChainResponse: {
+            /** Event Types */
+            event_types: components["schemas"]["EventTypeItem"][];
+            /** Avg Sync Interval Seconds */
+            avg_sync_interval_seconds: number;
+            /** Latest Kpi */
+            latest_kpi?: {
+                [key: string]: number;
+            } | null;
+        };
+        /** DashboardInsightsResponse */
+        DashboardInsightsResponse: {
+            /** Persona Name */
+            persona_name: string;
+            creator: components["schemas"]["InsightsMetrics"];
+            manager: components["schemas"]["InsightsMetrics"];
+            brand: components["schemas"]["InsightsMetrics"];
+            overall_roi: components["schemas"]["OverallROI"];
+        };
+        /** DashboardOverviewResponse */
+        DashboardOverviewResponse: {
+            /** Total Logs */
+            total_logs: number;
+            /** Success Rate */
+            success_rate: number;
+            /** Hourly Activity */
+            hourly_activity: components["schemas"]["HourlyActivityItem"][];
+        };
+        /** DashboardPerformanceResponse */
+        DashboardPerformanceResponse: {
+            /** Success Rate */
+            success_rate: number;
+            /** Failure Rate */
+            failure_rate: number;
+            /** Action Stats */
+            action_stats: {
+                [key: string]: components["schemas"]["ActionStatsItem"];
+            };
+        };
+        /** DashboardRecommendationsResponse */
+        DashboardRecommendationsResponse: {
+            /** Phases */
+            phases: components["schemas"]["PhaseItem"][];
+            overall_roi: components["schemas"]["OverallROI"];
+            /** Dynamic Recommendations */
+            dynamic_recommendations: string[];
+        };
         /** DateRange */
         DateRange: {
             /**
@@ -3031,6 +3188,13 @@ export interface components {
             /** Campaign Id */
             campaign_id?: number | null;
         };
+        /** EventTypeItem */
+        EventTypeItem: {
+            /** Name */
+            name: string;
+            /** Value */
+            value: number;
+        };
         /** FileInfo */
         FileInfo: {
             /** Id */
@@ -3117,6 +3281,23 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HourlyActivityItem */
+        HourlyActivityItem: {
+            /** Hour */
+            hour: string;
+            /** Total */
+            total: number;
+            /**
+             * Sync Metrics
+             * @default 0
+             */
+            sync_metrics: number | null;
+            /**
+             * Schedule
+             * @default 0
+             */
+            schedule: number | null;
         };
         /** InsightCommentList */
         InsightCommentList: {
@@ -3268,6 +3449,27 @@ export interface components {
          * @enum {string}
          */
         InsightSource: "webhook" | "poll" | "manual";
+        /** InsightsMetrics */
+        InsightsMetrics: {
+            /** Engagement Improvement */
+            engagement_improvement: number;
+            /** Optimal Time */
+            optimal_time: string;
+            /** Consistency Score */
+            consistency_score: number;
+            /** Response Time Reduction */
+            response_time_reduction?: number | null;
+            /** Automation Rate */
+            automation_rate?: number | null;
+            /** Monitoring Coverage */
+            monitoring_coverage?: number | null;
+            /** Policy Compliance */
+            policy_compliance?: number | null;
+            /** Tone Consistency */
+            tone_consistency?: number | null;
+            /** Quality Assurance */
+            quality_assurance?: number | null;
+        };
         /** IntentCandidate */
         IntentCandidate: {
             /** Intent */
@@ -3424,6 +3626,13 @@ export interface components {
         OperationResult: {
             /** Ok */
             ok: boolean;
+        };
+        /** OverallROI */
+        OverallROI: {
+            /** Response Time Improvement */
+            response_time_improvement: number;
+            /** Engagement Increase */
+            engagement_increase: number;
         };
         /**
          * Permission
@@ -3659,6 +3868,19 @@ export interface components {
             /** Persona Id */
             persona_id?: number | null;
             data: components["schemas"]["PersonaUpdate"];
+        };
+        /** PhaseItem */
+        PhaseItem: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Status */
+            status: string;
+            /** Progress */
+            progress: number;
+            /** Features */
+            features: string[];
         };
         /** PlatformAccountCreate */
         PlatformAccountCreate: {
@@ -6046,6 +6268,181 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    bff_playbook_dashboard_overview_api_bff_playbooks_dashboard_overview_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+                include_logs?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOverviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_dashboard_event_chain_api_bff_playbooks_dashboard_event_chain_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+                include_logs?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardEventChainResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_dashboard_performance_api_bff_playbooks_dashboard_performance_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+                include_logs?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardPerformanceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_dashboard_insights_api_bff_playbooks_dashboard_insights_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+                include_logs?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardInsightsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_dashboard_recommendations_api_bff_playbooks_dashboard_recommendations_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+                include_logs?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardRecommendationsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

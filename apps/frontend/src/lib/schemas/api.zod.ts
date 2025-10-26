@@ -1078,6 +1078,169 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
 
 
 /**
+ * Get overview metrics for playbook dashboard
+ * @summary Get Dashboard Overview Data
+ */
+export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryIncludeLogsDefault = false;
+
+export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryParams = zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
+})
+
+export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetResponseHourlyActivityItemSyncMetricsDefault = 0;export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetResponseHourlyActivityItemScheduleDefault = 0;
+
+export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetResponse = zod.object({
+  "total_logs": zod.number(),
+  "success_rate": zod.number(),
+  "hourly_activity": zod.array(zod.object({
+  "hour": zod.string(),
+  "total": zod.number(),
+  "sync_metrics": zod.union([zod.number(),zod.null()]).optional(),
+  "schedule": zod.union([zod.number(),zod.null()]).optional()
+}))
+})
+
+
+/**
+ * Get event chain analysis for playbook dashboard
+ * @summary Get Dashboard Event Chain Data
+ */
+export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryIncludeLogsDefault = false;
+
+export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryParams = zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
+})
+
+export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetResponse = zod.object({
+  "event_types": zod.array(zod.object({
+  "name": zod.string(),
+  "value": zod.number()
+})),
+  "avg_sync_interval_seconds": zod.number(),
+  "latest_kpi": zod.union([zod.record(zod.string(), zod.number()),zod.null()]).optional()
+})
+
+
+/**
+ * Get performance metrics for playbook dashboard
+ * @summary Get Dashboard Performance Data
+ */
+export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryIncludeLogsDefault = false;
+
+export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryParams = zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
+})
+
+export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetResponse = zod.object({
+  "success_rate": zod.number(),
+  "failure_rate": zod.number(),
+  "action_stats": zod.record(zod.string(), zod.object({
+  "total": zod.number(),
+  "success": zod.number(),
+  "rate": zod.number()
+}))
+})
+
+
+/**
+ * Get insights data for playbook dashboard
+ * @summary Get Dashboard Insights Data
+ */
+export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryIncludeLogsDefault = false;
+
+export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryParams = zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
+})
+
+export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetResponse = zod.object({
+  "persona_name": zod.string(),
+  "creator": zod.object({
+  "engagement_improvement": zod.number(),
+  "optimal_time": zod.string(),
+  "consistency_score": zod.number(),
+  "response_time_reduction": zod.union([zod.number(),zod.null()]).optional(),
+  "automation_rate": zod.union([zod.number(),zod.null()]).optional(),
+  "monitoring_coverage": zod.union([zod.number(),zod.null()]).optional(),
+  "policy_compliance": zod.union([zod.number(),zod.null()]).optional(),
+  "tone_consistency": zod.union([zod.number(),zod.null()]).optional(),
+  "quality_assurance": zod.union([zod.number(),zod.null()]).optional()
+}),
+  "manager": zod.object({
+  "engagement_improvement": zod.number(),
+  "optimal_time": zod.string(),
+  "consistency_score": zod.number(),
+  "response_time_reduction": zod.union([zod.number(),zod.null()]).optional(),
+  "automation_rate": zod.union([zod.number(),zod.null()]).optional(),
+  "monitoring_coverage": zod.union([zod.number(),zod.null()]).optional(),
+  "policy_compliance": zod.union([zod.number(),zod.null()]).optional(),
+  "tone_consistency": zod.union([zod.number(),zod.null()]).optional(),
+  "quality_assurance": zod.union([zod.number(),zod.null()]).optional()
+}),
+  "brand": zod.object({
+  "engagement_improvement": zod.number(),
+  "optimal_time": zod.string(),
+  "consistency_score": zod.number(),
+  "response_time_reduction": zod.union([zod.number(),zod.null()]).optional(),
+  "automation_rate": zod.union([zod.number(),zod.null()]).optional(),
+  "monitoring_coverage": zod.union([zod.number(),zod.null()]).optional(),
+  "policy_compliance": zod.union([zod.number(),zod.null()]).optional(),
+  "tone_consistency": zod.union([zod.number(),zod.null()]).optional(),
+  "quality_assurance": zod.union([zod.number(),zod.null()]).optional()
+}),
+  "overall_roi": zod.object({
+  "response_time_improvement": zod.number(),
+  "engagement_increase": zod.number()
+})
+})
+
+
+/**
+ * Get recommendations for playbook dashboard
+ * @summary Get Dashboard Recommendations Data
+ */
+export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryIncludeLogsDefault = false;
+
+export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryParams = zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
+})
+
+export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetResponse = zod.object({
+  "phases": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "status": zod.string(),
+  "progress": zod.number(),
+  "features": zod.array(zod.string())
+})),
+  "overall_roi": zod.object({
+  "response_time_improvement": zod.number(),
+  "engagement_increase": zod.number()
+}),
+  "dynamic_recommendations": zod.array(zod.string())
+})
+
+
+/**
  * List my playbooks with optional filtering.
  * @summary List Playbooks
  */

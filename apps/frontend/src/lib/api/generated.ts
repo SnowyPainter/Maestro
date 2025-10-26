@@ -240,6 +240,12 @@ export const ABTestWinnerEnum = {
   B: 'B',
 } as const;
 
+export interface ActionStatsItem {
+  total: number;
+  success: number;
+  rate: number;
+}
+
 export type Aggregation = typeof Aggregation[keyof typeof Aggregation];
 
 
@@ -565,6 +571,44 @@ export interface CoworkerTaskInfo {
   info?: CoworkerTaskInfoInfo;
 }
 
+export type DashboardEventChainResponseLatestKpiAnyOf = {[key: string]: number};
+
+export type DashboardEventChainResponseLatestKpi = DashboardEventChainResponseLatestKpiAnyOf | null;
+
+export interface DashboardEventChainResponse {
+  event_types: EventTypeItem[];
+  avg_sync_interval_seconds: number;
+  latest_kpi?: DashboardEventChainResponseLatestKpi;
+}
+
+export interface DashboardInsightsResponse {
+  persona_name: string;
+  creator: InsightsMetrics;
+  manager: InsightsMetrics;
+  brand: InsightsMetrics;
+  overall_roi: OverallROI;
+}
+
+export interface DashboardOverviewResponse {
+  total_logs: number;
+  success_rate: number;
+  hourly_activity: HourlyActivityItem[];
+}
+
+export type DashboardPerformanceResponseActionStats = {[key: string]: ActionStatsItem};
+
+export interface DashboardPerformanceResponse {
+  success_rate: number;
+  failure_rate: number;
+  action_stats: DashboardPerformanceResponseActionStats;
+}
+
+export interface DashboardRecommendationsResponse {
+  phases: PhaseItem[];
+  overall_roi: OverallROI;
+  dynamic_recommendations: string[];
+}
+
 export interface DateRange {
   start: string;
   end: string;
@@ -813,6 +857,11 @@ export interface EnrichedPostPublicationOut {
   campaign_id?: EnrichedPostPublicationOutCampaignId;
 }
 
+export interface EventTypeItem {
+  name: string;
+  value: number;
+}
+
 export type FileInfoDraftId = number | null;
 
 export interface FileInfo {
@@ -886,6 +935,17 @@ export interface GenerateTextResponse {
 
 export interface HTTPValidationError {
   detail?: ValidationError[];
+}
+
+export type HourlyActivityItemSyncMetrics = number | null;
+
+export type HourlyActivityItemSchedule = number | null;
+
+export interface HourlyActivityItem {
+  hour: string;
+  total: number;
+  sync_metrics?: HourlyActivityItemSyncMetrics;
+  schedule?: HourlyActivityItemSchedule;
 }
 
 export interface InsightCommentList {
@@ -1000,6 +1060,30 @@ export const InsightSource = {
   poll: 'poll',
   manual: 'manual',
 } as const;
+
+export type InsightsMetricsResponseTimeReduction = number | null;
+
+export type InsightsMetricsAutomationRate = number | null;
+
+export type InsightsMetricsMonitoringCoverage = number | null;
+
+export type InsightsMetricsPolicyCompliance = number | null;
+
+export type InsightsMetricsToneConsistency = number | null;
+
+export type InsightsMetricsQualityAssurance = number | null;
+
+export interface InsightsMetrics {
+  engagement_improvement: number;
+  optimal_time: string;
+  consistency_score: number;
+  response_time_reduction?: InsightsMetricsResponseTimeReduction;
+  automation_rate?: InsightsMetricsAutomationRate;
+  monitoring_coverage?: InsightsMetricsMonitoringCoverage;
+  policy_compliance?: InsightsMetricsPolicyCompliance;
+  tone_consistency?: InsightsMetricsToneConsistency;
+  quality_assurance?: InsightsMetricsQualityAssurance;
+}
 
 export interface IntentCandidate {
   intent: string;
@@ -1118,6 +1202,11 @@ export interface OAuthStartResponse {
 
 export interface OperationResult {
   ok: boolean;
+}
+
+export interface OverallROI {
+  response_time_improvement: number;
+  engagement_increase: number;
 }
 
 export type Permission = typeof Permission[keyof typeof Permission];
@@ -1358,6 +1447,14 @@ export type PersonaUpdateCommandPersonaId = number | null;
 export interface PersonaUpdateCommand {
   persona_id?: PersonaUpdateCommandPersonaId;
   data: PersonaUpdate;
+}
+
+export interface PhaseItem {
+  id: number;
+  title: string;
+  status: string;
+  progress: number;
+  features: string[];
 }
 
 export type PlatformAccountCreateOwnerUserId = number | null;
@@ -2594,6 +2691,61 @@ offset?: number;
 export type BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams = {
 persona_account_id?: number | null;
 limit?: number;
+};
+
+export type BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
+include_logs?: boolean;
+};
+
+export type BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
+include_logs?: boolean;
+};
+
+export type BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
+include_logs?: boolean;
+};
+
+export type BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
+include_logs?: boolean;
+};
+
+export type BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
+include_logs?: boolean;
 };
 
 export type BffPlaybookListPlaybooksApiBffPlaybooksGetParams = {
@@ -5490,6 +5642,456 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffMeReadMeApiBffMeGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get overview metrics for playbook dashboard
+ * @summary Get Dashboard Overview Data
+ */
+export const bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet = (
+    params?: BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DashboardOverviewResponse>(
+      {url: `/api/bff/playbooks/dashboard/overview`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryKey = (params?: BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams,) => {
+    return [`/api/bff/playbooks/dashboard/overview`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError = HTTPValidationError>(params?: BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>> = ({ signal }) => bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>>
+export type BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Dashboard Overview Data
+ */
+
+export function useBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get event chain analysis for playbook dashboard
+ * @summary Get Dashboard Event Chain Data
+ */
+export const bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet = (
+    params?: BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DashboardEventChainResponse>(
+      {url: `/api/bff/playbooks/dashboard/event-chain`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryKey = (params?: BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams,) => {
+    return [`/api/bff/playbooks/dashboard/event-chain`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError = HTTPValidationError>(params?: BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>> = ({ signal }) => bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>>
+export type BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Dashboard Event Chain Data
+ */
+
+export function useBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookDashboardEventChainApiBffPlaybooksDashboardEventChainGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get performance metrics for playbook dashboard
+ * @summary Get Dashboard Performance Data
+ */
+export const bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet = (
+    params?: BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DashboardPerformanceResponse>(
+      {url: `/api/bff/playbooks/dashboard/performance`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryKey = (params?: BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams,) => {
+    return [`/api/bff/playbooks/dashboard/performance`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError = HTTPValidationError>(params?: BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>> = ({ signal }) => bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>>
+export type BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Dashboard Performance Data
+ */
+
+export function useBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookDashboardPerformanceApiBffPlaybooksDashboardPerformanceGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get insights data for playbook dashboard
+ * @summary Get Dashboard Insights Data
+ */
+export const bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet = (
+    params?: BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DashboardInsightsResponse>(
+      {url: `/api/bff/playbooks/dashboard/insights`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryKey = (params?: BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams,) => {
+    return [`/api/bff/playbooks/dashboard/insights`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError = HTTPValidationError>(params?: BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>> = ({ signal }) => bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>>
+export type BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Dashboard Insights Data
+ */
+
+export function useBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookDashboardInsightsApiBffPlaybooksDashboardInsightsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get recommendations for playbook dashboard
+ * @summary Get Dashboard Recommendations Data
+ */
+export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet = (
+    params?: BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DashboardRecommendationsResponse>(
+      {url: `/api/bff/playbooks/dashboard/recommendations`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryKey = (params?: BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams,) => {
+    return [`/api/bff/playbooks/dashboard/recommendations`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError = HTTPValidationError>(params?: BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>> = ({ signal }) => bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>>
+export type BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Dashboard Recommendations Data
+ */
+
+export function useBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Clock, Palette, Hash } from "lucide-react";
 import { useContextRegistryStore } from "@/store/chat-context-registry";
 
-export function PlaybookList({ onSelectPlaybook }: { onSelectPlaybook: (playbookId: number) => void }) {
+export function PlaybookList({
+  onSelectPlaybook,
+  onAnalyzePlaybook
+}: {
+  onSelectPlaybook: (playbookId: number) => void;
+  onAnalyzePlaybook?: (playbookId: number) => void;
+}) {
   const { data: playbooks, isLoading, isError } = useBffPlaybookListPlaybooksApiBffPlaybooksGet();
   const [isExpanded, setIsExpanded] = useState(false);
   const registerEmission = useContextRegistryStore((state) => state.registerEmission);
@@ -97,13 +103,23 @@ export function PlaybookList({ onSelectPlaybook }: { onSelectPlaybook: (playbook
                             )}
                         </div>
 
-                        <Button
-                            size="sm"
-                            onClick={() => onSelectPlaybook(playbook.id)}
-                            className="ml-4 shrink-0"
-                        >
-                            Select
-                        </Button>
+                        <div className="flex gap-2 ml-4 shrink-0">
+                            <Button
+                                size="sm"
+                                onClick={() => onSelectPlaybook(playbook.id)}
+                            >
+                                Select
+                            </Button>
+                            {onAnalyzePlaybook && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => onAnalyzePlaybook(playbook.id)}
+                                >
+                                    Analyze
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             ))}

@@ -48,6 +48,7 @@ import ABTestDetail from "@/entities/abtests/components/ABTestDetail";
 import PostPublicationList from "@/entities/post-publications/components/PostPublicationList";
 import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
 import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
+import { PlaybookAnalysisDashboard } from "@/entities/playbooks/components/PlaybookAnalysisDashboard";
 import { PlaybookToolCard } from "@/features/playbooks/components/PlaybookToolCard";
 import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
 import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
@@ -600,6 +601,15 @@ export function useChatPageEvents() {
     ));
   }, [addCardMessage, handleCardDelete, removeMessage]);
 
+  const handlePlaybookAnalyze = useCallback<EntitySelectHandler>((playbookId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addCardMessage(messageId => (
+      <PlaybookAnalysisDashboard playbookId={playbookId} />
+    ));
+  }, [addCardMessage, removeMessage]);
+
   const handleSelectPlaybook = useCallback(() => {
     removeMessagesByComponent(PlaybookToolCard);
     removeMessagesByComponent(PlaybookList);
@@ -610,10 +620,11 @@ export function useChatPageEvents() {
       content: (
         <PlaybookList
           onSelectPlaybook={playbookId => handlePlaybookSelect(playbookId, messageId)}
+          onAnalyzePlaybook={playbookId => handlePlaybookAnalyze(playbookId, messageId)}
         />
       ),
     });
-  }, [appendMessage, getNextMessageId, handlePlaybookSelect, removeMessagesByComponent]);
+  }, [appendMessage, getNextMessageId, handlePlaybookSelect, handlePlaybookAnalyze, removeMessagesByComponent]);
 
   // Reactive 핸들러들
   const handleReactiveRuleSelect = useCallback<EntitySelectHandler>((ruleId, sourceMessageId) => {
