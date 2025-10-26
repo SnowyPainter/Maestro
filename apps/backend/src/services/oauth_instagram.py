@@ -16,7 +16,7 @@ from apps.backend.src.services.oauth.base import (
 INSTAGRAM_OAUTH_CONFIG = OAuthProviderConfig(
     authorize_url="https://www.instagram.com/oauth/authorize",
     token_url="https://api.instagram.com/oauth/access_token",
-    profile_url="https://graph.instagram.com/v23.0/me",
+    profile_url="https://graph.instagram.com/v24.0/me",
     default_scopes=[
         "instagram_business_basic",
         "instagram_business_manage_messages",
@@ -30,8 +30,8 @@ INSTAGRAM_OAUTH_CONFIG = OAuthProviderConfig(
 class InstagramOAuthProvider(BaseOAuthProvider):
     provider_name = "instagram"
 
-    _LONG_LIVED_TOKEN_URL = "https://graph.instagram.com/v23.0/access_token"
-    _LONG_LIVED_REFRESH_URL = "https://graph.instagram.com/v23.0/refresh_access_token"
+    _LONG_LIVED_TOKEN_URL = "https://graph.instagram.com/v24.0/access_token"
+    _LONG_LIVED_REFRESH_URL = "https://graph.instagram.com/v24.0/refresh_access_token"
     _LONG_LIVED_EXCHANGE_GRANT = "ig_exchange_token"
     _LONG_LIVED_REFRESH_GRANT = "ig_refresh_token"
 
