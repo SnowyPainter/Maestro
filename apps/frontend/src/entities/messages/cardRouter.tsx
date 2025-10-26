@@ -174,10 +174,10 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
   }
 
   // Playbook 관련 특수 처리
-  if (card_type === 'playbook.detail' && data?.id) {
+  if (card_type === 'playbook.detail' && data && typeof data === 'object' && 'playbook' in data && data.playbook && typeof data.playbook === 'object' && 'id' in data.playbook && data.playbook.id) {
     return (
       <PlaybookDetail
-        playbookId={data.id as number}
+        playbookId={data.playbook.id as number}
         onDelete={() => callbacks.onRemoveMessage?.(messageId)}
       />
     );
