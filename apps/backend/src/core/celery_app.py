@@ -88,7 +88,7 @@ beat_schedule["ensure_coworker_polls"] = {
 
 beat_schedule["ingest_reactive_comments"] = {
     "task": "apps.backend.src.workers.CoWorker.ingest_comments.ingest_reactive_comments",
-    "schedule": timedelta(seconds=60*5),
+    "schedule": timedelta(seconds=60),
     "options": {"queue": "coworker"},
 }
 

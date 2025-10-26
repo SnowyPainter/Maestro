@@ -341,8 +341,11 @@ def reactive_reply_to_comment(
         if platform_account.external_id:
             credentials["threads_user_id"] = platform_account.external_id
             credentials["user_id"] = platform_account.external_id
+        if platform_account.handle:
+            credentials["handle"] = platform_account.handle
 
-        if comment.platform not in (PlatformKind.THREADS,):
+        supported_platforms = (PlatformKind.THREADS, PlatformKind.INSTAGRAM)
+        if comment.platform not in supported_platforms:
             _mark_reaction_log(
                 session,
                 log=log,

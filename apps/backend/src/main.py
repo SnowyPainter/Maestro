@@ -75,10 +75,13 @@ async def reset_db():
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         """
         #await conn.execute(text("DROP TABLE IF EXISTS coworker_leases CASCADE"))
-        await conn.execute(text("DELETE FROM insight_comments"))
-        
+        #await conn.execute(text("DELETE FROM insight_comments"))
+
+        # Clean up SKIPPED and FAILED reaction action logs
+        await conn.execute(text("DELETE FROM reaction_action_logs WHERE status IN ('SKIPPED', 'FAILED')"))
+
         await conn.run_sync(Base.metadata.create_all)
-        
+
     return {"ok": True}
 
 # 최종적으로 app에 붙이기

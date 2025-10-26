@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet, useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet, useBffDraftsListPostPublicationsEnrichedApiBffDraftsPostPublicationsEnrichedPost } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,9 @@ import {
   Eye,
   Edit,
   Tag,
-  Zap
+  Zap,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { ReactionRuleStatus, ReactionActionType } from "@/lib/api/generated";
 import { usePersonaContextStore } from "@/store/persona-context";
@@ -36,6 +38,7 @@ export function RuleDetailCard({
 }: RuleDetailCardProps) {
   const { personaAccountId } = usePersonaContextStore();
   const { registerEmission } = useContextRegistryStore();
+  const [showAllPublications, setShowAllPublications] = useState(false);
 
   const { data: rule, isLoading: ruleLoading, error: ruleError } = useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet(ruleId);
   const { data: links, isLoading: linksLoading } = useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet(ruleId);
@@ -326,54 +329,78 @@ export function RuleDetailCard({
           {linksLoading || publicationsQuery.isPending ? (
             <Skeleton className="h-16 w-full" />
           ) : links && links.length > 0 ? (
-            <div className="space-y-2">
-              {links.map((link) => {
-                const publication = publications.find(pub => pub.id === link.post_publication_id);
-                return (
-                  <div
-                    key={link.id}
-                    className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        {publication ? publication.variant_content?.substring(0, 70) + "..." || `Publication ${publication.id}` : `Publication ID: ${link.post_publication_id}`}
-                      </div>
-                      {publication && (
-                        <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {publication.platform}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {publication.status}
-                          </Badge>
+            <>
+              <div className="space-y-2">
+                {links.slice(0, showAllPublications ? links.length : 2).map((link) => {
+                  const publication = publications.find(pub => pub.id === link.post_publication_id);
+                  return (
+                    <div
+                      key={link.id}
+                      className="flex items-start justify-between p-3 bg-muted/50 rounded-lg"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">
+                          {publication ? publication.variant_content?.substring(0, 70) + "..." || `Publication ${publication.id}` : `Publication ID: ${link.post_publication_id}`}
                         </div>
-                      )}
-                      <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                        <span>Priority: {link.priority}</span>
-                        {link.active_from && (
-                          <>
-                            <span>•</span>
-                            <Calendar className="h-3 w-3" />
-                            <span>From {new Date(link.active_from).toLocaleDateString()}</span>
-                          </>
+                        {publication && (
+                          <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {publication.platform}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {publication.status}
+                            </Badge>
+                          </div>
                         )}
-                        {link.active_until && (
-                          <>
-                            <span>•</span>
-                            <span>To {new Date(link.active_until).toLocaleDateString()}</span>
-                          </>
-                        )}
-                        {link.is_active ? (
-                          <CheckCircle className="h-3 w-3 text-green-500" />
-                        ) : (
-                          <XCircle className="h-3 w-3 text-red-500" />
-                        )}
+                        <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                          <span>Priority: {link.priority}</span>
+                          {link.active_from && (
+                            <>
+                              <span>•</span>
+                              <Calendar className="h-3 w-3" />
+                              <span>From {new Date(link.active_from).toLocaleDateString()}</span>
+                            </>
+                          )}
+                          {link.active_until && (
+                            <>
+                              <span>•</span>
+                              <span>To {new Date(link.active_until).toLocaleDateString()}</span>
+                            </>
+                          )}
+                          {link.is_active ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <XCircle className="h-3 w-3 text-red-500" />
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              {links.length > 2 && (
+                <div className="mt-3 text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAllPublications(!showAllPublications)}
+                    className="text-xs"
+                  >
+                    {showAllPublications ? (
+                      <>
+                        <ChevronUp className="h-3 w-3 mr-1" />
+                        Show Less ({links.length - 2} hidden)
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3 mr-1" />
+                        Show More ({links.length - 2} more)
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-6 text-muted-foreground">
               <Link className="h-8 w-8 mx-auto mb-2 opacity-50" />

@@ -7,7 +7,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from apps.backend.src.core.celery_app import celery_app
 from apps.backend.src.core.db import SessionLocal
@@ -29,6 +29,10 @@ from apps.backend.src.workers.Adapter.tasks import (
     reactive_send_dm,
 )
 
+import logging
+from apps.backend.src.core.logging import setup_logging
+
+setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -46,7 +50,10 @@ async def _load_recent_comments(
         select(InsightComment)
         .where(
             InsightComment.ingested_at >= cutoff,
-            InsightComment.is_owned_by_me.is_(False),
+            or_(
+                InsightComment.is_owned_by_me.is_(False),
+                InsightComment.is_owned_by_me.is_(None),
+            ),
             InsightComment.text.is_not(None),
         )
         .order_by(InsightComment.ingested_at.asc())
@@ -61,18 +68,39 @@ async def _load_template(
     template_id: Optional[int],
     *,
     persona_account_id: Optional[int],
+    allow_cross_persona: bool = True,
 ) -> Optional[ReactionMessageTemplate]:
     if not template_id:
         return None
     template = await session.get(ReactionMessageTemplate, template_id)
-    if template is None or not template.is_active:
+    if template is None:
+        logger.warning(
+            "Reaction template %s not found (persona_account_id=%s)",
+            template_id,
+            persona_account_id,
+        )
         return None
-    if (
-        template.persona_account_id
-        and persona_account_id
-        and template.persona_account_id != persona_account_id
-    ):
+    if not template.is_active:
+        logger.warning(
+            "Reaction template %s inactive (persona_account_id=%s, template_persona_id=%s)",
+            template_id,
+            persona_account_id,
+            template.persona_account_id,
+        )
         return None
+    if not allow_cross_persona:
+        if (
+            template.persona_account_id
+            and persona_account_id
+            and template.persona_account_id != persona_account_id
+        ):
+            logger.warning(
+                "Reaction template %s persona mismatch (expected=%s, got=%s)",
+                template_id,
+                template.persona_account_id,
+                persona_account_id,
+            )
+            return None
     return template
 
 
@@ -108,6 +136,10 @@ async def _process_action(
 ) -> Tuple[int, int]:
     dispatch_count = 0
     alert_count = 0
+
+    logger.info(f"Processing action: {action.reaction_rule_id}, {action.tag_key}, Reply Template ID: {action.reply_template_id}, DM Template ID: {action.dm_template_id}, Alert Enabled: {action.alert_enabled}")
+    logger.info(f"Comment: {comment}, Account Persona ID: {comment.account_persona_id}, Comment External ID: {comment.comment_external_id}, Author ID: {comment.author_id}")
+
     # Reply automation
     if action.reply_template_id and comment.comment_external_id and comment.account_persona_id:
         logger.info(f"Processing reply action for comment {comment.id}")
@@ -253,6 +285,18 @@ async def _process_comment(session, comment: InsightComment) -> Dict[str, int]:
         comment=comment,
         owner_user_id=comment.owner_user_id,
     )
+
+    logger.info(f"Evaluation: {evaluation}")
+    logger.info(f"Evaluation actions: {len(evaluation.actions)}")
+    logger.info(f"Evaluation matched tags: {evaluation.matched_tags}")
+    logger.info(f"Evaluation comment id: {evaluation.comment_id}")
+    logger.info(f"Evaluation actions: {evaluation.actions}")
+    logger.info(f"Evaluation matched tags: {evaluation.matched_tags}")
+    logger.info(f"Evaluation comment id: {evaluation.comment_id}")
+    logger.info(f"Evaluation actions: {evaluation.actions}")
+    logger.info(f"Evaluation matched tags: {evaluation.matched_tags}")
+    logger.info(f"Evaluation comment id: {evaluation.comment_id}")
+    
     if not evaluation.actions:
         return stats
     logger.info(f"Evaluation actions: {len(evaluation.actions)}")
