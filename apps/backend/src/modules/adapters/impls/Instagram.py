@@ -39,6 +39,11 @@ from apps.backend.src.services.http_clients import ASYNC_FETCH
 from apps.backend.src.services.storage import ensure_public_media_url
 from apps.backend.src.modules.files.image_utils import normalize_instagram_images
 
+from apps.backend.src.core.logging import setup_logging
+setup_logging()
+import logging
+
+logger = logging.getLogger(__name__)
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
@@ -51,7 +56,7 @@ class InstagramAdapter(CapabilityAdapter[SpecCompiler]):
         self,
         *,
         http_client: httpx.AsyncClient | None = None,
-        base_url: str = "https://graph.instagram.com/v24.0",
+        base_url: str = "https://graph.instagram.com/v23.0",
     ) -> None:
         http = http_client or ASYNC_FETCH
         context = InstagramContext(http=http, base_url=base_url)
@@ -310,16 +315,31 @@ class InstagramMetricsCapability(InstagramCapabilityBase, MetricsCapability):
             )
 
         media_type = media_details.get("media_type")
-        metrics_list = determine_metrics_for_media(media_type)
+        desired_metrics = determine_metrics_for_media(media_type)
 
         insights: Dict[str, Any] = {}
         warnings: List[str] = []
 
-        if metrics_list:
+        if desired_metrics:
+            metrics_query = ",".join(desired_metrics)
             try:
-                insights = await client.fetch_metrics(media_id=external_id, metrics=metrics_list)
+                insights = await client.fetch_metrics(media_id=external_id, metrics=metrics_query)
             except InstagramAPIError as exc:
-                warnings.append(exc.as_message())
+                fallback_metrics = parse_allowed_metrics_from_error(exc.as_message())
+                if not fallback_metrics:
+                    fallback_metrics = compute_fallback_metrics(desired_metrics, exc.as_message())
+                if fallback_metrics:
+                    try:
+                        insights = await client.fetch_metrics(media_id=external_id, metrics=",".join(fallback_metrics))
+                    except InstagramAPIError as retry_exc:
+                        warnings.append(retry_exc.as_message())
+                    else:
+                        warnings.append(
+                            "instagram metrics fetched with fallback set: "
+                            + ",".join(fallback_metrics)
+                        )
+                else:
+                    warnings.append(exc.as_message())
 
         metrics = parse_instagram_metrics(insights, media_details)
         content_kind = map_media_type_to_content_kind(media_type)
@@ -455,7 +475,7 @@ class InstagramCommentReadCapability(InstagramCapabilityBase, CommentReadCapabil
                 warnings=[],
             )
 
-        limit = None
+        limit = 100
         cursor = None
         if isinstance(options, dict):
             raw_limit = options.get("limit")
@@ -489,6 +509,25 @@ class InstagramCommentReadCapability(InstagramCapabilityBase, CommentReadCapabil
         comments, parse_warnings = parse_comment_nodes(payload, parent_id=parent_external_id)
         warnings.extend(parse_warnings)
         next_cursor = extract_next_cursor(payload)
+        # Some media return an empty first page while providing a cursor; perform one best-effort follow-up page.
+        if not comments and next_cursor:
+            try:
+                follow_payload = await client.list_comments(
+                    media_id=parent_external_id,
+                    limit=limit,
+                    cursor=next_cursor,
+                )
+            except InstagramAPIError as exc:
+                warnings.append(f"instagram comment follow-up failed: {exc.as_message()}")
+            else:
+                next_comments, follow_warnings = parse_comment_nodes(
+                    follow_payload,
+                    parent_id=parent_external_id,
+                )
+                warnings.extend(follow_warnings)
+                if next_comments:
+                    comments.extend(next_comments)
+                    next_cursor = extract_next_cursor(follow_payload)
 
         return CommentListResult(
             ok=True,
@@ -615,7 +654,8 @@ class InstagramAPI:
         try:
             return await self._client.get_json(
                 str(comment_id),
-                params={"fields": "id,text,timestamp,username,permalink,like_count"},
+                # Instagram Graph API comments do not expose permalink; request supported fields only.
+                params={"fields": "id,text,timestamp,username,like_count"},
             )
         except GraphAPIError as exc:
             raise InstagramAPIError.from_graph_error(exc) from exc
@@ -624,19 +664,25 @@ class InstagramAPI:
         self,
         *,
         media_id: str,
-        limit: Optional[int] = None,
+        limit: Optional[int] = 100,
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {
-            "fields": "id,text,timestamp,username,permalink,like_count,replies.limit(25){id,text,timestamp,username,permalink,like_count}",
+            # The comment node schema omits permalink; request supported fields only plus replies in one call.
+            "fields": "id,text,username,timestamp,like_count", #replies.limit(25){id,text,username,timestamp,like_count}
+            # "filter": "stream",  # 실시간 필터 제거 - 모든 댓글 가져오기
+            #"order": "chronological",
         }
         if limit is not None:
             params["limit"] = str(limit)
         if cursor:
             params["after"] = cursor
         try:
-            return await self._client.get_json(f"{media_id}/comments", params=params)
+            response = await self._client.get_json(f"{media_id}/comments", params=params)
+            logger.debug(f"Instagram comments API response for {media_id}: {response}")
+            return response
         except GraphAPIError as exc:
+            logger.error(f"Instagram comments API error for {media_id}: {exc.as_message()}")
             raise InstagramAPIError.from_graph_error(exc) from exc
 
     async def send_message(
@@ -818,13 +864,67 @@ def extract_creation_id(payload: Dict[str, Any] | None) -> Optional[str]:
     return None
 
 
-def determine_metrics_for_media(media_type: Any) -> str:
+def determine_metrics_for_media(media_type: Any) -> List[str]:
     kind = (media_type or "").upper()
-    if kind in {"IMAGE", "CAROUSEL_ALBUM"}:
-        return "impressions,reach,engagement,saved"
+    base_metrics: List[str] = [
+        "reach",
+        "likes",
+        "comments",
+        "saved",
+        "shares",
+        "total_interactions",
+        "profile_activity",
+        "profile_visits",
+        "follows",
+    ]
     if kind in {"VIDEO", "REEL", "IGTV"}:
-        return "impressions,reach,engagement,saved,video_views"
-    return "impressions,reach,engagement,saved"
+        base_metrics.extend(
+            [
+                "plays",
+                "views",
+                "replies",
+                "ig_reels_video_view_total_time",
+                "ig_reels_avg_watch_time",
+                "clips_replays_count",
+                "ig_reels_aggregated_all_plays_count",
+                "reels_skip_rate",
+                "content_views",
+            ]
+        )
+    # Ensure order is preserved while removing duplicates.
+    seen: set[str] = set()
+    ordered_metrics: List[str] = []
+    for metric in base_metrics:
+        metric_key = metric.strip()
+        if metric_key and metric_key not in seen:
+            ordered_metrics.append(metric_key)
+            seen.add(metric_key)
+    return ordered_metrics
+
+
+def parse_allowed_metrics_from_error(message: str) -> List[str]:
+    if "following values:" not in message:
+        return []
+    allowed_segment = message.split("following values:", 1)[1]
+    # Trim trailing metadata like "(type=..., code=...)"
+    if "(" in allowed_segment:
+        allowed_segment = allowed_segment.split("(", 1)[0]
+    metrics = []
+    for part in allowed_segment.split(","):
+        candidate = part.strip()
+        if candidate:
+            metrics.append(candidate)
+    return metrics
+
+
+def compute_fallback_metrics(desired_metrics: List[str], message: str) -> List[str]:
+    lowercase_message = message.lower()
+    disallowed: set[str] = set()
+    for metric in desired_metrics:
+        needle = metric.lower()
+        if needle in lowercase_message:
+            disallowed.add(metric)
+    return [metric for metric in desired_metrics if metric not in disallowed]
 
 
 def parse_instagram_metrics(
@@ -886,6 +986,9 @@ def parse_comment_nodes(payload: Dict[str, Any] | None, *, parent_id: str) -> Tu
     data = payload.get("data")
     if not isinstance(data, list):
         return comments, warnings
+    if not data:
+        warnings.append("instagram comment list returned empty data")
+        return comments, warnings
 
     for item in data:
         parsed, node_warnings = _parse_comment_node(item, parent_id=parent_id)
@@ -925,8 +1028,18 @@ def _build_comment(node: Dict[str, Any], *, parent_id: str, warnings: List[str])
         warnings.append("instagram comment payload contained invalid node")
         return None
 
-    comment_id = node.get("id")
-    if not isinstance(comment_id, str) or not comment_id.strip():
+    comment_id_raw = node.get("id")
+    comment_id: Optional[str]
+    if isinstance(comment_id_raw, str):
+        comment_id = comment_id_raw.strip()
+    elif isinstance(comment_id_raw, int):
+        comment_id = str(comment_id_raw)
+    elif isinstance(comment_id_raw, float):
+        comment_id = format(comment_id_raw, ".0f")
+    else:
+        comment_id = None
+
+    if not comment_id:
         warnings.append("instagram comment missing id")
         return None
 
@@ -944,7 +1057,7 @@ def _build_comment(node: Dict[str, Any], *, parent_id: str, warnings: List[str])
             pass
 
     return Comment(
-        external_id=comment_id.strip(),
+        external_id=comment_id,
         parent_external_id=parent_id,
         author_id=None,
         author_username=username,

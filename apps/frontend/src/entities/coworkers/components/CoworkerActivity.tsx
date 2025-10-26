@@ -111,8 +111,8 @@ const DayScheduleList = ({
     schedules: ScheduleListItem[];
     onScheduleClick: (schedule: ScheduleListItem) => void;
 }) => (
-    <div className="space-y-2">
-        <ScrollArea className="h-80 pr-4">
+    <div className="space-y-2 flex-1 min-h-0">
+        <div className="max-h-96 overflow-y-auto pr-4">
             <div className="space-y-2">
                 {schedules.map(schedule => (
                     <div
@@ -121,7 +121,7 @@ const DayScheduleList = ({
                         onClick={() => onScheduleClick(schedule)}
                     >
                         <StatusDisplay status={schedule.status as ScheduleStatus} dueDate={parseUtcDate(schedule.due_at)} />
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 overflow-hidden">
                             <p className="text-sm font-medium truncate">
                                 {schedule.meta?.label || `Schedule #${schedule.id}`}
                             </p>
@@ -135,7 +135,7 @@ const DayScheduleList = ({
                     </div>
                 ))}
             </div>
-        </ScrollArea>
+        </div>
     </div>
 );
 
@@ -368,8 +368,8 @@ export const CoworkerActivity = ({ personaAccountIds }: { personaAccountIds: num
 
             {/* 날짜별 스케줄 목록 다이얼로그 */}
             <Dialog open={!!selectedDate && !selectedSchedule} onOpenChange={(isOpen) => !isOpen && setSelectedDate(null)}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
+                <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+                    <DialogHeader className="flex-shrink-0">
                         <DialogTitle className="text-lg">
                             {selectedDate && format(selectedDate, 'MMM d, yyyy')}
                         </DialogTitle>
@@ -389,7 +389,7 @@ export const CoworkerActivity = ({ personaAccountIds }: { personaAccountIds: num
 
             {/* 스케줄 상세 다이얼로그 */}
             <Dialog open={!!selectedSchedule} onOpenChange={(isOpen) => !isOpen && setSelectedSchedule(null)}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[85vh]">
                     <DialogHeader>
                         <DialogTitle>Schedule Details</DialogTitle>
                         <DialogDescription>
