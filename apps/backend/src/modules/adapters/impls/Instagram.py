@@ -82,7 +82,6 @@ class InstagramAdapter(CapabilityAdapter[SpecCompiler]):
             message_sender=message_sender,
         )
 
-
 # Context & credentials -------------------------------------------------------------------------
 @dataclass
 class InstagramContext:
@@ -689,7 +688,7 @@ class InstagramAPI:
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {
             # The comment node schema omits permalink; request supported fields only plus replies in one call.
-            "fields": "id,text,username,timestamp,like_count", #replies.limit(25){id,text,username,timestamp,like_count}
+            "fields": "id,text,username,timestamp,like_count,replies.limit(25){id,text,username,timestamp,like_count}",
             # "filter": "stream",  # 실시간 필터 제거 - 모든 댓글 가져오기
             #"order": "chronological",
         }
