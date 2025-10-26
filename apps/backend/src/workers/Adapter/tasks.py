@@ -408,11 +408,14 @@ def reactive_reply_to_comment(
             raise
 
         if result.ok:
-            payload = {
+            # 기존 payload를 유지하면서 실행 결과를 추가
+            payload = dict(log.payload or {})
+            payload.update({
                 "external_id": result.external_id,
                 "permalink": result.permalink,
-                "warnings": result.warnings,
-            }
+                "warnings": result.warnings or [],
+                "execution_timestamp": datetime.now(timezone.utc).isoformat(),
+            })
             _mark_reaction_log(
                 session,
                 log=log,
@@ -550,21 +553,19 @@ def reactive_send_dm(
             raise
 
         if isinstance(result, MessageSendResult):
-            base_payload = {
+            # 기존 payload를 유지하면서 실행 결과를 추가
+            base_payload = dict(log.payload or {})
+            base_payload.update({
                 "recipient_id": result.recipient_id,
                 "message_id": result.message_id,
-                "warnings": result.warnings,
-                "errors": result.errors,
+                "warnings": result.warnings or [],
+                "errors": result.errors or [],
                 "raw": result.raw,
                 "skipped": result.skipped,
                 "reason": result.reason,
-                "message": message,
-                "metadata": metadata,
-                "persona_account_id": persona_account_id,
-                "comment_external_id": comment_external_id,
-                "recipient_external_id": comment_external_id,
-                "recipient_author_id": recipient_author_id,
-            }
+                "execution_timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+
             if _is_dm_window_closed(result):
                 payload = {**base_payload, "window_closed": True}
                 _mark_reaction_log(

@@ -189,11 +189,40 @@ async def _process_action(
                 error="reply_template_unavailable",
             )
         else:
+            reply_message = template.body or ""
+            persona_directives = await _load_persona_directives(
+                session,
+                persona_account_id=comment.account_persona_id,
+            )
+            policy_summary: Dict[str, Any] = {}
+            policy_warnings: List[str] = []
+            if persona_directives:
+                try:
+                    reply_message, policy_summary, policy_warnings = apply_persona_policies_to_message(
+                        reply_message,
+                        directives=persona_directives,
+                    )
+                except Exception as exc:  # pragma: no cover - defensive
+                    policy_warnings.append(f"persona policy application failed: {exc}")
+
+            if policy_warnings:
+                logger.warning(
+                    "Reply persona policy warnings for comment %s: %s",
+                    comment.id,
+                    "; ".join(policy_warnings),
+                )
+
             payload = {
                 "template_id": template.id,
                 "template_title": template.title,
                 "mode": action.llm_mode.value,
                 "metadata": action.metadata,
+                "message": reply_message,
+                "recipient_external_id": comment.comment_external_id,
+                "comment_external_id": comment.comment_external_id,
+                "recipient_author_id": comment.author_id,
+                "persona_policy_summary": policy_summary or None,
+                "persona_policy_warnings": policy_warnings or None,
             }
             log_id = await _ensure_log(
                 session,
@@ -209,6 +238,15 @@ async def _process_action(
                 reply_metadata.setdefault("reply_to_comment_id", comment.comment_external_id)
                 if comment.parent_external_id:
                     reply_metadata.setdefault("parent_external_id", comment.parent_external_id)
+                if policy_summary:
+                    reply_metadata["persona_policy_summary"] = policy_summary
+                if policy_warnings:
+                    reply_metadata["persona_policy_warnings"] = policy_warnings
+                if comment.author_id:
+                    reply_metadata.setdefault("recipient_author_id", comment.author_id)
+                if comment.author_username:
+                    reply_metadata.setdefault("recipient_author_username", comment.author_username)
+
                 dispatch_queue.append(
                     (
                         "reply",
@@ -217,7 +255,7 @@ async def _process_action(
                             "persona_account_id": comment.account_persona_id,
                             "reaction_rule_id": action.reaction_rule_id,
                             "tag_key": action.tag_key,
-                            "message": template.body,
+                            "message": reply_message,
                             "metadata": reply_metadata,
                         },
                     )
@@ -321,23 +359,6 @@ async def _process_action(
                         dm_metadata.setdefault("recipient_author_id", comment.author_id)
                     if comment.author_username:
                         dm_metadata.setdefault("recipient_author_username", comment.author_username)
-
-                    logger.info(f"DM metadata: {dm_metadata}")
-                    logger.info(f"DM message: {dm_message}")
-                    logger.info(f"DM template: {template.id}, {template.title}, {template.body}")
-                    logger.info(f"DM persona directives: {persona_directives}")
-                    logger.info(f"DM policy summary: {policy_summary}")
-                    logger.info(f"DM policy warnings: {policy_warnings}")
-                    logger.info(f"DM action: {action.reaction_rule_id}, {action.tag_key}, {action.llm_mode.value}, {action.metadata}")
-                    logger.info(
-                        "DM comment: %s, %s, author_id=%s, author_username=%s, platform=%s, persona_account_id=%s",
-                        comment.id,
-                        comment.comment_external_id,
-                        comment.author_id,
-                        comment.author_username,
-                        comment.platform.value,
-                        comment.account_persona_id,
-                    )
 
                     dispatch_queue.append(
                         (

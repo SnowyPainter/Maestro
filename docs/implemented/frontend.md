@@ -270,7 +270,7 @@ src/
    - 사용자가 Draft 카드에서 Schedule 버튼 클릭
    - `upsert_post_publication_schedule`로 예약 시간 설정
    - CoWorker가 정시 자동 발행 → `usePublishDraftApiOrchestratorActionPublishPost`
-   - Adapter가 Threads Graph API 호출 → 실제 게시
+   - Adapter가 Threads/Instagram Graph API 호출 → 실제 게시
    - `post-publication.detail` 카드 반환 (permalink 포함)
 
 ### ⚡ 자동화 규칙 설정 및 모니터링 (Reactive) — **유즈케이스 중심**
@@ -282,7 +282,7 @@ src/
    - 게시물에 규칙 연결 (RulePublication)
 
 2. **실시간 모니터링**
-   - ActionLogCard에서 실행 결과 실시간 확인
+   - ActionLogCard에서 실행 결과 실시간 확인 (Threads/Instagram 모두 지원)
    - Payload JSON을 예쁘게 표시 (링크 클릭 가능)
    - Context Registry에 rule_id 자동 등록
 

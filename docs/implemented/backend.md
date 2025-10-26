@@ -125,7 +125,12 @@
 - **Compiler 시스템** — IR을 플랫폼 제약에 맞게 변환 (텍스트 길이, 미디어 개수 등)
 - **구현 현황:**
   - ✅ **Threads** — 완전 구현 (Meta Graph API v1.0)
-  - 🟡 **Instagram** — Placeholder (인터페이스만 구현)
+  - ✅ **Instagram** — 완전 구현 (Meta Graph API v23.0)
+    - **게시글 업로드**: 이미지/비디오/캐러셀 게시물 자동 업로드
+    - **댓글 자동 달기**: 게시물에 댓글 생성 및 대댓글 지원 (페르소나 정책 자동 적용)
+    - **인사이트 추적**: 도달 범위, 좋아요, 댓글, 저장, 공유, 조회수 등 실시간 메트릭 수집
+    - **댓글 자동 답변**: 게시물 댓글에 대한 자동 답글 기능 (템플릿 품질 페르소나 보장)
+    - **DM 자동 보내기**: 댓글 작성자에게 private reply (DM) 자동 전송 (링크 변환, 금칙어 필터링)
 
 ##### 🧪 **abtests** — A/B 테스트
 - Variant 간 성과 비교
@@ -142,6 +147,7 @@
 - **ReactionMessageTemplate** — 재사용 가능한 메시지 템플릿
 - **ReactionActionLog** — 자동화 실행 로그 및 상태 추적
 - **매 5분마다 Sync Metrics** — 댓글 수집 → 규칙 평가 → 자동 응답 실행
+- **템플릿 품질 보장**: 템플릿이 잘못되었어도 **페르소나가 항상 내용 보정** (link_policy, banned_words, extras 자동 적용)
 - **LLM 지원 모드** — 템플릿 전용(LLM도 염두에 두고 설계는 함)
 
 ##### ✉️ **mail** — 이메일 기반 자동화
@@ -265,7 +271,7 @@
    - 사용자가 Draft에서 Schedule 버튼 클릭
    - `upsert_post_publication_schedule`로 예약 발행 설정
    - CoWorker가 `execute_due_schedules`로 정시 자동 발행
-   - Adapter가 Threads Graph API 호출 → 실제 게시
+   - Adapter가 Threads/Instagram Graph API 호출 → 실제 게시
    - **Playbook에 완전한 기록**: 당시 트렌드, Campaign KPI, 페르소나 컨텍스트, LLM 입력/출력 모두 JSON 로그로 저장
 
 ### 🤖 CoWorker 자동 루틴 (AI의 독립적 판단 기록)
@@ -286,7 +292,8 @@
 2. **매 5분마다 자동 실행**
    - Synchro 워커가 댓글 수집 (Adapter → InsightComment)
    - Reactive 엔진이 키워드 매칭 → 태그 생성 → 액션 실행
-   - **결과**: DM 전송, 댓글 답장, Alert 생성
+   - **결과**: DM 전송, 댓글 답장, Alert 생성 (Threads/Instagram 모두 지원)
+   - **템플릿 품질 보장**: 템플릿 내용이 페르소나 정책에 따라 자동 보정 (링크 변환, 금칙어 필터링)
    - ReactionActionLog로 실행 결과 기록
 
 #### 🎯 **유즈케이스 2: 댓글 기반 후속 콘텐츠 생성**
@@ -330,7 +337,7 @@
 2. **판단의 복제** — 나와 CoWorker의 모든 행동을 완전하게 기록 (트렌드, KPI, 페르소나, LLM 컨텍스트)하여 브랜드 리듬을 기억하고 재현
 3. **결정론적 실행** — DAG 기반 추적 가능한 액션 체인
 4. **기억하는 자동화** — Trends RAG로 유사 인사이트 기반 학습
-5. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (1회 설정 → 영구 자동화)
+5. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (템플릿이 잘못되었어도 페르소나가 내용 보정)
 6. **플랫폼 중립성** — Adapter 패턴으로 확장 가능한 구조
 7. **프론트엔드 융화** — BFF + OpenAPI 자동 동기화로 타입 안전성 보장
 
@@ -354,7 +361,7 @@ pnpm dev:backend:and:frontend
 ## 📊 모델 통계
 - **총 모듈 개수:** 16+ (users, accounts, drafts, campaigns, playbooks, insights, scheduler, trends, adapters, abtests, injectors, mail, timeline, common, reactive)
 - **총 Worker 종류:** 4 (CoWorker, Sniffer, Synchro, Adapter)
-- **지원 플랫폼:** Threads (완전), Instagram (Placeholder)
+- **지원 플랫폼:** Threads (완전), Instagram (완전)
 - **데이터베이스 테이블:** 20+
 - **Celery 큐:** 5 (default, sniffer, synchro, adapter, coworker)
 - **RAG 구현:** Trends 벡터 검색 (pgvector)

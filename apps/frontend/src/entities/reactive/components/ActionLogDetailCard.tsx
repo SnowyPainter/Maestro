@@ -179,6 +179,282 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
     );
   };
 
+  const renderDMPayload = (payload: any) => {
+    const raw = payload.raw || {};
+    const comment = raw.comment || {};
+    const reply = raw.reply || {};
+    const metadata = payload.metadata || {};
+
+    return (
+      <div className="space-y-4">
+        {/* Original Comment */}
+        {comment.text && (
+          <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-blue-900 text-sm">Original Comment</span>
+              {comment.from?.username && (
+                <Badge variant="outline" className="text-xs">
+                  @{comment.from.username}
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-gray-700">{comment.text}</p>
+            {comment.timestamp && (
+              <p className="text-xs text-gray-500 mt-1">
+                {new Date(comment.timestamp).toLocaleString('ko-KR')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Sent DM Message */}
+        {payload.message && (
+          <div className="border-l-4 border-green-500 pl-4 bg-green-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare className="h-4 w-4 text-green-600" />
+              <span className="font-medium text-green-900 text-sm">Sent DM</span>
+              {reply.message_id && (
+                <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                  Delivered
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-gray-700 font-medium">{payload.message}</p>
+          </div>
+        )}
+
+        {/* Link Policy Info */}
+        {metadata.link_policy?.inline_link && (
+          <div className="border-l-4 border-purple-500 pl-4 bg-purple-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <ExternalLink className="h-4 w-4 text-purple-600" />
+              <span className="font-medium text-purple-900 text-sm">Link Processing</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <p className="text-gray-700">
+                <span className="font-medium">Strategy:</span> {metadata.link_policy.inline_link.strategy}
+              </p>
+              {metadata.link_policy.inline_link.replacement_text && (
+                <p className="text-gray-700">
+                  <span className="font-medium">Replacement:</span> "{metadata.link_policy.inline_link.replacement_text}"
+                </p>
+              )}
+              {metadata.link_policy.inline_link.processed_urls?.length > 0 && (
+                <div>
+                  <span className="font-medium text-gray-700">Processed URLs:</span>
+                  <div className="mt-1 space-y-1">
+                    {metadata.link_policy.inline_link.processed_urls.map((url: string, index: number) => (
+                      <a
+                        key={index}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline text-xs inline-flex items-center gap-1"
+                      >
+                        {url}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Warnings and Errors */}
+        {(payload.warnings?.length > 0 || payload.errors?.length > 0) && (
+          <div className="border-l-4 border-orange-500 pl-4 bg-orange-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-orange-600" />
+              <span className="font-medium text-orange-900 text-sm">Issues</span>
+            </div>
+            <div className="space-y-1">
+              {payload.warnings?.map((warning: string, index: number) => (
+                <p key={`warning-${index}`} className="text-sm text-orange-700">
+                  ⚠️ {warning}
+                </p>
+              ))}
+              {payload.errors?.map((error: string, index: number) => (
+                <p key={`error-${index}`} className="text-sm text-red-700">
+                  ❌ {error}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Technical Details (Collapsible) */}
+        <div className="border-t border-gray-200 pt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-gray-500 hover:text-gray-700"
+            onClick={() => setIsPayloadExpanded(!isPayloadExpanded)}
+          >
+            {isPayloadExpanded ? (
+              <>
+                <ChevronDown className="h-3 w-3 mr-1" />
+                Hide Technical Details
+              </>
+            ) : (
+              <>
+                <ChevronRight className="h-3 w-3 mr-1" />
+                Show Technical Details
+              </>
+            )}
+          </Button>
+          {isPayloadExpanded && (
+            <div className="mt-2 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="max-h-32 overflow-auto p-2 text-xs font-mono leading-tight">
+                {renderCompactJson(payload)}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderReplyPayload = (payload: any) => {
+    const raw = payload.raw || {};
+    const comment = raw.comment || {};
+    const reply = raw.reply || {};
+    const metadata = payload.metadata || {};
+
+    return (
+      <div className="space-y-4">
+        {/* Parent Comment Context */}
+        {comment.text && (
+          <div className="border-l-4 border-blue-500 pl-4 bg-blue-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-blue-900 text-sm">Parent Comment</span>
+              {comment.from?.username && (
+                <Badge variant="outline" className="text-xs">
+                  @{comment.from.username}
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-gray-700">{comment.text}</p>
+            {comment.timestamp && (
+              <p className="text-xs text-gray-500 mt-1">
+                {new Date(comment.timestamp).toLocaleString('ko-KR')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Posted Reply */}
+        {payload.message && (
+          <div className="border-l-4 border-green-500 pl-4 bg-green-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare className="h-4 w-4 text-green-600" />
+              <span className="font-medium text-green-900 text-sm">Posted Reply</span>
+              {reply.id && (
+                <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                  Posted
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-gray-700 font-medium">{payload.message}</p>
+          </div>
+        )}
+
+        {/* Link Policy Info */}
+        {metadata.link_policy?.inline_link && (
+          <div className="border-l-4 border-purple-500 pl-4 bg-purple-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <ExternalLink className="h-4 w-4 text-purple-600" />
+              <span className="font-medium text-purple-900 text-sm">Link Processing</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <p className="text-gray-700">
+                <span className="font-medium">Strategy:</span> {metadata.link_policy.inline_link.strategy}
+              </p>
+              {metadata.link_policy.inline_link.replacement_text && (
+                <p className="text-gray-700">
+                  <span className="font-medium">Replacement:</span> "{metadata.link_policy.inline_link.replacement_text}"
+                </p>
+              )}
+              {metadata.link_policy.inline_link.processed_urls?.length > 0 && (
+                <div>
+                  <span className="font-medium text-gray-700">Processed URLs:</span>
+                  <div className="mt-1 space-y-1">
+                    {metadata.link_policy.inline_link.processed_urls.map((url: string, index: number) => (
+                      <a
+                        key={index}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline text-xs inline-flex items-center gap-1"
+                      >
+                        {url}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Warnings and Errors */}
+        {(payload.warnings?.length > 0 || payload.errors?.length > 0) && (
+          <div className="border-l-4 border-orange-500 pl-4 bg-orange-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-orange-600" />
+              <span className="font-medium text-orange-900 text-sm">Issues</span>
+            </div>
+            <div className="space-y-1">
+              {payload.warnings?.map((warning: string, index: number) => (
+                <p key={`warning-${index}`} className="text-sm text-orange-700">
+                  ⚠️ {warning}
+                </p>
+              ))}
+              {payload.errors?.map((error: string, index: number) => (
+                <p key={`error-${index}`} className="text-sm text-red-700">
+                  ❌ {error}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Technical Details (Collapsible) */}
+        <div className="border-t border-gray-200 pt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-gray-500 hover:text-gray-700"
+            onClick={() => setIsPayloadExpanded(!isPayloadExpanded)}
+          >
+            {isPayloadExpanded ? (
+              <>
+                <ChevronDown className="h-3 w-3 mr-1" />
+                Hide Technical Details
+              </>
+            ) : (
+              <>
+                <ChevronRight className="h-3 w-3 mr-1" />
+                Show Technical Details
+              </>
+            )}
+          </Button>
+          {isPayloadExpanded && (
+            <div className="mt-2 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="max-h-32 overflow-auto p-2 text-xs font-mono leading-tight">
+                {renderCompactJson(payload)}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -287,29 +563,46 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
         {/* Payload Data */}
         {actionLog.payload && (
           <div>
-            <Button
-              variant="ghost"
-              className="w-full justify-between p-0 h-auto hover:bg-gray-50 mb-3"
-              onClick={() => setIsPayloadExpanded(!isPayloadExpanded)}
-            >
-              <h4 className="font-medium text-gray-900 text-left">Action Payload</h4>
-              {isPayloadExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500" />
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-gray-900">Action Details</h4>
+              {(actionLog.action_type === "dm" || actionLog.action_type === "reply") && (
+                <Badge variant="outline" className="text-xs">
+                  Enhanced View
+                </Badge>
               )}
-            </Button>
-            {isPayloadExpanded && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="max-h-32 overflow-auto p-2 text-xs font-mono leading-tight">
-                  {renderCompactJson(actionLog.payload)}
-                </div>
-                {JSON.stringify(actionLog.payload).length > 300 && (
-                  <div className="px-3 pb-2 text-xs text-gray-500 border-t border-gray-200 bg-gray-100">
-                    Long JSON data - scroll to see all
+            </div>
+
+            {actionLog.action_type === "dm" ? (
+              renderDMPayload(actionLog.payload)
+            ) : actionLog.action_type === "reply" ? (
+              renderReplyPayload(actionLog.payload)
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between p-0 h-auto hover:bg-gray-50 mb-3"
+                  onClick={() => setIsPayloadExpanded(!isPayloadExpanded)}
+                >
+                  <span className="font-medium text-gray-700 text-left">Raw Payload</span>
+                  {isPayloadExpanded ? (
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+                {isPayloadExpanded && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="max-h-32 overflow-auto p-2 text-xs font-mono leading-tight">
+                      {renderCompactJson(actionLog.payload)}
+                    </div>
+                    {JSON.stringify(actionLog.payload).length > 300 && (
+                      <div className="px-3 pb-2 text-xs text-gray-500 border-t border-gray-200 bg-gray-100">
+                        Long JSON data - scroll to see all
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         )}
