@@ -556,5 +556,79 @@
     "footer": {
       "text": "MAESTRO. 懂记忆的自动化。"
     }
+  },
+  "use_cases": {
+    "section_title": "Maestro 的实际运作方式",
+    "section_description": "从单一命令到全自动工作流，了解 Maestro 如何复制您的判断力。",
+    "tabs": {
+      "ai_creation": "AI 内容创作",
+      "community_management": "自动化社区管理",
+      "data_strategy": "数据驱动策略",
+      "scheduling": "智能排程",
+      "playbook": "品牌剧本"
+    },
+    "common": {
+      "user": "您",
+      "bot": "Maestro",
+      "card_title_draft": "生成的草稿",
+      "card_title_insight": "核心洞察",
+      "action_schedule": "排程",
+      "action_publish": "立即发布",
+      "action_edit": "编辑",
+      "replay_animation": "重播动画"
+    },
+    "ai_creation": {
+      "title": "基于趋势的 AI 内容创作",
+      "description": "Maestro 的嗅探器 (Sniffer) 检测市场趋势，然后 AI 会根据您品牌的 Persona 生成相关内容草稿。",
+      "chat": {
+        "user_message": "获取关于 #可持续生活 的热门趋势，并为 Instagram 创建一个新草稿。"
+      },
+      "draft_card": {
+        "platform": "Instagram",
+        "content": "可持续生活不仅是一种趋势，更是一种生活方式！🌿 我们的最新系列旨在让环保选择变得更简单。您本周做出了什么小改变？",
+        "hashtags": "#可持续生活 #环保 #绿色选择"
+      }
+    },
+    "community_management": {
+      "title": "自动化社区管理",
+      "description": "一次性设置规则，让 Maestro 处理重复性互动。反应引擎 (Reactive Engine) 会检测评论中的关键词并触发自动回复。",
+      "rule_card": {
+        "title": "自动化规则",
+        "if_label": "如果评论包含",
+        "keyword": "价格？",
+        "then_label": "则使用模板回复",
+        "template": "定价信息"
+      },
+      "interaction": {
+        "comment_author": "好奇的顾客",
+        "comment_text": "这看起来太棒了！多少钱？",
+        "bot_reply_author": "您的品牌 (通过 Maestro)",
+        "bot_reply_text": "感谢您的询问！您可以在我们的网站上找到所有定价详情：[链接]"
+      }
+    },
+    "data_strategy": {
+      "title": "数据驱动的内容策略",
+      "description": "Maestro 分析帖子表现和评论，为您的下一步行动提供可行的见解。",
+      "chat": {
+        "user_message": "分析上次活动帖子的评论，并起草一篇后续帖子。"
+      },
+      "insight_card": {
+        "themes_title": "热门评论主题",
+        "themes": "定价, 配送, 材料质量"
+      },
+      "draft_card": {
+        "platform": "Threads",
+        "content": "您问，我们听！我们看到了您关于材料和配送的问题。我们很自豪能使用 100% 有机棉并提供碳中和配送。透明度是关键！",
+        "hashtags": "#品牌背后 #可持续性"
+      }
+    },
+    "scheduling": {
+      "title": "智能排程",
+      "description": "Maestro 帮助您在最佳时间发布内容。安排您的帖子，让您的 CoWorker 处理剩下的事情，确保您的品牌保持一致的存在感。"
+    },
+    "playbook": {
+      "title": "品牌剧本",
+      "description": "每一个行动、决策和结果都记录在剧本中。这个品牌的活记忆确保了一致性，并为未来的判断提供数据。"
+    }
   }
 }

@@ -18,6 +18,7 @@ import { InsightSection } from './components/v2/InsightSection';
 import { PhilosophySection } from './components/v2/PhilosophySection';
 import { TestimonialsSection } from './components/v2/TestimonialsSection';
 import { CtaSection } from './components/v2/CtaSection';
+import { UseCasesSection } from './components/v2/UseCasesSection';
 
 export function LandingPage() {
   const { t } = useTranslation();
@@ -104,6 +105,7 @@ export function LandingPage() {
         <CoreComponentsSection />
         <ExperienceSection />
         <HowItWorksSection />
+        <UseCasesSection />
         <InsightSection />
         <PhilosophySection />
         <TestimonialsSection />
