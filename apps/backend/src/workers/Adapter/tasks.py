@@ -360,13 +360,19 @@ def reactive_reply_to_comment(
 
         adapter = ADAPTER_REGISTRY.create_instance(comment.platform)
 
+        options = dict(metadata or {})
+        if comment.platform == PlatformKind.INSTAGRAM:
+            options.setdefault("reply_to_comment_id", comment.comment_external_id)
+            if comment.parent_external_id:
+                options.setdefault("parent_external_id", comment.parent_external_id)
+
         try:
             result = asyncio.run(
                 adapter.create_comment(
                     comment.comment_external_id,
                     credentials=credentials,
                     text=message,
-                    options=metadata or None,
+                    options=options or None,
                 )
             )
         except Exception as exc:  # pragma: no cover - safety guard

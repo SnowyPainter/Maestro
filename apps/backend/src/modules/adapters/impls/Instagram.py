@@ -409,12 +409,23 @@ class InstagramCommentCreateCapability(InstagramCapabilityBase, CommentCreateCap
         client = self._client(access_token=resolved_credentials.access_token)
 
         payload: Dict[str, Any] = {"message": body}
+        reply_to_comment_id: Optional[str] = None
         if isinstance(options, dict):
             if options.get("hide") is True:
                 payload["hide"] = "true"
+            raw_reply_id = options.get("reply_to_comment_id") or options.get("reply_to_comment")
+            if isinstance(raw_reply_id, str):
+                candidate = raw_reply_id.strip()
+                if candidate:
+                    reply_to_comment_id = candidate
+            elif isinstance(raw_reply_id, (int, float)):
+                reply_to_comment_id = format(raw_reply_id, ".0f")
 
         try:
-            response = await client.create_comment(media_id=parent_external_id, payload=payload)
+            if reply_to_comment_id:
+                response = await client.reply_to_comment(comment_id=reply_to_comment_id, payload=payload)
+            else:
+                response = await client.create_comment(media_id=parent_external_id, payload=payload)
         except InstagramAPIError as exc:
             return CommentCreateResult(
                 ok=False,
@@ -705,6 +716,12 @@ class InstagramAPI:
     async def create_comment(self, *, media_id: str, payload: MutableMapping[str, Any]) -> Dict[str, Any]:
         try:
             return await self._client.post_json(f"{media_id}/comments", data=payload)
+        except GraphAPIError as exc:
+            raise InstagramAPIError.from_graph_error(exc) from exc
+
+    async def reply_to_comment(self, *, comment_id: str, payload: MutableMapping[str, Any]) -> Dict[str, Any]:
+        try:
+            return await self._client.post_json(f"{comment_id}/replies", data=payload)
         except GraphAPIError as exc:
             raise InstagramAPIError.from_graph_error(exc) from exc
 

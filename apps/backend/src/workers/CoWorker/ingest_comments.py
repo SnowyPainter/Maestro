@@ -176,6 +176,10 @@ async def _process_action(
                 payload=payload,
             )
             if log_id is not None:
+                reply_metadata: Dict[str, Any] = dict(action.metadata or {})
+                reply_metadata.setdefault("reply_to_comment_id", comment.comment_external_id)
+                if comment.parent_external_id:
+                    reply_metadata.setdefault("parent_external_id", comment.parent_external_id)
                 dispatch_queue.append(
                     (
                         "reply",
@@ -185,7 +189,7 @@ async def _process_action(
                             "reaction_rule_id": action.reaction_rule_id,
                             "tag_key": action.tag_key,
                             "message": template.body,
-                            "metadata": action.metadata or {},
+                            "metadata": reply_metadata,
                         },
                     )
                 )
