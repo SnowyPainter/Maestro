@@ -56,17 +56,6 @@ export function PersonaAccountContext() {
 
     const contextTiles = [
         {
-            icon: FileText,
-            label: "Draft",
-            value: draftId ? `Draft ID ${draftId}` : "No draft selected",
-            enabled: draftEnabled && draftId !== null,
-            onToggle: setDraftEnabled,
-            toggleDisabled: draftId === null,
-            onClear: clearDraftContext,
-            clearDisabled: draftId === null,
-            helper: draftId === null ? "Select a draft in the composer to link it here." : "Include the draft when sending requests.",
-        },
-        {
             icon: Target,
             label: "Campaign",
             value: campaignId ? `Campaign ID ${campaignId}` : "No campaign selected",
@@ -76,6 +65,17 @@ export function PersonaAccountContext() {
             onClear: clearCampaignContext,
             clearDisabled: campaignId === null,
             helper: campaignId === null ? "Choose a campaign to make it available." : "Attach the campaign context to outgoing calls.",
+        },
+        {
+            icon: FileText,
+            label: "Draft",
+            value: draftId ? `Draft ID ${draftId}` : "No draft selected",
+            enabled: draftEnabled && draftId !== null,
+            onToggle: setDraftEnabled,
+            toggleDisabled: draftId === null,
+            onClear: clearDraftContext,
+            clearDisabled: draftId === null,
+            helper: draftId === null ? "Select a draft in the composer to link it here." : "Include the draft when sending requests.",
         },
         {
             icon: StickyNote,
