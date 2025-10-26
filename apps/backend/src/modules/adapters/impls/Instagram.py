@@ -735,8 +735,11 @@ class InstagramAPI:
         try:
             return await self._client.get_json(
                 str(comment_id),
-                # Instagram Graph API comments do not expose permalink; request supported fields only.
-                params={"fields": "id,text,timestamp,username,like_count"},
+                params={
+                    "fields": (
+                        "id,text,username,user{id,username},from{id,username},timestamp,like_count"
+                    ),
+                },
             )
         except GraphAPIError as exc:
             raise InstagramAPIError.from_graph_error(exc) from exc
@@ -749,10 +752,12 @@ class InstagramAPI:
         cursor: Optional[str] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {
-            # The comment node schema omits permalink; request supported fields only plus replies in one call.
-            "fields": "id,text,username,timestamp,like_count,replies.limit(25){id,text,username,timestamp,like_count}",
-            # "filter": "stream",  # 실시간 필터 제거 - 모든 댓글 가져오기
-            #"order": "chronological",
+            "fields": (
+                "id,text,username,user{id,username},from{id,username},timestamp,like_count,"
+                "replies.limit(25){id,text,username,user{id,username},from{id,username},timestamp,like_count}"
+            ),
+            # "filter": "stream",
+            # "order": "chronological",
         }
         if limit is not None:
             params["limit"] = str(limit)
@@ -1158,6 +1163,24 @@ def _build_comment(
     created_at = parse_iso_datetime(node.get("timestamp"))
     username_raw = node.get("username")
     username = username_raw.strip() if isinstance(username_raw, str) else None
+    author_id: Optional[str] = None
+
+    author_info = node.get("from") or node.get("user")
+    if isinstance(author_info, dict):
+        raw_author_id = author_info.get("id")
+        if isinstance(raw_author_id, str):
+            stripped_id = raw_author_id.strip()
+            if stripped_id:
+                author_id = stripped_id
+        elif isinstance(raw_author_id, (int, float)):
+            author_id = format(raw_author_id, ".0f")
+
+        author_username = author_info.get("username")
+        if not username and isinstance(author_username, str):
+            candidate = author_username.strip()
+            if candidate:
+                username = candidate
+
     permalink = node.get("permalink") if isinstance(node.get("permalink"), str) else None
 
     metrics: Dict[str, float] = {}
@@ -1181,7 +1204,7 @@ def _build_comment(
     return Comment(
         external_id=comment_id,
         parent_external_id=parent_id,
-        author_id=None,
+        author_id=author_id,
         author_username=username,
         text=text,
         created_at=created_at,

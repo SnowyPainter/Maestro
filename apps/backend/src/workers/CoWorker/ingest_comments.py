@@ -289,17 +289,6 @@ async def _process_comment(session, comment: InsightComment) -> Dict[str, int]:
         comment=comment,
         owner_user_id=comment.owner_user_id,
     )
-
-    logger.info(f"Evaluation: {evaluation}")
-    logger.info(f"Evaluation actions: {len(evaluation.actions)}")
-    logger.info(f"Evaluation matched tags: {evaluation.matched_tags}")
-    logger.info(f"Evaluation comment id: {evaluation.comment_id}")
-    logger.info(f"Evaluation actions: {evaluation.actions}")
-    logger.info(f"Evaluation matched tags: {evaluation.matched_tags}")
-    logger.info(f"Evaluation comment id: {evaluation.comment_id}")
-    logger.info(f"Evaluation actions: {evaluation.actions}")
-    logger.info(f"Evaluation matched tags: {evaluation.matched_tags}")
-    logger.info(f"Evaluation comment id: {evaluation.comment_id}")
     
     if not evaluation.actions:
         return stats
