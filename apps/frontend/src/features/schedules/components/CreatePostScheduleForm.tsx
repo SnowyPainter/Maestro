@@ -270,7 +270,9 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                                             const now = new Date();
                                             // 최소 5분 후로 설정 (즉시 실행 방지)
                                             now.setMinutes(now.getMinutes() + 5);
-                                            setTime(now.toISOString().slice(0, 16));
+                                            // 로컬 시간으로 설정
+                                            const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+                                            setTime(localTime.toISOString().slice(0, 16));
                                         }}
                                         disabled={!personaAccountId || !selectedVariant}
                                         className="text-xs"
@@ -285,7 +287,9 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                                         onClick={() => {
                                             const bestTime = calculateBestWindowTime();
                                             if (bestTime) {
-                                                setTime(bestTime.toISOString().slice(0, 16));
+                                                // 로컬 시간으로 설정
+                                                const localTime = new Date(bestTime.getTime() - bestTime.getTimezoneOffset() * 60000);
+                                                setTime(localTime.toISOString().slice(0, 16));
                                                 toast.success("Best window time set!", {
                                                     description: `Scheduled for ${bestTime.toLocaleDateString()} at ${bestTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                                                 });
@@ -294,7 +298,9 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                                                 const tomorrow = new Date();
                                                 tomorrow.setDate(tomorrow.getDate() + 1);
                                                 tomorrow.setHours(10, 0, 0, 0);
-                                                setTime(tomorrow.toISOString().slice(0, 16));
+                                                // 로컬 시간으로 설정
+                                                const localTime = new Date(tomorrow.getTime() - tomorrow.getTimezoneOffset() * 60000);
+                                                setTime(localTime.toISOString().slice(0, 16));
                                                 toast.info("Using default optimal time", {
                                                     description: "Best window data not available. Using tomorrow at 10 AM as default."
                                                 });
