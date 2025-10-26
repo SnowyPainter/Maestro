@@ -127,6 +127,11 @@ slots:
   - bff.campaigns.list_kpi_results
   - bff.campaigns.read_campaign
   - bff.drafts.list_drafts
+  - bff.playbook.dashboard_event_chain
+  - bff.playbook.dashboard_insights
+  - bff.playbook.dashboard_overview
+  - bff.playbook.dashboard_performance
+  - bff.playbook.dashboard_recommendations
   - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
@@ -328,6 +333,11 @@ slots:
   description: Filter by include logs
   value_type: boolean
   flows:
+  - bff.playbook.dashboard_event_chain
+  - bff.playbook.dashboard_insights
+  - bff.playbook.dashboard_overview
+  - bff.playbook.dashboard_performance
+  - bff.playbook.dashboard_recommendations
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: ingest_key
@@ -382,6 +392,11 @@ slots:
   description: Filter by last event
   value_type: string
   flows:
+  - bff.playbook.dashboard_event_chain
+  - bff.playbook.dashboard_insights
+  - bff.playbook.dashboard_overview
+  - bff.playbook.dashboard_performance
+  - bff.playbook.dashboard_recommendations
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: limit
@@ -561,6 +576,11 @@ slots:
   - bff.abtests.list
   - bff.accounts.list_accounts_for_persona
   - bff.accounts.read_persona
+  - bff.playbook.dashboard_event_chain
+  - bff.playbook.dashboard_insights
+  - bff.playbook.dashboard_overview
+  - bff.playbook.dashboard_performance
+  - bff.playbook.dashboard_recommendations
   - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
@@ -600,6 +620,11 @@ slots:
   description: Target a specific playbook id
   value_type: integer
   flows:
+  - bff.playbook.dashboard_event_chain
+  - bff.playbook.dashboard_insights
+  - bff.playbook.dashboard_overview
+  - bff.playbook.dashboard_performance
+  - bff.playbook.dashboard_recommendations
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: post_publication_id

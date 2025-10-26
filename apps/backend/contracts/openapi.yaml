@@ -1152,6 +1152,331 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+  /api/bff/playbooks/dashboard/overview:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - dashboard
+      - analytics
+      - ui
+      - frontend
+      summary: Get Dashboard Overview Data
+      description: Get overview metrics for playbook dashboard
+      operationId: bff_playbook_dashboard_overview_api_bff_playbooks_dashboard_overview_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardOverviewResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/dashboard/event-chain:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - dashboard
+      - analytics
+      - ui
+      - frontend
+      summary: Get Dashboard Event Chain Data
+      description: Get event chain analysis for playbook dashboard
+      operationId: bff_playbook_dashboard_event_chain_api_bff_playbooks_dashboard_event_chain_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardEventChainResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/dashboard/performance:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - dashboard
+      - analytics
+      - ui
+      - frontend
+      summary: Get Dashboard Performance Data
+      description: Get performance metrics for playbook dashboard
+      operationId: bff_playbook_dashboard_performance_api_bff_playbooks_dashboard_performance_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardPerformanceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/dashboard/insights:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - dashboard
+      - analytics
+      - ui
+      - frontend
+      summary: Get Dashboard Insights Data
+      description: Get insights data for playbook dashboard
+      operationId: bff_playbook_dashboard_insights_api_bff_playbooks_dashboard_insights_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardInsightsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/dashboard/recommendations:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - dashboard
+      - analytics
+      - ui
+      - frontend
+      summary: Get Dashboard Recommendations Data
+      description: Get recommendations for playbook dashboard
+      operationId: bff_playbook_dashboard_recommendations_api_bff_playbooks_dashboard_recommendations_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardRecommendationsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/playbooks:
     get:
       tags:
@@ -4644,6 +4969,23 @@ components:
       - A
       - B
       title: ABTestWinnerEnum
+    ActionStatsItem:
+      properties:
+        total:
+          type: integer
+          title: Total
+        success:
+          type: integer
+          title: Success
+        rate:
+          type: integer
+          title: Rate
+      type: object
+      required:
+      - total
+      - success
+      - rate
+      title: ActionStatsItem
     Aggregation:
       type: string
       enum:
@@ -5257,6 +5599,107 @@ components:
       - id
       - state
       title: CoworkerTaskInfo
+    DashboardEventChainResponse:
+      properties:
+        event_types:
+          items:
+            $ref: '#/components/schemas/EventTypeItem'
+          type: array
+          title: Event Types
+        avg_sync_interval_seconds:
+          type: number
+          title: Avg Sync Interval Seconds
+        latest_kpi:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Latest Kpi
+      type: object
+      required:
+      - event_types
+      - avg_sync_interval_seconds
+      title: DashboardEventChainResponse
+    DashboardInsightsResponse:
+      properties:
+        persona_name:
+          type: string
+          title: Persona Name
+        creator:
+          $ref: '#/components/schemas/InsightsMetrics'
+        manager:
+          $ref: '#/components/schemas/InsightsMetrics'
+        brand:
+          $ref: '#/components/schemas/InsightsMetrics'
+        overall_roi:
+          $ref: '#/components/schemas/OverallROI'
+      type: object
+      required:
+      - persona_name
+      - creator
+      - manager
+      - brand
+      - overall_roi
+      title: DashboardInsightsResponse
+    DashboardOverviewResponse:
+      properties:
+        total_logs:
+          type: integer
+          title: Total Logs
+        success_rate:
+          type: integer
+          title: Success Rate
+        hourly_activity:
+          items:
+            $ref: '#/components/schemas/HourlyActivityItem'
+          type: array
+          title: Hourly Activity
+      type: object
+      required:
+      - total_logs
+      - success_rate
+      - hourly_activity
+      title: DashboardOverviewResponse
+    DashboardPerformanceResponse:
+      properties:
+        success_rate:
+          type: integer
+          title: Success Rate
+        failure_rate:
+          type: integer
+          title: Failure Rate
+        action_stats:
+          additionalProperties:
+            $ref: '#/components/schemas/ActionStatsItem'
+          type: object
+          title: Action Stats
+      type: object
+      required:
+      - success_rate
+      - failure_rate
+      - action_stats
+      title: DashboardPerformanceResponse
+    DashboardRecommendationsResponse:
+      properties:
+        phases:
+          items:
+            $ref: '#/components/schemas/PhaseItem'
+          type: array
+          title: Phases
+        overall_roi:
+          $ref: '#/components/schemas/OverallROI'
+        dynamic_recommendations:
+          items:
+            type: string
+          type: array
+          title: Dynamic Recommendations
+      type: object
+      required:
+      - phases
+      - overall_roi
+      - dynamic_recommendations
+      title: DashboardRecommendationsResponse
     DateRange:
       properties:
         start:
@@ -5838,6 +6281,19 @@ components:
       - updated_at
       title: EnrichedPostPublicationOut
       description: Enriched post publication with variant and draft information.
+    EventTypeItem:
+      properties:
+        name:
+          type: string
+          title: Name
+        value:
+          type: integer
+          title: Value
+      type: object
+      required:
+      - name
+      - value
+      title: EventTypeItem
     FileInfo:
       properties:
         id:
@@ -5990,6 +6446,31 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    HourlyActivityItem:
+      properties:
+        hour:
+          type: string
+          title: Hour
+        total:
+          type: integer
+          title: Total
+        sync_metrics:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Sync Metrics
+          default: 0
+        schedule:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Schedule
+          default: 0
+      type: object
+      required:
+      - hour
+      - total
+      title: HourlyActivityItem
     InsightCommentList:
       properties:
         comments:
@@ -6229,6 +6710,53 @@ components:
       - poll
       - manual
       title: InsightSource
+    InsightsMetrics:
+      properties:
+        engagement_improvement:
+          type: integer
+          title: Engagement Improvement
+        optimal_time:
+          type: string
+          title: Optimal Time
+        consistency_score:
+          type: integer
+          title: Consistency Score
+        response_time_reduction:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Response Time Reduction
+        automation_rate:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Automation Rate
+        monitoring_coverage:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Monitoring Coverage
+        policy_compliance:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Policy Compliance
+        tone_consistency:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Tone Consistency
+        quality_assurance:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Quality Assurance
+      type: object
+      required:
+      - engagement_improvement
+      - optimal_time
+      - consistency_score
+      title: InsightsMetrics
     IntentCandidate:
       properties:
         intent:
@@ -6473,6 +7001,19 @@ components:
       required:
       - ok
       title: OperationResult
+    OverallROI:
+      properties:
+        response_time_improvement:
+          type: integer
+          title: Response Time Improvement
+        engagement_increase:
+          type: integer
+          title: Engagement Increase
+      type: object
+      required:
+      - response_time_improvement
+      - engagement_increase
+      title: OverallROI
     Permission:
       type: string
       enum:
@@ -6892,6 +7433,33 @@ components:
       required:
       - data
       title: PersonaUpdateCommand
+    PhaseItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        title:
+          type: string
+          title: Title
+        status:
+          type: string
+          title: Status
+        progress:
+          type: integer
+          title: Progress
+        features:
+          items:
+            type: string
+          type: array
+          title: Features
+      type: object
+      required:
+      - id
+      - title
+      - status
+      - progress
+      - features
+      title: PhaseItem
     PlatformAccountCreate:
       properties:
         owner_user_id:

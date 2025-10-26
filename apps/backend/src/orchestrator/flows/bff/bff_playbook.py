@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from fastapi import HTTPException
+
+from apps.backend.src.modules.playbooks.schemas import (
+    DashboardOverviewResponse,
+    DashboardEventChainResponse,
+    DashboardPerformanceResponse,
+    DashboardInsightsResponse,
+    DashboardRecommendationsResponse,
+)
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -112,7 +120,7 @@ async def op_search_playbooks(
     search_payload = payload.model_dump()
     include_logs = search_payload.pop("include_logs", False)
 
-    rows, total = await search_playbooks(db, **search_payload)
+    rows, total = await search_playbooks(db, owner_user_id=user.id, **search_payload)
 
     # Enrich playbooks with campaign and persona names
     enriched_items = []
@@ -153,7 +161,7 @@ async def op_get_playbook_detail(
     # Get playbook
     search_payload = payload.model_dump()
     search_payload.pop("include_logs", False)
-    rows, _ = await search_playbooks(db, **search_payload)
+    rows, _ = await search_playbooks(db, owner_user_id=user.id, **search_payload)
 
     if not rows:
         raise HTTPException(status_code=404, detail="Playbook not found")
@@ -187,6 +195,210 @@ async def op_get_playbook_detail(
         logs = [log for log in logs_list if log.playbook_id == row.id]
 
     return PlaybookDetailResponse(playbook=enriched_playbook, logs=logs)
+
+
+# Dashboard Analytics Operators
+
+@operator(
+    key="bff.playbook.get_dashboard_overview",
+    title="Get Dashboard Overview Data",
+    side_effect="read",
+)
+async def op_get_dashboard_overview(
+    payload: PlaybookSearchPayload,
+    ctx: TaskContext,
+) -> DashboardOverviewResponse:
+    """Dashboard Overview page data"""
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    if not payload.playbook_id:
+        raise HTTPException(status_code=400, detail="playbook_id is required")
+
+    # Check user permissions
+    rows, _ = await search_playbooks(db, playbook_id=payload.playbook_id, owner_user_id=user.id)
+    if not rows:
+        raise HTTPException(status_code=404, detail="Playbook not found")
+
+    from apps.backend.src.modules.playbooks.service import get_dashboard_overview_data
+    return await get_dashboard_overview_data(db, playbook_id=payload.playbook_id)
+
+
+@operator(
+    key="bff.playbook.get_dashboard_event_chain",
+    title="Get Dashboard Event Chain Data",
+    side_effect="read",
+)
+async def op_get_dashboard_event_chain(
+    payload: PlaybookSearchPayload,
+    ctx: TaskContext,
+) -> DashboardEventChainResponse:
+    """Dashboard Event Chain page data"""
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    if not payload.playbook_id:
+        raise HTTPException(status_code=400, detail="playbook_id is required")
+
+    # Check user permissions
+    rows, _ = await search_playbooks(db, playbook_id=payload.playbook_id, owner_user_id=user.id)
+    if not rows:
+        raise HTTPException(status_code=404, detail="Playbook not found")
+
+    from apps.backend.src.modules.playbooks.service import get_dashboard_event_chain_data
+    return await get_dashboard_event_chain_data(db, playbook_id=payload.playbook_id)
+
+
+@operator(
+    key="bff.playbook.get_dashboard_performance",
+    title="Get Dashboard Performance Data",
+    side_effect="read",
+)
+async def op_get_dashboard_performance(
+    payload: PlaybookSearchPayload,
+    ctx: TaskContext,
+) -> DashboardPerformanceResponse:
+    """Dashboard Performance page data"""
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    if not payload.playbook_id:
+        raise HTTPException(status_code=400, detail="playbook_id is required")
+
+    # Check user permissions
+    rows, _ = await search_playbooks(db, playbook_id=payload.playbook_id, owner_user_id=user.id)
+    if not rows:
+        raise HTTPException(status_code=404, detail="Playbook not found")
+
+    from apps.backend.src.modules.playbooks.service import get_dashboard_performance_data
+    return await get_dashboard_performance_data(db, playbook_id=payload.playbook_id)
+
+
+@operator(
+    key="bff.playbook.get_dashboard_insights",
+    title="Get Dashboard Insights Data",
+    side_effect="read",
+)
+async def op_get_dashboard_insights(
+    payload: PlaybookSearchPayload,
+    ctx: TaskContext,
+) -> DashboardInsightsResponse:
+    """Dashboard Insights page data"""
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    if not payload.playbook_id:
+        raise HTTPException(status_code=400, detail="playbook_id is required")
+
+    # Check user permissions
+    rows, _ = await search_playbooks(db, playbook_id=payload.playbook_id, owner_user_id=user.id)
+    if not rows:
+        raise HTTPException(status_code=404, detail="Playbook not found")
+
+    from apps.backend.src.modules.playbooks.service import get_dashboard_insights_data
+    return await get_dashboard_insights_data(db, playbook_id=payload.playbook_id)
+
+
+@operator(
+    key="bff.playbook.get_dashboard_recommendations",
+    title="Get Dashboard Recommendations Data",
+    side_effect="read",
+)
+async def op_get_dashboard_recommendations(
+    payload: PlaybookSearchPayload,
+    ctx: TaskContext,
+) -> DashboardRecommendationsResponse:
+    """Dashboard Recommendations page data"""
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    if not payload.playbook_id:
+        raise HTTPException(status_code=400, detail="playbook_id is required")
+
+    # Check user permissions
+    rows, _ = await search_playbooks(db, playbook_id=payload.playbook_id, owner_user_id=user.id)
+    if not rows:
+        raise HTTPException(status_code=404, detail="Playbook not found")
+
+    from apps.backend.src.modules.playbooks.service import get_dashboard_recommendations_data
+    return await get_dashboard_recommendations_data(db, playbook_id=payload.playbook_id)
+
+
+# Dashboard Analytics Flows
+
+@FLOWS.flow(
+    key="bff.playbook.dashboard_overview",
+    title="Get Dashboard Overview Data",
+    description="Get overview metrics for playbook dashboard",
+    input_model=PlaybookSearchPayload,
+    output_model=DashboardOverviewResponse,
+    method="get",
+    path="/playbooks/dashboard/overview",
+    tags=("bff", "playbooks", "dashboard", "analytics", "ui", "frontend"),
+)
+def _flow_bff_dashboard_overview(builder: FlowBuilder) -> None:
+    task = builder.task("dashboard_overview", "bff.playbook.get_dashboard_overview")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.playbook.dashboard_event_chain",
+    title="Get Dashboard Event Chain Data",
+    description="Get event chain analysis for playbook dashboard",
+    input_model=PlaybookSearchPayload,
+    output_model=DashboardEventChainResponse,
+    method="get",
+    path="/playbooks/dashboard/event-chain",
+    tags=("bff", "playbooks", "dashboard", "analytics", "ui", "frontend"),
+)
+def _flow_bff_dashboard_event_chain(builder: FlowBuilder) -> None:
+    task = builder.task("dashboard_event_chain", "bff.playbook.get_dashboard_event_chain")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.playbook.dashboard_performance",
+    title="Get Dashboard Performance Data",
+    description="Get performance metrics for playbook dashboard",
+    input_model=PlaybookSearchPayload,
+    output_model=DashboardPerformanceResponse,
+    method="get",
+    path="/playbooks/dashboard/performance",
+    tags=("bff", "playbooks", "dashboard", "analytics", "ui", "frontend"),
+)
+def _flow_bff_dashboard_performance(builder: FlowBuilder) -> None:
+    task = builder.task("dashboard_performance", "bff.playbook.get_dashboard_performance")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.playbook.dashboard_insights",
+    title="Get Dashboard Insights Data",
+    description="Get insights data for playbook dashboard",
+    input_model=PlaybookSearchPayload,
+    output_model=DashboardInsightsResponse,
+    method="get",
+    path="/playbooks/dashboard/insights",
+    tags=("bff", "playbooks", "dashboard", "analytics", "ui", "frontend"),
+)
+def _flow_bff_dashboard_insights(builder: FlowBuilder) -> None:
+    task = builder.task("dashboard_insights", "bff.playbook.get_dashboard_insights")
+    builder.expect_terminal(task)
+
+
+@FLOWS.flow(
+    key="bff.playbook.dashboard_recommendations",
+    title="Get Dashboard Recommendations Data",
+    description="Get recommendations for playbook dashboard",
+    input_model=PlaybookSearchPayload,
+    output_model=DashboardRecommendationsResponse,
+    method="get",
+    path="/playbooks/dashboard/recommendations",
+    tags=("bff", "playbooks", "dashboard", "analytics", "ui", "frontend"),
+)
+def _flow_bff_dashboard_recommendations(builder: FlowBuilder) -> None:
+    task = builder.task("dashboard_recommendations", "bff.playbook.get_dashboard_recommendations")
+    builder.expect_terminal(task)
 
 @FLOWS.flow(
     key="bff.playbook.list_playbooks",
@@ -240,4 +452,9 @@ __all__ = [
     "op_list_playbooks",
     "op_search_playbooks",
     "op_get_playbook_detail",
+    "op_get_dashboard_overview",
+    "op_get_dashboard_event_chain",
+    "op_get_dashboard_performance",
+    "op_get_dashboard_insights",
+    "op_get_dashboard_recommendations",
 ]

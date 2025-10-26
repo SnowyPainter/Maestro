@@ -93,3 +93,80 @@ class PlaybookLogOut(BaseModel):
 class PlaybookLogsResponse(BaseModel):
     items: List[PlaybookLogOut]
     total: int
+
+
+# Dashboard Schemas
+
+class HourlyActivityItem(BaseModel):
+    hour: str  # "00", "01", ..., "23"
+    total: int
+    sync_metrics: Optional[int] = 0
+    schedule: Optional[int] = 0
+
+
+class DashboardOverviewResponse(BaseModel):
+    total_logs: int
+    success_rate: int  # percentage 0-100
+    hourly_activity: List[HourlyActivityItem]
+
+
+class EventTypeItem(BaseModel):
+    name: str  # event type like "sync.metrics"
+    value: int  # count
+
+
+class DashboardEventChainResponse(BaseModel):
+    event_types: List[EventTypeItem]
+    avg_sync_interval_seconds: float
+    latest_kpi: Optional[Dict[str, float]] = None
+
+
+class ActionStatsItem(BaseModel):
+    total: int
+    success: int
+    rate: int  # percentage 0-100
+
+
+class DashboardPerformanceResponse(BaseModel):
+    success_rate: int  # percentage 0-100
+    failure_rate: int  # percentage 0-100
+    action_stats: Dict[str, ActionStatsItem]  # {"ALERT": {...}, "REPLY": {...}, "DM": {...}}
+
+
+class InsightsMetrics(BaseModel):
+    engagement_improvement: int  # percentage
+    optimal_time: str  # "22시"
+    consistency_score: int  # percentage
+    response_time_reduction: Optional[int] = None  # percentage (for manager)
+    automation_rate: Optional[int] = None  # percentage (for manager)
+    monitoring_coverage: Optional[int] = None  # percentage (for manager)
+    policy_compliance: Optional[int] = None  # percentage (for brand)
+    tone_consistency: Optional[int] = None  # percentage (for brand)
+    quality_assurance: Optional[int] = None  # percentage (for brand)
+
+
+class OverallROI(BaseModel):
+    response_time_improvement: int  # percentage
+    engagement_increase: int  # percentage
+
+
+class DashboardInsightsResponse(BaseModel):
+    persona_name: str
+    creator: InsightsMetrics
+    manager: InsightsMetrics
+    brand: InsightsMetrics
+    overall_roi: OverallROI
+
+
+class PhaseItem(BaseModel):
+    id: int
+    title: str
+    status: str  # "completed", "in_progress", "planned"
+    progress: int  # percentage 0-100
+    features: List[str]
+
+
+class DashboardRecommendationsResponse(BaseModel):
+    phases: List[PhaseItem]
+    overall_roi: OverallROI
+    dynamic_recommendations: List[str]
