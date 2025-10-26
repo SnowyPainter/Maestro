@@ -141,6 +141,8 @@ def _is_dm_window_closed(result: MessageSendResult) -> bool:
             return True
         if "subcode=2534022" in lowered or "2534022" in lowered:
             return True
+        if "subcode=33" in lowered:
+            return True
     return False
 
 def enqueue_variant_compile(

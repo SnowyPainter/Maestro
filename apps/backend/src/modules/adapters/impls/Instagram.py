@@ -651,25 +651,52 @@ class InstagramMessageSendCapability(InstagramCapabilityBase, MessageSendCapabil
             )
 
         client = self._client(access_token=resolved_credentials.access_token)
+        comment_details: Dict[str, Any] = {}
         try:
-            response = await client.send_private_reply(
-                comment_id=comment_id,
-                message_text=body,
-            )
+            comment_details = await client.fetch_comment(comment_id=comment_id)
         except InstagramAPIError as exc:
             return MessageSendResult(
                 ok=False,
                 errors=[exc.as_message()],
-                reason="dm_send_failed",
+                warnings=message_warnings,
+                reason="comment_fetch_failed",
+                raw={"comment_error": exc.payload} if exc.payload else {},
+            )
+
+        try:
+            response = await client.send_private_reply(
+                user_id=resolved_credentials.user_id,
+                comment_id=comment_id,
+                message_text=body,
+            )
+        except InstagramAPIError as exc:
+            error_message = exc.as_message()
+            raw_payload: Dict[str, Any] = {"comment": comment_details}
+            if exc.payload:
+                raw_payload["error"] = exc.payload
+            reason = "dm_send_failed"
+            if _is_private_reply_window_error(error_message):
+                reason = "dm_window_closed"
+                message_warnings.append("instagram private reply window closed")
+            return MessageSendResult(
+                ok=False,
+                errors=[error_message],
+                warnings=message_warnings,
+                reason=reason,
+                raw=raw_payload,
             )
 
         message_id = response.get("id") if isinstance(response, dict) else None
+
+        raw_payload: Dict[str, Any] = {"comment": comment_details}
+        if isinstance(response, dict):
+            raw_payload["reply"] = response
 
         return MessageSendResult(
             ok=True,
             recipient_id=comment_id,
             message_id=message_id,
-            raw=response if isinstance(response, dict) else {},
+            raw=raw_payload,
             warnings=message_warnings,
         )
 
@@ -778,11 +805,14 @@ class InstagramAPI:
             logger.error(f"Instagram comments API error for {media_id}: {exc.as_message()}")
             raise InstagramAPIError.from_graph_error(exc) from exc
 
-    async def send_private_reply(self, *, comment_id: str, message_text: str) -> Dict[str, Any]:
+    async def send_private_reply(self, *, user_id: str, comment_id: str, message_text: str) -> Dict[str, Any]:
         try:
             return await self._client.post_json(
-                f"{comment_id}/private_replies",
-                data={"message": message_text},
+                f"{user_id}/messages",
+                data={
+                    "recipient": {"comment_id": comment_id},
+                    "message": {"text": message_text},
+                },
             )
         except GraphAPIError as exc:
             raise InstagramAPIError.from_graph_error(exc) from exc
@@ -1213,6 +1243,19 @@ def _build_comment(
         metrics=metrics,
         is_owned_by_me=is_owned_by_me,
     )
+
+
+def _is_private_reply_window_error(message: str) -> bool:
+    lowercase = message.lower()
+    if "subcode=2534022" in lowercase:
+        return True
+    if "subcode=33" in lowercase:
+        return True
+    if "outside the allowed window" in lowercase:
+        return True
+    if "does not support this operation" in lowercase and "private" in lowercase:
+        return True
+    return False
 
 
 def extract_next_cursor(payload: Dict[str, Any] | None) -> Optional[str]:
