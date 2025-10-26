@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -223,6 +224,10 @@ class InstagramPublishingCapability(InstagramCapabilityBase, PublishingCapabilit
                         warnings=warnings,
                     )
                 media_kind = "VIDEO" if media_mode == "video" else "IMAGE"
+                # Wait for Instagram to process the media container before publishing
+                # This prevents "Media ID is not available" errors for single images
+                if media_mode == "image":
+                    await asyncio.sleep(2)
         except InstagramAPIError as exc:
             return PublishResult(
                 ok=False,
@@ -235,13 +240,28 @@ class InstagramPublishingCapability(InstagramCapabilityBase, PublishingCapabilit
         try:
             published = await client.publish_media(user_id=user_id, creation_id=creation_id)
         except InstagramAPIError as exc:
-            return PublishResult(
-                ok=False,
-                external_id=None,
-                permalink=None,
-                errors=[exc.as_message()],
-                warnings=warnings,
-            )
+            # If "Media ID is not available", retry after a short delay for single images
+            if "Media ID is not available" in exc.as_message() and media_mode == "image":
+                logger.warning(f"Media ID not available for creation_id {creation_id}, retrying after delay")
+                await asyncio.sleep(3)
+                try:
+                    published = await client.publish_media(user_id=user_id, creation_id=creation_id)
+                except InstagramAPIError as retry_exc:
+                    return PublishResult(
+                        ok=False,
+                        external_id=None,
+                        permalink=None,
+                        errors=[f"Instagram publish failed after retry: {retry_exc.as_message()}"],
+                        warnings=warnings,
+                    )
+            else:
+                return PublishResult(
+                    ok=False,
+                    external_id=None,
+                    permalink=None,
+                    errors=[exc.as_message()],
+                    warnings=warnings,
+                )
 
         media_id = extract_creation_id(published) or creation_id
 
