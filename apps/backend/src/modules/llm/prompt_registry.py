@@ -113,6 +113,7 @@ Instructions:
 - Study PersonaBrief to align tone, guardrails, and priorities with the persona.
 - Focus on the single provided trend; do not introduce additional trends.
 - Create a DraftIR with a compelling hook, persona-aligned body, and clear call-to-action.
+- Provide a concise, publication-ready title that reflects the angle of the draft. Avoid clickbait.
 - Enrich the narrative by relating the trend to the persona's hobbies or lived experiences so the copy feels personal and substantial.
 - Suggest supporting hashtags in the DraftIR metadata if appropriate.
 
@@ -141,6 +142,7 @@ Instructions:
 - Identify the hottest themes using metrics such as likes/replies.
 - Stay faithful to persona tone, guardrails, and bans described in PersonaBrief.
 - Create a DraftIR that acknowledges commenters' sentiment and moves the conversation forward.
+- Provide a precise title that would make sense as the post headline, grounded in the comment sentiment.
 - Keep structure concise: hook, acknowledgement, value response, CTA.
 - Ensure facts stay consistent with the comments and avoid inventing metrics.
 

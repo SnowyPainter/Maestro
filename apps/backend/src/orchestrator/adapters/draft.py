@@ -108,12 +108,15 @@ async def _draft_from_trends_llm(trends: TrendsListResponse, payload: Dict[str, 
 
     draft_ir = output.draft_ir
     final_payload: Dict[str, Any] = {}
-    for key in ("campaign_id", "title", "tags", "goal"):
+    for key in ("campaign_id", "tags", "goal"):
         if key in payload:
             final_payload[key] = payload[key]
 
-    if not final_payload.get("title"):
-        final_payload["title"] = _default_trend_title(trends)
+    final_payload["title"] = (
+        payload.get("title")
+        or output.title
+        or _default_trend_title(trends)
+    )
 
     final_payload["ir"] = draft_ir.model_dump(mode="json")
     return DraftSaveRequest.model_validate(final_payload)
@@ -125,11 +128,11 @@ def _draft_from_trends_static(trends: TrendsListResponse, payload: Dict[str, Any
         raise ValueError("No trend items available to build draft content")
 
     final_payload: Dict[str, Any] = {}
-    for key in ("campaign_id", "title", "tags", "goal"):
+    for key in ("campaign_id", "tags", "goal"):
         if key in payload:
             final_payload[key] = payload[key]
 
-    final_payload["title"] = final_payload.get("title") or _default_trend_title(trends)
+    final_payload["title"] = payload.get("title") or _default_trend_title(trends)
 
     blocks = []
     for idx, trend in enumerate(items, 1):

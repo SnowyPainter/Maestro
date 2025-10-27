@@ -69,9 +69,11 @@ class GuidanceFromTrendOutput(BaseModel):
 
 class DraftFromTrendOutput(BaseModel):
     draft_ir: DraftIR
+    title: Optional[str] = None
 
 class DraftFromCommentOutput(BaseModel):
     draft_ir: DraftIR
+    title: Optional[str] = None
 
 class CoworkerContextualWriteOutput(BaseModel):
     text: str

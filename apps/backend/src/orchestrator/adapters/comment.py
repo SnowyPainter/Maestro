@@ -110,11 +110,15 @@ async def _draft_from_comments_llm(
         return None
 
     final_payload: Dict[str, Any] = {}
-    for key in ("campaign_id", "title", "tags", "goal"):
+    for key in ("campaign_id", "tags", "goal"):
         if key in payload:
             final_payload[key] = payload[key]
 
-    final_payload.setdefault("title", _default_comment_title(comment_list))
+    final_payload["title"] = (
+        payload.get("title")
+        or output.title
+        or _default_comment_title(comment_list)
+    )
     final_payload["ir"] = output.draft_ir.model_dump(mode="json")
     return DraftSaveRequest.model_validate(final_payload)
 
