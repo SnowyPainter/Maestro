@@ -308,7 +308,7 @@ def _flow_reactive_delete_rule(builder: FlowBuilder):
 @FLOWS.flow(
     key="reactive.create_message_template",
     title="Create Reaction Message Template",
-    description="Create a reusable message template for reactive automations",
+    description="Create reaction message template for reactive automations",
     input_model=ReactionMessageTemplateCreateCommand,
     output_model=ReactionMessageTemplateOut,
     method="post",
@@ -323,7 +323,7 @@ def _flow_reactive_create_message_template(builder: FlowBuilder):
 @FLOWS.flow(
     key="reactive.update_message_template",
     title="Update Reaction Message Template",
-    description="Update an existing reaction message template",
+    description="Update reaction message template",
     input_model=ReactionMessageTemplateUpdateCommand,
     output_model=ReactionMessageTemplateOut,
     method="patch",
@@ -338,7 +338,7 @@ def _flow_reactive_update_message_template(builder: FlowBuilder):
 @FLOWS.flow(
     key="reactive.delete_message_template",
     title="Delete Reaction Message Template",
-    description="Delete an existing reaction message template",
+    description="Delete reaction message template",
     input_model=ReactionMessageTemplateDeleteCommand,
     output_model=OperationResult,
     method="delete",

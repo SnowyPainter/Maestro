@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from apps.backend.src.modules.drafts.schemas import DraftIR
 from apps.backend.src.modules.trends.schemas import TrendItem
 from apps.backend.src.modules.insights.schemas import InsightCommentOut
+from apps.backend.src.modules.common.enums import ReactionActionType
 
 
 # --- Prompt & Context ---
@@ -15,6 +16,7 @@ class PromptKey(str, Enum):
     DRAFT_FROM_TREND = "draft.from_trend" # 트렌드데이터를 바탕으로 글 작성
     DRAFT_FROM_COMMENT = "draft.from_comment" # 댓글데이터를 바탕으로 글 작성
     COWORKER_CONTEXTUAL_WRITE = "coworker.contextual.write"
+    REACTION_TEMPLATE_FROM_COMMENT = "reaction.template.from_comment"
 
 
 class PromptVars(BaseModel):
@@ -29,6 +31,9 @@ class PromptVars(BaseModel):
     campaign_brief: Optional[Dict[str, Any]] = None
     playbook_summary: Optional[Dict[str, Any]] = None
     recent_publications: Optional[List[Dict[str, Any]]] = None
+    template_type_hint: Optional[str] = None
+    tag_key_hint: Optional[str] = None
+    title_hint: Optional[str] = None
 
 class PromptMetadata(BaseModel):
     """프롬프트 템플릿의 메타데이터"""
@@ -71,12 +76,20 @@ class DraftFromCommentOutput(BaseModel):
 class CoworkerContextualWriteOutput(BaseModel):
     text: str
 
+
+class ReactionTemplateFromCommentOutput(BaseModel):
+    template_type: ReactionActionType
+    tag_key: Optional[str] = None
+    title: Optional[str] = None
+    body: str
+
 PROMPT_OUTPUT_SCHEMA: Dict[PromptKey, Type[BaseModel]] = {
     PromptKey.HASHTAG_FROM_TREND: HashtagFromTrendOutput,
     PromptKey.GUIDANCE_FROM_TREND: GuidanceFromTrendOutput,
     PromptKey.DRAFT_FROM_TREND: DraftFromTrendOutput,
     PromptKey.DRAFT_FROM_COMMENT: DraftFromCommentOutput,
     PromptKey.COWORKER_CONTEXTUAL_WRITE: CoworkerContextualWriteOutput,
+    PromptKey.REACTION_TEMPLATE_FROM_COMMENT: ReactionTemplateFromCommentOutput,
 }
 
 # 프롬프트 메타데이터 레지스트리
@@ -115,6 +128,22 @@ PROMPT_METADATA_REGISTRY: Dict[PromptKey, PromptMetadata] = {
         optional_vars={"persona_brief", "campaign_brief", "playbook_summary", "recent_publications", "tone", "goal"},
         output_schema=CoworkerContextualWriteOutput,
         description="컨텍스트(페르소나/캠페인/플레이북)를 반영한 카피 작성"
+    ),
+    PromptKey.REACTION_TEMPLATE_FROM_COMMENT: PromptMetadata(
+        key=PromptKey.REACTION_TEMPLATE_FROM_COMMENT,
+        required_vars={"comment_data", "persona_brief"},
+        optional_vars={
+            "product_name",
+            "audience",
+            "tone",
+            "goal",
+            "text",
+            "template_type_hint",
+            "tag_key_hint",
+            "title_hint",
+        },
+        output_schema=ReactionTemplateFromCommentOutput,
+        description="댓글 데이터를 바탕으로 반응 메시지 템플릿 생성"
     ),
 }
 

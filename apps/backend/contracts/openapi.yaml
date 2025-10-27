@@ -1724,7 +1724,7 @@ paths:
       - rules
       - list
       summary: List Reaction Rules
-      description: Retrieve all reaction rules for the current user
+      description: List reaction rules
       operationId: bff_reactive_list_rules_api_bff_reactive_rules_get
       responses:
         '200':
@@ -1742,7 +1742,7 @@ paths:
       - rules
       - detail
       summary: Get Reaction Rule
-      description: Get reaction rule by id
+      description: Get reaction rule
       operationId: bff_reactive_read_rule_api_bff_reactive_rules__rule_id__get
       parameters:
       - name: rule_id
@@ -1773,7 +1773,7 @@ paths:
       - rules
       - publications
       summary: List Reaction Rule Publication Links
-      description: Retrieve publications attached to a reaction rule
+      description: List publications attached to a reaction rule
       operationId: bff_reactive_list_rule_links_api_bff_reactive_rules__rule_id__publications_get
       parameters:
       - name: rule_id
@@ -1804,7 +1804,7 @@ paths:
       - activity
       - logs
       summary: List Reactive Action Logs
-      description: Retrieve recent reactive automation action logs
+      description: List reactive action logs
       operationId: bff_reactive_list_action_logs_api_bff_reactive_action_logs_get
       parameters:
       - name: status
@@ -1866,7 +1866,7 @@ paths:
       - templates
       - list
       summary: List Reaction Message Templates
-      description: Retrieve available reaction message templates for the current user
+      description: List reaction message templates
       operationId: bff_reactive_list_templates_api_bff_reactive_message_templates_get
       parameters:
       - name: template_type
@@ -4036,7 +4036,7 @@ paths:
       - templates
       - create
       summary: Create Reaction Message Template
-      description: Create a reusable message template for reactive automations
+      description: Create reaction message template for reactive automations
       operationId: reactive_create_message_template_api_orchestrator_reactive_message_templates_post
       requestBody:
         content:
@@ -4066,7 +4066,7 @@ paths:
       - templates
       - update
       summary: Update Reaction Message Template
-      description: Update an existing reaction message template
+      description: Update reaction message template
       operationId: reactive_update_message_template_api_orchestrator_reactive_message_templates__template_id__patch
       parameters:
       - name: template_id
@@ -4102,7 +4102,7 @@ paths:
       - templates
       - delete
       summary: Delete Reaction Message Template
-      description: Delete an existing reaction message template
+      description: Delete reaction message template
       operationId: reactive_delete_message_template_api_orchestrator_reactive_message_templates__template_id__delete
       parameters:
       - name: template_id

@@ -224,7 +224,7 @@ async def op_read_reaction_action_log(
 @FLOWS.flow(
     key="bff.reactive.list_rules",
     title="List Reaction Rules",
-    description="Retrieve all reaction rules for the current user",
+    description="List reaction rules",
     input_model=EmptyPayload,
     output_model=ReactionRuleListResult,
     method="get",
@@ -239,7 +239,7 @@ def _flow_bff_list_reaction_rules(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.reactive.read_rule",
     title="Get Reaction Rule",
-    description="Get reaction rule by id",
+    description="Get reaction rule",
     input_model=ReactionRuleReadPayload,
     output_model=ReactionRuleOut,
     method="get",
@@ -254,7 +254,7 @@ def _flow_bff_read_reaction_rule(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.reactive.list_rule_links",
     title="List Reaction Rule Publication Links",
-    description="Retrieve publications attached to a reaction rule",
+    description="List publications attached to a reaction rule",
     input_model=ReactionRuleLinksPayload,
     output_model=ReactionRuleLinksResult,
     method="get",
@@ -269,7 +269,7 @@ def _flow_bff_list_rule_links(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.reactive.list_action_logs",
     title="List Reactive Action Logs",
-    description="Retrieve recent reactive automation action logs",
+    description="List reactive action logs",
     input_model=ReactionActionLogQueryPayload,
     output_model=ReactionActionLogListResult,
     method="get",
@@ -284,7 +284,7 @@ def _flow_bff_list_action_logs(builder: FlowBuilder):
 @FLOWS.flow(
     key="bff.reactive.list_templates",
     title="List Reaction Message Templates",
-    description="Retrieve available reaction message templates for the current user",
+    description="List reaction message templates",
     input_model=ReactionMessageTemplateListPayload,
     output_model=ReactionMessageTemplateListResult,
     method="get",

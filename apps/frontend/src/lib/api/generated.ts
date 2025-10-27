@@ -6476,7 +6476,7 @@ export function useBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet<TData = 
 
 
 /**
- * Retrieve all reaction rules for the current user
+ * List reaction rules
  * @summary List Reaction Rules
  */
 export const bffReactiveListRulesApiBffReactiveRulesGet = (
@@ -6565,7 +6565,7 @@ export function useBffReactiveListRulesApiBffReactiveRulesGet<TData = Awaited<Re
 
 
 /**
- * Get reaction rule by id
+ * Get reaction rule
  * @summary Get Reaction Rule
  */
 export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGet = (
@@ -6654,7 +6654,7 @@ export function useBffReactiveReadRuleApiBffReactiveRulesRuleIdGet<TData = Await
 
 
 /**
- * Retrieve publications attached to a reaction rule
+ * List publications attached to a reaction rule
  * @summary List Reaction Rule Publication Links
  */
 export const bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGet = (
@@ -6743,7 +6743,7 @@ export function useBffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublications
 
 
 /**
- * Retrieve recent reactive automation action logs
+ * List reactive action logs
  * @summary List Reactive Action Logs
  */
 export const bffReactiveListActionLogsApiBffReactiveActionLogsGet = (
@@ -6833,7 +6833,7 @@ export function useBffReactiveListActionLogsApiBffReactiveActionLogsGet<TData = 
 
 
 /**
- * Retrieve available reaction message templates for the current user
+ * List reaction message templates
  * @summary List Reaction Message Templates
  */
 export const bffReactiveListTemplatesApiBffReactiveMessageTemplatesGet = (
@@ -10932,7 +10932,7 @@ export const useReactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDelete = <TE
     }
     
 /**
- * Create a reusable message template for reactive automations
+ * Create reaction message template for reactive automations
  * @summary Create Reaction Message Template
  */
 export const reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPost = (
@@ -10998,7 +10998,7 @@ export const useReactiveCreateMessageTemplateApiOrchestratorReactiveMessageTempl
     }
     
 /**
- * Update an existing reaction message template
+ * Update reaction message template
  * @summary Update Reaction Message Template
  */
 export const reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatch = (
@@ -11064,7 +11064,7 @@ export const useReactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTempl
     }
     
 /**
- * Delete an existing reaction message template
+ * Delete reaction message template
  * @summary Delete Reaction Message Template
  */
 export const reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDelete = (

@@ -9,7 +9,7 @@ import fnmatch
 
 
 from .draft import trends_to_draft_adapter
-from .comment import comments_to_draft_adapter
+from .comment import comments_to_draft_adapter, comments_to_reaction_message_template_adapter
 from .timeline import timeline_result_adapter
 
 
@@ -96,6 +96,9 @@ ADAPTERS = AdapterRegistry()
 ADAPTERS.register("bff.trends.list_trends", "drafts.create", trends_to_draft_adapter, priority=10)
 ADAPTERS.register("internal.insights.list_comments", "drafts.create", comments_to_draft_adapter, priority=10)
 ADAPTERS.register("bff.insights.comments.list", "drafts.create", comments_to_draft_adapter, priority=7)
+ADAPTERS.register("internal.insights.list_comments", "reactive.create_message_template", comments_to_reaction_message_template_adapter, priority=10)
+ADAPTERS.register("bff.insights.comments.list", "reactive.create_message_template", comments_to_reaction_message_template_adapter, priority=7)
+ADAPTERS.register("bff.insights.comments.search", "reactive.create_message_template", comments_to_reaction_message_template_adapter, priority=7)
 ADAPTERS.register("bff.timeline.*", "bff.timeline.*", timeline_result_adapter, priority=5)
 
 

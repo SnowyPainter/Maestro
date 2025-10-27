@@ -178,6 +178,38 @@ Instructions:
 
 Return ONLY JSON with structure {"text": "..."}. No explanations.
 """,
+
+    "reaction.template.from_comment": """\
+SYSTEM:
+You are Maestro's community response strategist. Respond ONLY with strict JSON matching:
+{{ json_schema }}
+
+USER:
+Product: {{ product_name or "N/A" }}
+Audience: {{ audience or "N/A" }}
+DesiredTone: {{ tone or "neutral" }}
+Goal: {{ goal or "relationship" }}
+AdditionalNotes: {{ text or "None" }}
+
+PersonaBrief (JSON):
+{{ persona_brief | tojson(indent=2) if persona_brief else "{}" }}
+
+CommentDataset (JSON):
+{{ comment_data | tojson(indent=2) if comment_data else "[]" }}
+
+ExistingHints:
+- TemplateTypeHint: {{ template_type_hint or "unspecified" }}
+- TagKeyHint: {{ tag_key_hint or "unspecified" }}
+- TitleHint: {{ title_hint or "unspecified" }}
+
+Instructions:
+- Study PersonaBrief and comments to decide whether a public reply or a private DM best serves the situation when TemplateTypeHint is unspecified.
+- Create a concise reaction message body that acknowledges key sentiments and offers a clear next step.
+- Suggest an informative title and, if relevant, a short tag key signifying the theme. Leave them null if no strong option exists.
+- Keep language natural, friendly, and aligned with the persona guardrails.
+- Ensure body is 3-6 sentences, written in English, ready to send without additional editing.
+- Return ONLY JSON that matches the schema exactly. No explanations.
+""",
 }
 
 _env = Environment(

@@ -1409,7 +1409,7 @@ export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetResponse = zod.
 
 
 /**
- * Retrieve all reaction rules for the current user
+ * List reaction rules
  * @summary List Reaction Rules
  */
 export const bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemKeywordsItemIsActiveDefault = true;export const bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemKeywordsItemPriorityDefault = 100;export const bffReactiveListRulesApiBffReactiveRulesGetResponseRulesItemActionsItemAlertEnabledDefault = false;
@@ -1449,7 +1449,7 @@ export const bffReactiveListRulesApiBffReactiveRulesGetResponse = zod.object({
 
 
 /**
- * Get reaction rule by id
+ * Get reaction rule
  * @summary Get Reaction Rule
  */
 export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetParams = zod.object({
@@ -1491,7 +1491,7 @@ export const bffReactiveReadRuleApiBffReactiveRulesRuleIdGetResponse = zod.objec
 
 
 /**
- * Retrieve publications attached to a reaction rule
+ * List publications attached to a reaction rule
  * @summary List Reaction Rule Publication Links
  */
 export const bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetParams = zod.object({
@@ -1511,7 +1511,7 @@ export const bffReactiveListRuleLinksApiBffReactiveRulesRuleIdPublicationsGetRes
 
 
 /**
- * Retrieve recent reactive automation action logs
+ * List reactive action logs
  * @summary List Reactive Action Logs
  */
 export const bffReactiveListActionLogsApiBffReactiveActionLogsGetQueryLimitDefault = 50;export const bffReactiveListActionLogsApiBffReactiveActionLogsGetQueryOffsetDefault = 0;
@@ -1542,7 +1542,7 @@ export const bffReactiveListActionLogsApiBffReactiveActionLogsGetResponse = zod.
 
 
 /**
- * Retrieve available reaction message templates for the current user
+ * List reaction message templates
  * @summary List Reaction Message Templates
  */
 export const bffReactiveListTemplatesApiBffReactiveMessageTemplatesGetQueryIncludeInactiveDefault = false;
@@ -3584,7 +3584,7 @@ export const reactiveDeleteRuleApiOrchestratorReactiveRulesRuleIdDeleteResponse 
 
 
 /**
- * Create a reusable message template for reactive automations
+ * Create reaction message template for reactive automations
  * @summary Create Reaction Message Template
  */
 export const reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplatesPostBodyIsActiveDefault = true;
@@ -3617,7 +3617,7 @@ export const reactiveCreateMessageTemplateApiOrchestratorReactiveMessageTemplate
 
 
 /**
- * Update an existing reaction message template
+ * Update reaction message template
  * @summary Update Reaction Message Template
  */
 export const reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdPatchParams = zod.object({
@@ -3653,7 +3653,7 @@ export const reactiveUpdateMessageTemplateApiOrchestratorReactiveMessageTemplate
 
 
 /**
- * Delete an existing reaction message template
+ * Delete reaction message template
  * @summary Delete Reaction Message Template
  */
 export const reactiveDeleteMessageTemplateApiOrchestratorReactiveMessageTemplatesTemplateIdDeleteParams = zod.object({

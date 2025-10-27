@@ -813,7 +813,7 @@ export interface paths {
         };
         /**
          * List Reaction Rules
-         * @description Retrieve all reaction rules for the current user
+         * @description List reaction rules
          */
         get: operations["bff_reactive_list_rules_api_bff_reactive_rules_get"];
         put?: never;
@@ -833,7 +833,7 @@ export interface paths {
         };
         /**
          * Get Reaction Rule
-         * @description Get reaction rule by id
+         * @description Get reaction rule
          */
         get: operations["bff_reactive_read_rule_api_bff_reactive_rules__rule_id__get"];
         put?: never;
@@ -853,7 +853,7 @@ export interface paths {
         };
         /**
          * List Reaction Rule Publication Links
-         * @description Retrieve publications attached to a reaction rule
+         * @description List publications attached to a reaction rule
          */
         get: operations["bff_reactive_list_rule_links_api_bff_reactive_rules__rule_id__publications_get"];
         put?: never;
@@ -873,7 +873,7 @@ export interface paths {
         };
         /**
          * List Reactive Action Logs
-         * @description Retrieve recent reactive automation action logs
+         * @description List reactive action logs
          */
         get: operations["bff_reactive_list_action_logs_api_bff_reactive_action_logs_get"];
         put?: never;
@@ -893,7 +893,7 @@ export interface paths {
         };
         /**
          * List Reaction Message Templates
-         * @description Retrieve available reaction message templates for the current user
+         * @description List reaction message templates
          */
         get: operations["bff_reactive_list_templates_api_bff_reactive_message_templates_get"];
         put?: never;
@@ -1904,7 +1904,7 @@ export interface paths {
         put?: never;
         /**
          * Create Reaction Message Template
-         * @description Create a reusable message template for reactive automations
+         * @description Create reaction message template for reactive automations
          */
         post: operations["reactive_create_message_template_api_orchestrator_reactive_message_templates_post"];
         delete?: never;
@@ -1925,14 +1925,14 @@ export interface paths {
         post?: never;
         /**
          * Delete Reaction Message Template
-         * @description Delete an existing reaction message template
+         * @description Delete reaction message template
          */
         delete: operations["reactive_delete_message_template_api_orchestrator_reactive_message_templates__template_id__delete"];
         options?: never;
         head?: never;
         /**
          * Update Reaction Message Template
-         * @description Update an existing reaction message template
+         * @description Update reaction message template
          */
         patch: operations["reactive_update_message_template_api_orchestrator_reactive_message_templates__template_id__patch"];
         trace?: never;
