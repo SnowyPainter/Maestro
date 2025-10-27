@@ -17,6 +17,7 @@ from apps.backend.src.core.logging import setup_logging
 setup_logging()
 
 from apps.backend.src.services.embeddings import embed_texts
+from .adapters.registry import ADAPTERS
 from .cards import card_type_for_model
 from .nlp import nlp_engine
 from .persona_context import persona_context_defaults
@@ -248,26 +249,52 @@ class FlowPlanner:
     def __init__(self) -> None:
         self._matcher = FlowMatcher()
 
+    ADAPTER_BONUS = 0.2
+
     async def plan(self, message: str) -> ChatPlan:
         segments = self._split_compound_message(message)
         if len(segments) > 1:
             return await self._plan_segments(message, segments)
         return await self._plan_single(message)
 
-    async def _plan_single(self, message: str) -> ChatPlan:
+    async def _plan_single(self, message: str, *, prev_flow_key: Optional[str] = None) -> ChatPlan:
         matches = await self._matcher.search(message, top_k=5)
         if not matches:
             return ChatPlan(steps=[], messages=self._no_match_messages(message), notes=None)
 
         attempted_slots: Dict[str, Any] = {}
+        prioritized: List[Tuple[float, int, FlowMatch, float]] = []
         for idx, match in enumerate(matches):
+            bonus = 0.0
+            if prev_flow_key and ADAPTERS.maybe_applicable(from_key=prev_flow_key, to_key=match.flow.key):
+                bonus = self.ADAPTER_BONUS
+            prioritized.append((match.score + bonus, idx, match, bonus))
+
+        prioritized.sort(key=lambda item: item[0], reverse=True)
+
+        for _, idx, match, bonus in prioritized:
             slots = self._extract_flow_slots(match.flow, message)
             steps = self._build_flow_steps(match.flow, slots, message)
+            adapter_assisted = False
+            if not steps and prev_flow_key and ADAPTERS.maybe_applicable(from_key=prev_flow_key, to_key=match.flow.key):
+                card_hint = card_type_for_model(match.flow.output_model)
+                steps = [
+                    PlanExecutionStep(
+                        id=None,
+                        kind="flow",
+                        flow_key=match.flow.key,
+                        payload={},
+                        card_hint=card_hint,
+                    )
+                ]
+                adapter_assisted = True
             if steps:
                 self._ensure_step_ids(steps)
+                bonus_note = f" + adapter bonus {bonus:.2f}" if bonus else ""
+                adapter_note = " Payload will be provided via adapter." if adapter_assisted else ""
                 notes = (
                     f"Matched flow '{match.flow.title}' via {match.strategy} search "
-                    f"(score {match.score:.2f})."
+                    f"(score {match.score:.2f}{bonus_note}).{adapter_note}"
                 )
                 alternatives = [candidate for pos, candidate in enumerate(matches) if pos != idx]
                 return ChatPlan(
@@ -299,13 +326,14 @@ class FlowPlanner:
         alternatives: List[FlowMatch] = []
         merged_slots: Dict[str, Any] = {}
         step_counter = 0
+        prev_flow_key: Optional[str] = None
 
         for index, segment in enumerate(segments, start=1):
             segment_text = segment.strip()
             if not segment_text:
                 continue
 
-            segment_plan = await self._plan_single(segment_text)
+            segment_plan = await self._plan_single(segment_text, prev_flow_key=prev_flow_key if combined_steps else None)
             merged_slots.update(segment_plan.slots)
             if segment_plan.primary_match and primary_match is None:
                 primary_match = segment_plan.primary_match
@@ -320,6 +348,8 @@ class FlowPlanner:
                 self._ensure_step_ids(segment_plan.steps, start=step_counter + 1, force=True)
                 step_counter += len(segment_plan.steps)
                 combined_steps.extend(segment_plan.steps)
+                last_flow = next((step.flow_key for step in reversed(combined_steps) if step.flow_key), prev_flow_key)
+                prev_flow_key = last_flow
             else:
                 prefix = f"segment {index} ('{segment_text}')"
                 if segment_plan.messages:
@@ -398,8 +428,6 @@ class FlowPlanner:
     def _apply_flow_adapters(self, steps: List[PlanExecutionStep]) -> None:
         if len(steps) < 2:
             return
-
-        from .adapters.registry import ADAPTERS
 
         for previous, current in zip(steps, steps[1:]):
             if previous.flow_key is None or current.flow_key is None:
