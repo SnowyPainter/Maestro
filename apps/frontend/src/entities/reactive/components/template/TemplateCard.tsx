@@ -25,89 +25,67 @@ export function TemplateCard({ template, onEdit, onDelete }: TemplateCardProps) 
     }
   };
 
-  const getActionTypeColor = (actionType: string) => {
-    switch (actionType) {
-      case 'dm':
-        return 'bg-blue-100 text-blue-800';
-      case 'reply':
-        return 'bg-green-100 text-green-800';
-      case 'alert':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
-    <Card className="hover:shadow-md transition-shadow h-full group relative">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {getActionTypeIcon(template.template_type)}
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-sm font-medium truncate">
-                {template.title || `Template ${template.id}`}
-              </CardTitle>
-              <div className="flex items-center gap-1 mt-1">
-                {template.tag_key && (
-                  <Badge variant="outline" className="text-xs px-1 py-0">
-                    {template.tag_key}
-                  </Badge>
-                )}
-                <Badge
-                  variant="secondary"
-                  className={`text-xs px-1.5 py-0.5 ${getActionTypeColor(template.template_type)}`}
-                >
-                  {template.template_type}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-
-      {/* Hover시에 나타나는 버튼들 - 중앙 상단에 absolute 배치 */}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+    <Card className="hover:shadow-md transition-shadow h-full group relative p-3">
+      {/* Hover시에 나타나는 버튼들 - 아이콘 위에 겹쳐서 배치 */}
+      <div className="absolute top-1 left-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onEdit(template)}
-          className="h-6 w-6 p-0 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white border"
+          className="h-5 w-5 p-0 bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white border"
         >
-          <Edit className="h-3 w-3" />
+          <Edit className="h-2.5 w-2.5" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onDelete(template)}
-          className="h-6 w-6 p-0 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white border text-red-500 hover:text-red-700"
+          className="h-5 w-5 p-0 bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white border text-red-500 hover:text-red-700"
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-2.5 w-2.5" />
         </Button>
       </div>
-      <CardContent className="pt-0">
-        <div className="space-y-2">
-          <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-            {template.body}
-          </p>
 
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">
-              {template.language && `${template.language}`}
-            </span>
-            <Badge
-              variant={template.is_active ? "default" : "secondary"}
-              className={`text-xs px-1.5 py-0.5 ${
-                template.is_active
-                  ? 'bg-green-100 text-green-700 hover:bg-green-100'
-                  : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {template.is_active ? 'Active' : 'Inactive'}
-            </Badge>
+      <div className="space-y-2">
+        {/* 아이콘 + 타이틀 */}
+        <div className="flex items-start gap-2">
+          {getActionTypeIcon(template.template_type)}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xs font-semibold text-gray-900 leading-tight line-clamp-2 min-h-[2rem]">
+              {template.title || `Template ${template.id}`}
+            </h3>
+            {template.tag_key && (
+              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 mt-1 inline-block">
+                {template.tag_key}
+              </Badge>
+            )}
           </div>
         </div>
-      </CardContent>
+
+        {/* 본문 */}
+        <p className="text-[11px] text-gray-600 line-clamp-3 leading-snug">
+          {template.body}
+        </p>
+
+        {/* 푸터 */}
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[10px] text-gray-500">
+            {template.language && `${template.language}`}
+          </span>
+          <Badge
+            variant={template.is_active ? "default" : "secondary"}
+            className={`text-[10px] px-1 py-0 h-3.5 ${
+              template.is_active
+                ? 'bg-green-100 text-green-700 hover:bg-green-100'
+                : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            {template.is_active ? 'Active' : 'Inactive'}
+          </Badge>
+        </div>
+      </div>
     </Card>
   );
 }
