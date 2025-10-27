@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link2, X, Zap, AlertCircle } from "lucide-react";
+import { Link2, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { useCallback } from "react";
@@ -44,20 +44,6 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
     unlink({ personaId: link.persona_id, accountId: link.account_id });
   };
 
-  const handleInject = useCallback(() => {
-    if (!persona || !account) return;
-
-    setPersonaContext({
-      personaAccountId: link.id,
-      personaId: link.persona_id,
-      personaName: persona.name,
-      personaAvatarUrl: persona.avatar_url ?? null,
-      accountId: link.account_id,
-      accountHandle: account.handle,
-      accountPlatform: account.platform,
-      accountAvatarUrl: account.avatar_url ?? null,
-    });
-  }, [persona, account, setPersonaContext, link]);
 
   if (!persona || !account) {
     return <Skeleton className="h-24 w-full" />;
@@ -109,21 +95,6 @@ export function PersonaAccountCard({ link, refetchLinks }: PersonaAccountCardPro
         </div>
         <div className="flex items-center gap-2">
           {isActive && isLinkActive && <Badge variant="secondary">Active</Badge>}
-          <button
-            onClick={handleInject}
-            disabled={isActive || !isLinkActive}
-            className={`p-2 rounded-md transition-colors ${
-              isActive && isLinkActive
-                ? 'bg-emerald-500 text-white cursor-not-allowed opacity-75'
-                : 'hover:bg-muted/50 cursor-pointer'
-            } ${!isLinkActive && 'cursor-not-allowed opacity-50'}`}
-          >
-            <Zap className={`h-4 w-4 ${
-              isActive && isLinkActive
-                ? 'text-white'
-                : 'text-emerald-500'
-            }  ${!isLinkActive && 'text-muted-foreground'}`} />
-          </button>
         </div>
       </CardFooter>
       <AlertDialog>

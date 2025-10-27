@@ -66,6 +66,7 @@ interface DisplayPersonaAccountCardProps {
     onSelect: (personaAccount: any) => void;
     isSelected?: boolean;
     isSelecting?: boolean;
+    showAlreadyInjected?: boolean;
     prefersReducedMotion?: boolean;
     className?: string;
 }
@@ -75,6 +76,7 @@ export function DisplayPersonaAccountCard({
     onSelect,
     isSelected = false,
     isSelecting = false,
+    showAlreadyInjected = false,
     prefersReducedMotion = false,
     className,
 }: DisplayPersonaAccountCardProps) {
@@ -213,14 +215,25 @@ export function DisplayPersonaAccountCard({
             </div>
 
             {/* Selection Overlay */}
-            {isSelecting && (
+            {(isSelecting || showAlreadyInjected) && (
                 <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center rounded-2xl">
                     <div className="bg-white/95 rounded-xl px-6 py-4 shadow-2xl flex items-center gap-3">
-                        <Zap className="h-6 w-6 text-primary animate-pulse" />
-                        <div>
-                            <p className="font-semibold text-gray-900">Injecting Account</p>
-                            <p className="text-sm text-gray-600">Setting up your persona...</p>
-                        </div>
+                        {isSelecting ? (
+                            <>
+                                <Zap className="h-6 w-6 text-primary animate-pulse" />
+                                <div>
+                                    <p className="font-semibold text-gray-900">Injecting Account</p>
+                                    <p className="text-sm text-gray-600">Setting up your persona...</p>
+                                </div>
+                            </>
+                        ) : showAlreadyInjected ? (
+                            <>
+                                <div className="text-center">
+                                    <p className="font-bold text-lg text-emerald-600 animate-bounce">Already Injected!!</p>
+                                    <p className="text-sm text-gray-600">This persona is currently active</p>
+                                </div>
+                            </>
+                        ) : null}
                     </div>
                 </div>
             )}

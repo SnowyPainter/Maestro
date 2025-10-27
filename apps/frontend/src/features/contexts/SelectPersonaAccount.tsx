@@ -15,17 +15,27 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
     const [injectingAccount, setInjectingAccount] = useState<string | null>(null);
+    const [alreadyInjectedAccount, setAlreadyInjectedAccount] = useState<string | null>(null);
     const touchStartX = useRef<number>(0);
     const touchEndX = useRef<number>(0);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const { setPersonaContext } = usePersonaContextStore();
+    const { setPersonaContext, personaAccountId: currentPersonaAccountId } = usePersonaContextStore();
 
     const { data: richPersonaAccounts, isLoading } = useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet({
         query: { enabled: true }
     });
 
     const handleSelectPersonaAccount = useCallback((richPersonaAccount: any) => {
+        // If already selected, show "Already Injected!!" message temporarily
+        if (String(richPersonaAccount.id) === String(currentPersonaAccountId)) {
+            setAlreadyInjectedAccount(String(richPersonaAccount.id));
+            setTimeout(() => {
+                setAlreadyInjectedAccount(null);
+            }, 2000); // Hide after 2 seconds
+            return;
+        }
+
         // Start injection animation
         setInjectingAccount(String(richPersonaAccount.id));
         console.log(richPersonaAccount)
@@ -44,7 +54,7 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
             setInjectingAccount(null);
             onSelect?.();
         }, 800); // 0.8 seconds injection animation
-    }, [setPersonaContext, onSelect]);
+    }, [setPersonaContext, onSelect, currentPersonaAccountId]);
 
     const nextSlide = useCallback(() => {
         if (!richPersonaAccounts?.length || isAnimating) return;
@@ -141,10 +151,10 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
             {/* Header */}
             <div className="text-center mb-6">
                 <h2 className="text-lg font-semibold text-foreground mb-2">
-                    Choose Account
+                    {currentPersonaAccountId ? 'Switch Persona Account' : 'Choose Account'}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                    Select a persona account to continue
+                    {currentPersonaAccountId ? 'Select a different persona account to switch' : 'Select a persona account to continue'}
                 </p>
             </div>
 
@@ -195,7 +205,9 @@ export function SelectPersonaAccount({ onSelect, className }: SelectPersonaAccou
                                 <DisplayPersonaAccountCard
                                     personaAccount={displayPersonaAccount}
                                     onSelect={handleSelectPersonaAccount}
+                                    isSelected={String(personaAccount.id) === String(currentPersonaAccountId)}
                                     isSelecting={isInjecting}
+                                    showAlreadyInjected={String(personaAccount.id) === alreadyInjectedAccount}
                                     prefersReducedMotion={prefersReducedMotion}
                                 />
                             </div>

@@ -103,52 +103,11 @@ export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamP
   }, [messages]);
 
   if (messages.length === 0) {
-    // If no persona account is selected, show persona selection carousel
-    if (!hasPersona) {
-      return (
-        <div className="h-screen flex flex-col bg-background">
-          <div className="flex-1 flex items-center justify-center p-4">
-            <SelectPersonaAccount />
-          </div>
-          <div className="w-full max-w-3xl px-4">
-            <ChatInput onSendMessage={onSendMessage} onClearChat={onClearChat} placeholder="Ask me anything..." />
-          </div>
-          <div className="text-xs text-muted-foreground p-2">
-            Maestro can make mistakes. Consider checking important information.
-          </div>
-        </div>
-      );
-    }
-
-    // If persona account is selected, show context cards
+    // Always show SelectPersonaAccount when chat is empty
     return (
       <div className="h-screen flex flex-col bg-background">
         <div className="flex-1 flex items-center justify-center p-4">
-          {contextCards.length > 0 ? (
-            <div className="w-full max-w-md relative">
-              <div className="relative overflow-hidden">
-                {contextCards.map((card, index) => (
-                  <div
-                    key={card.label}
-                    className={cn(
-                      "transition-opacity duration-300",
-                      index === 0 ? "opacity-100" : "opacity-0 absolute inset-0 pointer-events-none"
-                    )}
-                  >
-                    <ContextCard {...card} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="text-muted-foreground">
-                <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-sm">No active context</p>
-                <p className="text-xs text-muted-foreground">Select a persona to start chatting</p>
-              </div>
-            </div>
-          )}
+          <SelectPersonaAccount />
         </div>
         <div className="w-full max-w-3xl px-4">
           <ChatInput onSendMessage={onSendMessage} onClearChat={onClearChat} placeholder="Ask me anything..." />

@@ -182,8 +182,7 @@ export function PersonaAccountContext() {
                             value={personaName || "Unknown"}
                             enabled={true}
                             toggleDisabled={true}
-                            onClear={handleClearPersona}
-                            clearDisabled={false}
+                            clearDisabled={true}
                             variant="persona"
                             personaAvatarUrl={personaAvatarUrl || undefined}
                             accountHandle={accountHandle || undefined}
