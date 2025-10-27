@@ -226,6 +226,13 @@
 - 각 워커는 자율적으로 판단하고 실행
 - 인간의 승인을 기다리지 않고 초안 제안 가능
 
+### ✅ **Flow Chaining + Adaptive Scoring (플로우 체이닝 + 적응형 점수화)**
+- **어댑팅 보너스 점수 (ADAPTER_BONUS = 0.2)**: 이전 플로우와 현재 플로우가 어댑터로 연결될 수 있으면 자동으로 0.2점 보너스 부여
+- **자연스러운 플로우 연계**: "List all post publications" → "Search comments..."가 자연스럽게 연결되어 복합 명령어 처리
+- **확장성 극대화**: 새로운 플로우를 추가할 때 기존 플로우와의 어댑터만 정의하면 즉시 체이닝 가능
+- **DSL 실행의 효율성**: LLM은 판단/추론이 아닌 "적절한 글 생성"에만 충실 → 템플릿 품질 보장 및 페르소나 정책 자동 적용
+- **예시**: 댓글 검색 결과가 템플릿 생성 플로우의 입력으로 자동 변환되어 "Search comments ... and create reaction message template" 명령어 처리
+
 ---
 
 ## 🔒 보안 및 인증
@@ -306,6 +313,20 @@
    - "List comments post_publication_id:9 and create a new draft" → 특정 게시물 댓글 조회 후 댓글 기반 새 Draft 생성
    - **결과**: LLM이 댓글 분석 → 관련 트렌드 검색 → 후속 콘텐츠 초안 생성
 
+#### 🎯 **유즈케이스 3: 댓글 기반 자동 메시지 템플릿 생성 (Flow Chaining + Adapter)**
+1. **게시물 목록 조회**
+   - "List all post publications" → 발행된 게시물 목록 확인
+   - 특정 게시물 ID 선택
+
+2. **댓글 검색 및 템플릿 자동 생성**
+   - "Search comments post_publication:1 q:*some comment* and create reaction message template" → 특정 게시물의 댓글들을 검색하여 자동으로 DM/Reply 메시지 템플릿 생성
+   - **결과**: 댓글 내용 분석 → 페르소나 정책 적용 → 적절한 응답 템플릿 자동 생성 (DM용/댓글 답장용 분리)
+   - **특징**: Flow Chaining을 통해 "댓글 검색" → "템플릿 생성"이 자연스럽게 연결되며, LLM은 템플릿 품질 보장만 담당
+
+3. **템플릿 배포 및 자동화**
+   - 생성된 템플릿을 Reactive Rule에 연결하여 영구 자동화
+   - **결과**: 미래 댓글에 대한 자동 응답 체계 구축
+
 ### 📊 메트릭 수집 (지속적 학습 데이터 축적)
 1. Synchro 워커가 주기적으로 Adapter 호출
 2. 플랫폼별 메트릭 API 쿼리 (likes, replies, views 등)
@@ -338,8 +359,9 @@
 3. **결정론적 실행** — DAG 기반 추적 가능한 액션 체인
 4. **기억하는 자동화** — Trends RAG로 유사 인사이트 기반 학습
 5. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (템플릿이 잘못되었어도 페르소나가 내용 보정)
-6. **플랫폼 중립성** — Adapter 패턴으로 확장 가능한 구조
-7. **프론트엔드 융화** — BFF + OpenAPI 자동 동기화로 타입 안전성 보장
+6. **Flow Chaining + Adaptive Scoring** — 어댑팅 보너스로 자연스러운 플로우 연계, LLM은 생성에만 충실하여 확장성과 효율성 극대화
+7. **플랫폼 중립성** — Adapter 패턴으로 확장 가능한 구조
+8. **프론트엔드 융화** — BFF + OpenAPI 자동 동기화로 타입 안전성 보장
 
 ---
 
