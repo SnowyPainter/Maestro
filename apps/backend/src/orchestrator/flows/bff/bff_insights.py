@@ -13,8 +13,8 @@ from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.modules.users.models import User
-from apps.backend.src.modules.insights.schemas import InsightCommentList, InsightCommentOut
-from apps.backend.src.modules.insights.service import list_insight_comments
+from apps.backend.src.modules.insights.schemas import InsightCommentList, InsightCommentSearchPayload
+from apps.backend.src.modules.insights.service import list_insight_comments, search_insight_comments
 from apps.backend.src.modules.accounts.service import _load_platform_account
 from apps.backend.src.modules.drafts.service import _load_post_publication
 
@@ -57,6 +57,41 @@ async def op_list_insight_comments(
     )
     return comments
 
+@operator(
+    key="bff.insights.comments.search",
+    title="Search Comments",
+    side_effect="read",
+)
+async def op_search_insight_comments(
+    payload: InsightCommentSearchPayload,
+    ctx: TaskContext,
+) -> InsightCommentList:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User | None = ctx.optional(User)
+    
+    comments = await search_insight_comments(
+        db,
+        persona_account_id=payload.persona_account_id,
+        query=payload.q,
+        post_publication_id=payload.post_publication_id,
+        limit=payload.limit,
+    )
+    return comments
+
+
+@FLOWS.flow(
+    key="bff.insights.comments.search",
+    title="Search Comments",
+    description="Search comments.",
+    input_model=InsightCommentSearchPayload,
+    output_model=InsightCommentList,
+    method="get",
+    path="/insights/comments/search",
+    tags=("bff", "insights", "comments", "search"),
+)
+def _flow_bff_search_comments(builder: FlowBuilder):
+    task = builder.task("search_comments", "bff.insights.comments.search")
+    builder.expect_terminal(task)
 
 @FLOWS.flow(
     key="bff.insights.comments.list",

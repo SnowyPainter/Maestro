@@ -3,9 +3,10 @@ import { InsightCommentOut, InsightCommentList } from "@/lib/api/generated";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useContextRegistryStore } from "@/store/chat-context-registry";
 import { usePersonaContextStore } from "@/store/persona-context";
-import { ExternalLink, MessageSquare, User, Clock } from "lucide-react";
+import { ExternalLink, MessageSquare, User, Clock, Calendar, Hash, Link as LinkIcon } from "lucide-react";
 
 interface CommentListProps {
   data: InsightCommentList;
@@ -14,6 +15,8 @@ interface CommentListProps {
 
 const CommentList = ({ data, onSelectComment }: CommentListProps) => {
   const [selectedComment, setSelectedComment] = useState<number | null>(null);
+  const [selectedCommentDetail, setSelectedCommentDetail] = useState<InsightCommentOut | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const registerEmission = useContextRegistryStore((state) => state.registerEmission);
   const { personaAccountId } = usePersonaContextStore();
 
@@ -53,6 +56,8 @@ const CommentList = ({ data, onSelectComment }: CommentListProps) => {
 
   const handleSelectComment = (comment: InsightCommentOut) => {
     setSelectedComment(comment.id);
+    setSelectedCommentDetail(comment);
+    setIsDialogOpen(true);
     onSelectComment?.(comment.id);
   };
 
@@ -73,8 +78,15 @@ const CommentList = ({ data, onSelectComment }: CommentListProps) => {
     return ingested.toLocaleDateString();
   };
 
+  const formatLocalTime = (utcTime: string | null | undefined) => {
+    if (!utcTime) return "Unknown";
+    const date = new Date(utcTime);
+    return date.toLocaleString();
+  };
+
   return (
-    <Card className="shadow-sm">
+    <>
+      <Card className="shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-xl flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
@@ -171,6 +183,165 @@ const CommentList = ({ data, onSelectComment }: CommentListProps) => {
         )}
       </CardContent>
     </Card>
+
+    {/* Comment Detail Dialog */}
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        {selectedCommentDetail && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Comment Details
+              </DialogTitle>
+              <DialogDescription>
+                Detailed information about the selected comment
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className={`space-y-6 ${selectedCommentDetail.is_owned_by_me ? 'opacity-75' : ''}`}>
+              {/* Header Section */}
+              <div className="flex items-start gap-4">
+                <Avatar className="w-12 h-12 flex-shrink-0">
+                  <AvatarFallback className={`text-sm ${
+                    selectedCommentDetail.is_owned_by_me
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}>
+                    {selectedCommentDetail.is_owned_by_me ? "Me" : <User className="w-4 h-4" />}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-semibold text-base">
+                      {selectedCommentDetail.is_owned_by_me
+                        ? "Me"
+                        : (selectedCommentDetail.author_username || "Anonymous")}
+                    </span>
+                    {selectedCommentDetail.is_owned_by_me && (
+                      <Badge variant="secondary" className="text-xs px-2 py-1">
+                        My comment
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs capitalize ml-auto">
+                      {selectedCommentDetail.platform}
+                    </Badge>
+                  </div>
+
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Hash className="w-4 h-4" />
+                      <span>ID: {selectedCommentDetail.id}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span>Created: {formatLocalTime(selectedCommentDetail.comment_created_at)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>Ingested: {formatLocalTime(selectedCommentDetail.ingested_at)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comment Content */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                  Content
+                </h4>
+                <div className={`p-4 rounded-lg border ${
+                  selectedCommentDetail.is_owned_by_me
+                    ? 'bg-muted/30 border-muted-foreground/20'
+                    : 'bg-card'
+                }`}>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {selectedCommentDetail.text || "No content"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedCommentDetail.post_publication_id && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      Post Publication
+                    </h4>
+                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded">
+                      <Hash className="w-4 h-4" />
+                      <span className="text-sm">ID: {selectedCommentDetail.post_publication_id}</span>
+                    </div>
+                  </div>
+                )}
+
+                {selectedCommentDetail.account_persona_id && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      Account Persona
+                    </h4>
+                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded">
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">ID: {selectedCommentDetail.account_persona_id}</span>
+                    </div>
+                  </div>
+                )}
+
+                {selectedCommentDetail.comment_external_id && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      External ID
+                    </h4>
+                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded">
+                      <LinkIcon className="w-4 h-4" />
+                      <span className="text-sm truncate">{selectedCommentDetail.comment_external_id}</span>
+                    </div>
+                  </div>
+                )}
+
+                {selectedCommentDetail.permalink && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                      Permalink
+                    </h4>
+                    <a
+                      href={selectedCommentDetail.permalink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 bg-muted/50 rounded hover:bg-muted transition-colors text-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span className="truncate">View on platform</span>
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Metrics */}
+              {selectedCommentDetail.metrics && Object.keys(selectedCommentDetail.metrics).length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    Metrics
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {Object.entries(selectedCommentDetail.metrics).map(([key, value]) => (
+                      <div key={key} className="p-3 bg-muted/50 rounded text-center">
+                        <div className="text-lg font-semibold">{value}</div>
+                        <div className="text-xs text-muted-foreground capitalize">
+                          {key.replace(/_/g, ' ')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

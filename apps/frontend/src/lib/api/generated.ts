@@ -2693,6 +2693,13 @@ limit?: number;
 offset?: number;
 };
 
+export type BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams = {
+persona_account_id: number;
+q: string;
+post_publication_id?: number | null;
+limit?: number;
+};
+
 export type BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams = {
 persona_account_id?: number | null;
 limit?: number;
@@ -5461,6 +5468,96 @@ export function useBffDraftsListDraftsApiBffDraftsGet<TData = Awaited<ReturnType
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffDraftsListDraftsApiBffDraftsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Search comments.
+ * @summary Search Comments
+ */
+export const bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet = (
+    params: BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<InsightCommentList>(
+      {url: `/api/bff/insights/comments/search`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryKey = (params?: BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams,) => {
+    return [`/api/bff/insights/comments/search`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryOptions = <TData = Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError = HTTPValidationError>(params: BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>> = ({ signal }) => bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>>
+export type BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryError = HTTPValidationError
+
+
+export function useBffInsightsCommentsSearchApiBffInsightsCommentsSearchGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError = HTTPValidationError>(
+ params: BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffInsightsCommentsSearchApiBffInsightsCommentsSearchGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError = HTTPValidationError>(
+ params: BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffInsightsCommentsSearchApiBffInsightsCommentsSearchGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError = HTTPValidationError>(
+ params: BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Search Comments
+ */
+
+export function useBffInsightsCommentsSearchApiBffInsightsCommentsSearchGet<TData = Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError = HTTPValidationError>(
+ params: BffInsightsCommentsSearchApiBffInsightsCommentsSearchGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffInsightsCommentsSearchApiBffInsightsCommentsSearchGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

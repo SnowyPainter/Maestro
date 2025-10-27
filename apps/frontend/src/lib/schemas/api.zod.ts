@@ -1025,6 +1025,46 @@ export const bffDraftsListDraftsApiBffDraftsGetResponse = zod.array(bffDraftsLis
 
 
 /**
+ * Search comments.
+ * @summary Search Comments
+ */
+export const bffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryLimitDefault = 5;
+
+export const bffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryParams = zod.object({
+  "persona_account_id": zod.number(),
+  "q": zod.string(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "limit": zod.number().default(bffInsightsCommentsSearchApiBffInsightsCommentsSearchGetQueryLimitDefault)
+})
+
+export const bffInsightsCommentsSearchApiBffInsightsCommentsSearchGetResponseHasMoreDefault = false;
+
+export const bffInsightsCommentsSearchApiBffInsightsCommentsSearchGetResponse = zod.object({
+  "comments": zod.array(zod.object({
+  "owner_user_id": zod.union([zod.number(),zod.null()]).optional(),
+  "post_publication_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.enum(['instagram', 'threads']),
+  "platform_post_id": zod.string().nullish(),
+  "account_persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "comment_external_id": zod.string(),
+  "parent_external_id": zod.string().nullish(),
+  "author_id": zod.string().nullish(),
+  "author_username": zod.string().nullish(),
+  "text": zod.string().nullish(),
+  "permalink": zod.string().nullish(),
+  "comment_created_at": zod.iso.datetime({}).nullish(),
+  "is_owned_by_me": zod.union([zod.boolean(),zod.null()]).optional(),
+  "metrics": zod.record(zod.string(), zod.number()).optional(),
+  "raw": zod.record(zod.string(), zod.any()).optional(),
+  "id": zod.number(),
+  "ingested_at": zod.iso.datetime({})
+})),
+  "total": zod.number(),
+  "has_more": zod.boolean().optional()
+})
+
+
+/**
  * List comments for a post publication.
  * @summary List Comments
  */

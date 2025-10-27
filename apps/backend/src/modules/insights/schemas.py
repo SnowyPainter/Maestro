@@ -93,3 +93,9 @@ class InsightCommentList(BaseModel):
     comments: List[InsightCommentOut]
     total: int
     has_more: bool = False
+
+class InsightCommentSearchPayload(BaseModel):
+    persona_account_id: int
+    q: str # no post publication id -> just search all comments
+    post_publication_id: Optional[int] = None # if post publication id is provided, only search comments for that post publication
+    limit: int = 5

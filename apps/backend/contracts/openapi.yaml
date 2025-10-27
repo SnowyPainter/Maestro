@@ -1084,6 +1084,58 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/insights/comments/search:
+    get:
+      tags:
+      - bff
+      - bff
+      - insights
+      - comments
+      - search
+      summary: Search Comments
+      description: Search comments.
+      operationId: bff_insights_comments_search_api_bff_insights_comments_search_get
+      parameters:
+      - name: persona_account_id
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Persona Account Id
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Q
+      - name: post_publication_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Post Publication Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 5
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightCommentList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/insights/{post_publication_id}/comments:
     get:
       tags:

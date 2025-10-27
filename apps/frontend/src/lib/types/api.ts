@@ -584,6 +584,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/insights/comments/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Comments
+         * @description Search comments.
+         */
+        get: operations["bff_insights_comments_search_api_bff_insights_comments_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/insights/{post_publication_id}/comments": {
         parameters: {
             query?: never;
@@ -6215,6 +6235,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_insights_comments_search_api_bff_insights_comments_search_get: {
+        parameters: {
+            query: {
+                persona_account_id: number;
+                q: string;
+                post_publication_id?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightCommentList"];
                 };
             };
             /** @description Validation Error */

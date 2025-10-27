@@ -411,6 +411,7 @@ slots:
   - bff.campaigns.list_kpi_results
   - bff.drafts.list_drafts
   - bff.insights.comments.list
+  - bff.insights.comments.search
   - bff.playbook.list_playbooks
   - bff.reactive.list_action_logs
   - bff.schedule.get_schedule_stream
@@ -543,6 +544,7 @@ slots:
   - bff.contexts.current_persona
   - bff.contexts.current_persona_account
   - bff.insights.comments.list
+  - bff.insights.comments.search
   - bff.reactive.list_templates
   - bff.schedule.list_schedules
   - bff.timeline.abtests
@@ -633,6 +635,7 @@ slots:
   value_type: integer
   flows:
   - bff.insights.comments.list
+  - bff.insights.comments.search
   - insights.ingest
   - internal.drafts.publish
   - internal.insights.list_comments
@@ -658,6 +661,7 @@ slots:
   value_type: string
   flows:
   - bff.campaigns.list_campaigns
+  - bff.insights.comments.search
   - bff.schedule.get_schedule_stream
   - bff.trends.list_trends
 - name: queue

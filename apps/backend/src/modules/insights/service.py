@@ -278,3 +278,46 @@ async def list_insight_comments(
         total=len(comments),
         has_more=len(scored) > len(comments),
     )
+
+async def search_insight_comments(
+    db: AsyncSession,
+    *,
+    persona_account_id: int,
+    query: str,
+    post_publication_id: int | None = None,
+    limit: int = 5,
+) -> InsightCommentList:
+    if limit <= 0:
+        raise ValueError("limit must be positive")
+
+    stmt = (
+        select(InsightComment)
+        .where(InsightComment.account_persona_id == persona_account_id)
+    )
+
+    if post_publication_id is not None:
+        stmt = stmt.where(InsightComment.post_publication_id == post_publication_id)
+
+    if query:
+        q = f"%{query}%"
+        stmt = stmt.where(
+            (InsightComment.text.ilike(q)) |
+            (InsightComment.author_username.ilike(q))
+        )
+
+    stmt = stmt.order_by(
+        InsightComment.comment_created_at.desc().nullslast(),
+        InsightComment.ingested_at.desc(),
+    ).limit(limit)
+
+    result = await db.execute(stmt)
+    rows = list(result.scalars().all())
+    if not rows:
+        return InsightCommentList(comments=[], total=0, has_more=False)
+
+    comments = [InsightCommentOut.model_validate(row) for row in rows]
+    return InsightCommentList(
+        comments=comments,
+        total=len(comments),
+        has_more=False,
+    )
