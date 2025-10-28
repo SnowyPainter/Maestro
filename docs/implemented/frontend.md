@@ -149,6 +149,7 @@ src/
 - **Event Chain 페이지**: 이벤트 타입 분포 파이차트 + 메트릭 카드
 - **Performance 페이지**: 성공률 분포 파이차트 + 액션별 통계
 - **Insights 페이지**: Creator/Manager/Brand 페르소나별 가치 분석
+- **Trend Correlation 페이지**: KPI ↔ 트렌드 상관분석 (신규) — 트렌드 랭킹 vs. 콘텐츠 성과 예측
 - **Recommendations 페이지**: 개발 로드맵 타임라인 + AI 기반 추천
 - **플로팅 네비게이션**: 좌우 화살표 버튼으로 페이지 간 이동
 - **실시간 데이터 연동**: BFF API를 통한 실제 데이터베이스 메트릭 계산
@@ -208,8 +209,9 @@ src/
 - `EventChainPage` — 이벤트 체인 메트릭 + 타입 분포 파이차트
 - `PerformancePage` — 성공률 분포 + 액션 통계
 - `InsightsPage` — 페르소나별 가치 분석 카드
+- `TrendCorrelationPage` — KPI ↔ 트렌드 상관분석 (신규) — 산점도, 히트맵, 상관계수 시각화
 - `RecommendationsPage` — 개발 로드맵 타임라인 + AI 추천
-- `shadcn/ui Chart` 통합 — `ChartContainer`, `ChartTooltip`, `LineChart`, `PieChart`
+- `shadcn/ui Chart` 통합 — `ChartContainer`, `ChartTooltip`, `LineChart`, `PieChart`, `ScatterChart`, `BarChart`
 
 #### 🧩 **UI Components** (Radix 기반)
 - `Button`, `Input`, `Select`, `Checkbox`, `Switch`
@@ -329,7 +331,7 @@ src/
    - BFF API 호출로 실시간 데이터 조회
 
 2. **다중 페이지 대시보드 탐색**
-   - 플로팅 화살표 버튼으로 페이지 간 이동 (Overview → Event Chain → Performance → Insights → Recommendations)
+   - 플로팅 화살표 버튼으로 페이지 간 이동 (Overview → Event Chain → Performance → Insights → Trend Correlation → Recommendations)
    - 각 페이지별 데이터 시각화 (shadcn/ui chart 기반)
    - 메트릭 카드와 차트로 성과 분석
 
@@ -394,9 +396,10 @@ src/
 4. **실시간 동기화** — SSE로 백엔드 상태 실시간 반영
 5. **브랜드 기억 저장소** — 나와 CoWorker의 모든 행동을 완전하게 기록 (트렌드, KPI, 페르소나, LLM 컨텍스트)
 6. **컴팩트 분석 대시보드** — 실시간 메트릭 + 시각화로 즉시 인사이트 제공 (shadcn/ui chart)
-7. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (1회 설정 → 영구 자동화)
-8. **Trends RAG** — 벡터 검색으로 유사 트렌드 기반 인사이트 제공
-9. **타입 안전성** — OpenAPI 자동 생성으로 프론트/백엔드 계약 보장
+7. **KPI ↔ 트렌드 상관분석** — 트렌드 랭킹 vs. 콘텐츠 성과 예측 모델링으로 최적 트렌드 선정 (신규)
+8. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (1회 설정 → 영구 자동화)
+9. **Trends RAG** — 벡터 검색으로 유사 트렌드 기반 인사이트 제공
+10. **타입 안전성** — OpenAPI 자동 생성으로 프론트/백엔드 계약 보장
 
 ---
 
@@ -406,7 +409,7 @@ src/
 - **Features:** 13+ (백엔드 모듈 16개 연동)
 - **Entities:** 13+
 - **UI Components:** 30+
-- **Dashboard Components:** 6 (PlaybookAnalysisDashboard + 5 페이지 컴포넌트)
+- **Dashboard Components:** 7 (PlaybookAnalysisDashboard + 6 페이지 컴포넌트)
 - **자동 생성 API Hooks:** 50+ (대시보드 API 포함)
 
 ---
