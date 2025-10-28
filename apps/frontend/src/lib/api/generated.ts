@@ -614,6 +614,14 @@ export interface DashboardRecommendationsResponse {
   dynamic_recommendations: string[];
 }
 
+export interface DashboardTrendCorrelationResponse {
+  playbook_id: number;
+  total_samples?: number;
+  metric_correlations?: MetricCorrelationItem[];
+  top_trends?: TrendCorrelationItem[];
+  country_insights?: TrendCountryInsight[];
+}
+
 export interface DateRange {
   start: string;
   end: string;
@@ -1173,6 +1181,16 @@ export interface MailScheduleTemplateParams {
 
 export interface MessageOut {
   message: string;
+}
+
+export type MetricCorrelationItemCorrelation = number | null;
+
+export interface MetricCorrelationItem {
+  metric: string;
+  correlation?: MetricCorrelationItemCorrelation;
+  direction?: string;
+  strength?: string;
+  sample_size?: number;
 }
 
 export type MetricsScope = typeof MetricsScope[keyof typeof MetricsScope];
@@ -2529,6 +2547,35 @@ export interface TokenResponse {
   user: UserResponse;
 }
 
+export type TrendCorrelationItemAvgRank = number | null;
+
+export interface TrendCorrelationItem {
+  trend_title: string;
+  avg_rank?: TrendCorrelationItemAvgRank;
+  sample_size?: number;
+  metrics?: TrendCorrelationMetricInsight[];
+  /** @nullable */
+  latest_seen_at?: string | null;
+}
+
+export type TrendCorrelationMetricInsightCorrelation = number | null;
+
+export interface TrendCorrelationMetricInsight {
+  metric: string;
+  average_value: number;
+  correlation?: TrendCorrelationMetricInsightCorrelation;
+  direction?: string;
+  strength?: string;
+}
+
+export type TrendCountryInsightAvgMetrics = {[key: string]: number};
+
+export interface TrendCountryInsight {
+  country: string;
+  sample_size?: number;
+  avg_metrics?: TrendCountryInsightAvgMetrics;
+}
+
 /**
  * 데이터 수집 시각 (ISO format)
  */
@@ -2750,6 +2797,17 @@ include_logs?: boolean;
 };
 
 export type BffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetParams = {
+playbook_id?: number | null;
+campaign_id?: number | null;
+persona_id?: number | null;
+/**
+ * @nullable
+ */
+last_event?: string | null;
+include_logs?: boolean;
+};
+
+export type BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams = {
 playbook_id?: number | null;
 campaign_id?: number | null;
 persona_id?: number | null;
@@ -6194,6 +6252,96 @@ export function useBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRe
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommendationsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get KPI and trend correlation insights for playbook dashboard
+ * @summary Get Playbook Dashboard Trend Correlation Data
+ */
+export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet = (
+    params?: BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<DashboardTrendCorrelationResponse>(
+      {url: `/api/bff/playbooks/dashboard/trend-correlation`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryKey = (params?: BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams,) => {
+    return [`/api/bff/playbooks/dashboard/trend-correlation`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError = HTTPValidationError>(params?: BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>> = ({ signal }) => bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>>
+export type BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Playbook Dashboard Trend Correlation Data
+ */
+
+export function useBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet<TData = Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError = HTTPValidationError>(
+ params?: BffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

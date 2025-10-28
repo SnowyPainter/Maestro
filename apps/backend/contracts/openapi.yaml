@@ -1529,6 +1529,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/dashboard/trend-correlation:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - dashboard
+      - analytics
+      - ui
+      - frontend
+      summary: Get Playbook Dashboard Trend Correlation Data
+      description: Get KPI and trend correlation insights for playbook dashboard
+      operationId: bff_playbook_dashboard_trend_correlation_api_bff_playbooks_dashboard_trend_correlation_get
+      parameters:
+      - name: playbook_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: last_event
+        in: query
+        required: false
+        schema:
+          title: Last Event
+          type: string
+          nullable: true
+      - name: include_logs
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Logs
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardTrendCorrelationResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/playbooks:
     get:
       tags:
@@ -5772,6 +5837,34 @@ components:
       - overall_roi
       - dynamic_recommendations
       title: DashboardRecommendationsResponse
+    DashboardTrendCorrelationResponse:
+      properties:
+        playbook_id:
+          type: integer
+          title: Playbook Id
+        total_samples:
+          type: integer
+          title: Total Samples
+          default: 0
+        metric_correlations:
+          items:
+            $ref: '#/components/schemas/MetricCorrelationItem'
+          type: array
+          title: Metric Correlations
+        top_trends:
+          items:
+            $ref: '#/components/schemas/TrendCorrelationItem'
+          type: array
+          title: Top Trends
+        country_insights:
+          items:
+            $ref: '#/components/schemas/TrendCountryInsight'
+          type: array
+          title: Country Insights
+      type: object
+      required:
+      - playbook_id
+      title: DashboardTrendCorrelationResponse
     DateRange:
       properties:
         start:
@@ -7019,6 +7112,32 @@ components:
       required:
       - message
       title: MessageOut
+    MetricCorrelationItem:
+      properties:
+        metric:
+          type: string
+          title: Metric
+        correlation:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Correlation
+        direction:
+          type: string
+          title: Direction
+          default: neutral
+        strength:
+          type: string
+          title: Strength
+          default: insufficient
+        sample_size:
+          type: integer
+          title: Sample Size
+          default: 0
+      type: object
+      required:
+      - metric
+      title: MetricCorrelationItem
     MetricsScope:
       type: string
       enum:
@@ -9638,6 +9757,78 @@ components:
       - access_token
       - user
       title: TokenResponse
+    TrendCorrelationItem:
+      properties:
+        trend_title:
+          type: string
+          title: Trend Title
+        avg_rank:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Avg Rank
+        sample_size:
+          type: integer
+          title: Sample Size
+          default: 0
+        metrics:
+          items:
+            $ref: '#/components/schemas/TrendCorrelationMetricInsight'
+          type: array
+          title: Metrics
+        latest_seen_at:
+          title: Latest Seen At
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+      required:
+      - trend_title
+      title: TrendCorrelationItem
+    TrendCorrelationMetricInsight:
+      properties:
+        metric:
+          type: string
+          title: Metric
+        average_value:
+          type: number
+          title: Average Value
+        correlation:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Correlation
+        direction:
+          type: string
+          title: Direction
+          default: neutral
+        strength:
+          type: string
+          title: Strength
+          default: insufficient
+      type: object
+      required:
+      - metric
+      - average_value
+      title: TrendCorrelationMetricInsight
+    TrendCountryInsight:
+      properties:
+        country:
+          type: string
+          title: Country
+        sample_size:
+          type: integer
+          title: Sample Size
+          default: 0
+        avg_metrics:
+          additionalProperties:
+            type: number
+          type: object
+          title: Avg Metrics
+      type: object
+      required:
+      - country
+      title: TrendCountryInsight
     TrendItem:
       properties:
         rank:

@@ -7,6 +7,7 @@ import { EventChainPage } from "./dashboard/EventChainPage";
 import { PerformancePage } from "./dashboard/PerformancePage";
 import { InsightsPage } from "./dashboard/InsightsPage";
 import { RecommendationsPage } from "./dashboard/RecommendationsPage";
+import { TrendCorrelationPage } from "./dashboard/TrendCorrelationPage";
 
 const pages = [
   { component: OverviewPage, title: "Overview", key: "overview" },
@@ -14,6 +15,7 @@ const pages = [
   { component: PerformancePage, title: "Performance", key: "performance" },
   { component: InsightsPage, title: "Insights", key: "insights" },
   { component: RecommendationsPage, title: "Recommendations", key: "recommendations" },
+  { component: TrendCorrelationPage, title: "Trend Correlation", key: "trendCorrelation" },
 ];
 
 export function PlaybookAnalysisDashboard({

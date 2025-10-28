@@ -400,6 +400,7 @@ Historical Data → Feature Engineering → ML Training → 실시간 예측
 
 4. **인사이트 잠재력**:
    - 트렌드 연계성: Google Trends 데이터 실시간 반영
+   - KPI-트렌드 상관분석: 트렌드 랭킹 vs. 콘텐츠 성과 예측 모델링
    - 페르소나 일관성: "Tech Reviewer" 페르소나 UK Slang 스타일 유지
    - LLM 투명성: 프롬프트 → 출력 완전 추적 가능
 
@@ -536,6 +537,55 @@ include_logs    스냅샷 추출       aggregate       trend_snapshot
 - **프롬프트 효과성**: llm_input의 품질 vs. 생성 결과 품질
 - **컨텍스트 활용도**: persona_snapshot + trend_snapshot이 얼마나 반영되는지
 - **반복 생성 패턴**: 유사한 입력에 대한 출력 일관성
+
+#### **KPI ↔ 트렌드 상관관계 분석**
+- **트렌드 기반 성과 예측**: 트렌드 데이터의 랭킹 vs. 게시물 KPI 상관관계
+  - 예시: Google Trends Top 10 트렌드 기반 콘텐츠의 평균 참여율 분석
+  - 트렌드 신선도(검색량)와 게시물 impressions/engagement_rate의 상관계수
+- **지역별 트렌드 효과성**: trend_snapshot.country별 KPI 평균값 비교
+  - US 트렌드 vs. EU 트렌드 기반 콘텐츠의 성과 차이 분석
+  - 국가별 트렌드 채택률과 참여율의 상관관계
+- **트렌드-메트릭 시계열 분석**: 시간별 트렌드 변화 vs. KPI 메트릭 추이
+  - 트렌드 검색량 피크와 게시물 참여율 피크의 시간적 동기화 분석
+  - 트렌드 데이터 갱신 주기(8-12분)와 메트릭 수집 주기의 연계성
+- **트렌드 활용도 점수화**: 콘텐츠가 트렌드 데이터를 얼마나 반영했는지 정량적 측정
+  - 트렌드 키워드 포함도 vs. 게시물 성과 상관관계
+  - 트렌드 기반 생성 콘텐츠의 KPI 향상도 측정
+
+##### **실제 데이터 기반 분석 예시**
+```sql
+-- 트렌드 랭킹 vs KPI 상관관계 분석
+SELECT
+    (trend_snapshot->'items'->0->>'rank')::int as trend_rank,
+    AVG((kpi_snapshot->>'engagement_rate')::float) as avg_engagement,
+    COUNT(*) as post_count
+FROM playbook_logs
+WHERE event = 'sync.metrics'
+  AND kpi_snapshot IS NOT NULL
+  AND trend_snapshot IS NOT NULL
+  AND trend_snapshot->'items'->0 IS NOT NULL
+GROUP BY trend_rank
+ORDER BY trend_rank;
+
+-- 지역별 트렌드 효과성 분석
+SELECT
+    trend_snapshot->>'country' as country,
+    AVG((kpi_snapshot->>'likes')::float) as avg_likes,
+    AVG((kpi_snapshot->>'comments')::float) as avg_comments,
+    COUNT(*) as sample_size
+FROM playbook_logs
+WHERE event = 'sync.metrics'
+  AND kpi_snapshot IS NOT NULL
+  AND trend_snapshot IS NOT NULL
+GROUP BY country
+HAVING COUNT(*) >= 3
+ORDER BY avg_likes DESC;
+```
+
+##### **추천 대시보드 시각화**
+- **트렌드 랭킹 vs 참여율 산점도**: 트렌드 순위에 따른 콘텐츠 성과 분포
+- **국가별 트렌드 효과성 히트맵**: 지역별 트렌드 활용도와 KPI 상관관계
+- **트렌드-메트릭 시계열 차트**: 시간에 따른 트렌드 변화와 KPI 추이 동기화
 
 ### 6.4 확장된 메트릭스
 

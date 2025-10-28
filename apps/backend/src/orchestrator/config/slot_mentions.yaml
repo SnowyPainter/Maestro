@@ -132,6 +132,7 @@ slots:
   - bff.playbook.dashboard_overview
   - bff.playbook.dashboard_performance
   - bff.playbook.dashboard_recommendations
+  - bff.playbook.dashboard_trend_correlation
   - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
@@ -338,6 +339,7 @@ slots:
   - bff.playbook.dashboard_overview
   - bff.playbook.dashboard_performance
   - bff.playbook.dashboard_recommendations
+  - bff.playbook.dashboard_trend_correlation
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: ingest_key
@@ -397,6 +399,7 @@ slots:
   - bff.playbook.dashboard_overview
   - bff.playbook.dashboard_performance
   - bff.playbook.dashboard_recommendations
+  - bff.playbook.dashboard_trend_correlation
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: limit
@@ -583,6 +586,7 @@ slots:
   - bff.playbook.dashboard_overview
   - bff.playbook.dashboard_performance
   - bff.playbook.dashboard_recommendations
+  - bff.playbook.dashboard_trend_correlation
   - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
@@ -627,6 +631,7 @@ slots:
   - bff.playbook.dashboard_overview
   - bff.playbook.dashboard_performance
   - bff.playbook.dashboard_recommendations
+  - bff.playbook.dashboard_trend_correlation
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
 - name: post_publication_id

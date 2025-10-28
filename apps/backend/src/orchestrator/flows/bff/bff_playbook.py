@@ -12,6 +12,7 @@ from apps.backend.src.modules.playbooks.schemas import (
     DashboardPerformanceResponse,
     DashboardInsightsResponse,
     DashboardRecommendationsResponse,
+    DashboardTrendCorrelationResponse,
 )
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -324,6 +325,30 @@ async def op_get_dashboard_recommendations(
     return await get_dashboard_recommendations_data(db, playbook_id=payload.playbook_id)
 
 
+@operator(
+    key="bff.playbook.get_dashboard_trend_correlation",
+    title="Get Playbook Trend KPI Correlation Data",
+    side_effect="read",
+)
+async def op_get_dashboard_trend_correlation(
+    payload: PlaybookSearchPayload,
+    ctx: TaskContext,
+) -> DashboardTrendCorrelationResponse:
+    """Dashboard Trend vs KPI correlation data"""
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
+
+    if not payload.playbook_id:
+        raise HTTPException(status_code=400, detail="playbook_id is required")
+
+    rows, _ = await search_playbooks(db, playbook_id=payload.playbook_id, owner_user_id=user.id)
+    if not rows:
+        raise HTTPException(status_code=404, detail="Playbook not found")
+
+    from apps.backend.src.modules.playbooks.service import get_dashboard_trend_correlation_data
+    return await get_dashboard_trend_correlation_data(db, playbook_id=payload.playbook_id)
+
+
 # Dashboard Analytics Flows
 
 @FLOWS.flow(
@@ -400,6 +425,21 @@ def _flow_bff_dashboard_recommendations(builder: FlowBuilder) -> None:
     task = builder.task("dashboard_recommendations", "bff.playbook.get_dashboard_recommendations")
     builder.expect_terminal(task)
 
+
+@FLOWS.flow(
+    key="bff.playbook.dashboard_trend_correlation",
+    title="Get Playbook Dashboard Trend Correlation Data",
+    description="Get KPI and trend correlation insights for playbook dashboard",
+    input_model=PlaybookSearchPayload,
+    output_model=DashboardTrendCorrelationResponse,
+    method="get",
+    path="/playbooks/dashboard/trend-correlation",
+    tags=("bff", "playbooks", "dashboard", "analytics", "ui", "frontend"),
+)
+def _flow_bff_dashboard_trend_correlation(builder: FlowBuilder) -> None:
+    task = builder.task("dashboard_trend_correlation", "bff.playbook.get_dashboard_trend_correlation")
+    builder.expect_terminal(task)
+
 @FLOWS.flow(
     key="bff.playbook.list_playbooks",
     title="List Playbooks",
@@ -457,4 +497,5 @@ __all__ = [
     "op_get_dashboard_performance",
     "op_get_dashboard_insights",
     "op_get_dashboard_recommendations",
+    "op_get_dashboard_trend_correlation",
 ]

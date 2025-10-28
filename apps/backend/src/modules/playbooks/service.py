@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+from collections import defaultdict
 from datetime import datetime, date
 from typing import Any, List, Optional, Tuple, TYPE_CHECKING, Dict
 
@@ -23,6 +25,11 @@ from apps.backend.src.modules.playbooks.schemas import (
     InsightsMetrics,
     OverallROI,
     PhaseItem,
+    DashboardTrendCorrelationResponse,
+    MetricCorrelationItem,
+    TrendCorrelationItem,
+    TrendCorrelationMetricInsight,
+    TrendCountryInsight,
 )
 from apps.backend.src.modules.accounts.models import Persona, PersonaAccount
 from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPublication
@@ -537,6 +544,65 @@ def _is_number(value: Any) -> bool:
         return False
 
 
+def _coerce_numeric(value: Any) -> Optional[float]:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if cleaned.endswith("+"):
+            cleaned = cleaned[:-1]
+        cleaned = cleaned.replace(",", "")
+        try:
+            return float(cleaned)
+        except ValueError:
+            return None
+    return None
+
+
+def _pearson_correlation(xs: List[float], ys: List[float]) -> Optional[float]:
+    if len(xs) < 2 or len(xs) != len(ys):
+        return None
+    mean_x = sum(xs) / len(xs)
+    mean_y = sum(ys) / len(ys)
+    numerator = 0.0
+    denom_x = 0.0
+    denom_y = 0.0
+    for x, y in zip(xs, ys):
+        dx = x - mean_x
+        dy = y - mean_y
+        numerator += dx * dy
+        denom_x += dx * dx
+        denom_y += dy * dy
+    if denom_x <= 0 or denom_y <= 0:
+        return None
+    return numerator / math.sqrt(denom_x * denom_y)
+
+
+def _correlation_direction(value: Optional[float]) -> str:
+    if value is None:
+        return "insufficient"
+    if value > 0.1:
+        return "positive"
+    if value < -0.1:
+        return "negative"
+    return "neutral"
+
+
+def _correlation_strength(value: Optional[float], sample_size: int) -> str:
+    if value is None or sample_size < 2:
+        return "insufficient"
+    abs_val = abs(value)
+    if abs_val >= 0.7:
+        return "strong"
+    if abs_val >= 0.4:
+        return "moderate"
+    if abs_val >= 0.2 and sample_size >= 5:
+        return "weak"
+    if abs_val >= 0.2:
+        return "tentative"
+    return "insignificant"
+
+
 async def _build_kpi_snapshot(
     db: AsyncSession,
     *,
@@ -607,9 +673,9 @@ async def get_dashboard_overview_data(
     )
     total_logs = total_logs_result.scalar() or 0
 
-    # 최근 24시간 로그들로 시간대별 활동량 계산
+    # 최근 30일 로그들로 시간대별 활동량 계산 (더 많은 데이터로 정확한 분석)
     from datetime import timedelta
-    since_24h = datetime.utcnow() - timedelta(hours=24)
+    since_30d = datetime.utcnow() - timedelta(days=30)
 
     hourly_logs = await db.execute(
         select(
@@ -618,7 +684,7 @@ async def get_dashboard_overview_data(
         )
         .where(
             PlaybookLog.playbook_id == playbook_id,
-            PlaybookLog.timestamp >= since_24h
+            PlaybookLog.timestamp >= since_30d
         )
         .group_by(func.extract('hour', PlaybookLog.timestamp))
         .order_by(func.extract('hour', PlaybookLog.timestamp))
@@ -999,6 +1065,215 @@ async def get_dashboard_insights_data(
         manager=manager_metrics,
         brand=brand_metrics,
         overall_roi=overall_roi,
+    )
+
+
+async def get_dashboard_trend_correlation_data(
+    db: AsyncSession,
+    *,
+    playbook_id: int,
+) -> DashboardTrendCorrelationResponse:
+    """Trend 및 KPI 상관관계 분석"""
+    result = await db.execute(
+        select(
+            PlaybookLog.timestamp,
+            PlaybookLog.trend_snapshot,
+            PlaybookLog.kpi_snapshot,
+        )
+        .where(
+            PlaybookLog.playbook_id == playbook_id,
+            PlaybookLog.trend_snapshot.isnot(None),
+            PlaybookLog.kpi_snapshot.isnot(None),
+        )
+        .order_by(PlaybookLog.timestamp.asc())
+    )
+    rows = result.all()
+
+    if not rows:
+        return DashboardTrendCorrelationResponse(playbook_id=playbook_id)
+
+    metric_samples: Dict[str, List[Tuple[float, float]]] = defaultdict(list)
+    trend_samples: Dict[str, Dict[str, Any]] = defaultdict(
+        lambda: {
+            "ranks": [],
+            "scores": [],
+            "metrics": defaultdict(list),
+            "timestamps": [],
+        }
+    )
+    country_samples: Dict[str, Dict[str, Any]] = defaultdict(
+        lambda: {"count": 0, "metrics": defaultdict(list)}
+    )
+
+    total_samples = 0
+
+    for row in rows:
+        kpi_snapshot = row.kpi_snapshot or {}
+        trend_snapshot = row.trend_snapshot or {}
+
+        numeric_metrics = {
+            key: float(value)
+            for key, value in kpi_snapshot.items()
+            if _is_number(value)
+        }
+        if not numeric_metrics:
+            continue
+
+        items = trend_snapshot.get("items") or []
+        if not items:
+            continue
+
+        country = trend_snapshot.get("country")
+        if country:
+            country_entry = country_samples[str(country)]
+            country_entry["count"] += 1
+            for metric_name, metric_value in numeric_metrics.items():
+                country_entry["metrics"][metric_name].append(metric_value)
+
+        total_samples += 1
+
+        for item in items:
+            title = str(item.get("title") or "").strip()
+            if not title:
+                title = f"Trend #{len(trend_samples) + 1}"
+
+            rank_value = _coerce_numeric(item.get("rank"))
+            if rank_value is None:
+                rank_value = _coerce_numeric(item.get("score"))
+            if rank_value is None and item.get("approx_traffic") is not None:
+                traffic_value = _coerce_numeric(item.get("approx_traffic"))
+                if traffic_value is not None and traffic_value > 0:
+                    rank_value = max(1.0, traffic_value)
+
+            if rank_value is None or rank_value <= 0:
+                continue
+
+            score = 1.0 / rank_value
+
+            for metric_name, metric_value in numeric_metrics.items():
+                metric_samples[metric_name].append((score, metric_value))
+
+            entry = trend_samples[title]
+            entry["ranks"].append(float(rank_value))
+            entry["scores"].append(score)
+            entry["timestamps"].append(row.timestamp)
+            for metric_name, metric_value in numeric_metrics.items():
+                entry["metrics"][metric_name].append(metric_value)
+
+    metric_correlations: List[MetricCorrelationItem] = []
+    for metric_name, samples in metric_samples.items():
+        if not samples:
+            continue
+        scores = [score for score, _ in samples]
+        values = [value for _, value in samples]
+        corr = _pearson_correlation(scores, values)
+        metric_correlations.append(
+            MetricCorrelationItem(
+                metric=metric_name,
+                correlation=round(corr, 4) if corr is not None else None,
+                direction=_correlation_direction(corr),
+                strength=_correlation_strength(corr, len(samples)),
+                sample_size=len(samples),
+            )
+        )
+
+    metric_correlations.sort(
+        key=lambda item: (
+            abs(item.correlation) if item.correlation is not None else 0.0,
+            item.sample_size,
+        ),
+        reverse=True,
+    )
+    metric_correlations = metric_correlations[:10]
+
+    trend_items: List[TrendCorrelationItem] = []
+    for title, data in trend_samples.items():
+        scores = data["scores"]
+        sample_size = len(scores)
+        if sample_size == 0:
+            continue
+
+        avg_rank = (
+            sum(data["ranks"]) / len(data["ranks"]) if data["ranks"] else None
+        )
+
+        metric_insights: List[TrendCorrelationMetricInsight] = []
+        for metric_name, values in data["metrics"].items():
+            if not values:
+                continue
+            avg_value = sum(values) / len(values)
+            corr = _pearson_correlation(scores, values)
+            metric_insights.append(
+                TrendCorrelationMetricInsight(
+                    metric=metric_name,
+                    average_value=round(avg_value, 4),
+                    correlation=round(corr, 4) if corr is not None else None,
+                    direction=_correlation_direction(corr),
+                    strength=_correlation_strength(corr, sample_size),
+                )
+            )
+
+        metric_insights.sort(
+            key=lambda item: (
+                abs(item.correlation) if item.correlation is not None else 0.0,
+                item.average_value,
+            ),
+            reverse=True,
+        )
+
+        latest_seen_at = (
+            max(data["timestamps"]) if data["timestamps"] else None
+        )
+
+        trend_items.append(
+            TrendCorrelationItem(
+                trend_title=title,
+                avg_rank=round(avg_rank, 2) if avg_rank is not None else None,
+                sample_size=sample_size,
+                metrics=metric_insights[:5],
+                latest_seen_at=latest_seen_at,
+            )
+        )
+
+    trend_items.sort(
+        key=lambda item: (
+            item.sample_size,
+            abs(item.metrics[0].correlation) if item.metrics and item.metrics[0].correlation is not None else 0.0,
+        ),
+        reverse=True,
+    )
+    trend_items = trend_items[:10]
+
+    country_insights: List[TrendCountryInsight] = []
+    for country, data in country_samples.items():
+        sample_size = data["count"]
+        if sample_size == 0:
+            continue
+        avg_metrics = {
+            metric: round(sum(values) / len(values), 4)
+            for metric, values in data["metrics"].items()
+            if values
+        }
+        country_insights.append(
+            TrendCountryInsight(
+                country=country,
+                sample_size=sample_size,
+                avg_metrics=avg_metrics,
+            )
+        )
+
+    country_insights.sort(
+        key=lambda item: item.sample_size,
+        reverse=True,
+    )
+    country_insights = country_insights[:5]
+
+    return DashboardTrendCorrelationResponse(
+        playbook_id=playbook_id,
+        total_samples=total_samples,
+        metric_correlations=metric_correlations,
+        top_trends=trend_items,
+        country_insights=country_insights,
     )
 
 

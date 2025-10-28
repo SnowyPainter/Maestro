@@ -232,6 +232,14 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
       />
     );
   }
+  if (card_type === 'playbook.dashboard.trend_correlation' && data && typeof data === 'object' && 'playbook_id' in data) {
+    return (
+      <PlaybookAnalysisDashboard
+        playbookId={data.playbook_id as number}
+        initialPage="trendCorrelation"
+      />
+    );
+  }
 
   if (card_type === 'draft.post_publications.list') {
     return (

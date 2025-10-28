@@ -1286,6 +1286,53 @@ export const bffPlaybookDashboardRecommendationsApiBffPlaybooksDashboardRecommen
 
 
 /**
+ * Get KPI and trend correlation insights for playbook dashboard
+ * @summary Get Playbook Dashboard Trend Correlation Data
+ */
+export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryIncludeLogsDefault = false;
+
+export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetQueryParams = zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "last_event": zod.string().nullish(),
+  "include_logs": zod.boolean().optional()
+})
+
+export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseTotalSamplesDefault = 0;export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseMetricCorrelationsItemDirectionDefault = "neutral";export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseMetricCorrelationsItemStrengthDefault = "insufficient";export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseMetricCorrelationsItemSampleSizeDefault = 0;export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseTopTrendsItemSampleSizeDefault = 0;export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseTopTrendsItemMetricsItemDirectionDefault = "neutral";export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseTopTrendsItemMetricsItemStrengthDefault = "insufficient";export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseCountryInsightsItemSampleSizeDefault = 0;
+
+export const bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponse = zod.object({
+  "playbook_id": zod.number(),
+  "total_samples": zod.number().optional(),
+  "metric_correlations": zod.array(zod.object({
+  "metric": zod.string(),
+  "correlation": zod.union([zod.number(),zod.null()]).optional(),
+  "direction": zod.string().default(bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseMetricCorrelationsItemDirectionDefault),
+  "strength": zod.string().default(bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseMetricCorrelationsItemStrengthDefault),
+  "sample_size": zod.number().optional()
+})).optional(),
+  "top_trends": zod.array(zod.object({
+  "trend_title": zod.string(),
+  "avg_rank": zod.union([zod.number(),zod.null()]).optional(),
+  "sample_size": zod.number().optional(),
+  "metrics": zod.array(zod.object({
+  "metric": zod.string(),
+  "average_value": zod.number(),
+  "correlation": zod.union([zod.number(),zod.null()]).optional(),
+  "direction": zod.string().default(bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseTopTrendsItemMetricsItemDirectionDefault),
+  "strength": zod.string().default(bffPlaybookDashboardTrendCorrelationApiBffPlaybooksDashboardTrendCorrelationGetResponseTopTrendsItemMetricsItemStrengthDefault)
+})).optional(),
+  "latest_seen_at": zod.iso.datetime({}).nullish()
+})).optional(),
+  "country_insights": zod.array(zod.object({
+  "country": zod.string(),
+  "sample_size": zod.number().optional(),
+  "avg_metrics": zod.record(zod.string(), zod.number()).optional()
+})).optional()
+})
+
+
+/**
  * List my playbooks with optional filtering.
  * @summary List Playbooks
  */

@@ -744,6 +744,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/playbooks/dashboard/trend-correlation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Playbook Dashboard Trend Correlation Data
+         * @description Get KPI and trend correlation insights for playbook dashboard
+         */
+        get: operations["bff_playbook_dashboard_trend_correlation_api_bff_playbooks_dashboard_trend_correlation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/playbooks": {
         parameters: {
             query?: never;
@@ -2895,6 +2915,22 @@ export interface components {
             /** Dynamic Recommendations */
             dynamic_recommendations: string[];
         };
+        /** DashboardTrendCorrelationResponse */
+        DashboardTrendCorrelationResponse: {
+            /** Playbook Id */
+            playbook_id: number;
+            /**
+             * Total Samples
+             * @default 0
+             */
+            total_samples: number;
+            /** Metric Correlations */
+            metric_correlations?: components["schemas"]["MetricCorrelationItem"][];
+            /** Top Trends */
+            top_trends?: components["schemas"]["TrendCorrelationItem"][];
+            /** Country Insights */
+            country_insights?: components["schemas"]["TrendCountryInsight"][];
+        };
         /** DateRange */
         DateRange: {
             /**
@@ -3623,6 +3659,28 @@ export interface components {
         MessageOut: {
             /** Message */
             message: string;
+        };
+        /** MetricCorrelationItem */
+        MetricCorrelationItem: {
+            /** Metric */
+            metric: string;
+            /** Correlation */
+            correlation?: number | null;
+            /**
+             * Direction
+             * @default neutral
+             */
+            direction: string;
+            /**
+             * Strength
+             * @default insufficient
+             */
+            strength: string;
+            /**
+             * Sample Size
+             * @default 0
+             */
+            sample_size: number;
         };
         /**
          * MetricsScope
@@ -5224,6 +5282,58 @@ export interface components {
             token_type: string;
             user: components["schemas"]["UserResponse"];
         };
+        /** TrendCorrelationItem */
+        TrendCorrelationItem: {
+            /** Trend Title */
+            trend_title: string;
+            /** Avg Rank */
+            avg_rank?: number | null;
+            /**
+             * Sample Size
+             * @default 0
+             */
+            sample_size: number;
+            /** Metrics */
+            metrics?: components["schemas"]["TrendCorrelationMetricInsight"][];
+            /**
+             * Latest Seen At
+             * Format: date-time
+             */
+            latest_seen_at?: string | null;
+        };
+        /** TrendCorrelationMetricInsight */
+        TrendCorrelationMetricInsight: {
+            /** Metric */
+            metric: string;
+            /** Average Value */
+            average_value: number;
+            /** Correlation */
+            correlation?: number | null;
+            /**
+             * Direction
+             * @default neutral
+             */
+            direction: string;
+            /**
+             * Strength
+             * @default insufficient
+             */
+            strength: string;
+        };
+        /** TrendCountryInsight */
+        TrendCountryInsight: {
+            /** Country */
+            country: string;
+            /**
+             * Sample Size
+             * @default 0
+             */
+            sample_size: number;
+            /** Avg Metrics */
+            avg_metrics?: {
+                [key: string]: number;
+            };
+        };
         /**
          * TrendItem
          * @description Trends 개별 트렌드 아이템 스키마
@@ -6498,6 +6608,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardRecommendationsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_dashboard_trend_correlation_api_bff_playbooks_dashboard_trend_correlation_get: {
+        parameters: {
+            query?: {
+                playbook_id?: number | null;
+                campaign_id?: number | null;
+                persona_id?: number | null;
+                last_event?: string | null;
+                include_logs?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardTrendCorrelationResponse"];
                 };
             };
             /** @description Validation Error */

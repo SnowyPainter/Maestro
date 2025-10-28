@@ -175,3 +175,41 @@ class DashboardRecommendationsResponse(BaseModel):
     phases: List[PhaseItem]
     overall_roi: OverallROI
     dynamic_recommendations: List[str]
+
+
+class MetricCorrelationItem(BaseModel):
+    metric: str
+    correlation: Optional[float] = None
+    direction: str = "neutral"
+    strength: str = "insufficient"
+    sample_size: int = 0
+
+
+class TrendCorrelationMetricInsight(BaseModel):
+    metric: str
+    average_value: float
+    correlation: Optional[float] = None
+    direction: str = "neutral"
+    strength: str = "insufficient"
+
+
+class TrendCorrelationItem(BaseModel):
+    trend_title: str
+    avg_rank: Optional[float] = None
+    sample_size: int = 0
+    metrics: List[TrendCorrelationMetricInsight] = Field(default_factory=list)
+    latest_seen_at: Optional[datetime] = None
+
+
+class TrendCountryInsight(BaseModel):
+    country: str
+    sample_size: int = 0
+    avg_metrics: Dict[str, float] = Field(default_factory=dict)
+
+
+class DashboardTrendCorrelationResponse(BaseModel):
+    playbook_id: int
+    total_samples: int = 0
+    metric_correlations: List[MetricCorrelationItem] = Field(default_factory=list)
+    top_trends: List[TrendCorrelationItem] = Field(default_factory=list)
+    country_insights: List[TrendCountryInsight] = Field(default_factory=list)
