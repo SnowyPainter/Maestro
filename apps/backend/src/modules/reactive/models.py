@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
+import uuid
 
 from sqlalchemy import (
     Boolean,
@@ -17,6 +18,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from pgvector.sqlalchemy import Vector
 
 from apps.backend.src.core.db import Base
 
@@ -27,6 +30,7 @@ from apps.backend.src.modules.common.enums import (
     ReactionMatchType,
     ReactionRuleStatus,
 )
+from apps.backend.src.core.config import settings
 
 
 class ReactionRule(Base):
@@ -47,6 +51,8 @@ class ReactionRule(Base):
         Enum(ReactionRuleStatus), default=ReactionRuleStatus.ACTIVE, index=True
     )
     priority: Mapped[int] = mapped_column(Integer, default=100, index=True)
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

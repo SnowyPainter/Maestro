@@ -2,8 +2,12 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, DateTime, JSON, Text, ForeignKey, Boolean, UniqueConstraint, Index, Enum
 from datetime import datetime
+import uuid
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from pgvector.sqlalchemy import Vector
 from apps.backend.src.core.db import Base
 from apps.backend.src.modules.common.enums import PlatformKind, Permission
+from apps.backend.src.core.config import settings
 
 class PlatformAccount(Base):
     __tablename__ = "platform_accounts"
@@ -54,6 +58,9 @@ class Persona(Base):
     link_policy: Mapped[dict | None] = mapped_column(JSON)            # {link_in_bio: "...", utm: {...}}
     media_prefs: Mapped[dict | None] = mapped_column(JSON)            # {preferred_ratio: "9:16", allow_carousel: true}
     posting_windows: Mapped[list[dict] | None] = mapped_column(JSON)  # [{dow: "Mon", start:"09:00", end:"12:00"}]
+    graph_node_id: Mapped[uuid.UUID | None] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
+    keywords: Mapped[list[str] | None] = mapped_column(JSON)
 
     # 확장 메타(스키마 버전관리)
     extras: Mapped[dict | None] = mapped_column(JSON)                 # JSONSchema로 검증

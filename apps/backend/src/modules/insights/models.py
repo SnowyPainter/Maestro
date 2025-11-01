@@ -2,6 +2,7 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Optional
+import uuid
 
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import (
@@ -16,8 +17,11 @@ from sqlalchemy import (
     Boolean,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from pgvector.sqlalchemy import Vector
 from apps.backend.src.core.db import Base
 from apps.backend.src.modules.common.enums import PlatformKind, InsightSource, MetricsScope, ContentKind
+from apps.backend.src.core.config import settings
 
 class InsightSample(Base):
     """
@@ -50,6 +54,8 @@ class InsightSample(Base):
     content_kind: Mapped[ContentKind] = mapped_column(Enum(ContentKind), default=ContentKind.POST, index=True)
     scope: Mapped[MetricsScope] = mapped_column(Enum(MetricsScope), default=MetricsScope.SINCE_PUBLISH, index=True)
     metrics: Mapped[dict] = mapped_column(JSON)
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
 
     # 중복 방지용 키(플랫폼 이벤트 id 등)
     ingest_key: Mapped[Optional[str]] = mapped_column(String(128), unique=True, index=True)
@@ -108,6 +114,8 @@ class InsightComment(Base):
 
     metrics: Mapped[dict] = mapped_column(JSON, default=dict)
     raw: Mapped[dict] = mapped_column(JSON, default=dict)
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
 
     __table_args__ = (
         UniqueConstraint("platform", "comment_external_id", name="uq_insight_comment_external"),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import Optional
+import uuid
 
 from sqlalchemy import (
     Integer, String, Text, DateTime, ForeignKey, Enum, JSON, Index, UniqueConstraint
@@ -8,9 +9,12 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import select
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from pgvector.sqlalchemy import Vector
 from apps.backend.src.core.db import Base
 from apps.backend.src.modules.common.enums import DraftState, PlatformKind, VariantStatus, PostStatus
 from apps.backend.src.modules.accounts.models import PersonaAccount
+from apps.backend.src.core.config import settings
 
 
 class Draft(Base):
@@ -44,6 +48,8 @@ class Draft(Base):
 
     # 상태 전이 (작성/예약/모니터링/게시/삭제)
     state: Mapped[DraftState] = mapped_column(Enum(DraftState), default=DraftState.DRAFT, index=True)
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
 
     # 추적 정보
     created_by: Mapped[int] = mapped_column(Integer, index=True)
@@ -79,6 +85,8 @@ class DraftVariant(Base):
     status: Mapped[VariantStatus] = mapped_column(Enum(VariantStatus), default=VariantStatus.PENDING, index=True)
     errors: Mapped[Optional[list[str]]] = mapped_column(JSON)
     warnings: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
 
     # 컴파일 결과(플랫폼 중립 페이로드/블록 뷰)
     rendered_caption: Mapped[Optional[str]] = mapped_column(Text)
@@ -150,6 +158,8 @@ class PostPublication(Base):
     errors: Mapped[Optional[list[str]]] = mapped_column(JSON)
     warnings: Mapped[Optional[list[str]]] = mapped_column(JSON)
     meta: Mapped[Optional[dict]] = mapped_column(JSON)  # 요청 페이로드 스냅샷 등
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

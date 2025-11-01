@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
+import uuid
 
 from sqlalchemy import (
     DateTime,
@@ -13,8 +14,11 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from pgvector.sqlalchemy import Vector
 
 from apps.backend.src.core.db import Base
+from apps.backend.src.core.config import settings
 
 
 class Playbook(Base):
@@ -45,6 +49,9 @@ class Playbook(Base):
     best_time_window: Mapped[Optional[str]] = mapped_column(String(40))
     best_tone: Mapped[Optional[str]] = mapped_column(String(40))
     top_hashtags: Mapped[Optional[list[str]]] = mapped_column(JSON)
+    summary: Mapped[Optional[str]] = mapped_column(Text)
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
+    embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
 
     last_event: Mapped[Optional[str]] = mapped_column(String(50))
     last_updated: Mapped[datetime] = mapped_column(

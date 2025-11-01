@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional, List
+import uuid
 
 from sqlalchemy import (
     String, Integer, DateTime, Text, ForeignKey, UniqueConstraint, Index, func
@@ -9,6 +10,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import (
     DeclarativeBase, Mapped, mapped_column, relationship
 )
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from pgvector.sqlalchemy import Vector
 
 from apps.backend.src.core.db import Base
@@ -35,6 +37,7 @@ class Trend(Base):
 
     # 벡터 검색(임베딩 차원은 Alembic에서 고정: vector(EMBED_DIM))
     title_embedding: Mapped[Optional[list[float]]] = mapped_column(Vector(settings.EMBED_DIM), nullable=True)
+    graph_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(PGUUID(as_uuid=True), nullable=True, index=True)
 
     # 관계
     news_items: Mapped[List["NewsItem"]] = relationship(
