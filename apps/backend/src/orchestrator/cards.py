@@ -50,6 +50,8 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "ReactionActionLogListResult": "reactive.activity.log",
 
     "ReactionMessageTemplateOut": "reactive.template.detail",
+
+    "RagSearchResponse": "rag.search.result",
     
     "OperationResult": "info",
 }

@@ -126,19 +126,44 @@ async def _fetch_related(db: AsyncSession, node_ids: Sequence[UUID]) -> dict[UUI
             GraphEdge.dst_node_id,
             GraphEdge.edge_type,
             GraphEdge.meta,
+            GraphNode.node_type,
+            GraphNode.title,
+            GraphNode.summary,
+            GraphNode.meta.label("dst_meta"),
         )
+        .join(GraphNode, GraphNode.id == GraphEdge.dst_node_id, isouter=True)
         .where(GraphEdge.src_node_id.in_(node_ids))
     )
 
     rows = (await db.execute(stmt)).all()
     buckets: dict[UUID, list[RagRelatedEdge]] = {}
-    for src_id, dst_id, edge_type, meta in rows:
+    for src_id, dst_id, edge_type, meta, dst_node_type, dst_title, dst_summary, dst_meta in rows:
         bucket = buckets.setdefault(src_id, [])
         bucket.append(
             RagRelatedEdge(
                 dst_node_id=dst_id,
                 edge_type=edge_type,
                 meta=meta or {},
+                node_type=dst_node_type,
+                title=dst_title,
+                summary=dst_summary,
+                node_meta=dst_meta or {},
             )
         )
     return buckets
+
+
+async def expand_neighbors(
+    db: AsyncSession,
+    *,
+    node_id: UUID,
+    limit: int = 20,
+    edge_types: Optional[Sequence[str]] = None,
+) -> list[RagRelatedEdge]:
+    edges_map = await _fetch_related(db, [node_id])
+    edges = edges_map.get(node_id, [])
+    if edge_types:
+        edges = [edge for edge in edges if edge.edge_type in edge_types]
+    if limit:
+        edges = edges[:limit]
+    return edges

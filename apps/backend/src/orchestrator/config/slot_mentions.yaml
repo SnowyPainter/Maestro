@@ -230,6 +230,12 @@ slots:
   - drafts.delete
   - drafts.update_ir
   - internal.drafts.publish
+- name: edge_types
+  label: Edge Types
+  description: Filter by edge types
+  value_type: string_list
+  flows:
+  - bff.rag.expand
 - name: email_to
   label: Email To
   description: Filter by email to
@@ -417,6 +423,7 @@ slots:
   - bff.insights.comments.list
   - bff.insights.comments.search
   - bff.playbook.list_playbooks
+  - bff.rag.expand
   - bff.rag.search
   - bff.reactive.list_action_logs
   - bff.schedule.get_schedule_stream
@@ -482,6 +489,12 @@ slots:
   - campaigns.update_campaign
   - reactive.create_rule
   - reactive.update_rule
+- name: node_id
+  label: Node Id
+  description: Target a specific node id
+  value_type: integer
+  flows:
+  - bff.rag.expand
 - name: notes
   label: Notes
   description: Filter by notes

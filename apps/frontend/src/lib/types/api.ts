@@ -844,6 +844,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/rag/nodes/{node_id}/neighbors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Expand neighbors for a graph node
+         * @description Fetch neighboring nodes and edge types for the specified graph node
+         */
+        get: operations["bff_rag_expand_api_bff_rag_nodes__node_id__neighbors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/reactive/rules": {
         parameters: {
             query?: never;
@@ -4328,6 +4348,11 @@ export interface components {
          * @enum {string}
          */
         PostStatus: "pending" | "scheduled" | "published" | "deleted" | "failed" | "cancelled" | "monitoring";
+        /** RagExpandResponse */
+        RagExpandResponse: {
+            /** Items */
+            items?: components["schemas"]["RagRelatedEdge"][];
+        };
         /** RagRelatedEdge */
         RagRelatedEdge: {
             /**
@@ -4339,6 +4364,16 @@ export interface components {
             edge_type: string;
             /** Meta */
             meta?: {
+                [key: string]: unknown;
+            };
+            /** Node Type */
+            node_type?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Node Meta */
+            node_meta?: {
                 [key: string]: unknown;
             };
         };
@@ -6863,6 +6898,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RagSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_rag_expand_api_bff_rag_nodes__node_id__neighbors_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                node_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": string[] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RagExpandResponse"];
                 };
             };
             /** @description Validation Error */

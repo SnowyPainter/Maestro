@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.service import get_persona_account
-from apps.backend.src.modules.rag.schemas import RagSearchItem, RagSearchResponse
-from apps.backend.src.modules.rag.search import search_rag
+from apps.backend.src.modules.rag.schemas import RagExpandResponse, RagRelatedEdge, RagSearchResponse
+from apps.backend.src.modules.rag.search import expand_neighbors, search_rag
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
@@ -67,5 +68,40 @@ def _flow_bff_rag_search(builder: FlowBuilder):
     task = builder.task("rag_search", "bff.rag.search")
     builder.expect_terminal(task)
 
+class BffRagExpandPayload(BaseModel):
+    node_id: UUID
+    edge_types: Optional[List[str]] = None
+    limit: int = Field(20, ge=1, le=100)
 
-__all__ = ["BffRagSearchPayload", "RagSearchResponse"]
+
+@operator(
+    key="bff.rag.expand",
+    title="Expand neighbors for a graph node",
+    side_effect="read",
+)
+async def op_rag_expand(payload: BffRagExpandPayload, ctx: TaskContext) -> RagExpandResponse:
+    db: AsyncSession = ctx.require(AsyncSession)
+    edges = await expand_neighbors(
+        db,
+        node_id=payload.node_id,
+        limit=payload.limit,
+        edge_types=payload.edge_types,
+    )
+    return RagExpandResponse(items=edges)
+
+
+@FLOWS.flow(
+    key="bff.rag.expand",
+    title="Expand neighbors for a graph node",
+    description="Fetch neighboring nodes and edge types for the specified graph node",
+    input_model=BffRagExpandPayload,
+    output_model=RagExpandResponse,
+    method="get",
+    path="/rag/nodes/{node_id}/neighbors",
+    tags=("bff", "rag"),
+)
+def _flow_bff_rag_expand(builder: FlowBuilder):
+    task = builder.task("rag_expand", "bff.rag.expand")
+    builder.expect_terminal(task)
+
+__all__ = ["BffRagSearchPayload", "RagSearchResponse", "BffRagExpandPayload"]

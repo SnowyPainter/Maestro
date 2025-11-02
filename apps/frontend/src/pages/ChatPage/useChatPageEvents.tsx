@@ -8,6 +8,8 @@ import {
   CoworkerLeaseState,
   ChatCard,
   ReactionMessageTemplateOut,
+  bffRagExpandApiBffRagNodesNodeIdNeighborsGet,
+  RagRelatedEdge,
 } from "@/lib/api/generated";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
@@ -735,6 +737,117 @@ export function useChatPageEvents() {
     addCardMessage(() => <TemplateManager />);
   }, [addCardMessage, removeMessagesByComponent]);
 
+  const handleRagNavigate = useCallback(async (nodeId: string, nodeType: string, sourceMessageId: number) => {
+    console.log('handleRagNavigate called', nodeId, nodeType, sourceMessageId);
+
+    // 노드 타입에 따라 적절한 리스트 카드 표시
+    switch (nodeType) {
+      case 'campaign':
+        addCardMessage(messageId => renderCardByType({
+          card_type: 'campaign.list',
+          data: {},
+          title: 'Select Campaign'
+        }, {
+          messageId,
+          callbacks: {
+            onRemoveMessage: handleCardDelete,
+            onCampaignSelect: handleCampaignSelect,
+          }
+        }));
+        break;
+      case 'draft':
+        addCardMessage(messageId => renderCardByType({
+          card_type: 'draft.list',
+          data: {},
+          title: 'Select Draft'
+        }, {
+          messageId,
+          callbacks: {
+            onRemoveMessage: handleCardDelete,
+            onDraftSelect: handleDraftSelect,
+          }
+        }));
+        break;
+      case 'persona':
+        addCardMessage(messageId => renderCardByType({
+          card_type: 'account.persona.list',
+          data: {},
+          title: 'Select Persona'
+        }, {
+          messageId,
+          callbacks: {
+            onRemoveMessage: handleCardDelete,
+            onPersonaSelect: handlePersonaSelect,
+          }
+        }));
+        break;
+      case 'playbook':
+        addCardMessage(messageId => renderCardByType({
+          card_type: 'playbook.list',
+          data: {},
+          title: 'Select Playbook'
+        }, {
+          messageId,
+          callbacks: {
+            onRemoveMessage: handleCardDelete,
+            onPlaybookSelect: handlePlaybookSelect,
+          }
+        }));
+        break;
+      case 'account':
+        addCardMessage(messageId => renderCardByType({
+          card_type: 'account.pa.list',
+          data: {},
+          title: 'Select Account'
+        }, {
+          messageId,
+          callbacks: {
+            onRemoveMessage: handleCardDelete,
+            onAccountSelect: handleAccountSelect,
+          }
+        }));
+        break;
+      default:
+        // 다른 타입들은 아직 처리하지 않음
+        console.log('Navigation not implemented for node type:', nodeType);
+        break;
+    }
+  }, [addCardMessage, renderCardByType, handleCardDelete, handleCampaignSelect, handleDraftSelect, handlePersonaSelect, handlePlaybookSelect, handleAccountSelect]);
+
+  const handleRagExpand = useCallback(async (nodeId: string, nodeType: string, sourceMessageId: number, nodeInfo?: RagRelatedEdge) => {
+    try {
+      const result = await bffRagExpandApiBffRagNodesNodeIdNeighborsGet(
+        nodeId,
+        null, // edge_types
+        { limit: 20 } // params
+      );
+
+      // 확장된 결과를 새로운 카드로 표시
+      addCardMessage(messageId => renderCardByType({
+        card_type: 'rag.search.result',
+        data: {
+          expandData: result,
+          parentNode: {
+            nodeId,
+            nodeType,
+            title: nodeInfo?.title || `${nodeType.replace('_', ' ')} connections`,
+            meta: nodeInfo?.node_meta || nodeInfo?.meta || (nodeInfo as any)?.meta
+          }
+        },
+        title: `Expanded ${nodeType}`
+      }, {
+        messageId,
+        callbacks: {
+          onRemoveMessage: handleCardDelete,
+          onRagExpand: handleRagExpand,
+          onRagNavigate: handleRagNavigate,
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to expand node:', error);
+      addTextMessage('Failed to expand node', 'bot');
+    }
+  }, [addCardMessage, renderCardByType, handleCardDelete, addTextMessage, handleRagNavigate]);
 
   const handleReactiveSelectRule = useCallback(() => {
     removeMessagesByComponent(RuleToolCard);
@@ -937,6 +1050,11 @@ export function useChatPageEvents() {
             onReactiveCreateRule: handleReactiveCreateRule,
             onReactiveViewActivity: handleReactiveViewActivity,
             onReactiveSelectActionLog: handleReactiveSelectActionLog,
+            onRagExpand: handleRagExpand,
+            // 확장 결과인 경우에만 onRagNavigate 추가
+            ...(card.card_type === 'rag.search.result' && card.data?.parentNode ? {
+              onRagNavigate: handleRagNavigate,
+            } : {}),
           },
         }));
       });
@@ -944,7 +1062,7 @@ export function useChatPageEvents() {
       console.error('Chat error:', error);
       addTextMessage(t('chat.error_message'), 'bot');
     }
-  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, handleReactiveRuleSelect, handleReactiveCreateRule, handleReactiveViewActivity, t]);
+  }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, handleReactiveRuleSelect, handleReactiveCreateRule, handleReactiveViewActivity, handleRagNavigate, t]);
 
   return {
     handleChatSend,

@@ -1783,12 +1783,25 @@ export const PostStatus = {
   monitoring: 'monitoring',
 } as const;
 
+export interface RagExpandResponse {
+  items?: RagRelatedEdge[];
+}
+
 export type RagRelatedEdgeMeta = { [key: string]: unknown };
+
+export type RagRelatedEdgeNodeMeta = { [key: string]: unknown };
 
 export interface RagRelatedEdge {
   dst_node_id: string;
   edge_type: string;
   meta?: RagRelatedEdgeMeta;
+  /** @nullable */
+  node_type?: string | null;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  summary?: string | null;
+  node_meta?: RagRelatedEdgeNodeMeta;
 }
 
 export type RagSearchItemMeta = { [key: string]: unknown };
@@ -2896,6 +2909,12 @@ persona_id?: number | null;
 last_event?: string | null;
 include_logs?: boolean;
 };
+
+export type BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams = {
+limit?: number;
+};
+
+export type BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody = string[] | null;
 
 export type BffReactiveListActionLogsApiBffReactiveActionLogsGetParams = {
 status?: ReactionActionStatus | null;
@@ -6739,6 +6758,111 @@ export const useBffRagSearchApiBffRagSearchPost = <TError = HTTPValidationError,
       return useMutation(mutationOptions , queryClient);
     }
     
+/**
+ * Fetch neighboring nodes and edge types for the specified graph node
+ * @summary Expand neighbors for a graph node
+ */
+export const bffRagExpandApiBffRagNodesNodeIdNeighborsGet = (
+    nodeId: string,
+    bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody: BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,
+    params?: BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<RagExpandResponse>(
+      {url: `/api/bff/rag/nodes/${nodeId}/neighbors`, method: 'GET',
+      headers: {'Content-Type': 'application/json', },
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryKey = (nodeId?: string,
+    bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody?: BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,
+    params?: BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams,) => {
+    return [`/api/bff/rag/nodes/${nodeId}/neighbors`, ...(params ? [params]: []), bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody] as const;
+    }
+
+    
+export const getBffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryOptions = <TData = Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError = HTTPValidationError>(nodeId: string,
+    bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody: BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,
+    params?: BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryKey(nodeId,bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>> = ({ signal }) => bffRagExpandApiBffRagNodesNodeIdNeighborsGet(nodeId,bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(nodeId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>>
+export type BffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryError = HTTPValidationError
+
+
+export function useBffRagExpandApiBffRagNodesNodeIdNeighborsGet<TData = Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError = HTTPValidationError>(
+ nodeId: string,
+    bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody: BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,
+    params: undefined |  BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffRagExpandApiBffRagNodesNodeIdNeighborsGet<TData = Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError = HTTPValidationError>(
+ nodeId: string,
+    bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody: BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,
+    params?: BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffRagExpandApiBffRagNodesNodeIdNeighborsGet<TData = Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError = HTTPValidationError>(
+ nodeId: string,
+    bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody: BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,
+    params?: BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Expand neighbors for a graph node
+ */
+
+export function useBffRagExpandApiBffRagNodesNodeIdNeighborsGet<TData = Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError = HTTPValidationError>(
+ nodeId: string,
+    bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody: BffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,
+    params?: BffRagExpandApiBffRagNodesNodeIdNeighborsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffRagExpandApiBffRagNodesNodeIdNeighborsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryOptions(nodeId,bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody,params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
 /**
  * List reaction rules
  * @summary List Reaction Rules

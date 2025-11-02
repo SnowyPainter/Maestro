@@ -1808,6 +1808,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/rag/nodes/{node_id}/neighbors:
+    get:
+      tags:
+      - bff
+      - bff
+      - rag
+      summary: Expand neighbors for a graph node
+      description: Fetch neighboring nodes and edge types for the specified graph
+        node
+      operationId: bff_rag_expand_api_bff_rag_nodes__node_id__neighbors_get
+      parameters:
+      - name: node_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Node Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - type: array
+                items:
+                  type: string
+              - type: 'null'
+              title: Edge Types
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RagExpandResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/reactive/rules:
     get:
       tags:
@@ -8263,6 +8311,15 @@ components:
       - cancelled
       - monitoring
       title: PostStatus
+    RagExpandResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RagRelatedEdge'
+          type: array
+          title: Items
+      type: object
+      title: RagExpandResponse
     RagRelatedEdge:
       properties:
         dst_node_id:
@@ -8276,6 +8333,22 @@ components:
           additionalProperties: true
           type: object
           title: Meta
+        node_type:
+          title: Node Type
+          type: string
+          nullable: true
+        title:
+          title: Title
+          type: string
+          nullable: true
+        summary:
+          title: Summary
+          type: string
+          nullable: true
+        node_meta:
+          additionalProperties: true
+          type: object
+          title: Node Meta
       type: object
       required:
       - dst_node_id

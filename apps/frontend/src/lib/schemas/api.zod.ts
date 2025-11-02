@@ -1485,8 +1485,41 @@ export const bffRagSearchApiBffRagSearchPostResponse = zod.object({
   "related": zod.array(zod.object({
   "dst_node_id": zod.uuid(),
   "edge_type": zod.string(),
-  "meta": zod.record(zod.string(), zod.any()).optional()
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "node_type": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "node_meta": zod.record(zod.string(), zod.any()).optional()
 })).optional()
+})).optional()
+})
+
+
+/**
+ * Fetch neighboring nodes and edge types for the specified graph node
+ * @summary Expand neighbors for a graph node
+ */
+export const bffRagExpandApiBffRagNodesNodeIdNeighborsGetParams = zod.object({
+  "node_id": zod.uuid()
+})
+
+export const bffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryLimitDefault = 20;
+
+export const bffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryParams = zod.object({
+  "limit": zod.number().default(bffRagExpandApiBffRagNodesNodeIdNeighborsGetQueryLimitDefault)
+})
+
+export const bffRagExpandApiBffRagNodesNodeIdNeighborsGetBody = zod.union([zod.array(zod.string()),zod.null()])
+
+export const bffRagExpandApiBffRagNodesNodeIdNeighborsGetResponse = zod.object({
+  "items": zod.array(zod.object({
+  "dst_node_id": zod.uuid(),
+  "edge_type": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "node_type": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "node_meta": zod.record(zod.string(), zod.any()).optional()
 })).optional()
 })
 

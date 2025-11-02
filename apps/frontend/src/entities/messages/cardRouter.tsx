@@ -32,6 +32,8 @@ import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
 import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
 import { ActionLogDetailCard } from "@/entities/reactive/components/ActionLogDetailCard";
 import { TemplateDetailCard } from "@/entities/reactive/components/template/TemplateDetailCard";
+import GraphExplorer from "@/entities/rag/components/GraphExplorer";
+import { RagRelatedEdge, RagExpandResponse, RagSearchResponse } from "@/lib/api/generated";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -48,6 +50,8 @@ export interface CardRenderCallbacks {
   onReactiveCreateRule?: (sourceMessageId: number) => void;
   onReactiveViewActivity?: (sourceMessageId: number) => void;
   onReactiveSelectActionLog?: (actionLogId: number, sourceMessageId: number) => void;
+  onRagExpand?: (nodeId: string, nodeType: string, sourceMessageId: number, expandedData?: any) => void;
+  onRagNavigate?: (nodeId: string, nodeType: string, sourceMessageId: number) => void;
 }
 
 export interface RenderCardOptions {
@@ -352,6 +356,38 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         );
       }
       break;
+
+    case 'rag.search.result':
+      console.log('Rendering GraphExplorer with callbacks:', Object.keys(callbacks || {}));
+      return (
+        <GraphExplorer
+          data={data.edges || data.expandData ? undefined : data as RagSearchResponse}
+          expandData={data.expandData as RagExpandResponse | undefined}
+          edges={data.edges as RagRelatedEdge[] | undefined}
+          parentNode={data.parentNode as { nodeId: string; nodeType: string; title?: string; meta?: Record<string, any> } | undefined}
+          onExpandNode={async (nodeId, nodeType, nodeInfo) => {
+            if (callbacks.onRagExpand) {
+              callbacks.onRagExpand(nodeId, nodeType, messageId, nodeInfo);
+            }
+          }}
+          onNavigate={(nodeId, nodeType) => {
+            console.log('cardRouter onNavigate called:', nodeId, nodeType);
+            console.log('callbacks object:', callbacks);
+            console.log('callbacks?.onRagNavigate:', callbacks?.onRagNavigate);
+            if (callbacks?.onRagNavigate) {
+              console.log('Calling onRagNavigate...');
+              try {
+                callbacks.onRagNavigate(nodeId, nodeType, messageId);
+                console.log('onRagNavigate call completed');
+              } catch (error) {
+                console.error('Error calling onRagNavigate:', error);
+              }
+            } else {
+              console.log('onRagNavigate is undefined in callbacks');
+            }
+          }}
+        />
+      );
 
     default:
       return <GenericCard title={title || "Data"} data={data || card} />;

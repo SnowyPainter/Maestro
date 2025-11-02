@@ -10,6 +10,10 @@ class RagRelatedEdge(BaseModel):
     dst_node_id: UUID
     edge_type: str
     meta: Dict[str, Any] = Field(default_factory=dict)
+    node_type: Optional[str] = None
+    title: Optional[str] = None
+    summary: Optional[str] = None
+    node_meta: Dict[str, Any] = Field(default_factory=dict)
 
 
 class RagSearchItem(BaseModel):
@@ -42,3 +46,7 @@ class RagSearchItem(BaseModel):
 
 class RagSearchResponse(BaseModel):
     items: List[RagSearchItem] = Field(default_factory=list)
+
+
+class RagExpandResponse(BaseModel):
+    items: List[RagRelatedEdge] = Field(default_factory=list)
