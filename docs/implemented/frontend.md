@@ -127,6 +127,30 @@ src/
 - 트렌드 기반 Draft 제안
 - 벡터 검색 결과 시각화
 
+#### 🕸️ **rag** — Graph RAG 탐색 및 시각화
+- **GraphExplorer** — 지식 그래프 노드/엣지 인터랙티브 탐색
+  - 벡터 검색 결과를 카드 형식으로 시각화
+  - 노드별 `node_type` 필터링 (persona, campaign, draft, publication, trend, comment, rule 등)
+  - 실시간 검색어 필터링 (title, summary, chunks 매칭)
+  - 노드 확장(expand) 버튼으로 이웃 노드 탐색 (`onExpandNode` 콜백)
+  - 관계 간선(edge) 시각화 — edge_type, weight, meta 정보 표시
+  - 제한적 표시(상위 2개) + "Show more" 버튼으로 성능 최적화
+- **GraphNodeCard** — 개별 노드 카드 컴포넌트
+  - `title`, `summary`, `node_type`, `score` 표시
+  - Chunks 펼치기/접기 토글
+  - 원본 소스(`source_table`, `source_id`) 참조 링크
+  - 확장 버튼으로 이웃 노드 탐색
+- **RelatedNodeCard** — 관련 노드 간선 카드
+  - `edge_type` 배지 (produces, published_as, related_trend, comment_on 등)
+  - 대상 노드 정보 (`title`, `summary`, `node_type`)
+  - 클릭 시 해당 노드로 네비게이션
+- **BFF API 통합**
+  - `POST /api/orchestrator/bff/rag/search` — 쿼리 기반 검색 (`usePostApiOrchestratorBffRagSearchPost`)
+  - `GET /api/orchestrator/bff/rag/nodes/{node_id}/neighbors` — 노드 이웃 확장
+- **카드 타입**: `rag.search.result` — 채팅 스트림에서 Graph RAG 결과를 `GraphExplorer`로 자동 렌더링
+- **콜백 체인**: `onRagExpand`, `onRagNavigate` — 사용자가 노드를 확장/탐색할 때 채팅 메시지로 전파하여 연속 탐색 가능
+- **의미**: 단순 검색 결과를 넘어 **도메인 간 관계를 시각화**하여 사용자가 "Trend → Draft → Publication → Comment" 경로를 인터랙티브하게 탐색
+
 #### 🤝 **coworkers**
 - CoWorker 리스 관리
 - 자동 루틴 설정
@@ -212,6 +236,15 @@ src/
 - `TrendCorrelationPage` — KPI ↔ 트렌드 상관분석 (신규) — 산점도, 히트맵, 상관계수 시각화
 - `RecommendationsPage` — 개발 로드맵 타임라인 + AI 추천
 - `shadcn/ui Chart` 통합 — `ChartContainer`, `ChartTooltip`, `LineChart`, `PieChart`, `ScatterChart`, `BarChart`
+
+#### 🕸️ **Graph RAG Components**
+- `GraphExplorer` — 지식 그래프 인터랙티브 탐색기
+  - 노드 카드 목록 + 검색어 필터 + `node_type` 셀렉터
+  - "Show more" 토글로 결과 제한 표시
+  - 노드 확장(expand) 버튼으로 이웃 탐색
+- `GraphNodeCard` — 노드 정보 카드 (title, summary, score, chunks, source_ref)
+- `RelatedNodeCard` — 관련 노드 간선 카드 (edge_type, dst_node 정보)
+- `ParentNodeHeader` — 현재 탐색 중인 부모 노드 정보 헤더
 
 #### 🧩 **UI Components** (Radix 기반)
 - `Button`, `Input`, `Select`, `Checkbox`, `Switch`
@@ -342,6 +375,33 @@ src/
    - Insights: 페르소나별 가치 메트릭 (Creator/Manager/Brand)
    - Recommendations: AI 기반 최적화 제안
 
+### 🕸️ Graph RAG 탐색 플로우
+1. **초기 검색**
+   - 사용자가 채팅에서 "Search knowledge graph: {query}" 입력
+   - BFF API `POST /rag/search` 호출
+   - `GraphExplorer` 컴포넌트가 `rag.search.result` 카드로 렌더링
+
+2. **노드 탐색 및 확장**
+   - 사용자가 특정 노드 카드에서 "Expand" 버튼 클릭
+   - `onExpandNode` 콜백이 `node_id`, `node_type`을 채팅 메시지로 전송
+   - BFF API `GET /rag/nodes/{node_id}/neighbors` 호출
+   - 이웃 노드 목록이 새 `rag.search.result` 카드로 추가
+
+3. **관계 기반 네비게이션**
+   - `RelatedNodeCard`에서 특정 간선 클릭
+   - `onRagNavigate` 콜백으로 대상 노드 탐색
+   - 해당 노드의 상세 정보 및 이웃 노드가 새 카드로 추가
+
+4. **필터링 및 검색**
+   - `node_type` 셀렉터로 특정 타입만 표시 (예: draft, publication만)
+   - 검색어로 title/summary/chunks 실시간 필터링
+   - "Show more" 토글로 전체 결과 확인
+
+5. **연속 탐색**
+   - 사용자가 "Trend → Draft → Publication → Comment" 경로를 따라 연속 탐색
+   - 각 단계마다 새 카드가 채팅 스트림에 추가되어 탐색 히스토리 유지
+   - **의미**: 단순 검색이 아닌 **지식 그래프를 따라가는 인터랙티브 탐험**
+
 ---
 
 ## 🎨 디자인 시스템
@@ -398,19 +458,21 @@ src/
 6. **컴팩트 분석 대시보드** — 실시간 메트릭 + 시각화로 즉시 인사이트 제공 (shadcn/ui chart)
 7. **KPI ↔ 트렌드 상관분석** — 트렌드 랭킹 vs. 콘텐츠 성과 예측 모델링으로 최적 트렌드 선정 (신규)
 8. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (1회 설정 → 영구 자동화)
-9. **Trends RAG** — 벡터 검색으로 유사 트렌드 기반 인사이트 제공
-10. **타입 안전성** — OpenAPI 자동 생성으로 프론트/백엔드 계약 보장
+9. **Graph RAG 탐색** — 지식 그래프 인터랙티브 탐색으로 도메인 간 관계 시각화 (GraphExplorer)
+10. **Trends RAG** — 벡터 검색으로 유사 트렌드 기반 인사이트 제공
+11. **타입 안전성** — OpenAPI 자동 생성으로 프론트/백엔드 계약 보장
 
 ---
 
 ## 📊 컴포넌트 통계
 - **Pages:** 7+
 - **Widgets:** 5
-- **Features:** 13+ (백엔드 모듈 16개 연동)
-- **Entities:** 13+
+- **Features:** 14+ (백엔드 모듈 17개 연동, **rag** 포함)
+- **Entities:** 14+ (**rag** 포함)
 - **UI Components:** 30+
 - **Dashboard Components:** 7 (PlaybookAnalysisDashboard + 6 페이지 컴포넌트)
-- **자동 생성 API Hooks:** 50+ (대시보드 API 포함)
+- **Graph RAG Components:** 4 (GraphExplorer, GraphNodeCard, RelatedNodeCard, ParentNodeHeader)
+- **자동 생성 API Hooks:** 52+ (Graph RAG API 포함: `usePostApiOrchestratorBffRagSearchPost`, `useGetApiOrchestratorBffRagNodesNodeIdNeighborsGet`)
 
 ---
 

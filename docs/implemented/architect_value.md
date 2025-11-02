@@ -83,6 +83,30 @@ Playbook에 기록되는 것은 단순한 실행 결과가 아니다:
 
 시스템이 스스로 자신의 확장 방법을 기억하고 재현한다.
 
+### 지식의 그래프: 기억의 자기 조직화
+Graph RAG는 기억을 선형이 아닌 **그래프로 조직화**한다:
+
+```
+Persona → Campaign → Draft → Publication → Comment
+   ↓         ↓          ↓          ↓           ↓
+Playbook   KPI       Trend    Insights     Reaction
+```
+
+**핵심 통찰**: 데이터를 저장하는 것이 아니라, **관계를 저장**한다.
+
+"Trend X와 관련된 Draft는?" → 그래프 간선 `related_trend`를 따라가면 자동으로 답이 나온다.
+
+#### Celery 사이드카: 지식의 자동 동기화
+```python
+# domain 테이블이 변경되면
+Draft.save() → watch_drafts (30초 주기)
+              → Canonicalizer (규칙 기반 요약)
+              → GraphNode.upsert() (멱등)
+              → GraphEdge.create(type="produces") (자동 관계 생성)
+```
+
+**코드 증가율 = 0%** — 새 도메인 추가 시 Watcher 하나만 작성하면 끝.
+
 ---
 
 ## 시스템의 DNA: 재조합 가능한 모듈
@@ -102,6 +126,34 @@ class CommentsToTemplateAdapter:
             "persona_context": extract_persona_from_comments(comments_result)
         }
 ```
+
+### Graph RAG: 지식의 자기 조직화
+```python
+class GraphNode:
+    # 모든 도메인 엔티티를 통합한 정규화된 노드
+    node_type: str  # persona, draft, publication, trend, comment...
+    embedding: Vector(768)  # pgvector 코사인 유사도 검색
+    title: str
+    summary: str  # 규칙 기반 요약 (LLM 호출 없음)
+    source_table: str  # 원본 테이블 참조
+    signature_hash: str  # 변경 감지 (중복 임베딩 방지)
+
+class GraphEdge:
+    # 도메인 간 관계를 표현하는 방향성 간선
+    edge_type: str  # produces, published_as, related_trend, comment_on...
+    weight: float  # 관계 우선순위 (검색 시 가중치)
+```
+
+**검색 파이프라인: 벡터 + 그래프**
+```
+쿼리 → 임베딩 생성 (Redis 60s 캐시)
+     → pgvector 코사인 유사도 (1차 후보 40개)
+     → GraphEdge 탐색 (edge_type 우선순위)
+     → 점수 보정 (최신성, node_type 선호도)
+     → 컨텍스트 조립 (summary + chunks + meta)
+```
+
+**결과**: "Trend X와 관련된 Draft는?" → Trend 노드 검색 → `related_trend` 간선 → Draft 자동 탐색
 
 ### DSL: 의미의 재조합
 ```
@@ -129,8 +181,37 @@ Maestro는 재생성의 시스템이다.
 
 Maestro의 아키텍처는 바로 이 재조합의 지능을 구현한다.
 
+### 관계의 창발성
+Graph RAG는 단순히 데이터를 저장하지 않는다. **관계를 저장**한다.
+
+```
+Trend → Draft → Publication → Comment
+```
+
+이 관계들은 명시적으로 프로그래밍되지 않는다. 도메인 테이블의 외래키와 비즈니스 규칙에서 **자동으로 창발**한다.
+
+#### 예시: `related_trend` 간선의 자동 생성
+```python
+# Canonicalizer: 규칙 기반으로 관계 추론
+if publication.permalink and trend.link:
+    if publication.permalink.contains(trend.link):
+        GraphEdge.create(
+            src=publication_node,
+            dst=trend_node,
+            edge_type="related_trend",
+            weight=1.0
+        )
+```
+
+**코드는 관계를 정의하지 않는다. 관계는 데이터에서 스스로 나타난다.**
+
 ### 불멸의 시스템
-코드가 늘어나지 않는 시스템은 결코 낡아지지 않는다. 단지 새로운 어댑터들로 계속 진화할 뿐이다.
+코드가 늘어나지 않는 시스템은 결코 낡아지지 않는다.
+
+- **Flow Chaining**: 플로우들은 어댑터로 무한히 재조합된다
+- **Graph RAG**: 도메인 엔티티들은 그래프로 무한히 연결된다
+
+단지 새로운 어댑터와 Watcher로 계속 진화할 뿐이다.
 
 ---
 

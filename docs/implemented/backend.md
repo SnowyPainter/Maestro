@@ -114,6 +114,48 @@
   - 캐시 (Redis)와 DB 혼용으로 성능 최적화
 - Sniffer 워커가 수집
 
+##### 🕸️ **rag** — Graph RAG (지식 그래프 + 벡터 검색)
+- **GraphNode** — 모든 도메인 엔티티를 통합한 정규화된 그래프 노드
+  - `node_type` — persona, campaign, draft, draft_variant, post_publication, trend, insight_comment, reaction_rule, playbook
+  - `embedding` — pgvector(768) 벡터 임베딩 (TEI multilingual-e5-base 모델)
+  - `title`, `summary` — 각 노드의 요약 정보
+  - `source_table`, `source_id` — 원본 도메인 테이블 참조
+  - `owner_user_id`, `persona_id`, `campaign_id` — 필터링 컨텍스트
+  - `signature_hash` — 내용 변경 감지 (중복 임베딩 방지)
+- **GraphEdge** — 노드 간 관계를 표현하는 방향성 간선
+  - `edge_type` — produces, published_as, related_trend, comment_on, watches_publication, belongs_to, collaborates_with
+  - `weight` — 관계의 가중치 (검색 시 우선순위 결정)
+  - 그래프 확장(expansion) 시 우선순위: produces > published_as > comment_on > related_trend > watches_publication
+- **GraphChunk** — 긴 본문을 350~400 토큰 단위로 분할한 청크
+  - `chunk_index` — 청크 순서
+  - `body_text` — 청크 본문
+  - `embedding` — 청크별 벡터 임베딩
+  - 검색 결과에서 상위 2개 청크만 반환하여 컨텍스트 효율화
+- **검색 파이프라인** (검색 시 추가 LLM 호출 없음)
+  1. **쿼리 정규화** — 소문자/공백 정리, `persona:`, `campaign:` 프리픽스 파싱
+  2. **임베딩 생성** — `embed_texts` 호출, Redis 60초 TTL 캐시
+  3. **벡터 검색** — pgvector 코사인 유사도로 1차 후보 40개 추출
+  4. **그래프 확장** — 선택된 노드의 이웃 노드를 edge_type 우선순위로 탐색
+  5. **점수 보정** — 최신성(`updated_at`), node_type 선호도, 사용자 피드백 반영
+  6. **중복 제거** — 동일 source_table/source_id는 최고 점수만 유지
+  7. **컨텍스트 조립** — summary + 상위 2개 chunk + meta를 번들로 반환
+- **Celery 사이드카 동기화** — `graph_rag` 전용 큐
+  - Beat 스케줄: Draft/Variant 30초, Trend 5분, 기타 2분 주기
+  - Watchers: `watch_personas`, `watch_campaigns`, `watch_drafts`, `watch_trends`, `watch_publications`, `watch_insights`, `watch_reaction_rules`
+  - Canonicalizer: 각 도메인 데이터를 `CanonicalPayload`로 정규화 (요약은 규칙 기반, LLM 호출 없음)
+  - Chunker: 본문을 350~400 토큰 단위로 분할
+  - Graph Syncer: GraphNode/Chunk/Edge를 멱등 upsert (signature_hash로 중복 방지)
+  - Edge Builder: 외래키 및 비즈니스 규칙으로 간선 자동 생성
+- **BFF API**
+  - `POST /api/orchestrator/bff/rag/search` — 쿼리 기반 벡터 검색
+  - `GET /api/orchestrator/bff/rag/nodes/{node_id}/neighbors` — 노드 이웃 확장
+- **모니터링**
+  - Prometheus 메트릭: `rag_nodes_processed_total`, `rag_embeddings_failures_total`, `rag_watch_duration_seconds`
+  - Slack 알람: `graph_rag` 큐 실패 시 webhook 전송
+- **의미**: 단순 벡터 검색을 넘어 **도메인 간 관계를 그래프로 탐색**하여 더 풍부한 컨텍스트 제공
+  - 예: "Trend X와 관련된 Draft는?" → Trend 노드 검색 → related_trend 간선으로 Draft/Publication 자동 탐색
+  - 예: "Campaign Y의 모든 게시물과 댓글" → Campaign 노드 → belongs_to → Publication → comment_on → InsightComment
+
 ##### 🔌 **adapters** — 플랫폼 어댑터
 - **CapabilityAdapter 패턴** — 플랫폼별 차이 흡수
 - **Capabilities:**
@@ -211,11 +253,17 @@
 - 새 플랫폼 추가 시 인터페이스만 구현하면 됨
 - IR (중간 표현) → 플랫폼별 컴파일 → 발행
 
-### ✅ **RAG (Retrieval-Augmented Generation)**
-- Trends 데이터에 벡터 임베딩 저장 (pgvector)
-- 유사한 트렌드나 키워드로 과거 인사이트 검색
-- LLM 프롬프트에 검색된 트렌드 컨텍스트 주입
-- **"기억하는 자동화"**의 핵심
+### ✅ **Graph RAG (그래프 기반 검색 증강 생성)**
+- **벡터 검색 + 그래프 탐색** — pgvector 코사인 유사도 검색 후 GraphEdge로 이웃 노드 확장
+- **통합 지식 그래프** — Persona, Campaign, Draft, Publication, Trend, Comment, Rule을 단일 그래프로 연결
+- **Celery 사이드카** — 주기적으로 domain 테이블 스캔 → CanonicalPayload 정규화 → 임베딩 생성 → GraphNode/Chunk/Edge 동기화
+- **멱등 동기화** — `signature_hash`로 중복 임베딩 방지, 변경된 내용만 재처리
+- **관계 우선순위** — edge_type별 가중치로 중요한 관계 우선 탐색 (produces > published_as > comment_on > related_trend)
+- **LLM 호출 없음** — 검색 시 추가 요약/생성 없이 **저장된 요약/메트릭을 그대로 활용**하여 지연 최소화
+- **Redis 캐싱** — 쿼리 임베딩 60초 TTL, 컨텍스트 번들 30~120초 TTL
+- **Prometheus 메트릭** — `rag_nodes_processed_total`, `rag_watch_duration_seconds`로 사이드카 상태 모니터링
+- **의미**: 단순 트렌드 검색을 넘어 **"Persona X가 Campaign Y에서 Trend Z를 기반으로 작성한 Draft와 그 성과"를 그래프 관계로 추적**
+- **"기억하는 자동화"의 핵심** — 과거 판단의 맥락(페르소나, 캠페인, 트렌드, 성과)을 그래프로 기억하고 검색
 
 ### ✅ **BFF (Backend For Frontend)**
 - 프론트엔드 요구사항에 특화된 API 설계
@@ -365,12 +413,13 @@
 1. **2단계 게시 플로우** — "Get trends and create draft" → Schedule → 정시 자동 발행
 2. **판단의 복제** — 나와 CoWorker의 모든 행동을 완전하게 기록 (트렌드, KPI, 페르소나, LLM 컨텍스트)하여 브랜드 리듬을 기억하고 재현
 3. **결정론적 실행** — DAG 기반 추적 가능한 액션 체인
-4. **기억하는 자동화** — Trends RAG로 유사 인사이트 기반 학습
-5. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (템플릿이 잘못되었어도 페르소나가 내용 보정)
-6. **KPI ↔ 트렌드 상관분석** — 트렌드 랭킹 vs. 콘텐츠 성과 예측 모델링으로 최적 트렌드 선정
-7. **Flow Chaining + Adaptive Scoring** — 어댑팅 보너스로 자연스러운 플로우 연계, LLM은 생성에만 충실하여 확장성과 효율성 극대화
-8. **플랫폼 중립성** — Adapter 패턴으로 확장 가능한 구조
-9. **프론트엔드 융화** — BFF + OpenAPI 자동 동기화로 타입 안전성 보장
+4. **Graph RAG** — 벡터 검색 + 그래프 탐색으로 도메인 간 관계를 추적하여 풍부한 컨텍스트 제공 (Celery 사이드카 자동 동기화)
+5. **기억하는 자동화** — Trends RAG로 유사 인사이트 기반 학습
+6. **키워드 기반 자동화** — Reactive 엔진으로 댓글 자동 응답 (템플릿이 잘못되었어도 페르소나가 내용 보정)
+7. **KPI ↔ 트렌드 상관분석** — 트렌드 랭킹 vs. 콘텐츠 성과 예측 모델링으로 최적 트렌드 선정
+8. **Flow Chaining + Adaptive Scoring** — 어댑팅 보너스로 자연스러운 플로우 연계, LLM은 생성에만 충실하여 확장성과 효율성 극대화
+9. **플랫폼 중립성** — Adapter 패턴으로 확장 가능한 구조
+10. **프론트엔드 융화** — BFF + OpenAPI 자동 동기화로 타입 안전성 보장
 
 ---
 
@@ -390,12 +439,14 @@ pnpm dev:backend:and:frontend
 ---
 
 ## 📊 모델 통계
-- **총 모듈 개수:** 16+ (users, accounts, drafts, campaigns, playbooks, insights, scheduler, trends, adapters, abtests, injectors, mail, timeline, common, reactive)
-- **총 Worker 종류:** 4 (CoWorker, Sniffer, Synchro, Adapter)
+- **총 모듈 개수:** 17+ (users, accounts, drafts, campaigns, playbooks, insights, scheduler, trends, adapters, abtests, injectors, mail, timeline, common, reactive, **rag**)
+- **총 Worker 종류:** 5 (CoWorker, Sniffer, Synchro, Adapter, **RAG**)
 - **지원 플랫폼:** Threads (완전), Instagram (완전)
-- **데이터베이스 테이블:** 20+
-- **Celery 큐:** 5 (default, sniffer, synchro, adapter, coworker)
-- **RAG 구현:** Trends 벡터 검색 (pgvector)
+- **데이터베이스 테이블:** 23+ (기존 20+ + **rag_nodes, rag_edges, rag_chunks**)
+- **Celery 큐:** 6 (default, sniffer, synchro, adapter, coworker, **graph_rag**)
+- **Graph RAG 구현:** 벡터 검색(pgvector) + 그래프 탐색 + 사이드카 동기화
+- **Graph RAG 노드 타입:** 9종 (persona, campaign, playbook, draft, draft_variant, post_publication, trend, insight_comment, reaction_rule)
+- **Graph RAG 간선 타입:** 7종 (produces, published_as, related_trend, comment_on, watches_publication, belongs_to, collaborates_with)
 
 ---
 
