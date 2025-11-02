@@ -18,6 +18,8 @@ dependencies = [
   "python-multipart>=0.0.9",     # 폼 파서 (선택)
   "minio>=7.2",
   "pillow>=10.4",
+  "prometheus-client>=0.20",
+  "prometheus-fastapi-instrumentator>=7.0.0",
 ]
 
 [tool.pytest.ini_options]

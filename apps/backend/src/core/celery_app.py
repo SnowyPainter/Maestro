@@ -19,6 +19,7 @@ celery_app = Celery(
         "apps.backend.src.workers.CoWorker.execute_due_schedules",
         "apps.backend.src.workers.CoWorker.generate_texts",
         "apps.backend.src.workers.CoWorker.ingest_comments",
+        "apps.backend.src.workers.RAG.tasks",
     ],
 )
 
@@ -91,6 +92,53 @@ beat_schedule["ingest_reactive_comments"] = {
     "task": "apps.backend.src.workers.CoWorker.ingest_comments.ingest_reactive_comments",
     "schedule": timedelta(seconds=60),
     "options": {"queue": "coworker"},
+}
+
+# Graph RAG sidecar schedules
+beat_schedule["rag_watch_personas"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_personas",
+    "schedule": timedelta(seconds=120),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_campaigns"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_campaigns",
+    "schedule": timedelta(seconds=180),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_playbooks"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_playbooks",
+    "schedule": timedelta(seconds=180),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_drafts"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_drafts",
+    "schedule": timedelta(seconds=60),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_variants"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_draft_variants",
+    "schedule": timedelta(seconds=75),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_publications"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_publications",
+    "schedule": timedelta(seconds=120),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_trends"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_trends",
+    "schedule": timedelta(seconds=300),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_insights"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_insights",
+    "schedule": timedelta(seconds=90),
+    "options": {"queue": "graph_rag"},
+}
+beat_schedule["rag_watch_reaction_rules"] = {
+    "task": "apps.backend.src.workers.RAG.tasks.watch_reaction_rules",
+    "schedule": timedelta(seconds=180),
+    "options": {"queue": "graph_rag"},
 }
 
 celery_app.conf.beat_schedule = beat_schedule

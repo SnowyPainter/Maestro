@@ -18,49 +18,51 @@
 - Prometheus 설정(`infra/prometheus.yml`) 기본 타깃  
   - Sidecar: `host.docker.internal:9600/metrics`  
   - Backend: `host.docker.internal:8000/metrics` (FastAPI `/metrics` 노출 필요)  
-- 사이드카 프로세스는 `MAESTRO_SIDECAR_METRICS_PORT=9600` 환경 변수 또는 실행 옵션으로 HTTP 서버를 띄우고, `/healthz`, `/metrics`를 제공한다.  
+- 사이드카 프로세스는 `MAESTRO_SIDECAR_METRICS_PORT=9600` 환경 변수 또는 실행 옵션으로 HTTP 서버를 띄우고, `/healthz`, `/metrics`를 제공한다 (`apps.backend.src.workers.RAG.metrics.ensure_metrics_server`).  
 - Grafana는 Prometheus(9090)와 연동하여 대시보드를 구성한다.
 
 ## 파이프라인 단계
 1. **Watchers (Celery Beat Task)**  
    - 각 도메인 테이블을 `updated_at`, `graph_node_id`, 버전 컬럼(예: `ir_revision`, `compiler_version`)으로 스캔한다.  
-   - 신규/변경 레코드를 batch 단위(기본 200개)로 `graph_rag.canonicalize` 작업에 enqueue한다.  
-   - 초기 백필은 전수 스캔, 이후에는 `updated_at > last_synced_at` + `graph_node_id IS NULL` 조건을 조합한다.
+   - 신규/변경 레코드를 batch 단위(기본 200개)로 `canonicalize_{도메인}` 태스크(예: `canonicalize_draft`)에 enqueue한다.  
+   - 초기 백필은 전수 스캔, 이후에는 `updated_at > now - SCAN_WINDOW` + `graph_node_id IS NULL` 조건을 조합한다.
 
-   | Watcher 태스크 | 대상/기준 | Canonical 입력 | 비고 |
+   | Watcher 태스크 (`apps.backend.src.workers.RAG.tasks`) | 대상/기준 | Canonical 입력 | 비고 |
    | --- | --- | --- | --- |
-   | `watch_personas` | `personas` (활성만) | `name`, `bio`, `pillars`, `style_guide`, 연결 `platform_accounts.handle` | Persona → Account edge 생성 |
-   | `watch_campaigns` | `campaigns`, `campaign_kpi_defs` | `name`, 기간, KPI JSON | Persona/Playbook와 관계 |
-   | `watch_playbooks` | `playbooks` + 최신 `playbook_logs` | KPI 요약, `summary`, 상위 로그 메시지 | Persona ↔ Campaign 양방향 |
-   | `watch_drafts` | `drafts` (`ir_revision`, `tags`, `ir`) | IR 블록 텍스트, goal, 태그 | Variant/Publication과 edge |
-   | `watch_variants` | `draft_variants` (`compiler_version`, `rendered_*`) | 캡션, 메트릭, 해시태그 리스트 | Draft ↔ Variant edge |
-   | `watch_publications` | `post_publications` | 캡션, 링크, 스케줄 정보 | Variant/ReactionRule 연결 |
-   | `watch_trends` | `trends`, `trend_news_items` | 제목, 뉴스 타이틀 | Trend ↔ Draft/Playbook edge |
-   | `watch_insights` | `insight_comments`, `insights` | 코멘트 본문, 작성자 메타 | Persona/Publication edge |
-   | `watch_reaction_rules` | `reaction_rules`, `reaction_rule_keywords` | 키워드/액션 설명 | Rule ↔ Publication edge |
+   | `watch_personas` | `personas.updated_at` | `name`, `bio`, `pillars`, `style_guide` | Playbook edge 생성 |
+   | `watch_campaigns` | `campaigns.created_at` | `name`, 설명, 기간 | Playbook 관계 연결 |
+   | `watch_playbooks` | `playbooks.last_updated` | KPI 요약, best tone/window, 최근 로그 | Persona ↔ Campaign 양방향 |
+   | `watch_drafts` | `drafts.updated_at` | IR 블록, goal, tags | Variant edge 생성 |
+   | `watch_draft_variants` | `draft_variants.updated_at` | caption, metrics, rendered blocks | Draft/Publication edge |
+   | `watch_publications` | `post_publications.updated_at` | permalink, status, meta | Variant edge |
+   | `watch_trends` | `trends.retrieved` | title, traffic, related news | Trend 노드 생성 |
+   | `watch_insights` | `insight_comments.ingested_at` | 댓글 본문, metrics, raw | Publication edge |
+   | `watch_reaction_rules` | `reaction_rules.updated_at` | rule description, keywords, actions | Publication edge |
 
 2. **Canonicalizer**  
    - 각 watcher는 `CanonicalPayload`(예: `title`, `summary`, `body_sections`, `meta`, `signature`)로 정규화한다.  
-   - 요약 문장은 `Draft.ir` 블록과 `DraftVariant.metrics` 등 이미 저장된 텍스트를 조합하여 생성하며, 추가 LLM 호출 없이 규칙 기반으로 정리한다.  
+   - 구현은 `apps.backend.src.services.rag_sidecar.canonicalizers`에 도메인별 함수(`build_draft_payload` 등)로 정리되어 있으며, 모든 요약은 `Draft.ir`, `metrics`, KPI JSON 등을 규칙 기반으로 조합한다.  
    - `signature_hash = sha256(node_type + source_id + updated_at + 주요필드)`로 변경 감지.
 
 3. **Chunker & Embedding**  
-   - Canonical payload에서 `summary` + `body_sections`를 350~400 토큰 기준으로 잘라 `GraphChunk` 후보를 만든다(토큰화는 SentencePiece/Word 수 기반 approximation).  
-   - `services.embeddings.embed_texts_sync`를 통해 summary 1개 + 청크 N개의 벡터를 요청한다.  
+   - `apps.backend.src.services.rag_sidecar.chunker`가 `summary`를 제외한 본문을 350~400 토큰(문자 수 기준) 단위로 나눈다.  
+   - `services.embeddings.embed_texts_sync`를 통해 summary + 청크 벡터를 요청하고, summary 벡터는 노드 임베딩으로, 나머지는 `GraphChunk`에 저장한다.  
    - 응답 벡터는 `settings.EMBED_DIM` 길이를 검증하고, 정규화(기본 활성화)를 적용한다.
 
-4. **Graph Syncer**  
+4. **Graph Syncer** (`apps.backend.src.services.rag_sidecar.graph_sync`)  
    - `GraphNode`(node_type, source_table, source_id)의 upsert를 수행하고, 결과 UUID를 원본 테이블 `graph_node_id`에 반영한다.  
    - `signature_hash`가 동일하면 임베딩·청크를 건너뛰고 타임스탬프만 갱신한다.  
    - `GraphChunk`는 `(node_id, chunk_index)` 멱등 키로 upsert한다.
 
 5. **Edge Builder**  
    - 외래키 및 비즈니스 규칙으로 `GraphEdge`를 구성한다. 예)  
-     - Draft → Variant (`edge_type=produces`)  
-     - Variant → Publication (`edge_type=published_as`)  
-     - Persona ↔ Campaign (`edge_type=belongs_to` / `collaborates_with`)  
-     - Publication ↔ Trend (`edge_type=related_trend`, 링크 일치/해시태그 교집합 기반)  
-   - 모든 간선은 `(src_node_id, dst_node_id, edge_type)` 조합으로 중복 제거한다.
+    - Draft → Variant (`edge_type=produces`)  
+    - Variant → Publication (`edge_type=published_as`)  
+    - Persona ↔ Campaign (`edge_type=belongs_to` / `collaborates_with`)  
+    - Publication ↔ Trend (`edge_type=related_trend`, 링크 일치/해시태그 교집합 기반)  
+    - InsightComment → Publication (`edge_type=comment_on`)  
+    - ReactionRule → Publication (`edge_type=watches_publication`)  
+   - `NodeReference` → GraphNode 매핑 실패 시에는 조용히 skip 하며, 모든 간선은 `(src_node_id, dst_node_id, edge_type)` 조합으로 멱등 처리한다.
 
 6. **품질 & 재시도**  
    - 태스크 실패는 Celery 재시도(최대 5회, 지수 백오프).  

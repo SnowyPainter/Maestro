@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter
+from prometheus_fastapi_instrumentator import Instrumentator
 from apps.backend.src.core.middleware import ContextMiddleware
 
 from apps.backend.src.orchestrator.flows.auth_router import router as orchestrator_auth_router
@@ -32,6 +33,14 @@ app = FastAPI(title=settings.APP_NAME)
 
 # 공통 프리픽스(/api 혹은 /api/v1)
 api = APIRouter(prefix="/api")  # 필요하면 "/api/v1"
+
+# Prometheus metrics (expose at /metrics, exclude from OpenAPI)
+instrumentator = Instrumentator(
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
+    excluded_handlers={"/openapi.json", "/docs", "/docs/oauth2-redirect"},
+)
+instrumentator.instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
 app.add_middleware(
     CORSMiddleware,

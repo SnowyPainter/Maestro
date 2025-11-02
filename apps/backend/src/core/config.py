@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
 
     EMBED_PROVIDER_URL: str = "http://localhost:8080/embeddings"  # TEI 등
-    EMBED_DIM: int = 1024  # bge-m3=1024, e5/multilingual-base=768, MiniLM=384
+    EMBED_DIM: int = 768  # bge-m3=1024, e5/multilingual-base=768, MiniLM=384
     EMBED_NORMALIZE: bool = True
 
     # ----- Object storage / SeaweedFS -----
@@ -85,6 +85,9 @@ class Settings(BaseSettings):
 
     # ----- Alerts -----
     SLACK_ALERT_WEBHOOK_URL: Optional[str] = None
+
+    # ----- Metrics -----
+    PROMETHEUS_MULTIPROC_DIR: Optional[str] = ".prometheus-multiproc"
 
     # ----- LLM -----
     LLM_PRIMARY_MODEL: str = "gemini-2.0-flash-lite"

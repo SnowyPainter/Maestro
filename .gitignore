@@ -38,3 +38,6 @@ logs/
 tmp/
 temp/
 .cache/
+
+.prometheus-multiproc/
+.pytest_cache/
