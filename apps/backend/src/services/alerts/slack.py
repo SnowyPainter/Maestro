@@ -54,9 +54,9 @@ def notify_failure(
     """
 
     base_text = (
-        ":rotating_light: 사이드카 태스크 실패 감지"
+        ":rotating_light: Sidecar task failure detected"
         if queue == "graph_rag"
-        else ":warning: Celery 태스크 실패 감지"
+        else ":warning: Celery task failure detected"
     )
     summary = f"{base_text} – `{task_name}`"
 
