@@ -1,77 +1,78 @@
 ## 개요
 
-그래프 RAG(Graph Retrieval Augmented Generation)를 위한 데이터 백필은 API 서버의 주 업무 트래픽과 분리된 사이드카 프로세스가 담당한다. 사이드카는 기존 도메인 테이블(드래프트, 플레이북, 캠페인 등)에서 그래프 노드를 생성·갱신하고, 벡터 임베딩/청크를 계산한 뒤 `rag_nodes`, `rag_edges`, `rag_chunks` 전용 테이블에 반영한다.
+그래프 RAG(Graph Retrieval Augmented Generation) 사이드카는 Celery beat가 주기적으로 발행하는 작업을 Celery 워커가 처리하는 구조로 동작한다. 백엔드 메인 API와는 분리된 `graph_rag` 큐에서 domain 테이블을 스캔하고, `apps.backend.src/modules/rag/models.py`에 정의된 `rag_nodes`, `rag_edges`, `rag_chunks` 테이블을 채운다. 임베딩은 이미 존재하는 데이터(드래프트 IR, 변환 결과, KPI 등)를 조합해 생성하며, 추가 요약을 위한 LLM 호출은 사용하지 않는다.
 
-## 목표
-- 운영 트래픽에 영향을 주지 않는 비동기 파이프라인
-- 도메인 변경 사항을 빠르게 그래프에 반영
-- 데이터 품질(멱등성, 재시도, 모니터링) 확보
-- 초기 마이그레이션과 지속 동기화(near-realtime delta sync) 지원
+## 실행 구조
+- **Beat → Worker**  
+  - Celery 인스턴스는 `apps.backend.src/core/celery_app.py`에서 정의된다. 사이드카 작업은 여기에 `apps.backend.src.workers.RAG.*` 모듈을 포함시키고, `celery_app.conf.beat_schedule`에 감시 주기를 등록한다.  
+  - Beat는 `celery -A apps.backend.src.core.celery_app beat`로 실행하고, 워커는 `celery -A apps.backend.src.core.celery_app worker -Q graph_rag -E`와 같이 별도 프로세스로 띄운다.
+- **환경 설정**  
+  - Redis 브로커(`settings.CELERY_BROKER_URL`)와 동기 DB URL(`settings.SYNC_DATABASE_URL`)을 공유해 재시도/락을 처리한다.  
+  - 임베딩 서비스는 `apps.backend.src/services/embeddings.py`의 `embed_texts_sync`/`embed_texts`를 재사용한다.
+- **큐 구성**  
+  - `graph_rag` 전용 큐를 두고, 사이드카 태스크는 모두 이 큐를 사용한다.  
+  - 워커는 `--concurrency`를 낮게 유지(기본 2~4)하여 DB 부하를 제어한다.
 
-## 주요 기능
-1. **감지(Watchers)**  
-   - 테이블별 `updated_at`/`graph_node_id` 기준으로 백필 대상 스캔  
-   - 초기 백필 시 batched full scan, 이후에는 CDC(Change Data Capture) 큐 구독 또는 폴링
+## 파이프라인 단계
+1. **Watchers (Celery Beat Task)**  
+   - 각 도메인 테이블을 `updated_at`, `graph_node_id`, 버전 컬럼(예: `ir_revision`, `compiler_version`)으로 스캔한다.  
+   - 신규/변경 레코드를 batch 단위(기본 200개)로 `graph_rag.canonicalize` 작업에 enqueue한다.  
+   - 초기 백필은 전수 스캔, 이후에는 `updated_at > last_synced_at` + `graph_node_id IS NULL` 조건을 조합한다.
 
-2. **정규화(Canonicalizer)**  
-   - Raw JSON/IR을 자연어 문단, 키-값 메타, 구조화 메트릭으로 변환  
-   - Draft/Variant → 캡션·CTA·해시태그 요약, Playbook → KPI 텍스트화 등
+   | Watcher 태스크 | 대상/기준 | Canonical 입력 | 비고 |
+   | --- | --- | --- | --- |
+   | `watch_personas` | `personas` (활성만) | `name`, `bio`, `pillars`, `style_guide`, 연결 `platform_accounts.handle` | Persona → Account edge 생성 |
+   | `watch_campaigns` | `campaigns`, `campaign_kpi_defs` | `name`, 기간, KPI JSON | Persona/Playbook와 관계 |
+   | `watch_playbooks` | `playbooks` + 최신 `playbook_logs` | KPI 요약, `summary`, 상위 로그 메시지 | Persona ↔ Campaign 양방향 |
+   | `watch_drafts` | `drafts` (`ir_revision`, `tags`, `ir`) | IR 블록 텍스트, goal, 태그 | Variant/Publication과 edge |
+   | `watch_variants` | `draft_variants` (`compiler_version`, `rendered_*`) | 캡션, 메트릭, 해시태그 리스트 | Draft ↔ Variant edge |
+   | `watch_publications` | `post_publications` | 캡션, 링크, 스케줄 정보 | Variant/ReactionRule 연결 |
+   | `watch_trends` | `trends`, `trend_news_items` | 제목, 뉴스 타이틀 | Trend ↔ Draft/Playbook edge |
+   | `watch_insights` | `insight_comments`, `insights` | 코멘트 본문, 작성자 메타 | Persona/Publication edge |
+   | `watch_reaction_rules` | `reaction_rules`, `reaction_rule_keywords` | 키워드/액션 설명 | Rule ↔ Publication edge |
 
-3. **임베딩(Embedding Worker)**  
-   - `services.embeddings`를 재사용하여 노드/청크/메트릭을 벡터화  
-   - 사용자 정의 모델/버전 추적을 위해 노드 메타에 `embedding_provider`, `model_version` 저장
+2. **Canonicalizer**  
+   - 각 watcher는 `CanonicalPayload`(예: `title`, `summary`, `body_sections`, `meta`, `signature`)로 정규화한다.  
+   - 요약 문장은 `Draft.ir` 블록과 `DraftVariant.metrics` 등 이미 저장된 텍스트를 조합하여 생성하며, 추가 LLM 호출 없이 규칙 기반으로 정리한다.  
+   - `signature_hash = sha256(node_type + source_id + updated_at + 주요필드)`로 변경 감지.
 
-4. **그래프 싱크(Graph Syncer)**  
-   - `rag_nodes` Upsert (node_type, source_table, source_id 기준 멱등)  
-   - 도메인간 관계를 Edge로 투영 (`draft`→`variant`→`publication`, `persona`→`campaign` 등)  
-   - 청크 분할 규칙(최대 400 토큰, 요약/원문 혼합)
+3. **Chunker & Embedding**  
+   - Canonical payload에서 `summary` + `body_sections`를 350~400 토큰 기준으로 잘라 `GraphChunk` 후보를 만든다(토큰화는 SentencePiece/Word 수 기반 approximation).  
+   - `services.embeddings.embed_texts_sync`를 통해 summary 1개 + 청크 N개의 벡터를 요청한다.  
+   - 응답 벡터는 `settings.EMBED_DIM` 길이를 검증하고, 정규화(기본 활성화)를 적용한다.
 
-5. **품질·모니터링**  
-   - 성공/실패 메트릭(prometheus) : 처리량, 재시도, 지연  
-   - Grafana 알람: 백필 지연 > N분, 에러율 > 임계값  
-   - 운영자 확인용 상태 페이지(API 또는 CLI)
+4. **Graph Syncer**  
+   - `GraphNode`(node_type, source_table, source_id)의 upsert를 수행하고, 결과 UUID를 원본 테이블 `graph_node_id`에 반영한다.  
+   - `signature_hash`가 동일하면 임베딩·청크를 건너뛰고 타임스탬프만 갱신한다.  
+   - `GraphChunk`는 `(node_id, chunk_index)` 멱등 키로 upsert한다.
 
-## 구성 요소
-| 구성 | 설명 |
-| --- | --- |
-| Sidecar Runner | Celery beat/worker 또는 독립 FastAPI + Background task |
-| Watcher | 테이블 단위 스케줄러, 변경 감지 후 Job enqueue |
-| Canonicalizer | 도메인별 파서 + 추가 요약 LLM 호출 |
-| Embedding Adapter | Embedding API 호출, 벡터 검증(길이, 정규화) |
-| GraphStore Client | SQLAlchemy AsyncSession 사용, rag_* 테이블 Upsert |
-| Edge Builder | 외래키/비즈니스 규칙 기반 그래프 간선 생성 |
+5. **Edge Builder**  
+   - 외래키 및 비즈니스 규칙으로 `GraphEdge`를 구성한다. 예)  
+     - Draft → Variant (`edge_type=produces`)  
+     - Variant → Publication (`edge_type=published_as`)  
+     - Persona ↔ Campaign (`edge_type=belongs_to` / `collaborates_with`)  
+     - Publication ↔ Trend (`edge_type=related_trend`, 링크 일치/해시태그 교집합 기반)  
+   - 모든 간선은 `(src_node_id, dst_node_id, edge_type)` 조합으로 중복 제거한다.
 
-## 데이터 흐름
-1. Watcher가 `drafts` 에서 `graph_node_id IS NULL OR updated_at > last_synced_at` 조건으로 레코드 수집  
-2. 수집 레코드를 Canonicalizer에게 전달해 `CanonicalPayload` 생성  
-3. Embedding Worker가 CanonicalPayload의 텍스트를 벡터화  
-4. Graph Syncer가 `rag_nodes` upsert 후 `graph_node_id`를 원본 테이블에 업데이트  
-5. Edge Builder가 관계 정보로 `rag_edges`, 텍스트 조각으로 `rag_chunks`를 삽입  
-6. 성공 시 처리 로그 기록, 실패 시 재시도 큐에 push
+6. **품질 & 재시도**  
+   - 태스크 실패는 Celery 재시도(최대 5회, 지수 백오프).  
+   - 반복 실패 레코드는 Redis `rag:dead_letter:{source_table}:{source_id}`에 JSON으로 저장하고, 운영자가 수동 재처리한다.  
+   - 프로메테우스 메트릭: `rag_watch_duration_seconds`, `rag_nodes_processed_total`, `rag_embeddings_failures_total`.
 
 ## 백필 전략
-- **초기 마이그레이션**: 테이블별 배치 크기 500~1000, 병렬 워커 4~8개  
-- **증분 동기화**: 1분 주기 폴링 또는 CDC 브로커(Kafka/Redis Stream)  
-- **역호환**: `graph_node_id`가 비어있는 레코드에 대해서도 기존 API는 동작해야 하므로 백필 실패는 논블로킹  
-- **버전 관리**: Canonicalizer/Embedding 버전이 변경되면 `signature_hash` 비교 후 재백필 트리거
+- **초기 로드**: 테이블별 `SELECT ... ORDER BY updated_at ASC`를 batch(500개)로 나누어 순차 처리.  
+- **증분 동기화**: Beat 스케줄 기본 2분. Draft/Variant는 30초, Trend는 5분 등 도메인 특성에 따라 상이하게 설정.  
+- **버전 변경 처리**: Canonicalizer 규칙/임베딩 모델이 교체되면 `signature_hash`/`model_version`을 비교해 강제 재백필 태스크를 enqueue.
 
-## 장애 대응 & 멱등성
-- 각 단계는 `source_table`, `source_id`, `canonical_version` 조합으로 멱등  
-- Embedding API 타임아웃 시 지수 백오프 최대 5회 재시도  
-- 그래프 테이블 Insertion 실패 시, 해당 `source_id`를 Dead Letter Queue에 기록하여 운영자가 후처리  
-- 사이드카 자체 상태를 `/healthz`, `/metrics` 엔드포인트로 제공
-
-## 운영 & 배포
-- Docker 이미지로 패키징, API 서버와 동일 네트워크에 배포  
-- `.env` 에서 동기화 대상, 배치 크기, 워커 수 설정  
-- Helm/Compose에서 사이드카 컨테이너를 API 및 Celery와 함께 띄우되, 리소스 제한(cpu/mem) 별도 설정  
-- 릴리즈 시 케어해야 할 항목:  
-  - Alembic 완료 여부  
-  - pgvector 설치  
-  - Embedding Provider URL 가용성  
-  - 초기 백필 완료를 위한 임시 높은 워커 수
+## 운영 체크리스트
+- Alembic 마이그레이션(`apps/backend/migrations/versions/202501050001_add_graph_rag_tables.py`) 완료 여부 확인.  
+- PostgreSQL `pgvector` 확장 설치.  
+- `.env`에서 `CELERY_*`, `EMBED_PROVIDER_URL`, `EMBED_DIM`, `EMBED_NORMALIZE` 설정 확인.  
+- 사이드카 배포 시 Celery beat 스케줄 파일(`celerybeat-schedule.*`) 볼륨 공유로 재시작 후에도 오프셋 유지.  
+- 모니터링: Grafana/Prometheus 대시보드에 사이드카 지표 추가, 슬랙 알람(webhook)으로 실패 래치 알림.
 
 ## TODO / 향후 개선
-- CDC 브로커 도입 및 watch latency 단축  
-- 그래프 통계(차수, 노드 수, 고아 노드) 자동 보고서  
-- Canary 백필: 새로운 Canonicalizer 버전 테스트를 위한 그림자 그래프  
+- CDC(예: Postgres logical decoding)로 폴링을 대체하여 지연 감소.  
+- `rag_nodes` 그래프 통계 자동화(고아 노드, 차수 분포, 최신성).  
+- Canary 백필: 새로운 Canonicalizer 규칙을 그림자 노드에 적용해 비교.  
+- Edge 추천: 사용자 피드백 기반 확률적 edge weight 학습.

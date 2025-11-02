@@ -1,60 +1,68 @@
 ## 개요
 
-그래프 RAG 검색은 사용자 쿼리를 임베딩 기반 근접 검색과 그래프 확장을 결합하여, 대화형 응답이나 자동화 워크플로우에 필요한 컨텍스트를 구성한다. 사이드카가 백필한 `rag_nodes`, `rag_edges`, `rag_chunks`를 중심으로, 기존 도메인 테이블을 직접 조회하지 않고도 풍부한 문맥을 얻을 수 있다.
+그래프 RAG 검색기는 사이드카가 적재한 `rag_nodes`, `rag_edges`, `rag_chunks` 데이터를 이용해 사용자 질의에 대한 컨텍스트 번들을 만든다. 핵심은 **이미 저장된 요약/메트릭을 그대로 활용**하는 것이며, 검색 시 추가 LLM 호출은 발생하지 않는다. 임베딩 계산과 벡터 비교는 PostgreSQL + pgvector를 기반으로 한다.
 
-## 파이프라인 개요
-1. **쿼리 정규화(Query Canonicalization)**  
-   - 언어 감지 → 한국어/영어 등 입력 언어 태그  
-   - Stopword 제거, 주요 엔터티(캠페인, 페르소나, 드래프트 번호 등) 추출  
-   - 그래프 필터 조건 구성 (예: 특정 persona_id 범위)
+## 처리 파이프라인
+1. **쿼리 정규화 (Query Canonicalization)**  
+   - 입력 문자열을 소문자/공백 정리, 특수문자 제거, 숫자·해시태그 추출.  
+   - `persona:`, `campaign:`, `draft:` 프리픽스를 파싱해 필터 조건을 구성한다.  
+   - 언어 감지는 간단한 문자 비율 기반 heuristic으로 태깅하고, 추가 LLM 호출은 금지한다.  
+   - 결과물: `{normalized_text, filters{persona_ids, campaign_ids, owners}, language}`.
 
-2. **임베딩 생성(Query Embedding)**  
-   - `services.embeddings.embed_texts` 호출  
-   - 쿼리 벡터 정규화 후 캐시 (TTL 1분, 동일 질의 반복 대비)
+2. **임베딩 생성 (Query Embedding)**  
+   - `apps.backend.src/services/embeddings.embed_texts` 호출.  
+   - 사이드카와 동일한 모델/정규화(`settings.EMBED_DIM`, `settings.EMBED_NORMALIZE`)를 사용해 벡터 일관성을 유지한다.  
+   - 동일 질의 반복 대비 Redis(`redis://`, Celery 브로커와 공유)에 60초 TTL 캐시(`rag:query:{hash}`).
 
-3. **근접 노드 검색(Vector Search)**  
-   - `rag_nodes.embedding <=> query_vec` 또는 `rag_chunks.embedding <=> query_vec`  
-   - 상위 N개(기본 20) 후보 추출, node/chunk 혼합 시 `chunk.node_id`로 그룹화  
-   - 사용자/캠페인 스코프로 필터링: `owner_user_id`, `persona_id`, `campaign_id`
+3. **1차 후보 검색 (Vector Search)**  
+   - Postgres pgvector에서 `SELECT ... ORDER BY rag_nodes.embedding <=> :query_vec LIMIT :k` 형태로 수행.  
+   - `filters`에 따라 `owner_user_id`, `persona_id`, `campaign_id`를 WHERE 절로 추가한다.  
+   - `rag_chunks`는 summary보다 긴 본문이 필요한 경우에만 `UNION ALL` 혹은 별도 쿼리로 조회, 결과는 `chunk.node_id` 기준으로 묶는다.  
+   - 1차 결과는 노드 기준 최대 40개로 제한한다.
 
-4. **그래프 확장(Graph Expansion)**  
-   - 후보 노드에서 `rag_edges`를 따라 k-hop(기본 2-hop) 확장  
-   - 간선 가중치 및 edge_type에 따라 우선순위 부여 (예: `belongs_to` > `related_to`)  
-   - 확장된 노드의 청크/메타 정보를 추가 확보
+4. **그래프 확장 (Graph Expansion)**  
+   - 선택된 노드에 대해 `rag_edges`를 따라 최대 2-hop까지 확장한다.  
+   - `edge_type`에 따라 우선순위 가중치를 다르게 적용한다. (예: `produces` > `related_trend` > `mentions`).  
+   - 확장된 노드가 필터 스코프 밖이면 제외한다(예: 다른 사용자 소유 데이터).
 
-5. **결과 랭킹(Ranking & Dedup)**  
-   - 기본 점수 = 벡터 유사도  
-   - 보정 요소: 최신성(`rag_nodes.updated_at`), 노드 타입 우선순위, 사용자 제공 필터, 그래프 중심성  
-   - 동일 `source_table/source_id` 중복 제거 → 가장 높은 점수만 유지
+5. **점수 및 중복 제거 (Ranking & Dedup)**  
+   - 기본 점수는 코사인 유사도.  
+   - 보정 항목: `rag_nodes.updated_at` 최신성, `node_type`별 선호도(예: persona > playbook > trend), 사용자 가중치.  
+   - 동일 `source_table`/`source_id`는 가장 높은 점수를 남기고 제거한다.
 
-6. **컨텍스트 패키징(Context Assembly)**  
-   - 노드 summary + 주요 청크(body_text) + 메타데이터를 LLM 컨텍스트 구조로 변환  
-   - 최대 토큰 수 초과 시 요약 또는 chunk truncate  
-   - `source_ref` 필드로 원본 도메인 정보(예: draft URL) 포함
+6. **컨텍스트 조립 (Context Assembly)**  
+   - 각 노드의 `summary`, 대표 chunk(상위 2개), `meta`를 꺼내어 `{header, body, metadata}` 구조로 만든다.  
+   - 토큰 수(임시로 글자 수 1600자) 초과 시 chunk 길이를 줄이고, 별도의 요약 LLM 호출 없이 문장 단위로 잘라낸다.  
+   - `source_ref`에는 원본 테이블과 PK, 필요 시 URL(permalink 등)을 포함한다.
 
 7. **캐싱 & 피드백**  
-   - 완성된 컨텍스트는 Redis/Local cache에 저장 (TTL 30초~5분)  
-   - 사용자 피드백(선택/제외 노드)을 수집하여 점수 조정에 반영
+   - 최종 컨텍스트를 30~120초 TTL로 Redis에 저장(`rag:context:{query_hash}`)하여 동일 요청 반복 시 활용한다.  
+   - 프론트에서 특정 노드 채택/제외 정보를 보내면 `rag_feedback` 테이블 또는 Redis Sorted Set으로 누적하고, 향후 score 보정에 사용한다.
 
-## 쿼리 유형별 처리
-| 유형 | 전략 |
-| --- | --- |
-| 페르소나/캠페인 요약 요청 | persona/campaign 노드 우선 검색, 관련 draft/playbook hop 확장 |
-| 게시 성과 분석 | post_publication/insight_sample 중심, metrics 스냅샷 chunk 우선 |
-| 트렌드 인사이트 | trend 노드 검색 후 연관 playbook/draft 연결 |
-| 리액션 자동화 | reaction_rule 노드 검색, 연결된 insight_comment/DM 템플릿 포함 |
+## 노드 타입별 검색 힌트
+| Node Type | 주요 필드 | 연결 Edge |
+| --- | --- | --- |
+| `persona` | `summary`, `pillars`, `style_guide`, `default_hashtags` | `persona -> campaign`, `persona -> playbook`, `persona -> draft` |
+| `campaign` | 캠페인 설명, 기간, KPI 요약 | `campaign -> playbook`, `campaign -> draft` |
+| `draft` | IR 블록 텍스트, goal, 태그 | `draft -> variant`, `draft -> trend` |
+| `draft_variant` | `rendered_caption`, `metrics`, CTA/해시태그 | `variant -> publication` |
+| `post_publication` | caption, 게시 링크, 통계 | `publication -> insight`, `publication -> reaction_rule` |
+| `trend` | 제목, 뉴스 타이틀 모음 | `trend -> draft`, `trend -> playbook` |
+| `reaction_rule` | 키워드/액션 설명 | `reaction_rule -> publication` |
 
-## 폴백 & 안전장치
-- 벡터 검색 실패 시 키워드 매칭(`ILIKE`, trigram)으로 fallback 후 그래프 확장  
-- 그래프 hop 중 고아 노드(간선 없음)만 존재할 경우 노드 자체 텍스트만 반환  
-- 쿼리 임베딩 실패(embedding API 장애) 시 사이드카가 백업 모델 호출하도록 재시도
+## 폴백 전략
+- 상위 노드가 비어있다면 `ILIKE` 기반 키워드 검색을 수행하고 동일 파이프라인으로 확장한다.  
+- 임베딩 서비스 장애 시 `services.embeddings`가 내장한 재시도(최대 5회) 이후에는 HTTP 오류를 API로 전달하고, 프론트는 “검색 지연” 알림을 띄운다.  
+- 그래프 확장 결과가 고아 노드뿐이라면 해당 노드의 summary만 반환한다.
 
-## 모니터링
-- `search_requests_total`, `vector_latency_ms`, `graph_expansion_latency_ms` Prometheus 지표  
-- 상위 미스 노드(검색 결과 없거나 fallback 사용) Top 10 리포트  
-- 로그 샘플에 쿼리/선택된 node_id/score 기록 → 품질 평가
+## 모니터링 & 로깅
+- Prometheus 지표  
+  - `rag_search_requests_total{node_type}`  
+  - `rag_vector_query_latency_ms` (pgvector 쿼리 시간)  
+  - `rag_context_size_tokens` (드라이 실행 시 토큰 추정치)  
+- 로그: `query`, `top_node_ids`, `applied_filters`, `fallback_used` 필드를 JSON으로 남겨 디버깅에 활용한다.
 
-## 향후 개선
-- 세션 기반 re-ranking(유저 대화 맥락 반영)
-- 멀티 임베딩(다국어) 병합 전략
-- 그래프 학습 기반 Edge weight 자동 조정(feedback loop)
+## 향후 개선 아이디어
+- 세션 기반 재순위: 동일 사용자 최근 선택 노드에 가중치 적용.  
+- 다국어 질의 지원: `settings.EMBED_PROVIDER_URL`이 멀티벡터를 지원하면 언어별 벡터를 병합.  
+- 그래프 피드백 루프: 피드백 누적 데이터를 이용해 `edge_type` 가중치를 동적으로 조정.
