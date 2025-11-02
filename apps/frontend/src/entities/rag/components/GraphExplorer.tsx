@@ -1,125 +1,122 @@
-import React, { useState, useMemo } from 'react';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Filter } from 'lucide-react';
-import { RagSearchResponse, RagRelatedEdge, RagExpandResponse, RagSearchItem } from '@/lib/api/generated';
-import ParentNodeHeader from './ParentNodeHeader';
-import GraphNodeCard from './GraphNodeCard';
-import RelatedNodeCard from './RelatedNodeCard';
+import React, { useMemo, useState } from "react"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Filter, ChevronDown, ChevronUp } from "lucide-react"
+import {
+  RagSearchResponse,
+  RagRelatedEdge,
+  RagExpandResponse,
+  RagSearchItem,
+} from "@/lib/api/generated"
+import ParentNodeHeader from "./ParentNodeHeader"
+import GraphNodeCard from "./GraphNodeCard"
+import RelatedNodeCard from "./RelatedNodeCard"
 
 interface GraphExplorerProps {
-  data?: RagSearchResponse;
-  expandData?: RagExpandResponse;
-  edges?: RagRelatedEdge[];
-  onExpandNode?: (nodeId: string, nodeType: string, nodeInfo?: { title?: string; meta?: Record<string, any> }) => void;
-  onNavigate?: (nodeId: string, nodeType: string) => void;
+  data?: RagSearchResponse
+  expandData?: RagExpandResponse
+  edges?: RagRelatedEdge[]
+  onExpandNode?: (
+    nodeId: string,
+    nodeType: string,
+    nodeInfo?: { title?: string; meta?: Record<string, any> },
+  ) => void
+  onNavigate?: (nodeId: string, nodeType: string) => void
   parentNode?: {
-    nodeId: string;
-    nodeType: string;
-    title?: string;
-    meta?: Record<string, any>;
-  };
+    nodeId: string
+    nodeType: string
+    title?: string
+    meta?: Record<string, any>
+  }
 }
 
-const GraphExplorer: React.FC<GraphExplorerProps> = ({ data, expandData, edges, onExpandNode, onNavigate, parentNode }) => {
-  console.log('GraphExplorer rendered with onNavigate:', !!onNavigate, 'parentNode:', !!parentNode);
+const SHOW_LIMIT = 2
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+const GraphExplorer: React.FC<GraphExplorerProps> = ({
+  data,
+  expandData,
+  edges,
+  onExpandNode,
+  onNavigate,
+  parentNode,
+}) => {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedType, setSelectedType] = useState<string>("all")
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
+  const [showMore, setShowMore] = useState(false)
 
-  // edges나 expandData가 있으면 edges 모드로 동작
-  const isEdgesMode = (edges && edges.length > 0) || (expandData?.items && expandData.items.length > 0);
+  const isEdgesMode =
+    (edges && edges.length > 0) ||
+    (expandData?.items && expandData.items.length > 0)
 
-  // 고유한 노드 타입들 추출
+  const sourceItems = isEdgesMode
+    ? (edges || expandData?.items || [])
+    : (data?.items || [])
+
   const nodeTypes = useMemo(() => {
-    if (isEdgesMode) {
-      const sourceEdges = edges || expandData?.items || [];
-      const types = new Set(sourceEdges.map(edge => edge.node_type || 'unknown'));
-      return Array.from(types).sort();
-    }
-    const items = data?.items || [];
-    const types = new Set(items.map(item => item.node_type));
-    return Array.from(types).sort();
-  }, [data?.items, edges, expandData?.items, isEdgesMode]);
+    const types = new Set(
+      sourceItems.map((n: any) => n.node_type || "unknown"),
+    )
+    return Array.from(types).sort()
+  }, [sourceItems])
 
-  // 필터링된 아이템들 또는 edges
-  const filteredItems = useMemo(() => {
-    if (isEdgesMode) {
-      const sourceEdges = edges || expandData?.items || [];
-      return sourceEdges.filter(edge => {
-        const matchesSearch = !searchQuery ||
-          (edge.title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (edge.summary?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filtered = useMemo(() => {
+    const q = searchQuery.toLowerCase()
+    const match = (txt?: string) => txt?.toLowerCase().includes(q)
+    return sourceItems.filter((n: any) => {
+      const inSearch =
+        !q ||
+        match(n.title) ||
+        match(n.summary) ||
+        (n.chunks || []).some((c: string) => match(c))
+      const inType = selectedType === "all" || n.node_type === selectedType
+      return inSearch && inType
+    })
+  }, [sourceItems, searchQuery, selectedType])
 
-        const matchesType = selectedType === 'all' || edge.node_type === selectedType;
+  const toggleNode = (id: string) =>
+    setExpandedNodes((s) => {
+      const next = new Set(s)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
 
-        return matchesSearch && matchesType;
-      });
-    }
+  const handleExpand = async (
+    id: string,
+    type: string,
+    info?: { title?: string; meta?: Record<string, any> },
+  ) => {
+    if (onExpandNode) await onExpandNode(id, type, info)
+  }
 
-    const items = data?.items || [];
-    return items.filter(item => {
-      const matchesSearch = !searchQuery ||
-        (item.title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.summary?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.chunks || []).some(chunk => chunk.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      const matchesType = selectedType === 'all' || item.node_type === selectedType;
-
-      return matchesSearch && matchesType;
-    });
-  }, [data?.items, edges, expandData?.items, searchQuery, selectedType, isEdgesMode]);
-
-  const toggleNodeExpansion = (nodeId: string) => {
-    const newExpanded = new Set(expandedNodes);
-    if (newExpanded.has(nodeId)) {
-      newExpanded.delete(nodeId);
-    } else {
-      newExpanded.add(nodeId);
-    }
-    setExpandedNodes(newExpanded);
-  };
-
-  const handleExpandClick = async (nodeId: string, nodeType: string, nodeInfo?: { title?: string; meta?: Record<string, any> }) => {
-    if (onExpandNode) {
-      await onExpandNode(nodeId, nodeType, nodeInfo);
-    }
-  };
+  // 표시 제한 적용
+  const visibleItems = showMore ? filtered : filtered.slice(0, SHOW_LIMIT)
+  const hasMore = filtered.length > SHOW_LIMIT
 
   return (
     <div className="w-full space-y-3">
-      {/* 부모 노드 정보 표시 */}
       {parentNode && (
         <ParentNodeHeader
           parentNode={parentNode}
-          onNavigate={(nodeId, nodeType) => {
-            console.log('GraphExplorer onNavigate wrapper called:', nodeId, nodeType, !!onNavigate);
-            if (onNavigate) {
-              console.log('Calling actual onNavigate function...');
-              try {
-                onNavigate(nodeId, nodeType);
-                console.log('onNavigate call completed');
-              } catch (error) {
-                console.error('Error calling onNavigate:', error);
-              }
-            } else {
-              console.log('onNavigate is undefined in GraphExplorer');
-            }
-          }}
+          onNavigate={(id, type) => onNavigate?.(id, type)}
         />
       )}
 
-      {/* 간단한 필터 */}
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <Input
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
+      {/* 필터 헤더 */}
+      <div className="flex gap-2 items-center">
+        <Input
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1"
+        />
         <Select value={selectedType} onValueChange={setSelectedType}>
           <SelectTrigger className="w-40">
             <Filter className="h-4 w-4 mr-2" />
@@ -127,60 +124,92 @@ const GraphExplorer: React.FC<GraphExplorerProps> = ({ data, expandData, edges, 
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All types</SelectItem>
-            {nodeTypes.map(type => (
-              <SelectItem key={type} value={type}>
-                {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {nodeTypes.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t.replace("_", " ").replace(/\b\w/g, (l: string) =>
+                  l.toUpperCase(),
+                )}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* 노드 카드들 또는 관련 노드들 */}
+      {/* 노드 카드 */}
       <div className="space-y-2">
-        {isEdgesMode ? (
-          // edges 모드: RelatedNodeCard들 표시
-          (filteredItems as RagRelatedEdge[]).map((edge, index) => (
-            <RelatedNodeCard
-              key={index}
-              edge={edge}
-              onExpand={(nodeId, nodeType, nodeTitle) => handleExpandClick(nodeId, nodeType, { title: nodeTitle, meta: edge.node_meta })}
-            />
-          ))
-        ) : (
-          // 일반 모드: GraphNodeCard들과 관련 노드들 표시
-          (filteredItems as RagSearchItem[]).map((item) => (
-            <div key={item.node_id}>
-              <GraphNodeCard
-                item={item}
-                isExpanded={expandedNodes.has(item.node_id)}
-                onToggleExpand={() => toggleNodeExpansion(item.node_id)}
-                onExpandNode={(nodeInfo) => handleExpandClick(item.node_id, item.node_type, nodeInfo)}
+        {visibleItems.length > 0 ? (
+          isEdgesMode ? (
+            (visibleItems as RagRelatedEdge[]).map((edge, i) => (
+              <RelatedNodeCard
+                key={i}
+                edge={edge}
+                onExpand={(id, type, title) =>
+                  handleExpand(id, type, {
+                    title,
+                    meta: edge.node_meta,
+                  })
+                }
               />
-              {/* 관련 노드들 표시 */}
-              {item.related && item.related.length > 0 && expandedNodes.has(item.node_id) && (
-                <div className="ml-4 mt-2 space-y-1">
-                  {item.related.map((edge, edgeIndex) => (
-                    <RelatedNodeCard
-                      key={edgeIndex}
-                      edge={edge}
-                      onExpand={(nodeId, nodeType, nodeTitle) => handleExpandClick(nodeId, nodeType, { title: nodeTitle, meta: edge.node_meta })}
-                    />
+            ))
+          ) : (
+            (visibleItems as RagSearchItem[]).map((item) => (
+              <div key={item.node_id} className="space-y-1">
+                <GraphNodeCard
+                  item={item}
+                  isExpanded={expandedNodes.has(item.node_id)}
+                  onToggleExpand={() => toggleNode(item.node_id)}
+                  onExpandNode={(info) =>
+                    handleExpand(item.node_id, item.node_type, info)
+                  }
+                />
+                {item.related &&
+                  expandedNodes.has(item.node_id) &&
+                  item.related.map((edge, j) => (
+                    <div key={j} className="ml-3">
+                      <RelatedNodeCard
+                        edge={edge}
+                        onExpand={(id, type, title) =>
+                          handleExpand(id, type, {
+                            title,
+                            meta: edge.node_meta,
+                          })
+                        }
+                      />
+                    </div>
                   ))}
-                </div>
+              </div>
+            ))
+          )
+        ) : (
+          <div className="text-center text-sm text-muted-foreground py-8">
+            No results found
+          </div>
+        )}
+
+        {/* Show more / less 버튼 */}
+        {hasMore && (
+          <div className="flex justify-center pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMore((v) => !v)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              {showMore ? (
+                <>
+                  Show less <ChevronUp className="h-3 w-3 ml-1" />
+                </>
+              ) : (
+                <>
+                  Show more <ChevronDown className="h-3 w-3 ml-1" />
+                </>
               )}
-            </div>
-          ))
+            </Button>
+          </div>
         )}
       </div>
-
-      {filteredItems.length === 0 && (
-        <div className="text-center text-muted-foreground py-8">
-          No results found.
-        </div>
-      )}
     </div>
-  );
-};  
+  )
+}
 
-export default GraphExplorer;
+export default GraphExplorer

@@ -807,6 +807,8 @@ export function useChatPageEvents() {
           }
         }));
         break;
+      case 'insight_comment':
+        break;
       default:
         // 다른 타입들은 아직 처리하지 않음
         console.log('Navigation not implemented for node type:', nodeType);
