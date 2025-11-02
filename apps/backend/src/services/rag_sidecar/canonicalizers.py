@@ -22,7 +22,7 @@ def build_persona_payload(session: Session, persona_id: int) -> Optional[Canonic
     if not persona:
         return None
 
-    summary = persona.bio or f"{persona.name} persona profile"
+    summary = persona.bio or f"Persona profile for {persona.name}"
     sections: List[str] = []
 
     if persona.pillars:
@@ -51,14 +51,16 @@ def build_persona_payload(session: Session, persona_id: int) -> Optional[Canonic
         for pb_id, _ in playbooks
     ]
 
+    title = f"Persona – {persona.name}"
     return CanonicalPayload(
         node_type="persona",
         source_table="personas",
         source_id=str(persona.id),
-        title=persona.name,
+        title=title,
         summary=summary,
         body_sections=sections,
         meta={
+            "kind": "persona",
             "language": persona.language,
             "tone": persona.tone,
             "pillars": persona.pillars,
@@ -179,7 +181,9 @@ def build_draft_payload(session: Session, draft_id: int) -> Optional[CanonicalPa
     if not draft:
         return None
 
-    summary = draft.title or "Untitled draft"
+    title = draft.title or f"Draft #{draft.id}"
+    summary = (draft.title or draft.goal or "Draft")
+    summary = f"Draft '{summary}' for user #{draft.user_id}" if summary else f"Draft #{draft.id}"
     sections: List[str] = []
 
     if draft.goal:
@@ -209,10 +213,11 @@ def build_draft_payload(session: Session, draft_id: int) -> Optional[CanonicalPa
         node_type="draft",
         source_table="drafts",
         source_id=str(draft.id),
-        title=draft.title,
+        title=f"Draft – {title}",
         summary=summary,
         body_sections=sections,
         meta={
+            "kind": "draft",
             "goal": draft.goal,
             "campaign_id": draft.campaign_id,
             "ir_revision": draft.ir_revision,
@@ -232,7 +237,8 @@ def build_variant_payload(session: Session, variant_id: int) -> Optional[Canonic
     if not variant:
         return None
 
-    summary = variant.rendered_caption or f"{variant.platform} variant"
+    platform_value = str(variant.platform.value) if hasattr(variant.platform, "value") else str(variant.platform)
+    summary = variant.rendered_caption or f"{platform_value} variant copy"
     sections: List[str] = []
     if variant.metrics:
         sections.append(
@@ -265,14 +271,16 @@ def build_variant_payload(session: Session, variant_id: int) -> Optional[Canonic
         for pub_id, platform in publications
     ]
 
+    title = f"Variant – {platform_value}"
     return CanonicalPayload(
         node_type="draft_variant",
         source_table="draft_variants",
         source_id=str(variant.id),
-        title=f"Variant {variant.platform}",
+        title=title,
         summary=summary,
         body_sections=sections,
         meta={
+            "kind": "draft_variant",
             "platform": str(variant.platform),
             "status": str(variant.status),
         },
@@ -341,7 +349,7 @@ def build_trend_payload(session: Session, trend_id: int) -> Optional[CanonicalPa
     if not trend:
         return None
 
-    summary = trend.title
+    summary = f"Top trend in {trend.country} (rank #{trend.rank}): {trend.title}"
     sections: List[str] = []
     if trend.approx_traffic:
         sections.append(f"Traffic: {trend.approx_traffic}")
@@ -352,14 +360,16 @@ def build_trend_payload(session: Session, trend_id: int) -> Optional[CanonicalPa
             "Related news:\n- " + "\n- ".join(_format_news_item(item) for item in trend.news_items)
         )
 
+    title = f"Trend – {trend.title}"
     return CanonicalPayload(
         node_type="trend",
         source_table="trends",
         source_id=str(trend.id),
-        title=f"{trend.country} #{trend.rank}",
+        title=title,
         summary=summary,
         body_sections=sections,
         meta={
+            "kind": "trend",
             "country": trend.country,
             "retrieved": dt_iso(trend.retrieved),
             "rank": trend.rank,

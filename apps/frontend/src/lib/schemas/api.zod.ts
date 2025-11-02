@@ -1456,6 +1456,42 @@ export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetResponse = zod.
 
 
 /**
+ * Graph RAG Search over Maestro knowledge graph
+ * @summary Graph RAG Search
+ */
+export const bffRagSearchApiBffRagSearchPostBodyLimitDefault = 6;
+export const bffRagSearchApiBffRagSearchPostBodyLimitMax = 50;
+
+
+export const bffRagSearchApiBffRagSearchPostBody = zod.object({
+  "query": zod.string().min(1),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "limit": zod.number().min(1).max(bffRagSearchApiBffRagSearchPostBodyLimitMax).default(bffRagSearchApiBffRagSearchPostBodyLimitDefault)
+})
+
+export const bffRagSearchApiBffRagSearchPostResponse = zod.object({
+  "items": zod.array(zod.object({
+  "node_id": zod.uuid(),
+  "node_type": zod.string(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "source_table": zod.string().nullish(),
+  "source_id": zod.string().nullish(),
+  "score": zod.number(),
+  "chunks": zod.array(zod.string()).optional(),
+  "related": zod.array(zod.object({
+  "dst_node_id": zod.uuid(),
+  "edge_type": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})).optional()
+})).optional()
+})
+
+
+/**
  * List reaction rules
  * @summary List Reaction Rules
  */

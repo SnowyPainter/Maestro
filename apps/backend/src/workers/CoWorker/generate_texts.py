@@ -29,6 +29,7 @@ from apps.backend.src.modules.playbooks.service import record_playbook_event
 from apps.backend.src.modules.llm.style_composer import StyleComposer
 from apps.backend.src.modules.common.enums import ALREADY_PUBLISHED_STATUS, PlatformKind, PostStatus
 from apps.backend.src.modules.drafts.models import PostPublication, DraftVariant
+from apps.backend.src.modules.rag.search import search_rag
 
 logger = logging.getLogger(__name__)
 ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
@@ -68,6 +69,29 @@ def _gather_context(
         platform = _load_platform(session, persona_account_id)
         recent_publications = _load_recent_publications(session, persona_account_id)
     return persona, campaign, playbook_summary, platform, recent_publications
+
+
+async def _load_rag_context(
+    *,
+    query_text: str,
+    persona: Optional[Persona],
+    campaign: Optional[Campaign],
+    owner_user_id: Optional[int],
+    limit: int = 5,
+) -> List[Dict[str, Any]]:
+    persona_ids = [persona.id] if persona is not None else None
+    campaign_ids = [campaign.id] if campaign is not None else None
+
+    async with AsyncSessionLocal() as session:
+        items = await search_rag(
+            session,
+            query_text=query_text,
+            owner_user_id=owner_user_id,
+            persona_ids=persona_ids,
+            campaign_ids=campaign_ids,
+            limit=limit,
+        )
+    return [item.to_prompt_payload() for item in items]
 
 
 def _load_persona_scope(
@@ -266,6 +290,7 @@ async def _invoke_llm(
     playbook_summary: Optional[Dict[str, Any]],
     platform: Optional[PlatformKind],
     recent_publications: List[Dict[str, Any]],
+    rag_context: List[Dict[str, Any]],
 ) -> str:
     persona_brief = _persona_to_brief(persona)
     campaign_brief = _campaign_to_brief(campaign)
@@ -280,6 +305,7 @@ async def _invoke_llm(
         campaign_brief=campaign_brief,
         playbook_summary=playbook_summary,
         recent_publications=recent_publications or None,
+        rag_context=rag_context or None,
     )
     ctx = _build_llm_context(persona_account_id)
     result = await service.ainvoke(
@@ -343,12 +369,19 @@ def generate_contextual_text(self, prompt_text: str) -> str:
     """
     persona_account_id = _parse_int(get_persona_account_id())
     campaign_id = _parse_int(get_campaign_id())
+    user_id = _parse_int(get_user_id())
     persona, campaign, playbook_summary, platform, recent_publications = _gather_context(
         persona_account_id,
         campaign_id,
     )
-    
+
     async def _execute() -> str:
+        rag_context = await _load_rag_context(
+            query_text=prompt_text,
+            persona=persona,
+            campaign=campaign,
+            owner_user_id=user_id,
+        )
         generated_text = await _invoke_llm(
             prompt_text,
             persona_account_id=persona_account_id,
@@ -357,6 +390,7 @@ def generate_contextual_text(self, prompt_text: str) -> str:
             playbook_summary=playbook_summary,
             platform=platform,
             recent_publications=recent_publications,
+            rag_context=rag_context,
         )
         await _record_generation_log(
             persona_id=persona.id if persona is not None else None,

@@ -1780,6 +1780,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/rag/search:
+    post:
+      tags:
+      - bff
+      - bff
+      - rag
+      summary: Graph RAG Search
+      description: Graph RAG Search over Maestro knowledge graph
+      operationId: bff_rag_search_api_bff_rag_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BffRagSearchPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RagSearchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/reactive/rules:
     get:
       tags:
@@ -5110,6 +5138,37 @@ components:
       - last
       - avg
       title: Aggregation
+    BffRagSearchPayload:
+      properties:
+        query:
+          type: string
+          minLength: 1
+          title: Query
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        persona_account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        limit:
+          type: integer
+          maximum: 50.0
+          minimum: 1.0
+          title: Limit
+          default: 6
+      type: object
+      required:
+      - query
+      title: BffRagSearchPayload
     BlockImage:
       properties:
         type:
@@ -8204,6 +8263,81 @@ components:
       - cancelled
       - monitoring
       title: PostStatus
+    RagRelatedEdge:
+      properties:
+        dst_node_id:
+          type: string
+          format: uuid
+          title: Dst Node Id
+        edge_type:
+          type: string
+          title: Edge Type
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
+      type: object
+      required:
+      - dst_node_id
+      - edge_type
+      title: RagRelatedEdge
+    RagSearchItem:
+      properties:
+        node_id:
+          type: string
+          format: uuid
+          title: Node Id
+        node_type:
+          type: string
+          title: Node Type
+        title:
+          title: Title
+          type: string
+          nullable: true
+        summary:
+          title: Summary
+          type: string
+          nullable: true
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
+        source_table:
+          title: Source Table
+          type: string
+          nullable: true
+        source_id:
+          title: Source Id
+          type: string
+          nullable: true
+        score:
+          type: number
+          title: Score
+        chunks:
+          items:
+            type: string
+          type: array
+          title: Chunks
+        related:
+          items:
+            $ref: '#/components/schemas/RagRelatedEdge'
+          type: array
+          title: Related
+      type: object
+      required:
+      - node_id
+      - node_type
+      - score
+      title: RagSearchItem
+    RagSearchResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RagSearchItem'
+          type: array
+          title: Items
+      type: object
+      title: RagSearchResponse
     ReactionActionLogListResult:
       properties:
         total:

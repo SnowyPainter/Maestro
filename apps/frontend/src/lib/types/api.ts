@@ -824,6 +824,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/rag/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG Search
+         * @description Graph RAG Search over Maestro knowledge graph
+         */
+        post: operations["bff_rag_search_api_bff_rag_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/reactive/rules": {
         parameters: {
             query?: never;
@@ -2488,6 +2508,22 @@ export interface components {
          * @enum {string}
          */
         Aggregation: "sum" | "last" | "avg";
+        /** BffRagSearchPayload */
+        BffRagSearchPayload: {
+            /** Query */
+            query: string;
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Persona Account Id */
+            persona_account_id?: number | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+            /**
+             * Limit
+             * @default 6
+             */
+            limit: number;
+        };
         /** BlockImage */
         BlockImage: {
             /**
@@ -4292,6 +4328,53 @@ export interface components {
          * @enum {string}
          */
         PostStatus: "pending" | "scheduled" | "published" | "deleted" | "failed" | "cancelled" | "monitoring";
+        /** RagRelatedEdge */
+        RagRelatedEdge: {
+            /**
+             * Dst Node Id
+             * Format: uuid
+             */
+            dst_node_id: string;
+            /** Edge Type */
+            edge_type: string;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+        };
+        /** RagSearchItem */
+        RagSearchItem: {
+            /**
+             * Node Id
+             * Format: uuid
+             */
+            node_id: string;
+            /** Node Type */
+            node_type: string;
+            /** Title */
+            title?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+            /** Source Table */
+            source_table?: string | null;
+            /** Source Id */
+            source_id?: string | null;
+            /** Score */
+            score: number;
+            /** Chunks */
+            chunks?: string[];
+            /** Related */
+            related?: components["schemas"]["RagRelatedEdge"][];
+        };
+        /** RagSearchResponse */
+        RagSearchResponse: {
+            /** Items */
+            items?: components["schemas"]["RagSearchItem"][];
+        };
         /** ReactionActionLogListResult */
         ReactionActionLogListResult: {
             /** Total */
@@ -6747,6 +6830,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlaybookDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_rag_search_api_bff_rag_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BffRagSearchPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RagSearchResponse"];
                 };
             };
             /** @description Validation Error */

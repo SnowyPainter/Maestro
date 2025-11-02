@@ -136,6 +136,7 @@ slots:
   - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
+  - bff.rag.search
   - campaigns.aggregate_kpis
   - campaigns.delete_campaign
   - campaigns.record_kpi_result
@@ -416,6 +417,7 @@ slots:
   - bff.insights.comments.list
   - bff.insights.comments.search
   - bff.playbook.list_playbooks
+  - bff.rag.search
   - bff.reactive.list_action_logs
   - bff.schedule.get_schedule_stream
   - bff.schedule.list_schedules
@@ -548,6 +550,7 @@ slots:
   - bff.contexts.current_persona_account
   - bff.insights.comments.list
   - bff.insights.comments.search
+  - bff.rag.search
   - bff.reactive.list_templates
   - bff.schedule.list_schedules
   - bff.timeline.abtests
@@ -590,6 +593,7 @@ slots:
   - bff.playbook.get_playbook_detail
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
+  - bff.rag.search
   - internal.mail.compose_trends_email
 - name: pipeline_id
   label: Pipeline Id
@@ -669,6 +673,12 @@ slots:
   - bff.insights.comments.search
   - bff.schedule.get_schedule_stream
   - bff.trends.list_trends
+- name: query
+  label: Query
+  description: Set a keyword search term
+  value_type: string
+  flows:
+  - bff.rag.search
 - name: queue
   label: Queue
   description: Filter by queue
