@@ -65,6 +65,21 @@ services:
       - seaweed-filer
     restart: always
 
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: maestro-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.listen-address=:9090"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - postgres
+
 
 volumes:
   pgdata:
@@ -73,3 +88,4 @@ volumes:
   seaweed-volume-data:
   seaweed-filer-config:
   seaweed-filer-data:
+  prometheus-data:

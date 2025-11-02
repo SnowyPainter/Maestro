@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from celery import Celery
 from apps.backend.src.core.config import settings
+from apps.backend.src.core import celery_alerts  # noqa: F401 - register alert hooks
 from apps.backend.src.core import celery_ctx  # noqa: F401 - ensure signal handlers register
 
 # Celery 인스턴스

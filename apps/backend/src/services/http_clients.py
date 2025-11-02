@@ -51,3 +51,8 @@ REDDIT_SYNC_FETCH = httpx.Client(
     http2=False,                 # 중요: HTTP/2 끄기
     follow_redirects=True,
 )
+
+SLACK_CLIENT = httpx.Client(
+    timeout=httpx.Timeout(timeout=6.0, connect=3.0, read=6.0, write=3.0),
+    headers={"User-Agent": "Maestro-Alerts/1.0"},
+)

@@ -83,6 +83,9 @@ class Settings(BaseSettings):
     MEDIA_DOMAIN: str = "https://media.yukiscale.work"
     FRONTEND_DOMAIN: str = "https://app.yukiscale.work"
 
+    # ----- Alerts -----
+    SLACK_ALERT_WEBHOOK_URL: Optional[str] = None
+
     # ----- LLM -----
     LLM_PRIMARY_MODEL: str = "gemini-2.0-flash-lite"
     GEMINI_API_KEY: Optional[str] = None

@@ -10,8 +10,16 @@
   - Redis 브로커(`settings.CELERY_BROKER_URL`)와 동기 DB URL(`settings.SYNC_DATABASE_URL`)을 공유해 재시도/락을 처리한다.  
   - 임베딩 서비스는 `apps.backend.src/services/embeddings.py`의 `embed_texts_sync`/`embed_texts`를 재사용한다.
 - **큐 구성**  
-  - `graph_rag` 전용 큐를 두고, 사이드카 태스크는 모두 이 큐를 사용한다.  
-  - 워커는 `--concurrency`를 낮게 유지(기본 2~4)하여 DB 부하를 제어한다.
+- `graph_rag` 전용 큐를 두고, 사이드카 태스크는 모두 이 큐를 사용한다.  
+- 워커는 `--concurrency`를 낮게 유지(기본 2~4)하여 DB 부하를 제어한다.
+
+## 메트릭 수집(Prometheus)
+- `infra/docker-compose.yml`에 `maestro-prometheus` 서비스를 추가하여 사이드카/백엔드 메트릭을 스크랩한다.  
+- Prometheus 설정(`infra/prometheus.yml`) 기본 타깃  
+  - Sidecar: `host.docker.internal:9600/metrics`  
+  - Backend: `host.docker.internal:8000/metrics` (FastAPI `/metrics` 노출 필요)  
+- 사이드카 프로세스는 `MAESTRO_SIDECAR_METRICS_PORT=9600` 환경 변수 또는 실행 옵션으로 HTTP 서버를 띄우고, `/healthz`, `/metrics`를 제공한다.  
+- Grafana는 Prometheus(9090)와 연동하여 대시보드를 구성한다.
 
 ## 파이프라인 단계
 1. **Watchers (Celery Beat Task)**  
@@ -58,6 +66,11 @@
    - 태스크 실패는 Celery 재시도(최대 5회, 지수 백오프).  
    - 반복 실패 레코드는 Redis `rag:dead_letter:{source_table}:{source_id}`에 JSON으로 저장하고, 운영자가 수동 재처리한다.  
    - 프로메테우스 메트릭: `rag_watch_duration_seconds`, `rag_nodes_processed_total`, `rag_embeddings_failures_total`.
+
+## 슬랙 알람(Alerts)
+- 환경 변수 `SLACK_ALERT_WEBHOOK_URL`이 설정되어 있으면 `apps.backend.src.core.celery_alerts.py`가 Celery `task_failure` 시그널을 구독해 `apps.backend.src.services.alerts.slack.notify_failure`를 호출한다.  
+- `graph_rag` 큐에서 실패한 태스크만 Slack으로 전송하며, 메시지에는 태스크명, 예외 메시지, 재시도 횟수, payload 요약을 포함한다.  
+- 워커 기동 시 `SLACK_ALERT_WEBHOOK_URL` 미설정이면 로그 경고 후 알람 전송을 건너뛴다.
 
 ## 백필 전략
 - **초기 로드**: 테이블별 `SELECT ... ORDER BY updated_at ASC`를 batch(500개)로 나누어 순차 처리.  
