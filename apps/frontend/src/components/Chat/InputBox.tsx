@@ -67,6 +67,8 @@ const mergeTextParts = (parts: ContentPart[]): ContentPart[] => {
 export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a message..." }: InputBoxProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const compositionStateRef = useRef<{ startPos: number; lastLength: number } | null>(null);
+  const lastCompositionResultRef = useRef<{ startPos: number; text: string } | null>(null);
 
   const [parts, setParts] = useState<ContentPart[]>([{ type: 'text', id: `text_${Date.now()}`, text: '' }]);
   const [cursorPos, setCursorPos] = useState<number | null>(null);
@@ -118,6 +120,24 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
     return { start, end };
   };
+
+  const findPartAtCursor = useCallback((cursorPos: number, currentParts: ContentPart[] = parts): { part: ContentPart, index: number, offset: number } | null => {
+    let accumulatedLength = 0;
+    for (let i = 0; i < currentParts.length; i++) {
+      const part = currentParts[i];
+      const partLength = getPartDisplayText(part).length;
+      if (cursorPos <= accumulatedLength + partLength) {
+        return { part, index: i, offset: cursorPos - accumulatedLength };
+      }
+      accumulatedLength += partLength;
+    }
+    const lastPart = currentParts[currentParts.length - 1];
+    if (lastPart) {
+      const lastPartLength = getPartDisplayText(lastPart).length;
+      return { part: lastPart, index: currentParts.length - 1, offset: lastPartLength };
+    }
+    return null;
+  }, [parts, getPartDisplayText]);
 
   useEffect(() => {
     if (!activeComposer) {
@@ -253,70 +273,140 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
     const editor = editorRef.current;
     if (!editor) return;
 
-    const findPartAtCursor = (cursorPos: number): { part: ContentPart, index: number, offset: number } | null => {
-        let accumulatedLength = 0;
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            const partLength = getPartDisplayText(part).length;
-            if (cursorPos <= accumulatedLength + partLength) {
-                return { part, index: i, offset: cursorPos - accumulatedLength };
-            }
-            accumulatedLength += partLength;
-        }
-        const lastPart = parts[parts.length - 1];
-        if (lastPart) {
-            const lastPartLength = getPartDisplayText(lastPart).length;
-            return { part: lastPart, index: parts.length - 1, offset: lastPartLength };
-        }
-        return null;
-    };
-
     const handleBeforeInput = (e: InputEvent) => {
-      if (isComposing) return;
-      e.preventDefault();
-      
       const { data, inputType } = e;
+      const isCompositionInsert = inputType === 'insertCompositionText' || inputType === 'insertFromComposition';
+      const isCompositionDelete = inputType === 'deleteCompositionText';
+      if (isComposing && !isCompositionInsert && !isCompositionDelete) return;
+      e.preventDefault();
       const { start: startPos, end: endPos } = getCursorPosInEditor();
       const isSelection = endPos - startPos > 0;
 
       let newParts = [...parts];
 
-      // --- Selection-based Deletion ---
-      if (isSelection && inputType.startsWith('delete')) {
-        const startTarget = findPartAtCursor(startPos);
-        const endTarget = findPartAtCursor(endPos);
-        if (!startTarget || !endTarget) return;
+      if (!isComposing && inputType === 'insertText' && data && lastCompositionResultRef.current) {
+        const { startPos: compStart, text: compText } = lastCompositionResultRef.current;
+        const fullText = newParts.map(getPartDisplayText).join('');
+        const precedingStart = startPos - compText.length;
+        if (
+          precedingStart >= 0 &&
+          fullText.slice(precedingStart, startPos) === compText &&
+          data === compText &&
+          startPos - compStart === compText.length
+        ) {
+          lastCompositionResultRef.current = null;
+          return;
+        }
+        lastCompositionResultRef.current = null;
+      } else if (inputType !== 'insertCompositionText' && inputType !== 'insertFromComposition') {
+        lastCompositionResultRef.current = null;
+      }
 
+      const removeRange = (currentParts: ContentPart[], rangeStart: number, rangeEnd: number): ContentPart[] => {
+        if (rangeStart >= rangeEnd) return currentParts;
+        const startTarget = findPartAtCursor(rangeStart, currentParts);
+        const endTarget = findPartAtCursor(rangeEnd, currentParts);
+        if (!startTarget || !endTarget) return currentParts;
+
+        const result = [...currentParts];
         const { part: startPart, index: startIndex, offset: startOffsetInPart } = startTarget;
         const { part: endPart, index: endIndex, offset: endOffsetInPart } = endTarget;
 
-        if (startPart.type === 'chip' || endPart.type === 'chip') {
-            // Simplification: if selection touches a chip, just delete the whole chip(s).
-            // A more refined implementation would check if the chip is fully selected.
-            const firstChipIndex = parts.findIndex((p, i) => i >= startIndex && i <= endIndex && p.type === 'chip');
-            let lastChipIndex = -1;
-            for (let i = endIndex; i >= startIndex; i--) {
-                if (parts[i].type === 'chip') {
-                    lastChipIndex = i;
-                    break;
-                }
+        if (startIndex === endIndex) {
+          if (startPart.type === 'chip') {
+            result.splice(startIndex, 1);
+            return result;
+          }
+          if (startPart.type === 'text') {
+            const newText = startPart.text.slice(0, startOffsetInPart) + startPart.text.slice(endOffsetInPart);
+            result[startIndex] = { ...startPart, text: newText };
+            return result;
+          }
+          if (startPart.type === 'composer') {
+            const composerText = getPartDisplayText(startPart);
+            const prefixLength = composerText.length - startPart.state.query.length;
+            const queryLength = startPart.state.query.length;
+            const startInQuery = Math.min(Math.max(0, startOffsetInPart - prefixLength), queryLength);
+            const endInQuery = Math.min(Math.max(0, endOffsetInPart - prefixLength), queryLength);
+            if (startInQuery <= endInQuery) {
+              const newQuery = startPart.state.query.slice(0, startInQuery) + startPart.state.query.slice(endInQuery);
+              result[startIndex] = { ...startPart, state: { ...startPart.state, query: newQuery } };
             }
-            if (firstChipIndex > -1 && lastChipIndex > -1) {
-                newParts.splice(firstChipIndex, lastChipIndex - firstChipIndex + 1);
-            }
-        } else {
-            const firstPartContent = getPartDisplayText(startPart).slice(0, startOffsetInPart);
-            const lastPartContent = getPartDisplayText(endPart).slice(endOffsetInPart);
-            const combinedText = firstPartContent + lastPartContent;
-            const newTextPart = { type: 'text' as const, id: `text_${Date.now()}`, text: combinedText };
-            newParts.splice(startIndex, endIndex - startIndex + 1, newTextPart);
+            return result;
+          }
         }
 
+        if (startPart.type === 'chip' || endPart.type === 'chip') {
+          const firstChipIndex = result.findIndex((p, i) => i >= startIndex && i <= endIndex && p.type === 'chip');
+          let lastChipIndex = -1;
+          for (let i = endIndex; i >= startIndex; i--) {
+            if (result[i].type === 'chip') {
+              lastChipIndex = i;
+              break;
+            }
+          }
+          if (firstChipIndex > -1 && lastChipIndex > -1) {
+            result.splice(firstChipIndex, lastChipIndex - firstChipIndex + 1);
+          }
+        } else {
+          const firstPartContent = getPartDisplayText(startPart).slice(0, startOffsetInPart);
+          const lastPartContent = getPartDisplayText(endPart).slice(endOffsetInPart);
+          const combinedText = firstPartContent + lastPartContent;
+          const newTextPart: TextPart = { type: 'text', id: `text_${Date.now()}`, text: combinedText };
+          result.splice(startIndex, endIndex - startIndex + 1, newTextPart);
+        }
+
+        return result;
+      };
+
+      if (isCompositionInsert) {
+        const compositionState = compositionStateRef.current;
+        const insertPos = compositionState?.startPos ?? startPos;
+        const priorLength = compositionState?.lastLength ?? 0;
+        const insertionText = data ?? '';
+
+        if (priorLength > 0) {
+          newParts = removeRange(newParts, insertPos, insertPos + priorLength);
+        }
+
+        const targetAfterRemoval = findPartAtCursor(insertPos, newParts);
+        if (!targetAfterRemoval) return;
+
+        const { part, index, offset } = targetAfterRemoval;
+        if (part.type === 'text') {
+          const newText = part.text.slice(0, offset) + insertionText + part.text.slice(offset);
+          newParts[index] = { ...part, text: newText };
+        } else if (part.type === 'composer') {
+          const composerText = getPartDisplayText(part);
+          const prefixLength = composerText.length - part.state.query.length;
+          const queryOffset = offset - prefixLength;
+          if (queryOffset >= 0) {
+            const newQuery = part.state.query.slice(0, queryOffset) + insertionText + part.state.query.slice(queryOffset);
+            newParts[index] = { ...part, state: { ...part.state, query: newQuery } };
+          }
+        }
+
+        compositionStateRef.current = { startPos: insertPos, lastLength: insertionText.length };
+        lastCompositionResultRef.current = insertionText ? { startPos: insertPos, text: insertionText } : null;
+        setCursorPos(insertPos + insertionText.length);
+      } else if (isCompositionDelete) {
+        const compositionState = compositionStateRef.current;
+        const deletePos = compositionState?.startPos ?? startPos;
+        const deleteLength = compositionState?.lastLength ?? Math.max(endPos - startPos, 0);
+        if (deleteLength > 0) {
+          newParts = removeRange(newParts, deletePos, deletePos + deleteLength);
+          setCursorPos(deletePos);
+        }
+        if (compositionStateRef.current) {
+          compositionStateRef.current = { ...compositionStateRef.current, lastLength: 0 };
+        }
+        lastCompositionResultRef.current = null;
+      } else if (isSelection && inputType.startsWith('delete')) {
+        newParts = removeRange(newParts, startPos, endPos);
         setCursorPos(startPos);
-      } 
-      // --- Single-character input and Paste ---
-      else {
-        const target = findPartAtCursor(startPos);
+      } else {
+        // --- Single-character input and Paste ---
+        const target = findPartAtCursor(startPos, newParts);
         if (!target) return;
         const { part, index, offset } = target;
 
@@ -375,7 +465,7 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
                 }
                 case 'deleteContentBackward': {
                     if (startPos === 0) break;
-                    const effectiveTarget = findPartAtCursor(startPos);
+                    const effectiveTarget = findPartAtCursor(startPos, newParts);
                     if (!effectiveTarget) break;
                     let { part, index, offset } = effectiveTarget;
                     if (offset === 0 && index > 0) {
@@ -406,13 +496,13 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
                     break;
                 }
                 case 'deleteContentForward': {
-                    const fullLength = parts.map(getPartDisplayText).join('').length;
+                    const fullLength = newParts.map(getPartDisplayText).join('').length;
                     if (startPos === fullLength) break;
-                    const effectiveTarget = findPartAtCursor(startPos);
+                    const effectiveTarget = findPartAtCursor(startPos, newParts);
                     if (!effectiveTarget) break;
                     let { part, index, offset } = effectiveTarget;
                     const partLength = getPartDisplayText(part).length;
-                    if (offset === partLength && index < parts.length - 1) {
+                    if (offset === partLength && index < newParts.length - 1) {
                         index += 1;
                         part = newParts[index];
                         offset = 0;
@@ -451,11 +541,26 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
 
     editor.addEventListener('beforeinput', handleBeforeInput);
     return () => editor.removeEventListener('beforeinput', handleBeforeInput);
-  }, [parts, isComposing, getPartDisplayText, commitChip]);
+  }, [parts, isComposing, getPartDisplayText, commitChip, findPartAtCursor]);
 
   useLayoutEffect(() => {
     const editor = editorRef.current;
-    if (cursorPos === null || !editor) return;
+    if (!editor) return;
+
+    for (const node of Array.from(editor.childNodes)) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent && node.textContent.length > 0) {
+            editor.removeChild(node);
+        }
+        if (
+            node.nodeType === Node.ELEMENT_NODE &&
+            !(node as HTMLElement).dataset?.partType &&
+            !(node as HTMLElement).classList.contains('placeholder')
+        ) {
+            editor.removeChild(node);
+        }
+    }
+
+    if (cursorPos === null) return;
 
     let charCount = 0;
     let targetNode: Node | null = null;
@@ -511,8 +616,15 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
           contentEditable
           suppressContentEditableWarning
           onKeyDown={handleKeyDown}
-          onCompositionStart={() => setIsComposing(true)}
-          onCompositionEnd={() => setIsComposing(false)}
+          onCompositionStart={() => {
+            setIsComposing(true);
+            const { start } = getCursorPosInEditor();
+            compositionStateRef.current = { startPos: start, lastLength: 0 };
+          }}
+          onCompositionEnd={() => {
+            setIsComposing(false);
+            compositionStateRef.current = null;
+          }}
           className="flex-1 outline-none whitespace-pre-wrap break-words"
         >
             {parts.map(part => {
@@ -528,10 +640,9 @@ export function InputBox({ onSendMessage, onClearChat, placeholder = "Enter a me
                             {getPartDisplayText(part)}
                         </span>
                     );
-                }
-                return null;
-            })}
-            {isEmpty && <br/>}
+            }
+            return null;
+        })}
         </div>
         {isEmpty && (
           <div className="absolute top-3 left-3 text-muted-foreground pointer-events-none">
