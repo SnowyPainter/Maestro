@@ -1,24 +1,38 @@
 import React from "react";
-import { ChatCard, TrendsListResponse, DraftVariantRender, InsightCommentList, ReactionMessageTemplateOut, DraftVariantRenderDetail } from "@/lib/api/generated";
+import {
+  ChatCard,
+  TrendsListResponse,
+  DraftVariantRender,
+  InsightCommentList,
+  ReactionMessageTemplateOut,
+  DraftVariantRenderDetail,
+  RagRelatedEdge,
+  RagExpandResponse,
+  RagSearchResponse,
+} from "@/lib/api/generated";
+
+// Generic Cards
 import { TableCard } from "./components/Table";
 import { ChartCard } from "./components/ChartCard";
 import { EditorCard } from "./components/EditorCard";
 import { ProfileCard } from "./components/ProfileCard";
 import { InfoCard } from "./components/InfoCard";
 import { GenericCard } from "./components/GenericCard";
+
+// Feature-specific Cards
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
 import { CampaignDetail } from "@/entities/campaigns/components/CampaignDetail";
 import { CampaignList } from "@/entities/campaigns/components/CampaignList";
 import { DraftDetail } from "@/entities/drafts/components/DraftDetail";
 import { DraftList } from "@/entities/drafts/components/DraftList";
+import { DraftVariantList } from "../drafts/components/DraftVariantList";
+import { DraftVariantDetail } from "../drafts/components/DraftVariantDetail";
 import { PersonaDetail } from "@/entities/personas/components/PersonaDetail";
 import { PersonaList } from "@/entities/personas/components/PersonaList";
 import { AccountList } from "../accounts/components/AccountList";
 import { AccountDetail } from "../accounts/components/AccountDetail";
 import { PersonaAccountList } from "../accounts/components/PersonaAccountList";
 import { PersonaAccountCard } from "../accounts/components/PersonaAccountCard";
-import { DraftVariantList } from "../drafts/components/DraftVariantList";
-import { DraftVariantDetail } from "../drafts/components/DraftVariantDetail";
 import { TimelineCard } from "@/entities/timeline/components/TimelineCard";
 import { TimelineEvent } from "@/entities/timeline/model/types";
 import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
@@ -33,7 +47,6 @@ import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
 import { ActionLogDetailCard } from "@/entities/reactive/components/ActionLogDetailCard";
 import { TemplateDetailCard } from "@/entities/reactive/components/template/TemplateDetailCard";
 import GraphExplorer from "@/entities/rag/components/GraphExplorer";
-import { RagRelatedEdge, RagExpandResponse, RagSearchResponse } from "@/lib/api/generated";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -66,220 +79,207 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
   const { card_type, data, title } = card;
   const messageId = options?.messageId ?? -1;
   const callbacks = options?.callbacks ?? {};
-  
-  if (card_type === 'timeline.events.composed' && data?.events) {
-    return <TimelineCard title={title || "Timeline"} events={data.events as TimelineEvent[]} />;
-  }
 
-  if (card_type === 'trends' || (data && data.source && data.items)) {
-    return <TrendResultCard query={title || "Trends"} results={data as unknown as TrendsListResponse} />;
-  }
+  // Playbook Dashboard 페이지 매핑
+  const dashboardPages: Record<string, string> = {
+    'playbook.dashboard.overview': 'overview',
+    'playbook.dashboard.event_chain': 'eventChain',
+    'playbook.dashboard.performance': 'performance',
+    'playbook.dashboard.insights': 'insights',
+    'playbook.dashboard.recommendations': 'recommendations',
+    'playbook.dashboard.trend_correlation': 'trendCorrelation',
+  };
 
-  // Campaign 관련 특수 처리
-  if (card_type === 'campaign.detail' && data?.id) {
-    return (
-      <CampaignDetail
-        campaignId={data.id as number}
-        onDelete={() => callbacks.onRemoveMessage?.(messageId)}
-      />
-    );
-  }
-  if (card_type === 'campaign.list') {
-    return (
-      <CampaignList
-        onSelectCampaign={(campaignId) => callbacks.onCampaignSelect?.(campaignId, messageId)}
-      />
-    );
-  }
-
-  // Draft 관련 특수 처리
-  if (card_type === 'draft.detail' && data?.id) {
-    return (
-      <DraftDetail
-        draftId={data.id as number}
-        onDelete={() => callbacks.onRemoveMessage?.(messageId)}
-      />
-    );
-  }
-  if (card_type === 'draft.list') {
-    return (
-      <DraftList
-        onSelectDraft={(draftId) => callbacks.onDraftSelect?.(draftId, messageId)}
-      />
-    );
-  }
-
-  if (card_type === 'draft.variant.list') {
-    return (
-      <DraftVariantList
-        onSelect={(variant) => callbacks.onDraftVariantSelect?.(variant, messageId)}
-        variants={data.items as DraftVariantRender[]}
-      />
-    );
-  }
-
-  if (card_type === 'draft.variant.detail' && data.variant_id) {
-    return (
-      <DraftVariantDetail
-        draftId={data.draft_id as number}
-        platform={data.platform as string}
-        variantData={data as unknown as DraftVariantRenderDetail}
-      />
-    );
-  }
-
-  // Persona 관련 특수 처리
-  if (card_type === 'account.persona.detail' && data?.id) {
-    return (
-      <PersonaDetail
-        personaId={data.id as number}
-        onDelete={() => callbacks.onRemoveMessage?.(messageId)}
-      />
-    );
-  }
-  if (card_type === 'account.persona.list') {
-    return (
-      <PersonaList
-        onSelectPersona={(personaId) => callbacks.onPersonaSelect?.(personaId, messageId)}
-      />
-    );
-  }
-
-  // PersonaAccount 관련 특수 처리
-  if (card_type === 'account.persona_account.list') {
-    return (
-      <PersonaAccountList
-        //accountId={data.account_id as number}
-        palist={data.items as any}
-      />
-    );
-  }
-  if (card_type === 'account.persona_account.detail' && data?.id) {
-    return (
-      <PersonaAccountCard link={data as any} />
-    );
-  }
-
-  // Account 관련 특수 처리
-  if (card_type === 'account.pa.list') {
-    return (
-      <AccountList
-        onSelectAccount={(accountId) => callbacks.onAccountSelect?.(accountId, messageId)}
-      />
-    );
-  }
-
-  if (card_type === 'account.pa.detail' && data?.id) {
-    return (
-      <AccountDetail
-        accountId={data.id as number}
-        onDelete={() => callbacks.onRemoveMessage?.(messageId)}
-      />
-    );
-  }
-
-  // Playbook 관련 특수 처리
-  if (card_type === 'playbook.detail' && data && typeof data === 'object' && 'playbook' in data && data.playbook && typeof data.playbook === 'object' && 'id' in data.playbook && data.playbook.id) {
-    return (
-      <PlaybookDetail
-        playbookId={data.playbook.id as number}
-        onDelete={() => callbacks.onRemoveMessage?.(messageId)}
-      />
-    );
-  }
-  if (card_type === 'playbook.list') {
-    return (
-      <PlaybookList
-        onSelectPlaybook={playbookId => callbacks.onPlaybookSelect?.(playbookId, messageId)}
-      />
-    );
-  }
-
-  // Playbook Dashboard 관련 특수 처리
-  if (card_type === 'playbook.dashboard.overview' && data && typeof data === 'object' && 'playbook_id' in data) {
-    return (
-      <PlaybookAnalysisDashboard
-        playbookId={data.playbook_id as number}
-        initialPage="overview"
-      />
-    );
-  }
-  if (card_type === 'playbook.dashboard.event_chain' && data && typeof data === 'object' && 'playbook_id' in data) {
-    return (
-      <PlaybookAnalysisDashboard
-        playbookId={data.playbook_id as number}
-        initialPage="eventChain"
-      />
-    );
-  }
-  if (card_type === 'playbook.dashboard.performance' && data && typeof data === 'object' && 'playbook_id' in data) {
-    return (
-      <PlaybookAnalysisDashboard
-        playbookId={data.playbook_id as number}
-        initialPage="performance"
-      />
-    );
-  }
-  if (card_type === 'playbook.dashboard.insights' && data && typeof data === 'object' && 'playbook_id' in data) {
-    return (
-      <PlaybookAnalysisDashboard
-        playbookId={data.playbook_id as number}
-        initialPage="insights"
-      />
-    );
-  }
-  if (card_type === 'playbook.dashboard.recommendations' && data && typeof data === 'object' && 'playbook_id' in data) {
-    return (
-      <PlaybookAnalysisDashboard
-        playbookId={data.playbook_id as number}
-        initialPage="recommendations"
-      />
-    );
-  }
-  if (card_type === 'playbook.dashboard.trend_correlation' && data && typeof data === 'object' && 'playbook_id' in data) {
-    return (
-      <PlaybookAnalysisDashboard
-        playbookId={data.playbook_id as number}
-        initialPage="trendCorrelation"
-      />
-    );
-  }
-
-  if (card_type === 'draft.post_publications.list') {
-    return (
-      <PostPublicationList
-        onSelectPublication={(publicationId) => callbacks.onPostPublicationSelect?.(publicationId, messageId)}
-      />
-    );
-  }
-
-  if (card_type === 'insights.comments.list') {
-    return (
-      <CommentList
-        data={data as unknown as InsightCommentList}
-        onSelectComment={(commentId) => callbacks.onCommentSelect?.(commentId, messageId)}
-      />
-    );
-  }
-
-  if (card_type === 'coworker.detail') {
-    return <CoWorkerDetail />;
-  }
-
-  // 카드 타입에 따라 컴포넌트 선택
   switch (card_type) {
+    // ==================== Timeline ====================
+    case 'timeline.events.composed':
+      if (data?.events) {
+        return <TimelineCard title={title || "Timeline"} events={data.events as TimelineEvent[]} />;
+      }
+      break;
+
+    // ==================== Trends ====================
+    case 'trends':
+    case 'trends.list':
+      return <TrendResultCard query={title || "Trends"} results={data as unknown as TrendsListResponse} />;
+
+    // ==================== Campaign ====================
+    case 'campaign.detail':
+      if (data?.id) {
+        return (
+          <CampaignDetail
+            campaignId={data.id as number}
+            onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+          />
+        );
+      }
+      break;
+
+    case 'campaign.list':
+      return (
+        <CampaignList
+          onSelectCampaign={(campaignId) => callbacks.onCampaignSelect?.(campaignId, messageId)}
+        />
+      );
+
+    case 'campaign.kpi_def':
+    case 'campaign.kpi':
+      return <ChartCard title={title || "Data"} data={data || card} />;
+
+    // ==================== Draft ====================
+    case 'draft.detail':
+      if (data?.id) {
+        return (
+          <DraftDetail
+            draftId={data.id as number}
+            onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+          />
+        );
+      }
+      break;
+
+    case 'draft.list':
+      return (
+        <DraftList
+          onSelectDraft={(draftId) => callbacks.onDraftSelect?.(draftId, messageId)}
+        />
+      );
+
+    case 'draft.variant.list':
+      return (
+        <DraftVariantList
+          onSelect={(variant) => callbacks.onDraftVariantSelect?.(variant, messageId)}
+          variants={data.items as DraftVariantRender[]}
+        />
+      );
+
+    case 'draft.variant.detail':
+      if (data.variant_id) {
+        return (
+          <DraftVariantDetail
+            draftId={data.draft_id as number}
+            platform={data.platform as string}
+            variantData={data as unknown as DraftVariantRenderDetail}
+          />
+        );
+      }
+      break;
+
+    case 'draft.post_publications.list':
+      return (
+        <PostPublicationList
+          onSelectPublication={(publicationId) => callbacks.onPostPublicationSelect?.(publicationId, messageId)}
+        />
+      );
+
+    // ==================== Persona ====================
+    case 'account.persona.detail':
+      if (data?.id) {
+        return (
+          <PersonaDetail
+            personaId={data.id as number}
+            onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+          />
+        );
+      }
+      break;
+
+    case 'account.persona.list':
+      return (
+        <PersonaList
+          onSelectPersona={(personaId) => callbacks.onPersonaSelect?.(personaId, messageId)}
+        />
+      );
+
+    // ==================== PersonaAccount ====================
+    case 'account.persona_account.list':
+      return <PersonaAccountList palist={data.items as any} />;
+
+    case 'account.persona_account.detail':
+      if (data?.id) {
+        return <PersonaAccountCard link={data as any} />;
+      }
+      break;
+
+    // ==================== Account ====================
+    case 'account.pa.list':
+      return (
+        <AccountList
+          onSelectAccount={(accountId) => callbacks.onAccountSelect?.(accountId, messageId)}
+        />
+      );
+
+    case 'account.pa.detail':
+      if (data?.id) {
+        return (
+          <AccountDetail
+            accountId={data.id as number}
+            onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+          />
+        );
+      }
+      break;
+
+    // ==================== Playbook ====================
+    case 'playbook.detail':
+      if (data && typeof data === 'object' && 'playbook' in data && 
+          data.playbook && typeof data.playbook === 'object' && 
+          'id' in data.playbook && data.playbook.id) {
+        return (
+          <PlaybookDetail
+            playbookId={data.playbook.id as number}
+            onDelete={() => callbacks.onRemoveMessage?.(messageId)}
+          />
+        );
+      }
+      break;
+
+    case 'playbook.list':
+      return (
+        <PlaybookList
+          onSelectPlaybook={(playbookId) => callbacks.onPlaybookSelect?.(playbookId, messageId)}
+        />
+      );
+
+    case 'playbook.dashboard.overview':
+    case 'playbook.dashboard.event_chain':
+    case 'playbook.dashboard.performance':
+    case 'playbook.dashboard.insights':
+    case 'playbook.dashboard.recommendations':
+    case 'playbook.dashboard.trend_correlation':
+      if (data && typeof data === 'object' && 'playbook_id' in data) {
+        return (
+          <PlaybookAnalysisDashboard
+            playbookId={data.playbook_id as number}
+            initialPage={dashboardPages[card_type]}
+          />
+        );
+      }
+      break;
+
+    // ==================== Comments ====================
+    case 'insights.comments.list':
+      return (
+        <CommentList
+          data={data as unknown as InsightCommentList}
+          onSelectComment={(commentId) => callbacks.onCommentSelect?.(commentId, messageId)}
+        />
+      );
+
+    // ==================== CoWorker ====================
+    case 'coworker.detail':
+      return <CoWorkerDetail />;
+
+    // ==================== Generic Cards ====================
     case 'table':
     case 'list':
     case 'series':
     case 'collection':
-    case 'campaign.kpi_def':
-    case 'draft.variant.list':
       return <TableCard title={title || "Data"} data={data || card} />;
 
     case 'chart':
     case 'kpi':
     case 'metric':
-    case 'campaign.kpi':
       return <ChartCard title={title || "Data"} data={data || card} />;
 
     case 'editor':
@@ -289,18 +289,13 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     case 'profile':
     case 'persona':
     case 'user':
-    case 'account.pa.detail':
       return <ProfileCard title={title || "Data"} data={data || card} />;
 
     case 'info':
     case 'message':
       return <InfoCard title={title || "Data"} data={data || card} />;
 
-    case 'trends':
-    case 'trends.list':
-      return <TrendResultCard query={title || "Trends"} results={data as unknown as TrendsListResponse} />;
-
-    // Reactive 관련 카드들
+    // ==================== Reactive ====================
     case 'reactive.rule.overview':
       return (
         <RuleOverviewCard
@@ -316,12 +311,10 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
           <RuleDetailCard
             ruleId={data.id as number}
             onRequestLinker={(ruleId) => {
-              // Linker modal을 열기 위한 로직 (ChatStream에서 구현)
-              console.log('Request linker for rule:', ruleId);
+              // TODO: Linker modal을 열기 위한 로직 (ChatStream에서 구현)
             }}
             onEditRule={(ruleId) => {
-              // Edit rule 로직 (ChatStream에서 구현)
-              console.log('Edit rule:', ruleId);
+              // TODO: Edit rule 로직 (ChatStream에서 구현)
             }}
           />
         );
@@ -338,7 +331,9 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     case 'reactive.activity.log':
       return (
         <ActionLogCard
-          onSelectLog={(logId, sourceMessageId) => callbacks.onReactiveSelectActionLog?.(logId, sourceMessageId || messageId)}
+          onSelectLog={(logId, sourceMessageId) => 
+            callbacks.onReactiveSelectActionLog?.(logId, sourceMessageId || messageId)
+          }
           sourceMessageId={messageId}
         />
       );
@@ -348,43 +343,29 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         return (
           <ActionLogDetailCard
             actionLogId={data.id as number}
-            onBack={() => {
-              // Go back to activity log list
-              callbacks.onReactiveViewActivity?.(messageId);
-            }}
+            onBack={() => callbacks.onReactiveViewActivity?.(messageId)}
           />
         );
       }
       break;
 
+    // ==================== RAG ====================
     case 'rag.search.result':
-      console.log('Rendering GraphExplorer with callbacks:', Object.keys(callbacks || {}));
       return (
         <GraphExplorer
-          data={data.edges || data.expandData ? undefined : data as RagSearchResponse}
+          data={data.edges || data.expandData ? undefined : (data as RagSearchResponse)}
           expandData={data.expandData as RagExpandResponse | undefined}
           edges={data.edges as RagRelatedEdge[] | undefined}
-          parentNode={data.parentNode as { nodeId: string; nodeType: string; title?: string; meta?: Record<string, any> } | undefined}
+          parentNode={
+            data.parentNode as 
+            { nodeId: string; nodeType: string; title?: string; meta?: Record<string, any> } | 
+            undefined
+          }
           onExpandNode={async (nodeId, nodeType, nodeInfo) => {
-            if (callbacks.onRagExpand) {
-              callbacks.onRagExpand(nodeId, nodeType, messageId, nodeInfo);
-            }
+            callbacks.onRagExpand?.(nodeId, nodeType, messageId, nodeInfo);
           }}
           onNavigate={(nodeId, nodeType) => {
-            console.log('cardRouter onNavigate called:', nodeId, nodeType);
-            console.log('callbacks object:', callbacks);
-            console.log('callbacks?.onRagNavigate:', callbacks?.onRagNavigate);
-            if (callbacks?.onRagNavigate) {
-              console.log('Calling onRagNavigate...');
-              try {
-                callbacks.onRagNavigate(nodeId, nodeType, messageId);
-                console.log('onRagNavigate call completed');
-              } catch (error) {
-                console.error('Error calling onRagNavigate:', error);
-              }
-            } else {
-              console.log('onRagNavigate is undefined in callbacks');
-            }
+            callbacks.onRagNavigate?.(nodeId, nodeType, messageId);
           }}
         />
       );
