@@ -12,12 +12,8 @@ import {
 } from "@/lib/api/generated";
 
 // Generic Cards
-import { TableCard } from "./components/Table";
-import { ChartCard } from "./components/ChartCard";
-import { EditorCard } from "./components/EditorCard";
-import { ProfileCard } from "./components/ProfileCard";
 import { InfoCard } from "./components/InfoCard";
-import { GenericCard } from "./components/GenericCard";
+import { SeriesTableCard } from "./components/SeriesTableCard";
 
 // Feature-specific Cards
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
@@ -122,10 +118,6 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         />
       );
 
-    case 'campaign.kpi_def':
-    case 'campaign.kpi':
-      return <ChartCard title={title || "Data"} data={data || card} />;
-
     // ==================== Draft ====================
     case 'draft.detail':
       if (data?.id) {
@@ -222,9 +214,9 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
 
     // ==================== Playbook ====================
     case 'playbook.detail':
-      if (data && typeof data === 'object' && 'playbook' in data && 
-          data.playbook && typeof data.playbook === 'object' && 
-          'id' in data.playbook && data.playbook.id) {
+      if (data && typeof data === 'object' && 'playbook' in data &&
+        data.playbook && typeof data.playbook === 'object' &&
+        'id' in data.playbook && data.playbook.id) {
         return (
           <PlaybookDetail
             playbookId={data.playbook.id as number}
@@ -270,31 +262,6 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     case 'coworker.detail':
       return <CoWorkerDetail />;
 
-    // ==================== Generic Cards ====================
-    case 'table':
-    case 'list':
-    case 'series':
-    case 'collection':
-      return <TableCard title={title || "Data"} data={data || card} />;
-
-    case 'chart':
-    case 'kpi':
-    case 'metric':
-      return <ChartCard title={title || "Data"} data={data || card} />;
-
-    case 'editor':
-    case 'draft':
-      return <EditorCard title={title || "Data"} data={data || card} />;
-
-    case 'profile':
-    case 'persona':
-    case 'user':
-      return <ProfileCard title={title || "Data"} data={data || card} />;
-
-    case 'info':
-    case 'message':
-      return <InfoCard title={title || "Data"} data={data || card} />;
-
     // ==================== Reactive ====================
     case 'reactive.rule.overview':
       return (
@@ -331,7 +298,7 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
     case 'reactive.activity.log':
       return (
         <ActionLogCard
-          onSelectLog={(logId, sourceMessageId) => 
+          onSelectLog={(logId, sourceMessageId) =>
             callbacks.onReactiveSelectActionLog?.(logId, sourceMessageId || messageId)
           }
           sourceMessageId={messageId}
@@ -357,8 +324,8 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
           expandData={data.expandData as RagExpandResponse | undefined}
           edges={data.edges as RagRelatedEdge[] | undefined}
           parentNode={
-            data.parentNode as 
-            { nodeId: string; nodeType: string; title?: string; meta?: Record<string, any> } | 
+            data.parentNode as
+            { nodeId: string; nodeType: string; title?: string; meta?: Record<string, any> } |
             undefined
           }
           onExpandNode={async (nodeId, nodeType, nodeInfo) => {
@@ -370,7 +337,12 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         />
       );
 
+    // ==================== Generic Cards ====================
+    case 'info':
+    case 'message':
+      return <InfoCard title={title || "Data"} data={data || card} />;
+
     default:
-      return <GenericCard title={title || "Data"} data={data || card} />;
+      return <SeriesTableCard title={title || "Data"} data={data || card} />;
   }
 };
