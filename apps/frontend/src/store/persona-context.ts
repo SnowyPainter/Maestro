@@ -25,8 +25,6 @@ interface PersonaContextState {
   draftEnabled: boolean;
   campaignId: number | null;
   campaignEnabled: boolean;
-  userMemo: string | null;
-  userMemoEnabled: boolean;
   setPersonaContext: (context: PersonaContextInput | null) => void;
   clearPersonaContext: () => void;
   setDraftContext: (draftId: number | null) => void;
@@ -35,9 +33,6 @@ interface PersonaContextState {
   setCampaignContext: (campaignId: number | null) => void;
   clearCampaignContext: () => void;
   setCampaignEnabled: (enabled: boolean) => void;
-  setUserMemo: (memo: string | null) => void;
-  clearUserMemo: () => void;
-  setUserMemoEnabled: (enabled: boolean) => void;
 }
 
 const initialState = {
@@ -53,8 +48,6 @@ const initialState = {
   draftEnabled: false,
   campaignId: null,
   campaignEnabled: false,
-  userMemo: null,
-  userMemoEnabled: false,
 } satisfies Omit<
   PersonaContextState,
   |
@@ -66,9 +59,6 @@ const initialState = {
     | 'setCampaignContext'
     | 'clearCampaignContext'
     | 'setCampaignEnabled'
-    | 'setUserMemo'
-    | 'clearUserMemo'
-    | 'setUserMemoEnabled'
     | 'setActiveTool'
 >;
 
@@ -183,38 +173,6 @@ export const usePersonaContextStore = create<PersonaContextState>()(
         }
         set({
           campaignEnabled: nextEnabled,
-        });
-      },
-      setUserMemo: (memo) => {
-        const normalized = memo ?? null;
-        const hasContent = Boolean(normalized?.trim());
-        const state = get();
-        if (state.userMemo === normalized && state.userMemoEnabled === hasContent) {
-          return;
-        }
-        set({
-          userMemo: normalized,
-          userMemoEnabled: hasContent,
-        });
-      },
-      clearUserMemo: () => {
-        const state = get();
-        if (state.userMemo === null && !state.userMemoEnabled) {
-          return;
-        }
-        set({
-          userMemo: null,
-          userMemoEnabled: false,
-        });
-      },
-      setUserMemoEnabled: (enabled) => {
-        const state = get();
-        const nextEnabled = enabled && Boolean(state.userMemo?.trim());
-        if (state.userMemoEnabled === nextEnabled) {
-          return;
-        }
-        set({
-          userMemoEnabled: nextEnabled,
         });
       },
     }),

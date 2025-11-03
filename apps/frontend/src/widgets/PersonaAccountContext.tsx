@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { FileText, RefreshCw, StickyNote, Target, X, AlertTriangle, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { FileText, RefreshCw, Target, X, AlertTriangle, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { toast } from "sonner";
 
 // 플랫폼 이름을 사람이 읽기 쉬운 형태로 변환
@@ -25,7 +25,15 @@ function formatPlatformName(platform: string): string {
   }
 }
 
-export function PersonaAccountContext() {
+interface PersonaAccountContextProps {
+    onSelectCampaign?: () => void;
+    onSelectDraft?: () => void;
+}
+
+export function PersonaAccountContext({
+    onSelectCampaign,
+    onSelectDraft
+}: PersonaAccountContextProps = {}) {
     const {
         personaAccountId,
         personaName,
@@ -43,10 +51,6 @@ export function PersonaAccountContext() {
         campaignEnabled,
         setCampaignEnabled,
         clearCampaignContext,
-        userMemo,
-        userMemoEnabled,
-        setUserMemoEnabled,
-        clearUserMemo,
     } = usePersonaContextStore();
 
     const [isReconnecting, setIsReconnecting] = useState(false);
@@ -64,6 +68,7 @@ export function PersonaAccountContext() {
             toggleDisabled: campaignId === null,
             onClear: clearCampaignContext,
             clearDisabled: campaignId === null,
+            onClick: onSelectCampaign,
             helper: campaignId === null ? "Choose a campaign to make it available." : "Attach the campaign context to outgoing calls.",
         },
         {
@@ -75,18 +80,8 @@ export function PersonaAccountContext() {
             toggleDisabled: draftId === null,
             onClear: clearDraftContext,
             clearDisabled: draftId === null,
+            onClick: onSelectDraft,
             helper: draftId === null ? "Select a draft in the composer to link it here." : "Include the draft when sending requests.",
-        },
-        {
-            icon: StickyNote,
-            label: "User memo",
-            value: userMemo ? (userMemo.length > 200 ? `${userMemo.slice(0, 197)}...` : userMemo) : "No memo saved",
-            enabled: userMemoEnabled && Boolean(userMemo),
-            onToggle: setUserMemoEnabled,
-            toggleDisabled: !userMemo,
-            onClear: clearUserMemo,
-            clearDisabled: !userMemo,
-            helper: userMemo ? "Share this memo with the assistant when enabled." : "Add a memo to enable this context.",
         },
     ];
 

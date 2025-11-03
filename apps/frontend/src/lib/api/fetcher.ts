@@ -107,8 +107,6 @@ export async function apiFetch<T = unknown>(
     draftEnabled,
     campaignId,
     campaignEnabled,
-    userMemo,
-    userMemoEnabled,
   } = usePersonaContextStore.getState();
 
   if (personaAccountId !== null) {
@@ -121,13 +119,6 @@ export async function apiFetch<T = unknown>(
 
   if (campaignEnabled && campaignId !== null) {
     headers.set('X-Campaign-Id', String(campaignId));
-  }
-
-  if (userMemoEnabled && userMemo) {
-    const sanitizedMemo = userMemo.replace(/\r?\n/g, ' ').trim();
-    if (sanitizedMemo) {
-      headers.set('X-User-Memo', sanitizedMemo);
-    }
   }
 
   const httpMethod = (method || 'GET').toUpperCase();

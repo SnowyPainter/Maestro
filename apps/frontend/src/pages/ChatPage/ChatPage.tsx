@@ -8,7 +8,14 @@ import { useGetAvailableFlowsApiOrchestratorChatFlowsGet } from "@/lib/api/gener
 
 function ChatPageContent() {
   const messages = useChatMessages();
-  const { handleChatSend, addTrendQueryCard, clearChat, handleToolClick } = useChatPageEvents();
+  const {
+    handleChatSend,
+    addTrendQueryCard,
+    clearChat,
+    handleToolClick,
+    handleSelectCampaign,
+    handleSelectDraft
+  } = useChatPageEvents();
   const { data: flows } = useGetAvailableFlowsApiOrchestratorChatFlowsGet();
 
   return (
@@ -19,7 +26,11 @@ function ChatPageContent() {
         onToolClick={handleToolClick}
       />
       <ChatStream messages={messages} onSendMessage={handleChatSend} onClearChat={clearChat} />
-      <ChatContextPanel flows={flows || []} />
+      <ChatContextPanel
+        flows={flows || []}
+        onSelectCampaign={handleSelectCampaign}
+        onSelectDraft={handleSelectDraft}
+      />
     </div>
   );
 }

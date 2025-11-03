@@ -5,7 +5,7 @@ import { ContextCard } from "@/features/contexts/ContextCard";
 import { SelectPersonaAccount } from "@/features/contexts/SelectPersonaAccount";
 import { usePersonaContextStore } from "@/store/persona-context";
 import { MessageBubble } from "@/entities/messages/components/MessageBubble";
-import { User, FileText, Target, StickyNote } from "lucide-react";
+import { User, FileText, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatStreamProps {
@@ -32,65 +32,8 @@ export function ChatStream({ messages, onSendMessage, onClearChat }: ChatStreamP
     campaignEnabled,
     setCampaignEnabled,
     clearCampaignContext,
-    userMemo,
-    userMemoEnabled,
-    setUserMemoEnabled,
-    clearUserMemo,
   } = usePersonaContextStore();
 
-  const hasPersona = personaAccountId !== null;
-
-  const contextCards = [
-    // 1순위: 페르소나 계정
-    ...(hasPersona ? [{
-      icon: User,
-      label: "Persona Account",
-      value: personaName || "Unknown",
-      enabled: true, // 페르소나 계정은 항상 enabled
-      toggleDisabled: true,
-      variant: 'persona' as const,
-      personaAvatarUrl: personaAvatarUrl || undefined,
-      accountHandle: accountHandle || undefined,
-      accountPlatform: accountPlatform || undefined,
-      helper: "Your active persona account context",
-    }] : []),
-    // Draft
-    ...(draftId ? [{
-      icon: FileText,
-      label: "Draft",
-      value: `Draft ID ${draftId}`,
-      enabled: draftEnabled,
-      onToggle: setDraftEnabled,
-      toggleDisabled: false,
-      onClear: clearDraftContext,
-      clearDisabled: false,
-      helper: "Include the draft when sending requests.",
-    }] : []),
-    // Campaign
-    ...(campaignId ? [{
-      icon: Target,
-      label: "Campaign",
-      value: `Campaign ID ${campaignId}`,
-      enabled: campaignEnabled,
-      onToggle: setCampaignEnabled,
-      toggleDisabled: false,
-      onClear: clearCampaignContext,
-      clearDisabled: false,
-      helper: "Attach the campaign context to outgoing calls.",
-    }] : []),
-    // User memo
-    ...(userMemo ? [{
-      icon: StickyNote,
-      label: "User memo",
-      value: userMemo.length > 200 ? `${userMemo.slice(0, 197)}...` : userMemo,
-      enabled: userMemoEnabled,
-      onToggle: setUserMemoEnabled,
-      toggleDisabled: false,
-      onClear: clearUserMemo,
-      clearDisabled: false,
-      helper: "Share this memo with the assistant when enabled.",
-    }] : []),
-  ].flat();
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {

@@ -16,6 +16,7 @@ interface ContextCardProps {
     clearDisabled?: boolean;
     helper?: string;
     className?: string;
+    onClick?: () => void; // 추가: 카드 전체 클릭 핸들러
     // Persona account specific props
     variant?: 'default' | 'persona';
     personaAvatarUrl?: string;
@@ -40,6 +41,7 @@ export function ContextCard({
     clearDisabled,
     helper,
     className,
+    onClick,
     variant = 'default',
     personaAvatarUrl,
     accountHandle,
@@ -54,11 +56,12 @@ export function ContextCard({
         return (
             <div
                 className={cn(
-                    "rounded-2xl border shadow-md p-4 transition-colors relative overflow-hidden min-h-[140px]",
+                    "rounded-2xl border shadow-md p-4 transition-colors relative overflow-hidden min-h-[140px] cursor-pointer hover:opacity-90",
                     platformGradient ? "text-white" : "text-card-foreground",
                     platformGradient || "bg-card border-primary/70 shadow-lg",
                     className
                 )}
+                onClick={onClick}
             >
                 {/* 2x2 Grid Layout */}
                 <div className="grid grid-cols-2 gap-2 h-full">
@@ -192,10 +195,11 @@ export function ContextCard({
     return (
         <div
             className={cn(
-                "rounded-2xl border bg-card text-card-foreground shadow-md p-4 transition-colors min-h-[160px]",
+                "rounded-2xl border bg-card text-card-foreground shadow-md p-4 transition-colors min-h-[160px] cursor-pointer hover:opacity-90",
                 enabled ? "border-primary/60 shadow-sm" : "border-border",
                 className
             )}
+            onClick={onClick}
         >
             <div className="flex items-start gap-3">
                 <span className="mt-1 rounded-md bg-muted p-2 text-muted-foreground">

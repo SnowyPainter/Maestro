@@ -3,18 +3,31 @@ import { PersonaAccountContext } from "./PersonaAccountContext";
 
 interface FlowInfo {
     title?: string;
-    description?: string;
+    description?: string | null;
     method?: string;
     path?: string;
 }
 
-export function ChatContextPanel({ flows }: { flows?: FlowInfo[] }) {
+interface ChatContextPanelProps {
+    flows?: FlowInfo[];
+    onSelectCampaign?: () => void;
+    onSelectDraft?: () => void;
+}
+
+export function ChatContextPanel({
+    flows,
+    onSelectCampaign,
+    onSelectDraft
+}: ChatContextPanelProps) {
 
     return (
         <aside className="bg-card border-l p-4 h-screen hidden lg:block">
             <h2 className="text-lg font-semibold mb-4">Context</h2>
             <div className="space-y-6">
-                <PersonaAccountContext />
+                <PersonaAccountContext
+                    onSelectCampaign={onSelectCampaign}
+                    onSelectDraft={onSelectDraft}
+                />
 
                 <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="flows">

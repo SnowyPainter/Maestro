@@ -1071,5 +1071,7 @@ export function useChatPageEvents() {
     addTrendQueryCard,
     clearChat,
     handleToolClick,
+    handleSelectCampaign,
+    handleSelectDraft,
   };
 }
