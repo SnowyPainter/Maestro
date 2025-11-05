@@ -2,10 +2,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { MailBatchRequest, PostPublishBatchRequest, SyncMetricsBatchRequest } from "@/lib/api/generated";
+import { MailBatchRequest, SyncMetricsBatchRequest } from "@/lib/api/generated";
 import { ScheduleBuilderProps } from "../ScheduleBuilder";
 
-type BatchRequest = MailBatchRequest | PostPublishBatchRequest | SyncMetricsBatchRequest;
+type BatchRequest = MailBatchRequest | SyncMetricsBatchRequest;
 
 interface SimpleSettingsProps<T extends BatchRequest> extends ScheduleBuilderProps<T> {
     handleFieldChange: (path: string, val: any) => void;

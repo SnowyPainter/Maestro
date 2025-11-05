@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { MailBatchRequest, PostPublishBatchRequest, SyncMetricsBatchRequest } from "@/lib/api/generated";
+import { MailBatchRequest, SyncMetricsBatchRequest } from "@/lib/api/generated";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { ScheduleBuilderProps } from "../ScheduleBuilder";
 
-type BatchRequest = MailBatchRequest | PostPublishBatchRequest | SyncMetricsBatchRequest;
+type BatchRequest = MailBatchRequest | SyncMetricsBatchRequest;
 
 interface AdvancedSettingsProps<T extends BatchRequest> extends ScheduleBuilderProps<T> {
     handleFieldChange: (path: string, val: any) => void;

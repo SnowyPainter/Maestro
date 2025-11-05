@@ -1,13 +1,13 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MailBatchRequest, PostPublishBatchRequest, SyncMetricsBatchRequest } from "@/lib/api/generated";
+import { MailBatchRequest, SyncMetricsBatchRequest } from "@/lib/api/generated";
 import { ScheduleBuilderProps } from "../ScheduleBuilder";
 import { SimpleSettings } from "./SimpleSettings";
 import { AdvancedSettings } from "./AdvancedSettings";
 
-type BatchRequest = MailBatchRequest | PostPublishBatchRequest | SyncMetricsBatchRequest;
+type BatchRequest = MailBatchRequest | SyncMetricsBatchRequest;
 
-export function ScheduledRunSettings<T extends BatchRequest>({ value, onChange, errors }: ScheduleBuilderProps<T>) {
+export function ScheduledRunSettings({ value, onChange, errors }: ScheduleBuilderProps<BatchRequest>) {
 
     const handleFieldChange = (path: string, val: any) => {
         const keys = path.split('.');
