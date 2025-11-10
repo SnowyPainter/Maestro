@@ -84,6 +84,7 @@
 - **Campaign** — 마케팅 캠페인 정의
 - **CampaignKPIDef** — KPI 정의 (목표, 메트릭)
 - **CampaignKPIResult** — 실제 성과 기록
+- **Tracking links × KPI** — `tracking_links` 테이블에서 persona/draft 단위 방문수를 집계해 `LINK_CLICKS`, `CTR`을 캠페인 KPI에 자동 반영 (variant/draft/페르소나 경계를 지키면서 재사용)
 
 ##### 📖 **playbooks** — 행동 기록 및 학습 (브랜드 기억 저장소)
 - **나와 CoWorker의 모든 행동 기록** — 인간 + AI의 모든 판단과 실행을 JSON 로그로 저장
@@ -269,6 +270,7 @@
 - 프론트엔드 요구사항에 특화된 API 설계
 - 카드 기반 응답 포맷
 - OpenAPI 스펙 자동 생성 → 프론트엔드 타입/훅 자동 동기화
+- `GET /bff/me/links` — 내 모든 트래킹 링크를 페이지네이션 + URL/게시글 검색으로 조회 (persona, draft, 방문수 포함)
 
 ### ✅ **Event-Driven 워커**
 - Celery 큐를 통해 CoWorker/Sniffer/Synchro 독립 실행
@@ -376,6 +378,16 @@
    - 생성된 템플릿을 Reactive Rule에 연결하여 영구 자동화
    - **결과**: 미래 댓글에 대한 자동 응답 체계 구축
 
+#### 🎯 **유즈케이스 4: 링크 추적 KPI & CTR 확인**
+1. **링크 발급 & 모니터링**
+   - Draft/DM/댓글 생성 시 페르소나 링크 정책에 따라 모든 URL이 외부 링크로 자동 변환
+2. **캠페인 KPI 반영**
+   - 링크 클릭되는 것이 바로 DB에 저장, 캠페인 집계시 누적
+   - CTR 정의가 있다면 `LINK_CLICKS / IMPRESSIONS`로 자동 산출 (플랫폼에서 제공하는 impression과 결합)
+3. **인사이트 활용**
+   - 내 링크들을 볼 수 있고, 어느 링크에서 방문자수가 폭발하고 현재 링크가 아무도 방문하지 않는 것인지도 확인 가능  
+   - 따라서 같은 링크라도 어떤 게시글에서 방문자가 폭발적이었는지 확인 가능  
+
 ### 📊 메트릭 수집 (지속적 학습 데이터 축적)
 1. Synchro 워커가 주기적으로 Adapter 호출
 2. 플랫폼별 메트릭 API 쿼리 (likes, replies, views 등)
@@ -451,4 +463,3 @@ pnpm dev:backend:and:frontend
 ---
 
 > **"나와 CoWorker의 모든 행동은 기록됩니다. 트렌드가 무엇이었는지, Campaign KPI들은 어땠는지, 페르소나는 무엇을 썼는지 — 이 루프는 끊임없이 당신의 판단을 복제하고 정제합니다."**
-

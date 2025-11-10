@@ -352,6 +352,16 @@ src/
    - "Create a new draft" → 댓글 기반 새 Draft 생성
    - **결과**: LLM이 댓글 분석 → 관련 트렌드 검색 → 후속 콘텐츠 초안 생성
 
+#### 🎯 **유즈케이스 3: 링크 추적/CTR 모니터링**
+1. **링크 인벤토리 탐색**
+   - URL/게시글 키워드로 필터링, persona/draft별 방문수 정렬
+2. **성과 해석**
+   - 각 링크 카드에서 퍼블릭 URL, 원본 URL, 마지막 방문 시각 확인
+   - CTA가 잘 작동하는지 비교 후 Draft/Persona 정책 즉시 수정
+3. **KPI 연동**
+   - 동일한 visit_count가 Campaign KPI의 `LINK_CLICKS`로 반영됨을 대시보드에서 확인
+   - Impression 값이 있을 경우 CTR 카드로 바로 확인 → 메시지/채널 우선순위 재조정
+
 ### 📊 실시간 스케줄 스트림 (SSE)
 1. `useEffect`에서 `/api/sse/scheduler/stream` 연결
 2. 백엔드가 예약된 게시물 상태 변화 스트림
@@ -540,4 +550,3 @@ src/
 ---
 
 > **"Maestro는 나를 대신 쓰는 게 아니라, 나와 CoWorker의 모든 행동을 기록하며 나의 리듬을 대신 연주한다."**
-
