@@ -10,6 +10,7 @@ from apps.backend.src.orchestrator.helper_router import router as orchestrator_h
 from apps.backend.src.orchestrator.internal_router import router as orchestrator_internal_router
 from apps.backend.src.modules.files.file_router import router as file_router
 from apps.backend.src.modules.files.public_router import router as public_media_router
+from apps.backend.src.modules.link_tracking.router import router as link_tracking_router
 from apps.backend.src.modules.scheduler.router import router as scheduler_stream_router
 from apps.backend.src.core.logging import setup_logging
 
@@ -95,6 +96,7 @@ async def reset_db():
 
 # 최종적으로 app에 붙이기
 app.include_router(api)
+app.include_router(link_tracking_router, prefix="/l")
 
 def _deunionize_nullable(d):
     """anyOf/oneOf에 [string + null] 패턴이 나오면 nullable 표현으로 정규화"""

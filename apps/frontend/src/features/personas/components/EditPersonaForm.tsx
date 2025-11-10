@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { components } from "@/lib/types/api";
@@ -101,6 +102,8 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
   const [inlineLinkReplacement, setInlineLinkReplacement] = useState(
     typeof initialInlinePolicy?.replacement_text === "string" ? initialInlinePolicy.replacement_text : ""
   );
+  const initialTrackingPolicy = initialLinkPolicy?.tracking_links as Record<string, unknown> | undefined;
+  const [trackInlineLinks, setTrackInlineLinks] = useState(Boolean(initialTrackingPolicy?.enabled));
 
   const initialMediaPrefs = persona.media_prefs ?? {};
   const [preferredRatio, setPreferredRatio] = useState(
@@ -212,6 +215,12 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
           inlineLinkConfig.replacement_text = replacement;
         }
         linkPolicy.inline_link = inlineLinkConfig;
+      }
+      if (trackInlineLinks) {
+        linkPolicy.tracking_links = {
+          enabled: true,
+          strategy: "redirect",
+        };
       }
 
       const mediaPrefs: Record<string, unknown> = {};
@@ -463,6 +472,21 @@ export function EditPersonaForm({ persona, onSuccess }: { persona: PersonaOut, o
                 placeholder="e.g. Link in bio"
               />
             ) : null}
+          </div>
+          <div className="flex items-center gap-3 rounded-md border px-3 py-2">
+            <Switch
+              id="track_links"
+              checked={trackInlineLinks}
+              onCheckedChange={(checked) => setTrackInlineLinks(Boolean(checked))}
+            />
+            <div className="space-y-0.5">
+              <label htmlFor="track_links" className="text-sm font-medium">
+                Replace links with trackable redirects
+              </label>
+              <p className="text-xs text-muted-foreground">
+                When enabled, captions use public tracking URLs so you can count visits per post.
+              </p>
+            </div>
           </div>
           <div className="space-y-2">
             {utmParams.map((row) => (

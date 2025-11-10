@@ -62,6 +62,7 @@ const PersonaDetailView = ({ persona }: { persona: Persona }) => {
     const mediaPrefs = persona.media_prefs as Record<string, any> | undefined;
     const postingWindows = persona.posting_windows as { dow: string; start: string; end: string }[] | undefined;
     const replaceMap = (persona.extras as Record<string, any> | undefined)?.replace_map as Record<string, string> | undefined;
+    const trackingLinks = linkPolicy?.tracking_links as { enabled?: boolean; strategy?: string } | undefined;
 
     return (
         <CardContent className="text-sm">
@@ -114,6 +115,22 @@ const PersonaDetailView = ({ persona }: { persona: Persona }) => {
                         {inlineLinkPolicy?.strategy === 'replace' && (
                             <DetailItem label="Replacement Text">{renderValue(inlineLinkPolicy?.replacement_text)}</DetailItem>
                         )}
+                        <DetailItem label="Track Links">
+                            {trackingLinks ? (
+                                <div className="flex flex-col gap-1">
+                                    <Badge variant={trackingLinks.enabled ? "default" : "outline"}>
+                                        {trackingLinks.enabled ? "Enabled" : "Disabled"}
+                                    </Badge>
+                                    {trackingLinks.strategy ? (
+                                        <span className="text-xs text-muted-foreground">
+                                            Strategy: {trackingLinks.strategy}
+                                        </span>
+                                    ) : null}
+                                </div>
+                            ) : (
+                                <span className="text-muted-foreground">Not configured</span>
+                            )}
+                        </DetailItem>
                         <DetailItem label="UTM Parameters">
                             {utm && Object.keys(utm).length > 0 ? (
                                 <div className="space-y-2 rounded-md border p-2">

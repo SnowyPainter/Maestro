@@ -4034,3 +4034,13 @@ export const coworkerGenerateTextApiOrchestratorHelpersCoworkerGenerateTextPostR
  * @summary Health
  */
 export const healthApiHealthGetResponse = zod.any()
+
+
+/**
+ * @summary Redirect Tracking Link
+ */
+export const redirectTrackingLinkLTokenGetParams = zod.object({
+  "token": zod.string()
+})
+
+export const redirectTrackingLinkLTokenGetResponse = zod.any()

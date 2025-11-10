@@ -263,6 +263,116 @@ export function ActionLogDetailCard({ actionLogId, onBack }: ActionLogDetailCard
           </div>
         )}
 
+        {metadata.link_policy?.tracking_links && (
+          <div className="border-l-4 border-indigo-500 pl-4 bg-indigo-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <ExternalLink className="h-4 w-4 text-indigo-600" />
+              <span className="font-medium text-indigo-900 text-sm">Tracking Links</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <p className="text-gray-700">
+                <span className="font-medium">Status:</span>{" "}
+                {metadata.link_policy.tracking_links.enabled ? "Enabled" : "Disabled"}
+              </p>
+              {typeof metadata.link_policy.tracking_links.issued_count === "number" && (
+                <p className="text-gray-700">
+                  <span className="font-medium">Issued Links:</span>{" "}
+                  {metadata.link_policy.tracking_links.issued_count}
+                </p>
+              )}
+              {metadata.link_policy.tracking_links.warnings?.length ? (
+                <ul className="text-xs text-amber-700 list-disc pl-4">
+                  {metadata.link_policy.tracking_links.warnings.map((warning: string) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              ) : null}
+              {metadata.link_policy.tracking_links.links?.length ? (
+                <div className="space-y-1">
+                  <span className="font-medium text-gray-700">Redirect URLs:</span>
+                  <div className="flex flex-col gap-1">
+                    {metadata.link_policy.tracking_links.links.map(
+                      (link: { public_url?: string; original_url?: string; token?: string }, index: number) => (
+                        <div key={link.public_url ?? link.token ?? index} className="text-xs text-gray-700 space-y-0.5">
+                          {link.public_url ? (
+                            <a
+                              href={link.public_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"
+                            >
+                              {link.public_url}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null}
+                          {link.original_url ? (
+                            <div className="text-[11px] text-gray-500 break-all">→ {link.original_url}</div>
+                          ) : null}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {metadata.link_policy?.tracking_links && (
+          <div className="border-l-4 border-indigo-500 pl-4 bg-indigo-50 rounded-r-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <ExternalLink className="h-4 w-4 text-indigo-600" />
+              <span className="font-medium text-indigo-900 text-sm">Tracking Links</span>
+            </div>
+            <div className="space-y-1 text-sm">
+              <p className="text-gray-700">
+                <span className="font-medium">Status:</span>{" "}
+                {metadata.link_policy.tracking_links.enabled ? "Enabled" : "Disabled"}
+              </p>
+              {typeof metadata.link_policy.tracking_links.issued_count === "number" && (
+                <p className="text-gray-700">
+                  <span className="font-medium">Issued Links:</span>{" "}
+                  {metadata.link_policy.tracking_links.issued_count}
+                </p>
+              )}
+              {metadata.link_policy.tracking_links.warnings?.length ? (
+                <ul className="text-xs text-amber-700 list-disc pl-4">
+                  {metadata.link_policy.tracking_links.warnings.map((warning: string) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              ) : null}
+              {metadata.link_policy.tracking_links.links?.length ? (
+                <div className="space-y-1">
+                  <span className="font-medium text-gray-700">Redirect URLs:</span>
+                  <div className="flex flex-col gap-1">
+                    {metadata.link_policy.tracking_links.links.map(
+                      (link: { public_url?: string; original_url?: string; token?: string }, index: number) => (
+                        <div key={link.public_url ?? link.token ?? index} className="text-xs text-gray-700 space-y-0.5">
+                          {link.public_url ? (
+                            <a
+                              href={link.public_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"
+                            >
+                              {link.public_url}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : null}
+                          {link.original_url ? (
+                            <div className="text-[11px] text-gray-500 break-all">→ {link.original_url}</div>
+                          ) : null}
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
+
         {/* Warnings and Errors */}
         {(payload.warnings?.length > 0 || payload.errors?.length > 0) && (
           <div className="border-l-4 border-orange-500 pl-4 bg-orange-50 rounded-r-lg p-3">

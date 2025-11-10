@@ -212,6 +212,17 @@ export function DraftVariantDetail({
       replacement_text?: string;
       processed_urls?: string[];
     };
+    tracking_links?: {
+      enabled?: boolean;
+      issued_count?: number;
+      warnings?: string[];
+      links?: Array<{
+        link_id?: number;
+        token?: string;
+        original_url?: string;
+        public_url?: string;
+      }>;
+    };
   } | undefined;
   const personaMediaPrefs = personaAdjustments?.media_prefs as {
     preferred_ratio?: string;
@@ -436,6 +447,48 @@ export function DraftVariantDetail({
                           <ul className="list-disc pl-4 text-xs text-muted-foreground">
                             {personaLinkPolicy.inline_link.processed_urls.map((url) => (
                               <li key={url} className="break-all">{url}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {personaLinkPolicy.tracking_links ? (
+                    <div className="space-y-1">
+                      <span className="font-semibold text-foreground/80">Tracking Links</span>
+                      <p className="text-muted-foreground">
+                        Status: {personaLinkPolicy.tracking_links.enabled ? 'Enabled' : 'Disabled'} • Issued{" "}
+                        {personaLinkPolicy.tracking_links.issued_count ?? 0}
+                      </p>
+                      {personaLinkPolicy.tracking_links.warnings?.length ? (
+                        <ul className="text-xs text-amber-600 list-disc pl-4">
+                          {personaLinkPolicy.tracking_links.warnings.map((warning) => (
+                            <li key={warning}>{warning}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      {personaLinkPolicy.tracking_links.links?.length ? (
+                        <div className="space-y-1">
+                          <span className="text-muted-foreground">Issued URLs:</span>
+                          <ul className="list-disc pl-4 text-xs text-muted-foreground">
+                            {personaLinkPolicy.tracking_links.links.map((link) => (
+                              <li key={link.token ?? link.public_url} className="break-all space-y-0.5">
+                                <div>
+                                  <span className="font-medium">Public:</span>{" "}
+                                  {link.public_url ? (
+                                    <a href={link.public_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">
+                                      {link.public_url}
+                                    </a>
+                                  ) : (
+                                    <span>{link.token}</span>
+                                  )}
+                                </div>
+                                {link.original_url ? (
+                                  <div className="text-[11px] text-muted-foreground">
+                                    → {link.original_url}
+                                  </div>
+                                ) : null}
+                              </li>
                             ))}
                           </ul>
                         </div>

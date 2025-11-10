@@ -21,6 +21,7 @@ from apps.backend.src.modules.common.enums import PlatformKind, VariantStatus
 from apps.backend.src.modules.injectors.base import InjectedContent
 from apps.backend.src.modules.injectors.platform_policy import ComposePolicy, PLATFORM_POLICIES
 from apps.backend.src.services.embeddings import embed_texts, embed_texts_sync
+from apps.backend.src.modules.link_tracking.service import TrackingLinkAllocator, TrackingReplacement
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ class CompileState:
         metrics: Dict[str, Any],
         options: Dict[str, Any],
         applied_persona: Dict[str, Any],
+        link_allocator: Optional[TrackingLinkAllocator],
     ) -> None:
         self.payload = payload
         self.policy = policy
@@ -62,6 +64,7 @@ class CompileState:
         self.metrics = metrics
         self.options = options
         self.applied_persona = applied_persona
+        self.link_allocator = link_allocator
 
     def merge_options(self, extra: Optional[Dict[str, Any]]) -> None:
         if not extra:
@@ -112,6 +115,7 @@ async def compile_with_spec(payload: InjectedContent, spec: CompileSpec) -> Comp
     caption, applied_persona, persona_warnings = _apply_persona_rules(
         caption,
         persona_directives,
+        link_allocator=payload.link_allocator,
     )
     if persona_warnings:
         warnings.extend(persona_warnings)
@@ -146,6 +150,7 @@ async def compile_with_spec(payload: InjectedContent, spec: CompileSpec) -> Comp
         metrics=metrics,
         options=options,
         applied_persona=applied_persona,
+        link_allocator=payload.link_allocator,
     )
 
     for hook in spec.hooks:
@@ -179,6 +184,8 @@ async def compile_with_spec(payload: InjectedContent, spec: CompileSpec) -> Comp
 def _apply_persona_rules(
     caption: str,
     directives: Dict[str, Any],
+    *,
+    link_allocator: Optional[TrackingLinkAllocator] = None,
 ) -> Tuple[str, Dict[str, Any], List[str]]:
     warnings: List[str] = []
     applied: Dict[str, Any] = {}
@@ -200,6 +207,7 @@ def _apply_persona_rules(
     caption, link_policy_summary, link_policy_warnings = _apply_link_policy(
         caption,
         directives.get("link_policy"),
+        link_allocator=link_allocator,
     )
     if link_policy_summary:
         applied["link_policy"] = link_policy_summary
@@ -408,6 +416,8 @@ async def _fetch_style_embeddings(texts: List[str]) -> List[List[float]]:
 def _apply_link_policy(
     caption: str,
     link_policy: Any,
+    *,
+    link_allocator: Optional[TrackingLinkAllocator] = None,
 ) -> Tuple[str, Dict[str, Any], List[str]]:
     if not isinstance(link_policy, dict) or not link_policy:
         return caption, {}, []
@@ -477,13 +487,80 @@ def _apply_link_policy(
     if inline_summary:
         summary["inline_link"] = inline_summary
 
+    tracking_cfg = link_policy.get("tracking_links")
+    tracking_summary, tracking_warnings = _apply_tracking_links_to_text(
+        text,
+        tracking_cfg if isinstance(tracking_cfg, dict) else None,
+        link_allocator,
+    )
+    text = tracking_summary.pop("caption", text)
+    if tracking_summary:
+        summary["tracking_links"] = tracking_summary
+    if tracking_warnings:
+        warnings.extend(tracking_warnings)
+
     return text, summary, warnings
+
+
+def _apply_tracking_links_to_text(
+    text: str,
+    tracking_cfg: Optional[Dict[str, Any]],
+    link_allocator: Optional[TrackingLinkAllocator],
+) -> Tuple[Dict[str, Any], List[str]]:
+    caption = text
+    warnings: List[str] = []
+    if not tracking_cfg or not tracking_cfg.get("enabled") or link_allocator is None:
+        return {"caption": caption}, warnings
+
+    urls = _URL_PATTERN.findall(caption)
+    if not urls:
+        warnings.append("tracking links enabled but no URLs were found in caption")
+        return {"caption": caption}, warnings
+
+    replacements: List[TrackingReplacement] = []
+
+    def _replace(match: re.Match[str]) -> str:
+        original_url = match.group(0)
+        try:
+            allocation = link_allocator.allocate(original_url=original_url)
+        except Exception as exc:  # noqa: BLE001
+            warnings.append(f"tracking link allocation failed: {exc}")
+            return original_url
+        replacements.append(allocation)
+        return allocation.public_url
+
+    updated_caption = _URL_PATTERN.sub(_replace, caption)
+    if not replacements:
+        return {"caption": caption}, warnings
+
+    summary: Dict[str, Any] = {
+        "caption": updated_caption,
+        "enabled": True,
+        "issued_count": len(replacements),
+        "links": [
+            {
+                "link_id": alloc.link_id,
+                "token": alloc.token,
+                "public_url": alloc.public_url,
+                "original_url": alloc.original_url,
+            }
+            for alloc in replacements
+        ],
+    }
+    strategy = tracking_cfg.get("strategy")
+    if strategy:
+        summary["strategy"] = strategy
+    if warnings:
+        summary["warnings"] = list(warnings)
+
+    return summary, warnings
 
 
 def apply_persona_policies_to_message(
     message: str,
     *,
     directives: Optional[Dict[str, Any]] = None,
+    link_allocator: Optional[TrackingLinkAllocator] = None,
 ) -> Tuple[str, Dict[str, Any], List[str]]:
     """
     Apply a subset of persona directives (replace map, link policy, banned words)
@@ -501,7 +578,11 @@ def apply_persona_policies_to_message(
     if replace_warnings:
         warnings.extend(replace_warnings)
 
-    text, link_summary, link_warnings = _apply_link_policy(text, directives.get("link_policy"))
+    text, link_summary, link_warnings = _apply_link_policy(
+        text,
+        directives.get("link_policy"),
+        link_allocator=link_allocator,
+    )
     if link_summary:
         applied["link_policy"] = link_summary
     if link_warnings:

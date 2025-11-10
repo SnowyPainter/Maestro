@@ -11,6 +11,7 @@ from apps.backend.src.modules.injectors.base import (
     InjectedContent,
     InjectorRegistry,
 )
+from apps.backend.src.modules.link_tracking.service import TrackingLinkAllocator
 
 
 async def compile_variant(
@@ -23,6 +24,7 @@ async def compile_variant(
     injector_registry: Optional[InjectorRegistry] = None,
     injector_names: Optional[Iterable[str]] = None,
     adapter_instance: Optional[Adapter] = None,
+    tracking_allocator: Optional[TrackingLinkAllocator] = None,
 ) -> CompileResult:
     """Compose IR through injectors then delegate to the adapter compiler."""
 
@@ -32,6 +34,7 @@ async def compile_variant(
         ir_revision=ir_revision,
         persona=persona,
         locale=locale,
+        link_allocator=tracking_allocator,
     )
 
     registry = injector_registry or DEFAULT_INJECTOR_REGISTRY

@@ -82,6 +82,7 @@ class Settings(BaseSettings):
     API_DOMAIN: str = "https://api.yukiscale.work"
     MEDIA_DOMAIN: str = "https://media.yukiscale.work"
     FRONTEND_DOMAIN: str = "https://app.yukiscale.work"
+    LINK_TRACKING_DOMAIN: str = "https://link.yukiscale.work"
 
     # ----- Alerts -----
     SLACK_ALERT_WEBHOOK_URL: Optional[str] = None
@@ -141,6 +142,17 @@ class Settings(BaseSettings):
     def MEDIA_PUBLIC_BASE(self) -> str:
         base = self.MEDIA_DOMAIN.strip()
         return base.rstrip("/") if base else self.API_PUBLIC_BASE
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def LINK_TRACKING_PUBLIC_BASE(self) -> str:
+        tracking = (self.LINK_TRACKING_DOMAIN or "").strip()
+        if tracking:
+            return tracking.rstrip("/")
+        frontend = (self.FRONTEND_DOMAIN or "").strip()
+        if frontend:
+            return frontend.rstrip("/")
+        return self.API_PUBLIC_BASE
 
     class Config:
         env_file = BACKEND_DIR / ".env"

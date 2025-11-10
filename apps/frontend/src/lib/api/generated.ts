@@ -12488,3 +12488,91 @@ export function useHealthApiHealthGet<TData = Awaited<ReturnType<typeof healthAp
 
   return query;
 }
+
+
+
+
+/**
+ * @summary Redirect Tracking Link
+ */
+export const redirectTrackingLinkLTokenGet = (
+    token: string,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<unknown>(
+      {url: `/l/${token}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getRedirectTrackingLinkLTokenGetQueryKey = (token?: string,) => {
+    return [`/l/${token}`] as const;
+    }
+
+    
+export const getRedirectTrackingLinkLTokenGetQueryOptions = <TData = Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError = HTTPValidationError>(token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRedirectTrackingLinkLTokenGetQueryKey(token);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>> = ({ signal }) => redirectTrackingLinkLTokenGet(token, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(token), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RedirectTrackingLinkLTokenGetQueryResult = NonNullable<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>>
+export type RedirectTrackingLinkLTokenGetQueryError = HTTPValidationError
+
+
+export function useRedirectTrackingLinkLTokenGet<TData = Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError = HTTPValidationError>(
+ token: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>,
+          TError,
+          Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRedirectTrackingLinkLTokenGet<TData = Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError = HTTPValidationError>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>,
+          TError,
+          Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRedirectTrackingLinkLTokenGet<TData = Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError = HTTPValidationError>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Redirect Tracking Link
+ */
+
+export function useRedirectTrackingLinkLTokenGet<TData = Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError = HTTPValidationError>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof redirectTrackingLinkLTokenGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRedirectTrackingLinkLTokenGetQueryOptions(token,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}

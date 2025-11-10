@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Protocol
 
 from apps.backend.src.modules.common.enums import PlatformKind
+from apps.backend.src.modules.link_tracking.service import TrackingLinkAllocator
 
 
 @dataclass
@@ -20,6 +21,7 @@ class InjectedContent:
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
     locale: Optional[str] = None
+    link_allocator: Optional[TrackingLinkAllocator] = None
 
 
 @dataclass
@@ -36,6 +38,7 @@ class InjectorContext:
     options: Dict[str, Any] = field(default_factory=dict)
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
+    link_allocator: Optional[TrackingLinkAllocator] = None
 
     @classmethod
     def from_ir(
@@ -46,6 +49,7 @@ class InjectorContext:
         ir_revision: int = 0,
         persona: Any = None,
         locale: Optional[str] = None,
+        link_allocator: Optional[TrackingLinkAllocator] = None,
     ) -> "InjectorContext":
         ir_dict = _normalize_ir(ir)
         options = copy.deepcopy(ir_dict.get("options") or {})
@@ -56,6 +60,7 @@ class InjectorContext:
             persona=persona,
             locale=locale,
             options=options,
+            link_allocator=link_allocator,
         )
 
     def finalize(self) -> InjectedContent:
@@ -69,6 +74,7 @@ class InjectorContext:
             warnings=list(self.warnings),
             errors=list(self.errors),
             locale=self.locale,
+            link_allocator=self.link_allocator,
         )
 
 

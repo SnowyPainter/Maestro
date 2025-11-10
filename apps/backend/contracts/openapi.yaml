@@ -4675,6 +4675,31 @@ paths:
           content:
             application/json:
               schema: {}
+  /l/{token}:
+    get:
+      tags:
+      - link-tracking
+      summary: Redirect Tracking Link
+      operationId: redirect_tracking_link_l__token__get
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     ABTestCompleteCommand:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from datetime import datetime, timezone
 from typing import Any, Iterable, Optional, Union
 
@@ -30,7 +31,13 @@ from apps.backend.src.modules.adapters.core.types import (
 from apps.backend.src.modules.reactive.models import ReactionActionLog
 from apps.backend.src.modules.insights.models import InsightComment
 from apps.backend.src.modules.accounts.models import PlatformAccount
+from apps.backend.src.modules.link_tracking.service import (
+    DBTrackingLinkAllocator,
+    TrackingLinkContext,
+)
 from sqlalchemy.exc import IntegrityError
+
+logger = logging.getLogger(__name__)
 
 _ENGINE = create_engine(settings.SYNC_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=_ENGINE, autocommit=False, autoflush=False)
@@ -59,6 +66,41 @@ def _load_persona_account_with_platform(session, persona_account_id: int) -> tup
         return None, None
     platform_account = session.get(PlatformAccount, persona_account.account_id)
     return persona_account, platform_account
+
+
+def _maybe_build_tracking_allocator(
+    session,
+    persona: Optional[Persona],
+    draft: Optional[Draft],
+    variant: Optional[DraftVariant],
+):
+    if not persona or not draft or not variant:
+        return None
+    link_policy = getattr(persona, "link_policy", None) or {}
+    tracking_cfg = link_policy.get("tracking_links") if isinstance(link_policy, dict) else None
+    if not isinstance(tracking_cfg, dict) or not tracking_cfg.get("enabled"):
+        return None
+
+    persona_id = getattr(persona, "id", None)
+    owner_user_id = getattr(persona, "owner_user_id", None)
+    if persona_id is None or owner_user_id is None:
+        return None
+    try:
+        return DBTrackingLinkAllocator(
+            session,
+            context=TrackingLinkContext(
+                persona_id=persona_id,
+                owner_user_id=owner_user_id,
+                persona_name=getattr(persona, "name", None),
+                variant_id=getattr(variant, "id", None),
+                draft_id=getattr(draft, "id", None),
+                platform=getattr(getattr(variant, "platform", None), "value", None),
+                ir_revision=getattr(draft, "ir_revision", None),
+            ),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("tracking allocator unavailable: %s", exc)
+        return None
 
 
 def _get_or_create_reaction_log(
@@ -188,6 +230,7 @@ def compile_draft_variant(
         
         persona_account_id = _parse_int(get_persona_account_id())
         persona = _load_persona(session, persona_account_id)
+        link_allocator = _maybe_build_tracking_allocator(session, persona, draft, variant)
 
         try:
             result = asyncio.run(
@@ -197,6 +240,7 @@ def compile_draft_variant(
                     ir_revision=draft.ir_revision,
                     persona=persona,
                     injector_names=injector_names,
+                    tracking_allocator=link_allocator,
                 )
             )
         except Exception as exc:  # pragma: no cover - defensive fallback

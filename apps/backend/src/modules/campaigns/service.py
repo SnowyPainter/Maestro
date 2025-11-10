@@ -199,6 +199,20 @@ async def _campaign_post_publication_ids(db: AsyncSession, campaign_id: int) -> 
     except Exception as e:
         return []
 
+
+async def _campaign_link_clicks_total(db: AsyncSession, campaign_id: int) -> float:
+    query = """
+        SELECT COALESCE(SUM(t.visit_count), 0)
+        FROM tracking_links t
+        LEFT JOIN draft_variants dv ON t.variant_id = dv.id
+        LEFT JOIN drafts d_v ON dv.draft_id = d_v.id
+        LEFT JOIN drafts d_d ON t.draft_id = d_d.id
+        WHERE COALESCE(d_v.campaign_id, d_d.campaign_id) = :campaign_id
+    """
+    result = await db.execute(text(query), {"campaign_id": campaign_id})
+    total = result.scalar()
+    return float(total or 0.0)
+
 # ---- 유틸: 포스트 퍼블리케이션별 최신 샘플(metrics) 스냅샷 {post_publication_id: (ts, metrics)}
 async def _latest_metrics_per_post_publication(
     db: AsyncSession, post_publication_ids: List[int], as_of: datetime
@@ -250,6 +264,7 @@ async def calculate_campaign_kpis_snapshot(
     # 2) 스냅샷 구축(포스트 퍼블리케이션별 최신 샘플)
     ppids = await _campaign_post_publication_ids(db, campaign_id)
     snap = await _latest_metrics_per_post_publication(db, ppids, as_of)
+    link_clicks_total = await _campaign_link_clicks_total(db, campaign_id)
 
     # 3) Aggregation별 계산
     values: Dict[str, float] = {}
@@ -257,7 +272,7 @@ async def calculate_campaign_kpis_snapshot(
     # 캠페인 합계(파생지표 재계산 용)
     totals_for_derived = {
         KPIKey.IMPRESSIONS.value: 0.0,
-        KPIKey.LINK_CLICKS.value: 0.0,
+        KPIKey.LINK_CLICKS.value: link_clicks_total,
         KPIKey.LIKES.value: 0.0,
         KPIKey.COMMENTS.value: 0.0,
         KPIKey.SHARES.value: 0.0,
@@ -275,6 +290,16 @@ async def calculate_campaign_kpis_snapshot(
     for d in defs:
         key = d.key.value
         agg = d.aggregation
+
+        if d.key == KPIKey.LINK_CLICKS:
+            if agg == Aggregation.AVG:
+                values[key] = link_clicks_total
+            elif agg == Aggregation.LAST:
+                values[key] = link_clicks_total
+            else:  # treat SUM and other aggregations the same (total clicks)
+                values[key] = link_clicks_total
+            # totals_for_derived already seeded with total
+            continue
 
         # per-post-publication 최신 값 모으기
         series: List[float] = []
