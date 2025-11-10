@@ -125,6 +125,7 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
       return (
         <TrackingLinkList
           data={data as unknown as TrackingLinkListResponse}
+          onDraftVariantSelect={(variant, sourceMessageId) => callbacks.onDraftVariantSelect?.(variant, sourceMessageId || messageId)}
         />
       );
 

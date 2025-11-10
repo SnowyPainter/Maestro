@@ -1,4 +1,4 @@
-import { TrackingLinkListResponse, TrackingLinkItem } from "@/lib/api/generated";
+import { TrackingLinkListResponse, TrackingLinkItem, DraftVariantRender } from "@/lib/api/generated";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,7 @@ import { useState } from "react";
 
 interface TrackingLinkListProps {
   data: TrackingLinkListResponse;
+  onDraftVariantSelect?: (variant: DraftVariantRender, sourceMessageId: number) => void;
 }
 
 const formatLastVisited = (dateString: string | null) => {
@@ -61,11 +62,36 @@ const getPlatformIcon = (platform?: string | null) => {
   }
 };
 
-const TrackingLinkRow = ({ item }: { item: TrackingLinkItem }) => {
+const TrackingLinkRow = ({
+  item,
+  onDraftVariantSelect
+}: {
+  item: TrackingLinkItem;
+  onDraftVariantSelect?: (variant: DraftVariantRender, sourceMessageId: number) => void;
+}) => {
   const hasVisits = item.last_visited_at !== null && item.visit_count > 0;
 
+  const handleDraftClick = () => {
+    // draft_id, variant_id, platform이 모두 있는 경우 DraftVariantDetail로 이동
+    if (item.draft_id && item.variant_id && item.platform && onDraftVariantSelect) {
+      const variant: DraftVariantRender = {
+        variant_id: item.variant_id,
+        draft_id: item.draft_id,
+        platform: item.platform,
+        status: 'compiled', // 기본값
+        compiled_at: item.created_at,
+        rendered_caption: null,
+        rendered_blocks: {},
+        compiler_version: 1
+      };
+      onDraftVariantSelect(variant, -1); // sourceMessageId는 임시로 -1 사용
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3 py-2 px-1 hover:bg-muted/50 rounded-sm">
+    <div className={`flex items-center gap-3 py-2 px-1 rounded-sm ${
+      item.draft_id ? 'hover:bg-muted/50 cursor-pointer' : ''
+    }`} onClick={handleDraftClick}>
       {/* Platform Icon */}
       {getPlatformIcon(item.platform)}
 
@@ -129,7 +155,7 @@ const TrackingLinkRow = ({ item }: { item: TrackingLinkItem }) => {
   );
 };
 
-export function TrackingLinkList({ data }: TrackingLinkListProps) {
+export function TrackingLinkList({ data, onDraftVariantSelect }: TrackingLinkListProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const ITEMS_PER_PAGE = 5;
 
@@ -174,7 +200,7 @@ export function TrackingLinkList({ data }: TrackingLinkListProps) {
       <div className="space-y-1">
         {displayItems.map((item, index) => (
           <div key={item.id}>
-            <TrackingLinkRow item={item} />
+            <TrackingLinkRow item={item} onDraftVariantSelect={onDraftVariantSelect} />
             {index < displayItems.length - 1 && <Separator className="my-1" />}
           </div>
         ))}
