@@ -1204,6 +1204,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
+  /api/bff/me/links:
+    get:
+      tags:
+      - bff
+      - bff
+      - me
+      - links
+      - tracking
+      - pagination
+      - search
+      summary: List Tracking Links
+      description: List tracking links owned by the current user with pagination and
+        optional search filters
+      operationId: bff_me_list_tracking_links_api_bff_me_links_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Offset
+      - name: search_url
+        in: query
+        required: false
+        schema:
+          title: Search Url
+          type: string
+          nullable: true
+      - name: search_post
+        in: query
+        required: false
+        schema:
+          title: Search Post
+          type: string
+          nullable: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingLinkListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/playbooks/dashboard/overview:
     get:
       tags:
@@ -9989,6 +10045,91 @@ components:
       - access_token
       - user
       title: TokenResponse
+    TrackingLinkItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        token:
+          type: string
+          title: Token
+        target_url:
+          type: string
+          title: Target Url
+        public_url:
+          type: string
+          title: Public Url
+        visit_count:
+          type: integer
+          title: Visit Count
+        last_visited_at:
+          title: Last Visited At
+          format: date-time
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        persona_id:
+          type: integer
+          title: Persona Id
+        persona_name:
+          title: Persona Name
+          type: string
+          nullable: true
+        draft_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Draft Id
+        draft_title:
+          title: Draft Title
+          type: string
+          nullable: true
+        variant_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Variant Id
+        platform:
+          title: Platform
+          type: string
+          nullable: true
+      type: object
+      required:
+      - id
+      - token
+      - target_url
+      - public_url
+      - visit_count
+      - last_visited_at
+      - created_at
+      - persona_id
+      title: TrackingLinkItem
+    TrackingLinkListResponse:
+      properties:
+        total:
+          type: integer
+          title: Total
+        limit:
+          type: integer
+          title: Limit
+        offset:
+          type: integer
+          title: Offset
+        items:
+          items:
+            $ref: '#/components/schemas/TrackingLinkItem'
+          type: array
+          title: Items
+      type: object
+      required:
+      - total
+      - limit
+      - offset
+      - items
+      title: TrackingLinkListResponse
     TrendCorrelationItem:
       properties:
         trend_title:

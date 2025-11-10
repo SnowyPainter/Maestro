@@ -21,6 +21,7 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
     "DraftEnrichedPostPublicationsList": "draft.post_publications.list",
 
     "InsightCommentList": "insights.comments.list",
+    "TrackingLinkListResponse": "tracking.links.list",
 
     "PersonaOut": "account.persona.detail",
     "PersonaList": "account.persona.list",

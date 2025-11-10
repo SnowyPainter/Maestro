@@ -644,6 +644,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/me/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tracking Links
+         * @description List tracking links owned by the current user with pagination and optional search filters
+         */
+        get: operations["bff_me_list_tracking_links_api_bff_me_links_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/playbooks/dashboard/overview": {
         parameters: {
             query?: never;
@@ -5417,6 +5437,52 @@ export interface components {
             token_type: string;
             user: components["schemas"]["UserResponse"];
         };
+        /** TrackingLinkItem */
+        TrackingLinkItem: {
+            /** Id */
+            id: number;
+            /** Token */
+            token: string;
+            /** Target Url */
+            target_url: string;
+            /** Public Url */
+            public_url: string;
+            /** Visit Count */
+            visit_count: number;
+            /**
+             * Last Visited At
+             * Format: date-time
+             */
+            last_visited_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Persona Id */
+            persona_id: number;
+            /** Persona Name */
+            persona_name?: string | null;
+            /** Draft Id */
+            draft_id?: number | null;
+            /** Draft Title */
+            draft_title?: string | null;
+            /** Variant Id */
+            variant_id?: number | null;
+            /** Platform */
+            platform?: string | null;
+        };
+        /** TrackingLinkListResponse */
+        TrackingLinkListResponse: {
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Items */
+            items: components["schemas"]["TrackingLinkItem"][];
+        };
         /** TrendCorrelationItem */
         TrendCorrelationItem: {
             /** Trend Title */
@@ -6577,6 +6643,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    bff_me_list_tracking_links_api_bff_me_links_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                search_url?: string | null;
+                search_post?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackingLinkListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

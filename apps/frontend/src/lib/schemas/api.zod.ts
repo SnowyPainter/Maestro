@@ -1118,6 +1118,41 @@ export const bffMeReadMeApiBffMeGetResponse = zod.object({
 
 
 /**
+ * List tracking links owned by the current user with pagination and optional search filters
+ * @summary List Tracking Links
+ */
+export const bffMeListTrackingLinksApiBffMeLinksGetQueryLimitDefault = 20;export const bffMeListTrackingLinksApiBffMeLinksGetQueryOffsetDefault = 0;
+
+export const bffMeListTrackingLinksApiBffMeLinksGetQueryParams = zod.object({
+  "limit": zod.number().default(bffMeListTrackingLinksApiBffMeLinksGetQueryLimitDefault),
+  "offset": zod.number().optional(),
+  "search_url": zod.string().nullish(),
+  "search_post": zod.string().nullish()
+})
+
+export const bffMeListTrackingLinksApiBffMeLinksGetResponse = zod.object({
+  "total": zod.number(),
+  "limit": zod.number(),
+  "offset": zod.number(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "token": zod.string(),
+  "target_url": zod.string(),
+  "public_url": zod.string(),
+  "visit_count": zod.number(),
+  "last_visited_at": zod.iso.datetime({}).nullable(),
+  "created_at": zod.iso.datetime({}),
+  "persona_id": zod.number(),
+  "persona_name": zod.string().nullish(),
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "draft_title": zod.string().nullish(),
+  "variant_id": zod.union([zod.number(),zod.null()]).optional(),
+  "platform": zod.string().nullish()
+}))
+})
+
+
+/**
  * Get overview metrics for playbook dashboard
  * @summary Get Playbook Dashboard Overview Data
  */

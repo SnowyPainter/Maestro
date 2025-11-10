@@ -422,6 +422,7 @@ slots:
   - bff.drafts.list_drafts
   - bff.insights.comments.list
   - bff.insights.comments.search
+  - bff.me.list_tracking_links
   - bff.playbook.list_playbooks
   - bff.rag.expand
   - bff.rag.search
@@ -512,6 +513,7 @@ slots:
   - bff.accounts.list_platform_accounts
   - bff.campaigns.list_campaigns
   - bff.drafts.list_drafts
+  - bff.me.list_tracking_links
   - bff.playbook.list_playbooks
   - bff.reactive.list_action_logs
   - bff.schedule.list_schedules
@@ -765,6 +767,18 @@ slots:
   - interval
   flows:
   - insights.ingest
+- name: search_post
+  label: Search Post
+  description: Filter by search post
+  value_type: string
+  flows:
+  - bff.me.list_tracking_links
+- name: search_url
+  label: Search Url
+  description: Filter by search url
+  value_type: string
+  flows:
+  - bff.me.list_tracking_links
 - name: segments
   label: Segments
   description: Filter by segments

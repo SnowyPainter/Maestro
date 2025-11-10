@@ -9,6 +9,7 @@ import {
   RagRelatedEdge,
   RagExpandResponse,
   RagSearchResponse,
+  TrackingLinkListResponse,
 } from "@/lib/api/generated";
 
 // Generic Cards
@@ -42,6 +43,7 @@ import { RuleDetailCard } from "@/entities/reactive/components/RuleDetailCard";
 import { ActionLogCard } from "@/entities/reactive/components/ActionLogCard";
 import { ActionLogDetailCard } from "@/entities/reactive/components/ActionLogDetailCard";
 import { TemplateDetailCard } from "@/entities/reactive/components/template/TemplateDetailCard";
+import { TrackingLinkList } from "@/entities/tracking/components/TrackingLinkList";
 import GraphExplorer from "@/entities/rag/components/GraphExplorer";
 
 export interface CardRenderCallbacks {
@@ -115,6 +117,14 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
       return (
         <CampaignList
           onSelectCampaign={(campaignId) => callbacks.onCampaignSelect?.(campaignId, messageId)}
+        />
+      );
+
+    // ==================== Tracking ====================
+    case 'tracking.links.list':
+      return (
+        <TrackingLinkList
+          data={data as unknown as TrackingLinkListResponse}
         />
       );
 

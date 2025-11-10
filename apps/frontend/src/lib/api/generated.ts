@@ -2610,6 +2610,37 @@ export interface TokenResponse {
   user: UserResponse;
 }
 
+export type TrackingLinkItemDraftId = number | null;
+
+export type TrackingLinkItemVariantId = number | null;
+
+export interface TrackingLinkItem {
+  id: number;
+  token: string;
+  target_url: string;
+  public_url: string;
+  visit_count: number;
+  /** @nullable */
+  last_visited_at: string | null;
+  created_at: string;
+  persona_id: number;
+  /** @nullable */
+  persona_name?: string | null;
+  draft_id?: TrackingLinkItemDraftId;
+  /** @nullable */
+  draft_title?: string | null;
+  variant_id?: TrackingLinkItemVariantId;
+  /** @nullable */
+  platform?: string | null;
+}
+
+export interface TrackingLinkListResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  items: TrackingLinkItem[];
+}
+
 export type TrendCorrelationItemAvgRank = number | null;
 
 export interface TrendCorrelationItem {
@@ -2813,6 +2844,19 @@ limit?: number;
 export type BffInsightsCommentsListApiBffInsightsPostPublicationIdCommentsGetParams = {
 persona_account_id?: number | null;
 limit?: number;
+};
+
+export type BffMeListTrackingLinksApiBffMeLinksGetParams = {
+limit?: number;
+offset?: number;
+/**
+ * @nullable
+ */
+search_url?: string | null;
+/**
+ * @nullable
+ */
+search_post?: string | null;
 };
 
 export type BffPlaybookDashboardOverviewApiBffPlaybooksDashboardOverviewGetParams = {
@@ -5871,6 +5915,96 @@ export function useBffMeReadMeApiBffMeGet<TData = Awaited<ReturnType<typeof bffM
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffMeReadMeApiBffMeGetQueryOptions(options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * List tracking links owned by the current user with pagination and optional search filters
+ * @summary List Tracking Links
+ */
+export const bffMeListTrackingLinksApiBffMeLinksGet = (
+    params?: BffMeListTrackingLinksApiBffMeLinksGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<TrackingLinkListResponse>(
+      {url: `/api/bff/me/links`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getBffMeListTrackingLinksApiBffMeLinksGetQueryKey = (params?: BffMeListTrackingLinksApiBffMeLinksGetParams,) => {
+    return [`/api/bff/me/links`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getBffMeListTrackingLinksApiBffMeLinksGetQueryOptions = <TData = Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError = HTTPValidationError>(params?: BffMeListTrackingLinksApiBffMeLinksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffMeListTrackingLinksApiBffMeLinksGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>> = ({ signal }) => bffMeListTrackingLinksApiBffMeLinksGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffMeListTrackingLinksApiBffMeLinksGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>>
+export type BffMeListTrackingLinksApiBffMeLinksGetQueryError = HTTPValidationError
+
+
+export function useBffMeListTrackingLinksApiBffMeLinksGet<TData = Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError = HTTPValidationError>(
+ params: undefined |  BffMeListTrackingLinksApiBffMeLinksGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffMeListTrackingLinksApiBffMeLinksGet<TData = Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError = HTTPValidationError>(
+ params?: BffMeListTrackingLinksApiBffMeLinksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffMeListTrackingLinksApiBffMeLinksGet<TData = Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError = HTTPValidationError>(
+ params?: BffMeListTrackingLinksApiBffMeLinksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Tracking Links
+ */
+
+export function useBffMeListTrackingLinksApiBffMeLinksGet<TData = Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError = HTTPValidationError>(
+ params?: BffMeListTrackingLinksApiBffMeLinksGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffMeListTrackingLinksApiBffMeLinksGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffMeListTrackingLinksApiBffMeLinksGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
