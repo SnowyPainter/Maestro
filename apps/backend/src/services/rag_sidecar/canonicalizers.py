@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
-from typing import Iterable, List, Optional, Sequence, Tuple
+from datetime import datetime, timedelta
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -133,15 +133,20 @@ def build_playbook_payload(session: Session, playbook_id: int) -> Optional[Canon
     if playbook.top_hashtags:
         sections.append(f"Top hashtags: {', '.join(playbook.top_hashtags)}")
 
-    latest_logs: Sequence[Tuple[str, Optional[str]]] = (
-        session.query(PlaybookLog.event, PlaybookLog.message)
+    latest_logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime]] = (
+        session.query(
+            PlaybookLog.event,
+            PlaybookLog.message,
+            PlaybookLog.trend_snapshot,
+            PlaybookLog.timestamp,
+        )
         .filter(PlaybookLog.playbook_id == playbook.id)
         .order_by(PlaybookLog.timestamp.desc())
         .limit(5)
         .all()
     )
     if latest_logs:
-        formatted_logs = [f"{event}: {message or ''}".strip() for event, message in latest_logs]
+        formatted_logs = [f"{event}: {message or ''}".strip() for event, message, _snapshot, _ts in latest_logs]
         sections.append("Recent events:\n- " + "\n- ".join(formatted_logs))
 
     edges = [
@@ -156,6 +161,12 @@ def build_playbook_payload(session: Session, playbook_id: int) -> Optional[Canon
             edge_type="for_campaign",
         ),
     ]
+    edges.extend(
+        _build_trend_edges_from_logs(
+            node_ref("playbook", "playbooks", playbook.id),
+            latest_logs,
+        )
+    )
 
     return CanonicalPayload(
         node_type="playbook",
@@ -208,6 +219,26 @@ def build_draft_payload(session: Session, draft_id: int) -> Optional[CanonicalPa
         )
         for var_id, platform in variants
     ]
+    draft_logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime]] = (
+        session.query(
+            PlaybookLog.event,
+            PlaybookLog.message,
+            PlaybookLog.trend_snapshot,
+            PlaybookLog.timestamp,
+        )
+        .filter(PlaybookLog.draft_id == draft.id, PlaybookLog.trend_snapshot.isnot(None))
+        .order_by(PlaybookLog.timestamp.desc())
+        .limit(5)
+        .all()
+    )
+    if draft_logs:
+        edges.extend(
+            _build_trend_edges_from_logs(
+                node_ref("draft", "drafts", draft.id),
+                draft_logs,
+                edge_type="trend_reference",
+            )
+        )
 
     return CanonicalPayload(
         node_type="draft",
@@ -361,6 +392,8 @@ def build_trend_payload(session: Session, trend_id: int) -> Optional[CanonicalPa
         )
 
     title = f"Trend – {trend.title}"
+    edges = _trend_edges_from_playbooks(session, trend, limit=16)
+
     return CanonicalPayload(
         node_type="trend",
         source_table="trends",
@@ -375,6 +408,7 @@ def build_trend_payload(session: Session, trend_id: int) -> Optional[CanonicalPa
             "rank": trend.rank,
         },
         signature_extras={"retrieved": dt_iso(trend.retrieved)},
+        edges=tuple(edges),
     )
 
 
@@ -531,3 +565,102 @@ def _format_news_item(item: NewsItem) -> str:
     if item.url:
         parts.append(item.url)
     return " ".join(parts)
+
+
+def _build_trend_edges_from_logs(
+    src_node: NodeReference,
+    logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime]],
+    edge_type: str = "trend_reference",
+) -> List[EdgeReference]:
+    edges: List[EdgeReference] = []
+    seen: Set[int] = set()
+    for _event, _message, snapshot, timestamp in logs:
+        for item in _iter_trend_items(snapshot):
+            trend_id = _coerce_int(item.get("id"))
+            if trend_id is None or trend_id in seen:
+                continue
+            seen.add(trend_id)
+            edges.append(
+                EdgeReference(
+                    src=src_node,
+                    dst=node_ref("trend", "trends", trend_id),
+                    edge_type=edge_type,
+                    meta={
+                        "trend_title": item.get("title"),
+                        "country": item.get("country"),
+                        "rank": item.get("rank"),
+                        "retrieved": item.get("retrieved"),
+                        "snapshot_timestamp": dt_iso(timestamp),
+                    },
+                )
+            )
+    return edges
+
+
+def _trend_edges_from_playbooks(session: Session, trend: Trend, *, limit: int) -> List[EdgeReference]:
+    if trend.id is None:
+        return []
+
+    window_start = None
+    if trend.retrieved:
+        window_start = trend.retrieved - timedelta(days=14)
+
+    query = (
+        session.query(
+            PlaybookLog.playbook_id,
+            PlaybookLog.trend_snapshot,
+            PlaybookLog.timestamp,
+            Playbook.persona_id,
+            Playbook.campaign_id,
+        )
+        .join(Playbook, Playbook.id == PlaybookLog.playbook_id)
+        .filter(PlaybookLog.trend_snapshot.isnot(None))
+        .order_by(PlaybookLog.timestamp.desc())
+    )
+    if window_start:
+        query = query.filter(PlaybookLog.timestamp >= window_start)
+    rows = query.limit(limit * 4).all()
+
+    edges: List[EdgeReference] = []
+    seen_playbooks: Set[int] = set()
+    for playbook_id, snapshot, timestamp, persona_id, campaign_id in rows:
+        if playbook_id in seen_playbooks:
+            continue
+        if not any(_coerce_int(item.get("id")) == trend.id for item in _iter_trend_items(snapshot)):
+            continue
+        seen_playbooks.add(playbook_id)
+        edges.append(
+            EdgeReference(
+                src=node_ref("trend", "trends", trend.id),
+                dst=node_ref("playbook", "playbooks", playbook_id),
+                edge_type="trend_of",
+                meta={
+                    "last_referenced_at": dt_iso(timestamp),
+                    "persona_id": persona_id,
+                    "campaign_id": campaign_id,
+                },
+            )
+        )
+        if len(edges) >= limit:
+            break
+    return edges
+
+
+def _iter_trend_items(snapshot: Optional[dict]) -> Iterable[Dict[str, Any]]:
+    if not snapshot or not isinstance(snapshot, dict):
+        return []
+    items = snapshot.get("items")
+    if not isinstance(items, list):
+        return []
+    return (item for item in items if isinstance(item, dict))
+
+
+def _coerce_int(value: Any) -> Optional[int]:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            return None
+    return None

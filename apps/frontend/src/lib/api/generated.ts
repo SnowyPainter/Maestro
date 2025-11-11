@@ -262,9 +262,23 @@ export type BffRagSearchPayloadPersonaAccountId = number | null;
 
 export type BffRagSearchPayloadCampaignId = number | null;
 
+/**
+ * Post-processing mode for the shared operator
+ */
+export type BffRagSearchPayloadMode = typeof BffRagSearchPayloadMode[keyof typeof BffRagSearchPayloadMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const BffRagSearchPayloadMode = {
+  default: 'default',
+  quickstart: 'quickstart',
+  memory: 'memory',
+  next_action: 'next_action',
+} as const;
+
 export interface BffRagSearchPayload {
-  /** @minLength 1 */
-  query: string;
+  /** @minLength 0 */
+  query?: string;
   persona_id?: BffRagSearchPayloadPersonaId;
   persona_account_id?: BffRagSearchPayloadPersonaAccountId;
   campaign_id?: BffRagSearchPayloadCampaignId;
@@ -273,6 +287,16 @@ export interface BffRagSearchPayload {
    * @maximum 50
    */
   limit?: number;
+  /** Post-processing mode for the shared operator */
+  mode?: BffRagSearchPayloadMode;
+  /** Populate quickstart templates even outside quickstart mode */
+  include_quickstart?: boolean;
+  /** Include memory reuse summaries */
+  include_memory?: boolean;
+  /** Include Next Action proposals */
+  include_next_actions?: boolean;
+  /** Include ROI/value insights */
+  include_roi?: boolean;
 }
 
 export type BlockImageProps = { [key: string]: unknown };
@@ -1757,6 +1781,67 @@ export interface RagExpandResponse {
   items?: RagRelatedEdge[];
 }
 
+export type RagMemoryHighlightPlaybookId = number | null;
+
+export type RagMemoryHighlightPersona = RagPersonaContext | null;
+
+export interface RagMemoryHighlight {
+  playbook_id?: RagMemoryHighlightPlaybookId;
+  persona?: RagMemoryHighlightPersona;
+  /** @nullable */
+  node_id?: string | null;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  summary?: string | null;
+  reuse_count?: number;
+  /** @nullable */
+  last_used_at?: string | null;
+  reasons?: string[];
+}
+
+export type RagNextActionProposalPlaybookId = number | null;
+
+export type RagNextActionProposalPersona = RagPersonaContext | null;
+
+export type RagNextActionProposalMeta = { [key: string]: unknown };
+
+export interface RagNextActionProposal {
+  playbook_id?: RagNextActionProposalPlaybookId;
+  persona?: RagNextActionProposalPersona;
+  title: string;
+  action: string;
+  confidence?: number;
+  /** @nullable */
+  suggested_at?: string | null;
+  meta?: RagNextActionProposalMeta;
+}
+
+export type RagPersonaContextPersonaId = number | null;
+
+export type RagPersonaContextCampaignId = number | null;
+
+export interface RagPersonaContext {
+  persona_id?: RagPersonaContextPersonaId;
+  /** @nullable */
+  persona_name?: string | null;
+  campaign_id?: RagPersonaContextCampaignId;
+  /** @nullable */
+  campaign_name?: string | null;
+}
+
+export type RagQuickstartTemplatePersona = RagPersonaContext | null;
+
+export interface RagQuickstartTemplate {
+  title: string;
+  query: string;
+  /** @nullable */
+  description?: string | null;
+  persona?: RagQuickstartTemplatePersona;
+  /** @nullable */
+  source_node_id?: string | null;
+}
+
 export type RagRelatedEdgeMeta = { [key: string]: unknown };
 
 export type RagRelatedEdgeNodeMeta = { [key: string]: unknown };
@@ -1793,8 +1878,24 @@ export interface RagSearchItem {
   related?: RagRelatedEdge[];
 }
 
+export type RagSearchResponseRoi = RagValueInsight | null;
+
 export interface RagSearchResponse {
   items?: RagSearchItem[];
+  quickstart?: RagQuickstartTemplate[];
+  memory_highlights?: RagMemoryHighlight[];
+  next_actions?: RagNextActionProposal[];
+  roi?: RagSearchResponseRoi;
+}
+
+export type RagValueInsightPersona = RagPersonaContext | null;
+
+export interface RagValueInsight {
+  persona?: RagValueInsightPersona;
+  memory_reuse_count?: number;
+  automated_decisions?: number;
+  saved_minutes?: number;
+  ai_intervention_rate?: number;
 }
 
 export interface ReactionActionLogListResult {
@@ -6854,6 +6955,204 @@ export const useBffRagSearchApiBffRagSearchPost = <TError = HTTPValidationError,
       > => {
 
       const mutationOptions = getBffRagSearchApiBffRagSearchPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Curated Graph RAG search tuned for the onboarding quickstart loop
+ * @summary Graph RAG Quickstart Search
+ */
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPost = (
+    bffRagSearchPayload: BffRagSearchPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<RagSearchResponse>(
+      {url: `/api/bff/rag/search/quickstart`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: bffRagSearchPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffRagSearchQuickstartApiBffRagSearchQuickstartPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchQuickstartApiBffRagSearchQuickstartPost>>, TError,{data: BffRagSearchPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchQuickstartApiBffRagSearchQuickstartPost>>, TError,{data: BffRagSearchPayload}, TContext> => {
+
+const mutationKey = ['bffRagSearchQuickstartApiBffRagSearchQuickstartPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffRagSearchQuickstartApiBffRagSearchQuickstartPost>>, {data: BffRagSearchPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffRagSearchQuickstartApiBffRagSearchQuickstartPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffRagSearchQuickstartApiBffRagSearchQuickstartPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffRagSearchQuickstartApiBffRagSearchQuickstartPost>>>
+    export type BffRagSearchQuickstartApiBffRagSearchQuickstartPostMutationBody = BffRagSearchPayload
+    export type BffRagSearchQuickstartApiBffRagSearchQuickstartPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Graph RAG Quickstart Search
+ */
+export const useBffRagSearchQuickstartApiBffRagSearchQuickstartPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchQuickstartApiBffRagSearchQuickstartPost>>, TError,{data: BffRagSearchPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffRagSearchQuickstartApiBffRagSearchQuickstartPost>>,
+        TError,
+        {data: BffRagSearchPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffRagSearchQuickstartApiBffRagSearchQuickstartPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Surface playbooks and judgements that can be reapplied immediately
+ * @summary Graph RAG Memory Reapply Search
+ */
+export const bffRagSearchMemoryApiBffRagSearchMemoryPost = (
+    bffRagSearchPayload: BffRagSearchPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<RagSearchResponse>(
+      {url: `/api/bff/rag/search/memory`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: bffRagSearchPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffRagSearchMemoryApiBffRagSearchMemoryPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchMemoryApiBffRagSearchMemoryPost>>, TError,{data: BffRagSearchPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchMemoryApiBffRagSearchMemoryPost>>, TError,{data: BffRagSearchPayload}, TContext> => {
+
+const mutationKey = ['bffRagSearchMemoryApiBffRagSearchMemoryPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffRagSearchMemoryApiBffRagSearchMemoryPost>>, {data: BffRagSearchPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffRagSearchMemoryApiBffRagSearchMemoryPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffRagSearchMemoryApiBffRagSearchMemoryPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffRagSearchMemoryApiBffRagSearchMemoryPost>>>
+    export type BffRagSearchMemoryApiBffRagSearchMemoryPostMutationBody = BffRagSearchPayload
+    export type BffRagSearchMemoryApiBffRagSearchMemoryPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Graph RAG Memory Reapply Search
+ */
+export const useBffRagSearchMemoryApiBffRagSearchMemoryPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchMemoryApiBffRagSearchMemoryPost>>, TError,{data: BffRagSearchPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffRagSearchMemoryApiBffRagSearchMemoryPost>>,
+        TError,
+        {data: BffRagSearchPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffRagSearchMemoryApiBffRagSearchMemoryPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Translate Graph RAG context into the next recommended action
+ * @summary Graph RAG Next Action Search
+ */
+export const bffRagSearchNextActionApiBffRagSearchNextActionPost = (
+    bffRagSearchPayload: BffRagSearchPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<RagSearchResponse>(
+      {url: `/api/bff/rag/search/next-action`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: bffRagSearchPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getBffRagSearchNextActionApiBffRagSearchNextActionPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchNextActionApiBffRagSearchNextActionPost>>, TError,{data: BffRagSearchPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchNextActionApiBffRagSearchNextActionPost>>, TError,{data: BffRagSearchPayload}, TContext> => {
+
+const mutationKey = ['bffRagSearchNextActionApiBffRagSearchNextActionPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bffRagSearchNextActionApiBffRagSearchNextActionPost>>, {data: BffRagSearchPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bffRagSearchNextActionApiBffRagSearchNextActionPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BffRagSearchNextActionApiBffRagSearchNextActionPostMutationResult = NonNullable<Awaited<ReturnType<typeof bffRagSearchNextActionApiBffRagSearchNextActionPost>>>
+    export type BffRagSearchNextActionApiBffRagSearchNextActionPostMutationBody = BffRagSearchPayload
+    export type BffRagSearchNextActionApiBffRagSearchNextActionPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Graph RAG Next Action Search
+ */
+export const useBffRagSearchNextActionApiBffRagSearchNextActionPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bffRagSearchNextActionApiBffRagSearchNextActionPost>>, TError,{data: BffRagSearchPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof bffRagSearchNextActionApiBffRagSearchNextActionPost>>,
+        TError,
+        {data: BffRagSearchPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getBffRagSearchNextActionApiBffRagSearchNextActionPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

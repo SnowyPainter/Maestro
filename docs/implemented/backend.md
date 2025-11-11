@@ -258,6 +258,7 @@
 - **벡터 검색 + 그래프 탐색** — pgvector 코사인 유사도 검색 후 GraphEdge로 이웃 노드 확장
 - **통합 지식 그래프** — Persona, Campaign, Draft, Publication, Trend, Comment, Rule을 단일 그래프로 연결
 - **Celery 사이드카** — 주기적으로 domain 테이블 스캔 → CanonicalPayload 정규화 → 임베딩 생성 → GraphNode/Chunk/Edge 동기화
+- **실시간 관계 업데이트** — Playbook/Draft 로그의 트렌드 스냅샷을 해석해 `trend_reference`, `trend_of` 엣지를 자동 생성하여 “이 판단이 어떤 트렌드를 재사용했는지”가 그래프에 즉시 반영
 - **멱등 동기화** — `signature_hash`로 중복 임베딩 방지, 변경된 내용만 재처리
 - **관계 우선순위** — edge_type별 가중치로 중요한 관계 우선 탐색 (produces > published_as > comment_on > related_trend)
 - **LLM 호출 없음** — 검색 시 추가 요약/생성 없이 **저장된 요약/메트릭을 그대로 활용**하여 지연 최소화
@@ -265,6 +266,8 @@
 - **Prometheus 메트릭** — `rag_nodes_processed_total`, `rag_watch_duration_seconds`로 사이드카 상태 모니터링
 - **의미**: 단순 트렌드 검색을 넘어 **"Persona X가 Campaign Y에서 Trend Z를 기반으로 작성한 Draft와 그 성과"를 그래프 관계로 추적**
 - **"기억하는 자동화"의 핵심** — 과거 판단의 맥락(페르소나, 캠페인, 트렌드, 성과)을 그래프로 기억하고 검색
+
+> 현재 사이드카 파이프라인은 모든 Playbook/Draft 갱신을 감지해 수십 초 내에 임베딩과 엣지를 재계산합니다. 따라서 “그래프 RAG 시스템과 사이드카가 정상 작동한다”는 것은 단순 슬로건이 아니라, 실제로 신규 판단/트렌드가 기록되자마자 그래프 검색에서 즉시 노출되고 있음을 의미합니다.
 
 ### ✅ **BFF (Backend For Frontend)**
 - 프론트엔드 요구사항에 특화된 API 설계

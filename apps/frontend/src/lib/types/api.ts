@@ -864,6 +864,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/rag/search/quickstart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG Quickstart Search
+         * @description Curated Graph RAG search tuned for the onboarding quickstart loop
+         */
+        post: operations["bff_rag_search_quickstart_api_bff_rag_search_quickstart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/rag/search/memory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG Memory Reapply Search
+         * @description Surface playbooks and judgements that can be reapplied immediately
+         */
+        post: operations["bff_rag_search_memory_api_bff_rag_search_memory_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bff/rag/search/next-action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG Next Action Search
+         * @description Translate Graph RAG context into the next recommended action
+         */
+        post: operations["bff_rag_search_next_action_api_bff_rag_search_next_action_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/rag/nodes/{node_id}/neighbors": {
         parameters: {
             query?: never;
@@ -2547,7 +2607,10 @@ export interface components {
         Aggregation: "sum" | "last" | "avg";
         /** BffRagSearchPayload */
         BffRagSearchPayload: {
-            /** Query */
+            /**
+             * Query
+             * @default
+             */
             query: string;
             /** Persona Id */
             persona_id?: number | null;
@@ -2560,6 +2623,37 @@ export interface components {
              * @default 6
              */
             limit: number;
+            /**
+             * Mode
+             * @description Post-processing mode for the shared operator
+             * @default default
+             * @enum {string}
+             */
+            mode: "default" | "quickstart" | "memory" | "next_action";
+            /**
+             * Include Quickstart
+             * @description Populate quickstart templates even outside quickstart mode
+             * @default false
+             */
+            include_quickstart: boolean;
+            /**
+             * Include Memory
+             * @description Include memory reuse summaries
+             * @default false
+             */
+            include_memory: boolean;
+            /**
+             * Include Next Actions
+             * @description Include Next Action proposals
+             * @default false
+             */
+            include_next_actions: boolean;
+            /**
+             * Include Roi
+             * @description Include ROI/value insights
+             * @default false
+             */
+            include_roi: boolean;
         };
         /** BlockImage */
         BlockImage: {
@@ -4314,6 +4408,83 @@ export interface components {
             /** Items */
             items?: components["schemas"]["RagRelatedEdge"][];
         };
+        /** RagMemoryHighlight */
+        RagMemoryHighlight: {
+            /** Playbook Id */
+            playbook_id?: number | null;
+            persona?: components["schemas"]["RagPersonaContext"] | null;
+            /**
+             * Node Id
+             * Format: uuid
+             */
+            node_id?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /**
+             * Reuse Count
+             * @default 0
+             */
+            reuse_count: number;
+            /**
+             * Last Used At
+             * Format: date-time
+             */
+            last_used_at?: string | null;
+            /** Reasons */
+            reasons?: string[];
+        };
+        /** RagNextActionProposal */
+        RagNextActionProposal: {
+            /** Playbook Id */
+            playbook_id?: number | null;
+            persona?: components["schemas"]["RagPersonaContext"] | null;
+            /** Title */
+            title: string;
+            /** Action */
+            action: string;
+            /**
+             * Confidence
+             * @default 0.5
+             */
+            confidence: number;
+            /**
+             * Suggested At
+             * Format: date-time
+             */
+            suggested_at?: string | null;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+        };
+        /** RagPersonaContext */
+        RagPersonaContext: {
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Persona Name */
+            persona_name?: string | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+            /** Campaign Name */
+            campaign_name?: string | null;
+        };
+        /** RagQuickstartTemplate */
+        RagQuickstartTemplate: {
+            /** Title */
+            title: string;
+            /** Query */
+            query: string;
+            /** Description */
+            description?: string | null;
+            persona?: components["schemas"]["RagPersonaContext"] | null;
+            /**
+             * Source Node Id
+             * Format: uuid
+             */
+            source_node_id?: string | null;
+        };
         /** RagRelatedEdge */
         RagRelatedEdge: {
             /**
@@ -4370,6 +4541,37 @@ export interface components {
         RagSearchResponse: {
             /** Items */
             items?: components["schemas"]["RagSearchItem"][];
+            /** Quickstart */
+            quickstart?: components["schemas"]["RagQuickstartTemplate"][];
+            /** Memory Highlights */
+            memory_highlights?: components["schemas"]["RagMemoryHighlight"][];
+            /** Next Actions */
+            next_actions?: components["schemas"]["RagNextActionProposal"][];
+            roi?: components["schemas"]["RagValueInsight"] | null;
+        };
+        /** RagValueInsight */
+        RagValueInsight: {
+            persona?: components["schemas"]["RagPersonaContext"] | null;
+            /**
+             * Memory Reuse Count
+             * @default 0
+             */
+            memory_reuse_count: number;
+            /**
+             * Automated Decisions
+             * @default 0
+             */
+            automated_decisions: number;
+            /**
+             * Saved Minutes
+             * @default 0
+             */
+            saved_minutes: number;
+            /**
+             * Ai Intervention Rate
+             * @default 0
+             */
+            ai_intervention_rate: number;
         };
         /** ReactionActionLogListResult */
         ReactionActionLogListResult: {
@@ -6919,6 +7121,105 @@ export interface operations {
         };
     };
     bff_rag_search_api_bff_rag_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BffRagSearchPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RagSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_rag_search_quickstart_api_bff_rag_search_quickstart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BffRagSearchPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RagSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_rag_search_memory_api_bff_rag_search_memory_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BffRagSearchPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RagSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_rag_search_next_action_api_bff_rag_search_next_action_post: {
         parameters: {
             query?: never;
             header?: never;

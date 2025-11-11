@@ -1864,6 +1864,93 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/rag/search/quickstart:
+    post:
+      tags:
+      - bff
+      - bff
+      - rag
+      - quickstart
+      summary: Graph RAG Quickstart Search
+      description: Curated Graph RAG search tuned for the onboarding quickstart loop
+      operationId: bff_rag_search_quickstart_api_bff_rag_search_quickstart_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BffRagSearchPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RagSearchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/rag/search/memory:
+    post:
+      tags:
+      - bff
+      - bff
+      - rag
+      - memory
+      summary: Graph RAG Memory Reapply Search
+      description: Surface playbooks and judgements that can be reapplied immediately
+      operationId: bff_rag_search_memory_api_bff_rag_search_memory_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BffRagSearchPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RagSearchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/rag/search/next-action:
+    post:
+      tags:
+      - bff
+      - bff
+      - rag
+      - next_action
+      summary: Graph RAG Next Action Search
+      description: Translate Graph RAG context into the next recommended action
+      operationId: bff_rag_search_next_action_api_bff_rag_search_next_action_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BffRagSearchPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RagSearchResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/rag/nodes/{node_id}/neighbors:
     get:
       tags:
@@ -5241,8 +5328,9 @@ components:
       properties:
         query:
           type: string
-          minLength: 1
+          minLength: 0
           title: Query
+          default: ''
         persona_id:
           anyOf:
           - type: integer
@@ -5264,9 +5352,37 @@ components:
           minimum: 1.0
           title: Limit
           default: 6
+        mode:
+          type: string
+          enum:
+          - default
+          - quickstart
+          - memory
+          - next_action
+          title: Mode
+          description: Post-processing mode for the shared operator
+          default: default
+        include_quickstart:
+          type: boolean
+          title: Include Quickstart
+          description: Populate quickstart templates even outside quickstart mode
+          default: false
+        include_memory:
+          type: boolean
+          title: Include Memory
+          description: Include memory reuse summaries
+          default: false
+        include_next_actions:
+          type: boolean
+          title: Include Next Actions
+          description: Include Next Action proposals
+          default: false
+        include_roi:
+          type: boolean
+          title: Include Roi
+          description: Include ROI/value insights
+          default: false
       type: object
-      required:
-      - query
       title: BffRagSearchPayload
     BlockImage:
       properties:
@@ -8288,6 +8404,129 @@ components:
           title: Items
       type: object
       title: RagExpandResponse
+    RagMemoryHighlight:
+      properties:
+        playbook_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+        persona:
+          anyOf:
+          - $ref: '#/components/schemas/RagPersonaContext'
+          - type: 'null'
+        node_id:
+          title: Node Id
+          format: uuid
+          type: string
+          nullable: true
+        title:
+          title: Title
+          type: string
+          nullable: true
+        summary:
+          title: Summary
+          type: string
+          nullable: true
+        reuse_count:
+          type: integer
+          title: Reuse Count
+          default: 0
+        last_used_at:
+          title: Last Used At
+          format: date-time
+          type: string
+          nullable: true
+        reasons:
+          items:
+            type: string
+          type: array
+          title: Reasons
+      type: object
+      title: RagMemoryHighlight
+    RagNextActionProposal:
+      properties:
+        playbook_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+        persona:
+          anyOf:
+          - $ref: '#/components/schemas/RagPersonaContext'
+          - type: 'null'
+        title:
+          type: string
+          title: Title
+        action:
+          type: string
+          title: Action
+        confidence:
+          type: number
+          title: Confidence
+          default: 0.5
+        suggested_at:
+          title: Suggested At
+          format: date-time
+          type: string
+          nullable: true
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
+      type: object
+      required:
+      - title
+      - action
+      title: RagNextActionProposal
+    RagPersonaContext:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        persona_name:
+          title: Persona Name
+          type: string
+          nullable: true
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        campaign_name:
+          title: Campaign Name
+          type: string
+          nullable: true
+      type: object
+      title: RagPersonaContext
+    RagQuickstartTemplate:
+      properties:
+        title:
+          type: string
+          title: Title
+        query:
+          type: string
+          title: Query
+        description:
+          title: Description
+          type: string
+          nullable: true
+        persona:
+          anyOf:
+          - $ref: '#/components/schemas/RagPersonaContext'
+          - type: 'null'
+        source_node_id:
+          title: Source Node Id
+          format: uuid
+          type: string
+          nullable: true
+      type: object
+      required:
+      - title
+      - query
+      title: RagQuickstartTemplate
     RagRelatedEdge:
       properties:
         dst_node_id:
@@ -8377,8 +8616,51 @@ components:
             $ref: '#/components/schemas/RagSearchItem'
           type: array
           title: Items
+        quickstart:
+          items:
+            $ref: '#/components/schemas/RagQuickstartTemplate'
+          type: array
+          title: Quickstart
+        memory_highlights:
+          items:
+            $ref: '#/components/schemas/RagMemoryHighlight'
+          type: array
+          title: Memory Highlights
+        next_actions:
+          items:
+            $ref: '#/components/schemas/RagNextActionProposal'
+          type: array
+          title: Next Actions
+        roi:
+          anyOf:
+          - $ref: '#/components/schemas/RagValueInsight'
+          - type: 'null'
       type: object
       title: RagSearchResponse
+    RagValueInsight:
+      properties:
+        persona:
+          anyOf:
+          - $ref: '#/components/schemas/RagPersonaContext'
+          - type: 'null'
+        memory_reuse_count:
+          type: integer
+          title: Memory Reuse Count
+          default: 0
+        automated_decisions:
+          type: integer
+          title: Automated Decisions
+          default: 0
+        saved_minutes:
+          type: integer
+          title: Saved Minutes
+          default: 0
+        ai_intervention_rate:
+          type: number
+          title: Ai Intervention Rate
+          default: 0.0
+      type: object
+      title: RagValueInsight
     ReactionActionLogListResult:
       properties:
         total:

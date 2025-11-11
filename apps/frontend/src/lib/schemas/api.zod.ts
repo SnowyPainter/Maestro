@@ -1494,17 +1494,26 @@ export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetResponse = zod.
  * Graph RAG Search over Maestro knowledge graph
  * @summary Graph RAG Search
  */
+export const bffRagSearchApiBffRagSearchPostBodyQueryDefault = "";
+export const bffRagSearchApiBffRagSearchPostBodyQueryMin = 0;
 export const bffRagSearchApiBffRagSearchPostBodyLimitDefault = 6;
 export const bffRagSearchApiBffRagSearchPostBodyLimitMax = 50;
-
+export const bffRagSearchApiBffRagSearchPostBodyModeDefault = "default";export const bffRagSearchApiBffRagSearchPostBodyIncludeQuickstartDefault = false;export const bffRagSearchApiBffRagSearchPostBodyIncludeMemoryDefault = false;export const bffRagSearchApiBffRagSearchPostBodyIncludeNextActionsDefault = false;export const bffRagSearchApiBffRagSearchPostBodyIncludeRoiDefault = false;
 
 export const bffRagSearchApiBffRagSearchPostBody = zod.object({
-  "query": zod.string().min(1),
+  "query": zod.string().min(bffRagSearchApiBffRagSearchPostBodyQueryMin).optional(),
   "persona_id": zod.union([zod.number(),zod.null()]).optional(),
   "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
   "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
-  "limit": zod.number().min(1).max(bffRagSearchApiBffRagSearchPostBodyLimitMax).default(bffRagSearchApiBffRagSearchPostBodyLimitDefault)
+  "limit": zod.number().min(1).max(bffRagSearchApiBffRagSearchPostBodyLimitMax).default(bffRagSearchApiBffRagSearchPostBodyLimitDefault),
+  "mode": zod.enum(['default', 'quickstart', 'memory', 'next_action']).default(bffRagSearchApiBffRagSearchPostBodyModeDefault).describe('Post-processing mode for the shared operator'),
+  "include_quickstart": zod.boolean().optional().describe('Populate quickstart templates even outside quickstart mode'),
+  "include_memory": zod.boolean().optional().describe('Include memory reuse summaries'),
+  "include_next_actions": zod.boolean().optional().describe('Include Next Action proposals'),
+  "include_roi": zod.boolean().optional().describe('Include ROI/value insights')
 })
+
+export const bffRagSearchApiBffRagSearchPostResponseMemoryHighlightsItemReuseCountDefault = 0;export const bffRagSearchApiBffRagSearchPostResponseNextActionsItemConfidenceDefault = 0.5;export const bffRagSearchApiBffRagSearchPostResponseRoiMemoryReuseCountDefault = 0;export const bffRagSearchApiBffRagSearchPostResponseRoiAutomatedDecisionsDefault = 0;export const bffRagSearchApiBffRagSearchPostResponseRoiSavedMinutesDefault = 0;export const bffRagSearchApiBffRagSearchPostResponseRoiAiInterventionRateDefault = 0;
 
 export const bffRagSearchApiBffRagSearchPostResponse = zod.object({
   "items": zod.array(zod.object({
@@ -1526,7 +1535,366 @@ export const bffRagSearchApiBffRagSearchPostResponse = zod.object({
   "summary": zod.string().nullish(),
   "node_meta": zod.record(zod.string(), zod.any()).optional()
 })).optional()
+})).optional(),
+  "quickstart": zod.array(zod.object({
+  "title": zod.string(),
+  "query": zod.string(),
+  "description": zod.string().nullish(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "source_node_id": zod.uuid().nullish()
+})).optional(),
+  "memory_highlights": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "node_id": zod.uuid().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "reuse_count": zod.number().optional(),
+  "last_used_at": zod.iso.datetime({}).nullish(),
+  "reasons": zod.array(zod.string()).optional()
+})).optional(),
+  "next_actions": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "title": zod.string(),
+  "action": zod.string(),
+  "confidence": zod.number().default(bffRagSearchApiBffRagSearchPostResponseNextActionsItemConfidenceDefault),
+  "suggested_at": zod.iso.datetime({}).nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * Curated Graph RAG search tuned for the onboarding quickstart loop
+ * @summary Graph RAG Quickstart Search
+ */
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyQueryDefault = "";
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyQueryMin = 0;
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyLimitDefault = 6;
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyLimitMax = 50;
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyModeDefault = "default";export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyIncludeQuickstartDefault = false;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyIncludeMemoryDefault = false;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyIncludeNextActionsDefault = false;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyIncludeRoiDefault = false;
+
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostBody = zod.object({
+  "query": zod.string().min(bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyQueryMin).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "limit": zod.number().min(1).max(bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyLimitMax).default(bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyLimitDefault),
+  "mode": zod.enum(['default', 'quickstart', 'memory', 'next_action']).default(bffRagSearchQuickstartApiBffRagSearchQuickstartPostBodyModeDefault).describe('Post-processing mode for the shared operator'),
+  "include_quickstart": zod.boolean().optional().describe('Populate quickstart templates even outside quickstart mode'),
+  "include_memory": zod.boolean().optional().describe('Include memory reuse summaries'),
+  "include_next_actions": zod.boolean().optional().describe('Include Next Action proposals'),
+  "include_roi": zod.boolean().optional().describe('Include ROI/value insights')
+})
+
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponseMemoryHighlightsItemReuseCountDefault = 0;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponseNextActionsItemConfidenceDefault = 0.5;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponseRoiMemoryReuseCountDefault = 0;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponseRoiAutomatedDecisionsDefault = 0;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponseRoiSavedMinutesDefault = 0;export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponseRoiAiInterventionRateDefault = 0;
+
+export const bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponse = zod.object({
+  "items": zod.array(zod.object({
+  "node_id": zod.uuid(),
+  "node_type": zod.string(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "source_table": zod.string().nullish(),
+  "source_id": zod.string().nullish(),
+  "score": zod.number(),
+  "chunks": zod.array(zod.string()).optional(),
+  "related": zod.array(zod.object({
+  "dst_node_id": zod.uuid(),
+  "edge_type": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "node_type": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "node_meta": zod.record(zod.string(), zod.any()).optional()
 })).optional()
+})).optional(),
+  "quickstart": zod.array(zod.object({
+  "title": zod.string(),
+  "query": zod.string(),
+  "description": zod.string().nullish(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "source_node_id": zod.uuid().nullish()
+})).optional(),
+  "memory_highlights": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "node_id": zod.uuid().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "reuse_count": zod.number().optional(),
+  "last_used_at": zod.iso.datetime({}).nullish(),
+  "reasons": zod.array(zod.string()).optional()
+})).optional(),
+  "next_actions": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "title": zod.string(),
+  "action": zod.string(),
+  "confidence": zod.number().default(bffRagSearchQuickstartApiBffRagSearchQuickstartPostResponseNextActionsItemConfidenceDefault),
+  "suggested_at": zod.iso.datetime({}).nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * Surface playbooks and judgements that can be reapplied immediately
+ * @summary Graph RAG Memory Reapply Search
+ */
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyQueryDefault = "";
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyQueryMin = 0;
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyLimitDefault = 6;
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyLimitMax = 50;
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyModeDefault = "default";export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyIncludeQuickstartDefault = false;export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyIncludeMemoryDefault = false;export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyIncludeNextActionsDefault = false;export const bffRagSearchMemoryApiBffRagSearchMemoryPostBodyIncludeRoiDefault = false;
+
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostBody = zod.object({
+  "query": zod.string().min(bffRagSearchMemoryApiBffRagSearchMemoryPostBodyQueryMin).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "limit": zod.number().min(1).max(bffRagSearchMemoryApiBffRagSearchMemoryPostBodyLimitMax).default(bffRagSearchMemoryApiBffRagSearchMemoryPostBodyLimitDefault),
+  "mode": zod.enum(['default', 'quickstart', 'memory', 'next_action']).default(bffRagSearchMemoryApiBffRagSearchMemoryPostBodyModeDefault).describe('Post-processing mode for the shared operator'),
+  "include_quickstart": zod.boolean().optional().describe('Populate quickstart templates even outside quickstart mode'),
+  "include_memory": zod.boolean().optional().describe('Include memory reuse summaries'),
+  "include_next_actions": zod.boolean().optional().describe('Include Next Action proposals'),
+  "include_roi": zod.boolean().optional().describe('Include ROI/value insights')
+})
+
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostResponseMemoryHighlightsItemReuseCountDefault = 0;export const bffRagSearchMemoryApiBffRagSearchMemoryPostResponseNextActionsItemConfidenceDefault = 0.5;export const bffRagSearchMemoryApiBffRagSearchMemoryPostResponseRoiMemoryReuseCountDefault = 0;export const bffRagSearchMemoryApiBffRagSearchMemoryPostResponseRoiAutomatedDecisionsDefault = 0;export const bffRagSearchMemoryApiBffRagSearchMemoryPostResponseRoiSavedMinutesDefault = 0;export const bffRagSearchMemoryApiBffRagSearchMemoryPostResponseRoiAiInterventionRateDefault = 0;
+
+export const bffRagSearchMemoryApiBffRagSearchMemoryPostResponse = zod.object({
+  "items": zod.array(zod.object({
+  "node_id": zod.uuid(),
+  "node_type": zod.string(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "source_table": zod.string().nullish(),
+  "source_id": zod.string().nullish(),
+  "score": zod.number(),
+  "chunks": zod.array(zod.string()).optional(),
+  "related": zod.array(zod.object({
+  "dst_node_id": zod.uuid(),
+  "edge_type": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "node_type": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "node_meta": zod.record(zod.string(), zod.any()).optional()
+})).optional()
+})).optional(),
+  "quickstart": zod.array(zod.object({
+  "title": zod.string(),
+  "query": zod.string(),
+  "description": zod.string().nullish(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "source_node_id": zod.uuid().nullish()
+})).optional(),
+  "memory_highlights": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "node_id": zod.uuid().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "reuse_count": zod.number().optional(),
+  "last_used_at": zod.iso.datetime({}).nullish(),
+  "reasons": zod.array(zod.string()).optional()
+})).optional(),
+  "next_actions": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "title": zod.string(),
+  "action": zod.string(),
+  "confidence": zod.number().default(bffRagSearchMemoryApiBffRagSearchMemoryPostResponseNextActionsItemConfidenceDefault),
+  "suggested_at": zod.iso.datetime({}).nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
+})
+
+
+/**
+ * Translate Graph RAG context into the next recommended action
+ * @summary Graph RAG Next Action Search
+ */
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyQueryDefault = "";
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyQueryMin = 0;
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyLimitDefault = 6;
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyLimitMax = 50;
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyModeDefault = "default";export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyIncludeQuickstartDefault = false;export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyIncludeMemoryDefault = false;export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyIncludeNextActionsDefault = false;export const bffRagSearchNextActionApiBffRagSearchNextActionPostBodyIncludeRoiDefault = false;
+
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostBody = zod.object({
+  "query": zod.string().min(bffRagSearchNextActionApiBffRagSearchNextActionPostBodyQueryMin).optional(),
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "limit": zod.number().min(1).max(bffRagSearchNextActionApiBffRagSearchNextActionPostBodyLimitMax).default(bffRagSearchNextActionApiBffRagSearchNextActionPostBodyLimitDefault),
+  "mode": zod.enum(['default', 'quickstart', 'memory', 'next_action']).default(bffRagSearchNextActionApiBffRagSearchNextActionPostBodyModeDefault).describe('Post-processing mode for the shared operator'),
+  "include_quickstart": zod.boolean().optional().describe('Populate quickstart templates even outside quickstart mode'),
+  "include_memory": zod.boolean().optional().describe('Include memory reuse summaries'),
+  "include_next_actions": zod.boolean().optional().describe('Include Next Action proposals'),
+  "include_roi": zod.boolean().optional().describe('Include ROI/value insights')
+})
+
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostResponseMemoryHighlightsItemReuseCountDefault = 0;export const bffRagSearchNextActionApiBffRagSearchNextActionPostResponseNextActionsItemConfidenceDefault = 0.5;export const bffRagSearchNextActionApiBffRagSearchNextActionPostResponseRoiMemoryReuseCountDefault = 0;export const bffRagSearchNextActionApiBffRagSearchNextActionPostResponseRoiAutomatedDecisionsDefault = 0;export const bffRagSearchNextActionApiBffRagSearchNextActionPostResponseRoiSavedMinutesDefault = 0;export const bffRagSearchNextActionApiBffRagSearchNextActionPostResponseRoiAiInterventionRateDefault = 0;
+
+export const bffRagSearchNextActionApiBffRagSearchNextActionPostResponse = zod.object({
+  "items": zod.array(zod.object({
+  "node_id": zod.uuid(),
+  "node_type": zod.string(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "source_table": zod.string().nullish(),
+  "source_id": zod.string().nullish(),
+  "score": zod.number(),
+  "chunks": zod.array(zod.string()).optional(),
+  "related": zod.array(zod.object({
+  "dst_node_id": zod.uuid(),
+  "edge_type": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "node_type": zod.string().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "node_meta": zod.record(zod.string(), zod.any()).optional()
+})).optional()
+})).optional(),
+  "quickstart": zod.array(zod.object({
+  "title": zod.string(),
+  "query": zod.string(),
+  "description": zod.string().nullish(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "source_node_id": zod.uuid().nullish()
+})).optional(),
+  "memory_highlights": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "node_id": zod.uuid().nullish(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "reuse_count": zod.number().optional(),
+  "last_used_at": zod.iso.datetime({}).nullish(),
+  "reasons": zod.array(zod.string()).optional()
+})).optional(),
+  "next_actions": zod.array(zod.object({
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "title": zod.string(),
+  "action": zod.string(),
+  "confidence": zod.number().default(bffRagSearchNextActionApiBffRagSearchNextActionPostResponseNextActionsItemConfidenceDefault),
+  "suggested_at": zod.iso.datetime({}).nullish(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
 })
 
 

@@ -136,6 +136,9 @@ slots:
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
   - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
   - campaigns.aggregate_kpis
   - campaigns.delete_campaign
   - campaigns.record_kpi_result
@@ -325,6 +328,42 @@ slots:
   - bff.playbook.dashboard_trend_correlation
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
+- name: include_memory
+  label: Include Memory
+  description: Filter by include memory
+  value_type: boolean
+  flows:
+  - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
+- name: include_next_actions
+  label: Include Next Actions
+  description: Filter by include next actions
+  value_type: boolean
+  flows:
+  - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
+- name: include_quickstart
+  label: Include Quickstart
+  description: Filter by include quickstart
+  value_type: boolean
+  flows:
+  - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
+- name: include_roi
+  label: Include Roi
+  description: Filter by include roi
+  value_type: boolean
+  flows:
+  - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
 - name: ingest_key
   label: Ingest Key
   description: Filter by ingest key
@@ -402,6 +441,9 @@ slots:
   - bff.playbook.list_playbooks
   - bff.rag.expand
   - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
   - bff.reactive.list_action_logs
   - bff.schedule.get_schedule_stream
   - bff.schedule.list_schedules
@@ -449,6 +491,20 @@ slots:
   value_type: string
   flows:
   - insights.ingest
+- name: mode
+  label: Mode
+  description: Filter by mode
+  value_type: string
+  choices:
+  - default
+  - quickstart
+  - memory
+  - next_action
+  flows:
+  - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
 - name: name
   label: Name
   description: Filter by name
@@ -534,6 +590,9 @@ slots:
   - bff.insights.comments.list
   - bff.insights.comments.search
   - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
   - bff.reactive.list_templates
   - bff.schedule.list_schedules
   - bff.timeline.abtests
@@ -576,6 +635,9 @@ slots:
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
   - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
 - name: platform
   label: Platform
   description: Filter by platform slug
@@ -653,6 +715,9 @@ slots:
   value_type: string
   flows:
   - bff.rag.search
+  - bff.rag.search.memory
+  - bff.rag.search.next_action
+  - bff.rag.search.quickstart
 - name: queue
   label: Queue
   description: Filter by queue
