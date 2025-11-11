@@ -57,21 +57,7 @@ class Settings(BaseSettings):
     TRENDS_COUNTRIES: str = "US,HK" #중국 시장은 없음. HK 홍콩
     TRENDS_INTERVAL_MINUTES: int = 60
     TRENDS_MAX_ITEMS: int = 20
-
-    # ----- Mailer -----
-    MAIL_HOST: str = "localhost"
-    MAIL_PORT: int = 587
-    MAIL_USER: str = "localhost"
-    MAIL_PASSWORD: str = "localhost"
-    MAIL_SENDER_NAME: str = "localhost"
-    MAIL_SENDER_EMAIL: str = "localhost"
-    INBOUND_EMAIL_SECRET: str = "s1cr3tzkqjz"
-    MAIL_IMAP_HOST: str = "imap.naver.com"
-    MAIL_IMAP_PORT: int = 993
-    MAIL_IMAP_USER: str = ""
-    MAIL_IMAP_PASSWORD: str = ""
-    MAIL_IMAP_FOLDER: str = "INBOX"
-
+    
     # ----- SNS -----
     THREADS_CLIENT_ID: str = ""
     THREADS_CLIENT_SECRET: str = ""

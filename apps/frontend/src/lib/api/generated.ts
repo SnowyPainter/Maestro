@@ -1163,39 +1163,9 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface MailBatchRequest {
-  /** @nullable */
-  title?: string | null;
-  timezone?: string;
-  date_range: DateRange;
-  weekmask?: string[];
-  exdates?: string[];
-  segments: ScheduleSegment[];
-  distribution?: ScheduleDistribution;
-  constraints?: ScheduleConstraints;
-  /** @nullable */
-  queue?: string | null;
-  template: 'mail.trends_with_reply';
-  payload_template: MailScheduleTemplateParams;
-}
-
 export interface MailScheduleBlackout {
   start: string;
   end: string;
-}
-
-/**
- * Parameters for the mail trends + reply template.
- */
-export interface MailScheduleTemplateParams {
-  persona_id: number;
-  persona_account_id: number;
-  email_to: string;
-  country?: string;
-  limit?: number;
-  wait_timeout_s?: number;
-  /** @nullable */
-  pipeline_id?: string | null;
 }
 
 export interface MessageOut {
@@ -2195,8 +2165,6 @@ export interface RichPersonaAccountOut {
   last_updated_at?: string | null;
 }
 
-export type ScheduleCompileRequestMail = MailScheduleTemplateParams | null;
-
 export type ScheduleCompileRequestPostPublish = PostPublishTemplateParams | null;
 
 export type ScheduleCompileRequestSyncMetrics = SyncMetricsTemplateParams | null;
@@ -2207,7 +2175,6 @@ export type ScheduleCompileRequestAbtestComplete = ABTestCompleteTemplateParams 
 
 export interface ScheduleCompileRequest {
   template: ScheduleTemplateKey;
-  mail?: ScheduleCompileRequestMail;
   post_publish?: ScheduleCompileRequestPostPublish;
   sync_metrics?: ScheduleCompileRequestSyncMetrics;
   abtest_schedule?: ScheduleCompileRequestAbtestSchedule;
@@ -2506,7 +2473,6 @@ export type ScheduleTemplateKey = typeof ScheduleTemplateKey[keyof typeof Schedu
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ScheduleTemplateKey = {
-  mailtrends_with_reply: 'mail.trends_with_reply',
   postpublish: 'post.publish',
   insightssync_metrics: 'insights.sync_metrics',
   abtestschedule_ab_test: 'abtest.schedule_ab_test',
@@ -10725,72 +10691,6 @@ export const useActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSched
       > => {
 
       const mutationOptions = getActionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Create or update a mail publication schedule for the given draft variant
- * @summary Create Trends similar to persona Mail Schedule
- */
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost = (
-    mailBatchRequest: MailBatchRequest,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<ScheduleCreateResult>(
-      {url: `/api/orchestrator/actions/schedules/mail/create`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: mailBatchRequest, signal
-    },
-      options);
-    }
-  
-
-
-export const getActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailBatchRequest}, TContext> => {
-
-const mutationKey = ['actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, {data: MailBatchRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>>
-    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationBody = MailBatchRequest
-    export type ActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationError = HTTPValidationError
-
-    /**
- * @summary Create Trends similar to persona Mail Schedule
- */
-export const useActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>, TError,{data: MailBatchRequest}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePost>>,
-        TError,
-        {data: MailBatchRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getActionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

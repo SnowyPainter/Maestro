@@ -26,7 +26,6 @@ class TemplateVisibility(str, Enum):
 
 
 class ScheduleTemplateKey(str, Enum):
-    MAIL_TRENDS_WITH_REPLY = "mail.trends_with_reply"
     POST_PUBLISH = "post.publish"
     INSIGHTS_SYNC_METRICS = "insights.sync_metrics"
     SCHEDULE_AB_TEST = "abtest.schedule_ab_test"
@@ -75,68 +74,6 @@ def compile_schedule_template(request: "ScheduleCompileRequest") -> "ScheduleCom
 # ---------------------------------------------------------------------------
 # Default template and blueprint registrations
 # ---------------------------------------------------------------------------
-
-
-def _build_mail_trends_with_reply(request: "ScheduleCompileRequest") -> "ScheduleDagSpec":
-    from .schemas import (
-        MailScheduleTemplateParams,
-        ScheduleDagBuilder,
-        payload_ref,
-        node_ref,
-        resume_ref,
-    )
-
-    params: MailScheduleTemplateParams = request.require_mail_params()
-    builder = ScheduleDagBuilder()
-
-    builder.meta(label=ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY.value)
-    builder.payload(
-        persona_id=params.persona_id,
-        persona_account_id=params.persona_account_id,
-        email_to=params.email_to,
-        country=params.country,
-        limit=params.limit,
-        wait_timeout_s=params.wait_timeout_s,
-        pipeline_id=params.pipeline_id,
-    )
-
-    compose_id = builder.add_node(
-        "internal.mail.compose_trends_email",
-        node_id="compose",
-        persona_id=payload_ref("persona_id"),
-        persona_account_id=payload_ref("persona_account_id"),
-        email_to=payload_ref("email_to"),
-        country=payload_ref("country"),
-        limit=payload_ref("limit"),
-        pipeline_id=payload_ref("pipeline_id"),
-    )
-
-    wait_id = builder.add_node(
-        "internal.mail.await_reply",
-        node_id="wait_reply",
-        pipeline_id=node_ref(compose_id, "pipeline_id"),
-        timeout_s=payload_ref("wait_timeout_s"),
-        should_wait=node_ref(compose_id, "sent"),
-        reason=node_ref(compose_id, "reason"),
-    )
-
-    builder.add_node(
-        "internal.event.mail.ingest_draft_mail",
-        node_id="ingest_reply",
-        subject=resume_ref("event.subject"),
-        from_email=resume_ref("event.from"),
-        sender=resume_ref("event.sender"),
-        envelope=resume_ref("event.envelope"),
-        text=resume_ref("event.text"),
-        body=resume_ref("event.body"),
-        text_plain=resume_ref("event.text_plain"),
-    )
-
-    builder.connect(compose_id, wait_id)
-    builder.connect(wait_id, "ingest_reply")
-
-    return builder.build_model()
-
 
 def _build_post_publish_template(request: "ScheduleCompileRequest") -> "ScheduleDagSpec":
     from .schemas import (
@@ -289,18 +226,6 @@ def _build_complete_abtest_template(request: "ScheduleCompileRequest") -> "Sched
     )
     builder.connect(determine_id, complete_id)
     return builder.build_model()
-
-
-register_template(
-    ScheduleTemplateDefinition(
-        key=ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY,
-        title="Persona Trends Mail with Reply",
-        description="Send persona-adapted trends email and await reply to ingest draft",
-        builder=_build_mail_trends_with_reply,
-        visibility=TemplateVisibility.PUBLIC,
-        group="monitoring",
-    )
-)
 
 register_template(
     ScheduleTemplateDefinition(

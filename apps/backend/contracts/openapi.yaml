@@ -3879,36 +3879,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/actions/schedules/mail/create:
-    post:
-      tags:
-      - action
-      - action
-      - schedule
-      - cancel
-      summary: Create Trends similar to persona Mail Schedule
-      description: Create or update a mail publication schedule for the given draft
-        variant
-      operationId: action_schedule_create_trends_mail_schedule_api_orchestrator_actions_schedules_mail_create_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MailBatchRequest'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScheduleCreateResult'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/actions/schedules/sync_metrics/create:
     post:
       tags:
@@ -7193,55 +7163,6 @@ components:
       - email
       - password
       title: LoginRequest
-    MailBatchRequest:
-      properties:
-        title:
-          title: Title
-          type: string
-          nullable: true
-        timezone:
-          type: string
-          title: Timezone
-          default: UTC
-        date_range:
-          $ref: '#/components/schemas/DateRange'
-        weekmask:
-          items:
-            type: string
-          type: array
-          title: Weekmask
-        exdates:
-          items:
-            type: string
-            format: date
-          type: array
-          title: Exdates
-        segments:
-          items:
-            $ref: '#/components/schemas/ScheduleSegment'
-          type: array
-          title: Segments
-        distribution:
-          $ref: '#/components/schemas/ScheduleDistribution'
-        constraints:
-          $ref: '#/components/schemas/ScheduleConstraints'
-        queue:
-          title: Queue
-          type: string
-          nullable: true
-        template:
-          type: string
-          const: mail.trends_with_reply
-          title: Template
-        payload_template:
-          $ref: '#/components/schemas/MailScheduleTemplateParams'
-      type: object
-      required:
-      - date_range
-      - segments
-      - template
-      - payload_template
-      title: MailBatchRequest
     MailScheduleBlackout:
       properties:
         start:
@@ -7257,40 +7178,6 @@ components:
       - start
       - end
       title: MailScheduleBlackout
-    MailScheduleTemplateParams:
-      properties:
-        persona_id:
-          type: integer
-          title: Persona Id
-        persona_account_id:
-          type: integer
-          title: Persona Account Id
-        email_to:
-          type: string
-          title: Email To
-        country:
-          type: string
-          title: Country
-          default: US
-        limit:
-          type: integer
-          title: Limit
-          default: 20
-        wait_timeout_s:
-          type: integer
-          title: Wait Timeout S
-          default: 604800
-        pipeline_id:
-          title: Pipeline Id
-          type: string
-          nullable: true
-      type: object
-      required:
-      - persona_id
-      - persona_account_id
-      - email_to
-      title: MailScheduleTemplateParams
-      description: Parameters for the mail trends + reply template.
     MessageOut:
       properties:
         message:
@@ -9234,10 +9121,6 @@ components:
       properties:
         template:
           $ref: '#/components/schemas/ScheduleTemplateKey'
-        mail:
-          anyOf:
-          - $ref: '#/components/schemas/MailScheduleTemplateParams'
-          - type: 'null'
         post_publish:
           anyOf:
           - $ref: '#/components/schemas/PostPublishTemplateParams'
@@ -9806,7 +9689,6 @@ components:
     ScheduleTemplateKey:
       type: string
       enum:
-      - mail.trends_with_reply
       - post.publish
       - insights.sync_metrics
       - abtest.schedule_ab_test

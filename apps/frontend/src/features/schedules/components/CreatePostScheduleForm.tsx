@@ -160,12 +160,12 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
     const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     return (
-        <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-5xl mx-auto">
-            <CardHeader className="pb-4">
+        <Card className="rounded-xl border bg-card text-card-foreground w-full max-w-5xl mx-auto">
+            <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="text-2xl">Schedule a New Post</CardTitle>
-                        <CardDescription className="text-base mt-1">
+                        <CardTitle className="text-lg">Schedule a New Post</CardTitle>
+                        <CardDescription className="text-sm mt-1">
                             {draftId ? "Set the time and confirm your post" : "Choose a draft to get started"}
                         </CardDescription>
                     </div>
@@ -178,12 +178,12 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                 </div>
             </CardHeader>
 
-            <CardContent className="p-6">
+            <CardContent className="p-4">
                 {!draftId ? (
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-primary" />
-                            <Label className="text-lg font-semibold">Choose a Draft</Label>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <Label className="text-sm font-medium">Choose a Draft</Label>
                         </div>
                         <div className="relative max-w-md">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -202,16 +202,16 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                         </div>
                         {isLoadingDrafts ? (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {Array.from({ length: 9 }).map((_, index) => <Skeleton key={index} className="h-24" />)}
+                                {Array.from({ length: 9 }).map((_, index) => <Skeleton key={index} className="h-20" />)}
                             </div>
                         ) : filteredDrafts.length > 0 ? (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     {paginatedDrafts.map(draft => (
-                                        <Card key={draft.id} className="cursor-pointer transition-all hover:shadow-md hover:bg-muted/50" onClick={() => handleDraftSelect(draft.id)}>
-                                            <CardContent className="p-4">
-                                                <div className="space-y-2">
-                                                    <h3 className="font-semibold text-sm leading-tight line-clamp-2">{draft.title || `Draft #${draft.id}`}</h3>
+                                        <Card key={draft.id} className="cursor-pointer transition-colors hover:bg-muted/50" onClick={() => handleDraftSelect(draft.id)}>
+                                            <CardContent className="p-3">
+                                                <div className="space-y-1.5">
+                                                    <h3 className="font-medium text-sm leading-tight line-clamp-2">{draft.title || `Draft #${draft.id}`}</h3>
                                                     <p className="text-xs text-muted-foreground line-clamp-2">{draft.goal || "No goal specified"}</p>
                                                 </div>
                                             </CardContent>
@@ -227,40 +227,40 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                                 )}
                             </>
                         ) : (
-                            <div className="text-center py-8 text-muted-foreground"><FileText className="h-12 w-12 mx-auto mb-4 opacity-50" /><p className="text-lg font-medium mb-2">No drafts found</p><p className="text-sm">{searchQuery ? "Try adjusting your search terms" : "Create your first draft to get started"}</p></div>
+                            <div className="text-center py-6 text-muted-foreground"><FileText className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm font-medium mb-1">No drafts found</p><p className="text-xs">{searchQuery ? "Try adjusting your search terms" : "Create your first draft to get started"}</p></div>
                         )}
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                            <Label className="text-lg font-semibold flex items-center gap-2">
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <Label className="text-sm font-medium flex items-center gap-2">
                                 Preview for <Badge variant="outline" className="capitalize">{accountPlatform}</Badge>
                             </Label>
                             <div className="w-full max-w-md mx-auto">
                                 {isLoadingVariants && (
-                                    <div className="space-y-4">
-                                        <Skeleton className="h-8 w-1/3" />
+                                    <div className="space-y-3">
+                                        <Skeleton className="h-6 w-1/3" />
                                         <Skeleton className="w-full aspect-square" />
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-4 w-2/3" />
+                                        <Skeleton className="h-3 w-full" />
+                                        <Skeleton className="h-3 w-2/3" />
                                     </div>
                                 )}
                                 {!isLoadingVariants && selectedVariant && <DraftVariantPreview variant={selectedVariant} />}
                                 {!isLoadingVariants && !selectedVariant && (
-                                    <Card className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 border-dashed">
-                                        <AlertTriangle className="h-10 w-10 text-destructive mb-4" />
-                                        <CardTitle className="text-lg text-destructive">No Compatible Variant</CardTitle>
-                                        <CardDescription className="mt-2">
+                                    <Card className="flex flex-col items-center justify-center p-6 text-center bg-muted/30 border-dashed">
+                                        <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+                                        <CardTitle className="text-sm text-destructive">No Compatible Variant</CardTitle>
+                                        <CardDescription className="text-xs mt-1">
                                             This draft does not have a variant for the selected persona's platform ({accountPlatform}).
                                         </CardDescription>
                                     </Card>
                                 )}
                             </div>
                         </div>
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="schedule-time" className="text-lg font-semibold flex items-center gap-2"><Calendar className="h-5 w-5 text-primary" /> Schedule Time</Label>
-                                <Input id="schedule-time" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} disabled={!personaAccountId || !selectedVariant} className="text-base" />
+                                <Label htmlFor="schedule-time" className="text-sm font-medium flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> Schedule Time</Label>
+                                <Input id="schedule-time" type="datetime-local" value={time} onChange={e => setTime(e.target.value)} disabled={!personaAccountId || !selectedVariant} className="text-sm" />
                                 <div className="flex gap-2 pt-1">
                                     <Button
                                         type="button"
@@ -316,8 +316,8 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
                                 <p className="text-xs text-muted-foreground">Timezone: {timezoneName}</p>
                             </div>
                             {!personaAccountId && (
-                                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
-                                    <p className="text-sm text-destructive font-medium">A persona must be active to schedule a post.</p>
+                                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+                                    <p className="text-xs text-destructive font-medium">A persona must be active to schedule a post.</p>
                                 </div>
                             )}
                         </div>
@@ -326,10 +326,10 @@ export function CreatePostScheduleForm({ onCreated }: { onCreated: (scheduleIds:
             </CardContent>
 
             {draftId && (
-                <CardFooter className="p-6 border-t bg-muted/20 flex justify-end">
-                    <Button onClick={handleSchedule} disabled={isPending || !time || !selectedVariant || !personaAccountId} className="min-w-40">
+                <CardFooter className="p-4 border-t bg-muted/20 flex justify-end">
+                    <Button onClick={handleSchedule} disabled={isPending || !time || !selectedVariant || !personaAccountId} className="min-w-32">
                         {isPending ? "Scheduling..." : "Schedule Post"}
-                        <Clock className="h-4 w-4 ml-2" />
+                        <Clock className="h-3 w-3 ml-1" />
                     </Button>
                 </CardFooter>
             )}

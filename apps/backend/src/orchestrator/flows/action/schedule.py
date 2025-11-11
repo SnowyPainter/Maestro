@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from apps.backend.src.modules.scheduler.models import Schedule
-from apps.backend.src.modules.scheduler.schemas import MailBatchRequest, SyncMetricsBatchRequest
+from apps.backend.src.modules.scheduler.schemas import SyncMetricsBatchRequest
 from apps.backend.src.modules.common.enums import ScheduleStatus
 from apps.backend.src.modules.scheduler.registry import ScheduleTemplateKey, TemplateVisibility, compile_schedule_template
 from apps.backend.src.modules.scheduler.schemas import (
@@ -330,9 +330,7 @@ def _compile_request_for_batch(payload: ScheduleBatchRequest) -> ScheduleCompile
         raise HTTPException(status_code=400, detail="unsupported schedule template") from exc
 
     compile_kwargs: Dict[str, Any] = {"template": template_key}
-    if template_key == ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
-        compile_kwargs["mail"] = payload.payload_template
-    elif template_key == ScheduleTemplateKey.POST_PUBLISH:
+    if template_key == ScheduleTemplateKey.POST_PUBLISH:
         compile_kwargs["post_publish"] = payload.payload_template
     elif template_key == ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
         compile_kwargs["sync_metrics"] = payload.payload_template
@@ -565,68 +563,6 @@ async def _cancel_post_publish_schedule(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     await remove_publication_schedule(db, publication=publication)
     return True
-
-
-@operator(
-    key="action.schedule.create_trends_mail_schedule",
-    title="Create Trends Mail Schedule",
-    side_effect="write",
-)
-async def op_create_trends_mail_schedule(
-    payload: MailBatchRequest,
-    ctx: TaskContext,
-) -> ScheduleCreateResult:
-    db: AsyncSession = ctx.require(AsyncSession)
-    user: Optional[User] = ctx.optional(User)
-
-    try:
-        template_key = ScheduleTemplateKey(payload.template)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail="unsupported schedule template") from exc
-
-    if template_key != ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
-        raise HTTPException(status_code=400, detail="mail schedule template expected")
-
-    plan_result = await op_plan_schedule_batch(payload, ctx)
-    dag_spec = plan_result.dag_spec
-    planned_instances = plan_result.instances
-
-    base_meta = dict(dag_spec.meta or {})
-    if payload.title:
-        base_meta.setdefault("title", payload.title)
-        base_meta["plan_title"] = payload.title
-
-    base_context: Dict[str, Any] = {
-        "template": ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY.value,
-        "plan_timezone": payload.timezone,
-    }
-    if payload.title:
-        base_context["plan_title"] = payload.title
-    if user is not None:
-        base_context["user_id"] = user.id
-
-    persona_account_id = payload.payload_template.persona_account_id
-    queue = payload.queue or "coworker"
-
-    schedule_ids: List[int] = []
-    for due_at_utc, meta_delta, context_delta in _iter_plan_instances(planned_instances):
-        spec_instance = dag_spec.model_copy(update={"meta": _merge_meta(base_meta, meta_delta)})
-        dag_json = spec_instance.model_dump(by_alias=True, exclude_none=True)
-        schedule_ids.extend(
-            await _persist_schedules(
-                db,
-                persona_account_id=persona_account_id,
-                dag_spec=dag_json,
-                payload=spec_instance.payload,
-                due_times=[(due_at_utc, context_delta)],
-                queue=queue,
-                base_context=base_context,
-            )
-        )
-
-    await db.commit()
-    return ScheduleCreateResult(schedule_ids=schedule_ids)
-
 
 @operator(
     key="action.schedule.create_sync_metrics_schedule",
@@ -1059,28 +995,6 @@ def _flow_create_draft_post_schedule(builder: FlowBuilder):
 def _flow_cancel_draft_post_schedule(builder: FlowBuilder):
     task = builder.task("cancel_draft_post_schedule", "action.schedule.cancel_draft_post_schedule")
     builder.expect_terminal(task)
-
-# ---------------------------------------------------------------------------
-# Mailing schedule flows
-# ---------------------------------------------------------------------------
-
-@FLOWS.flow(
-    key="action.schedule.create_trends_mail_schedule",
-    title="Create Trends similar to persona Mail Schedule",
-    description="Create or update a mail publication schedule for the given draft variant",
-    input_model=MailBatchRequest,
-    output_model=ScheduleCreateResult,
-    method="post",
-    path="/actions/schedules/mail/create",
-    tags=("action", "schedule", "cancel")
-)
-def _flow_create_trends_mail_schedule(builder: FlowBuilder):
-    task = builder.task(
-        "create_trends_mail_schedule",
-        "action.schedule.create_trends_mail_schedule",
-    )
-    builder.expect_terminal(task)
-
 
 @FLOWS.flow(
     key="action.schedule.create_sync_metrics_schedule",

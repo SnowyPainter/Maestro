@@ -1769,26 +1769,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/actions/schedules/mail/create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Trends similar to persona Mail Schedule
-         * @description Create or update a mail publication schedule for the given draft variant
-         */
-        post: operations["action_schedule_create_trends_mail_schedule_api_orchestrator_actions_schedules_mail_create_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/actions/schedules/sync_metrics/create": {
         parameters: {
             query?: never;
@@ -3679,33 +3659,6 @@ export interface components {
             /** Password */
             password: string;
         };
-        /** MailBatchRequest */
-        MailBatchRequest: {
-            /** Title */
-            title?: string | null;
-            /**
-             * Timezone
-             * @default UTC
-             */
-            timezone: string;
-            date_range: components["schemas"]["DateRange"];
-            /** Weekmask */
-            weekmask?: string[];
-            /** Exdates */
-            exdates?: string[];
-            /** Segments */
-            segments: components["schemas"]["ScheduleSegment"][];
-            distribution?: components["schemas"]["ScheduleDistribution"];
-            constraints?: components["schemas"]["ScheduleConstraints"];
-            /** Queue */
-            queue?: string | null;
-            /**
-             * Template
-             * @constant
-             */
-            template: "mail.trends_with_reply";
-            payload_template: components["schemas"]["MailScheduleTemplateParams"];
-        };
         /** MailScheduleBlackout */
         MailScheduleBlackout: {
             /**
@@ -3718,35 +3671,6 @@ export interface components {
              * Format: time
              */
             end: string;
-        };
-        /**
-         * MailScheduleTemplateParams
-         * @description Parameters for the mail trends + reply template.
-         */
-        MailScheduleTemplateParams: {
-            /** Persona Id */
-            persona_id: number;
-            /** Persona Account Id */
-            persona_account_id: number;
-            /** Email To */
-            email_to: string;
-            /**
-             * Country
-             * @default US
-             */
-            country: string;
-            /**
-             * Limit
-             * @default 20
-             */
-            limit: number;
-            /**
-             * Wait Timeout S
-             * @default 604800
-             */
-            wait_timeout_s: number;
-            /** Pipeline Id */
-            pipeline_id?: string | null;
         };
         /** MessageOut */
         MessageOut: {
@@ -4918,7 +4842,6 @@ export interface components {
         /** ScheduleCompileRequest */
         ScheduleCompileRequest: {
             template: components["schemas"]["ScheduleTemplateKey"];
-            mail?: components["schemas"]["MailScheduleTemplateParams"] | null;
             post_publish?: components["schemas"]["PostPublishTemplateParams"] | null;
             sync_metrics?: components["schemas"]["SyncMetricsTemplateParams"] | null;
             abtest_schedule?: components["schemas"]["ABTestScheduleTemplateParams"] | null;
@@ -5288,7 +5211,7 @@ export interface components {
          * ScheduleTemplateKey
          * @enum {string}
          */
-        ScheduleTemplateKey: "mail.trends_with_reply" | "post.publish" | "insights.sync_metrics" | "abtest.schedule_ab_test" | "abtest.complete_ab_test";
+        ScheduleTemplateKey: "post.publish" | "insights.sync_metrics" | "abtest.schedule_ab_test" | "abtest.complete_ab_test";
         /** ScheduleTemplateListResult */
         ScheduleTemplateListResult: {
             /** Templates */
@@ -8672,39 +8595,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    action_schedule_create_trends_mail_schedule_api_orchestrator_actions_schedules_mail_create_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MailBatchRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScheduleCreateResult"];
                 };
             };
             /** @description Validation Error */

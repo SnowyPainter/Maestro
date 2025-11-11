@@ -113,7 +113,6 @@ slots:
   description: Filter by body
   value_type: string
   flows:
-  - internal.event.mail.ingest_draft_mail
   - reactive.create_message_template
   - reactive.update_message_template
 - name: campaign_id
@@ -156,7 +155,6 @@ slots:
   value_type: string
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: content_kind
   label: Content Kind
   description: Filter by content kind
@@ -176,7 +174,6 @@ slots:
   value_type: string
   flows:
   - bff.trends.list_trends
-  - internal.mail.compose_trends_email
 - name: dag_spec
   label: Dag Spec
   description: Filter by dag spec
@@ -196,7 +193,6 @@ slots:
   value_type: string
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: defs
   label: Defs
   description: Filter by defs
@@ -218,7 +214,6 @@ slots:
   value_type: string
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: draft_id
   label: Draft Id
   description: Target a specific draft id
@@ -236,12 +231,6 @@ slots:
   value_type: string_list
   flows:
   - bff.rag.expand
-- name: email_to
-  label: Email To
-  description: Filter by email to
-  value_type: string
-  flows:
-  - internal.mail.compose_trends_email
 - name: end
   label: End
   description: Filter by end
@@ -256,12 +245,6 @@ slots:
   flows:
   - campaigns.create_campaign
   - campaigns.update_campaign
-- name: envelope
-  label: Envelope
-  description: Filter by envelope
-  value_type: string
-  flows:
-  - internal.event.mail.ingest_draft_mail
 - name: events
   label: Events
   description: Filter by events
@@ -278,7 +261,6 @@ slots:
   value_type: string_list
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: finished_at
   label: Finished At
   description: Filter by finished at
@@ -291,12 +273,6 @@ slots:
   value_type: boolean
   flows:
   - action.coworker.update_my_coworker
-- name: from_email
-  label: From Email
-  description: Filter by from email
-  value_type: string
-  flows:
-  - internal.event.mail.ingest_draft_mail
 - name: goal
   label: Goal
   description: Filter by goal
@@ -436,7 +412,6 @@ slots:
   - bff.timeline.trends
   - bff.trends.list_trends
   - internal.insights.list_comments
-  - internal.mail.compose_trends_email
 - name: link
   label: Link
   description: Filter by link
@@ -449,12 +424,6 @@ slots:
   value_type: integer
   flows:
   - reactive.unlink_rule_publication
-- name: mail
-  label: Mail
-  description: Filter by mail
-  value_type: string
-  flows:
-  - action.schedule.compile_template
 - name: mapping_version
   label: Mapping Version
   description: Filter by mapping version
@@ -543,7 +512,6 @@ slots:
   value_type: string
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: persona
   label: Persona
   description: Filter by persona
@@ -576,7 +544,6 @@ slots:
   - internal.drafts.publish
   - internal.insights.list_comments
   - internal.insights.sync_metrics
-  - internal.mail.compose_trends_email
   - reactive.create_message_template
   - reactive.update_message_template
 - name: persona_account_ids
@@ -609,14 +576,6 @@ slots:
   - bff.playbook.list_playbooks
   - bff.playbook.search_playbooks
   - bff.rag.search
-  - internal.mail.compose_trends_email
-- name: pipeline_id
-  label: Pipeline Id
-  description: Target a specific pipeline id
-  value_type: integer
-  flows:
-  - internal.mail.await_reply
-  - internal.mail.compose_trends_email
 - name: platform
   label: Platform
   description: Filter by platform slug
@@ -701,7 +660,6 @@ slots:
   flows:
   - action.schedule.create_from_raw_dag
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
   - bff.schedule.list_schedules
 - name: raw
   label: Raw
@@ -709,12 +667,6 @@ slots:
   value_type: string
   flows:
   - insights.ingest
-- name: reason
-  label: Reason
-  description: Filter by reason
-  value_type: string
-  flows:
-  - internal.mail.await_reply
 - name: remove_persona_account_ids
   label: Remove Persona Account Ids
   description: Filter by remove persona account ids
@@ -785,19 +737,6 @@ slots:
   value_type: string_list
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
-- name: sender
-  label: Sender
-  description: Filter by sender
-  value_type: string
-  flows:
-  - internal.event.mail.ingest_draft_mail
-- name: should_wait
-  label: Should Wait
-  description: Filter by should wait
-  value_type: boolean
-  flows:
-  - internal.mail.await_reply
 - name: since
   label: Since
   description: Set a since date
@@ -865,13 +804,6 @@ slots:
   value_type: string
   flows:
   - bff.schedule.get_schedule_stream
-- name: subject
-  label: Subject
-  description: Filter by subject
-  value_type: string
-  flows:
-  - internal.event.mail.ingest_draft_mail
-  - internal.mail.compose_trends_email
 - name: sync_metrics
   label: Sync Metrics
   description: Filter by sync metrics
@@ -899,7 +831,6 @@ slots:
   description: Filter by template
   value_type: enum
   choices:
-  - mail.trends_with_reply
   - post.publish
   - insights.sync_metrics
   - abtest.schedule_ab_test
@@ -907,7 +838,6 @@ slots:
   flows:
   - action.schedule.compile_template
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: template_id
   label: Template Id
   description: Target a specific template id
@@ -928,38 +858,18 @@ slots:
   - bff.reactive.list_templates
   - reactive.create_message_template
   - reactive.update_message_template
-- name: text
-  label: Text
-  description: Filter by text
-  value_type: string
-  flows:
-  - internal.event.mail.ingest_draft_mail
-- name: text_plain
-  label: Text Plain
-  description: Filter by text plain
-  value_type: string
-  flows:
-  - internal.event.mail.ingest_draft_mail
-- name: timeout_s
-  label: Timeout S
-  description: Filter by timeout s
-  value_type: string
-  flows:
-  - internal.mail.await_reply
 - name: timezone
   label: Timezone
   description: Filter by timezone
   value_type: string
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: title
   label: Title
   description: Filter by title
   value_type: string
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
   - drafts.create
   - drafts.update_ir
   - reactive.create_message_template
@@ -1035,7 +945,6 @@ slots:
   value_type: string_list
   flows:
   - action.schedule.create_sync_metrics_schedule
-  - action.schedule.create_trends_mail_schedule
 - name: window_end
   label: Window End
   description: Filter by window end

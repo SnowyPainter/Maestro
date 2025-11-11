@@ -54,18 +54,6 @@ class ScheduleDagSpec(BaseModel):
     meta: Dict[str, Any] = Field(default_factory=dict)
 
 
-class MailScheduleTemplateParams(BaseModel):
-    """Parameters for the mail trends + reply template."""
-
-    persona_id: int
-    persona_account_id: int
-    email_to: str
-    country: str = "US"
-    limit: int = 20
-    wait_timeout_s: int = 7 * 24 * 3600
-    pipeline_id: Optional[str] = None
-
-
 class DateRange(BaseModel):
     start: date
     end: date
@@ -185,7 +173,6 @@ class ABTestCompleteTemplateParams(BaseModel):
 
 class ScheduleCompileRequest(BaseModel):
     template: ScheduleTemplateKey
-    mail: Optional[MailScheduleTemplateParams] = None
     post_publish: Optional[PostPublishTemplateParams] = None
     sync_metrics: Optional[SyncMetricsTemplateParams] = None
     abtest_schedule: Optional[ABTestScheduleTemplateParams] = None
@@ -193,10 +180,7 @@ class ScheduleCompileRequest(BaseModel):
 
     @model_validator(mode="after")
     def _ensure_params(self) -> "ScheduleCompileRequest":
-        if self.template == ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY:
-            if self.mail is None:
-                raise ValueError("mail parameters are required for the selected template")
-        elif self.template == ScheduleTemplateKey.POST_PUBLISH:
+        if self.template == ScheduleTemplateKey.POST_PUBLISH:
             if self.post_publish is None:
                 raise ValueError("post_publish parameters are required for the selected template")
         elif self.template == ScheduleTemplateKey.INSIGHTS_SYNC_METRICS:
@@ -209,11 +193,6 @@ class ScheduleCompileRequest(BaseModel):
             if self.abtest_complete is None:
                 raise ValueError("abtest_complete parameters are required for the selected template")
         return self
-
-    def require_mail_params(self) -> MailScheduleTemplateParams:
-        if self.mail is None:
-            raise ValueError("mail parameters not provided")
-        return self.mail
 
     def require_post_publish_params(self) -> PostPublishTemplateParams:
         if self.post_publish is None:
@@ -291,11 +270,6 @@ class BatchCommon(BaseModel):
         return self
 
 
-class MailBatchRequest(BatchCommon):
-    template: Literal[ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY.value]
-    payload_template: MailScheduleTemplateParams
-
-
 class PostPublishBatchRequest(BatchCommon):
     template: Literal[ScheduleTemplateKey.POST_PUBLISH.value]
     payload_template: PostPublishTemplateParams
@@ -307,11 +281,9 @@ class SyncMetricsBatchRequest(BatchCommon):
 
 
 ScheduleBatchRequest = Annotated[
-    Union[MailBatchRequest, PostPublishBatchRequest, SyncMetricsBatchRequest],
+    Union[PostPublishBatchRequest, SyncMetricsBatchRequest],
     Field(discriminator="template"),
 ]
-
-MailScheduleBatchRequest = MailBatchRequest
 
 class RawDagScheduleInstance(BaseModel):
     dag_spec: ScheduleDagSpec = Field(..., description="Full DAG specification to persist")
@@ -466,7 +438,7 @@ __all__ = [
     "ScheduleDagGraph",
     "ScheduleDagSpec",
     "ScheduleTemplateKey",
-    "MailScheduleTemplateParams",
+    "SlackScheduleTemplateParams",
     "DateRange",
     "MailScheduleBlackout",
     "ScheduleConstraints",
@@ -474,7 +446,7 @@ __all__ = [
     "ScheduleDistribution",
     "ScheduleBatchRequest",
     "SchedulePlanInstance",
-    "MailScheduleBatchRequest",
+    "SlackScheduleBatchRequest",
     "PostPublishTemplateParams",
     "SyncMetricsTemplateParams",
     "ScheduleCompileRequest",

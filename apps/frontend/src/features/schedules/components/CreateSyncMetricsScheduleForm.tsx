@@ -37,8 +37,8 @@ function ContextPersonaDisplay() {
     const { personaAccountId } = usePersonaContextStore();
     const { data: allAccounts } = useBffAccountsListRichPersonaAccountsForUserApiBffAccountsPersonaAccountsRichGet();
     const account = allAccounts?.find(acc => acc.id === personaAccountId);
-    if (!account) return <div className="flex items-center gap-2 rounded-lg border border-dashed p-3 text-destructive"><AlertTriangle className="h-6 w-6" /><div><p className="font-semibold">No Active Persona</p><p className="text-xs">Please select a persona account first.</p></div></div>;
-    return <div className="flex items-center gap-3 rounded-lg border p-3 bg-muted/40"><Avatar className="h-9 w-9"><AvatarImage src={account.persona_avatar_url || undefined} /><AvatarFallback>{account.persona_name?.charAt(0)}</AvatarFallback></Avatar><div><p className="font-semibold">{account.persona_name}</p><p className="text-sm text-muted-foreground">{account.account_handle}</p></div></div>;
+    if (!account) return <div className="flex items-center gap-2 rounded-lg border border-dashed p-2 text-destructive"><AlertTriangle className="h-4 w-4" /><div><p className="font-medium text-sm">No Active Persona</p><p className="text-xs">Please select a persona account first.</p></div></div>;
+    return <div className="flex items-center gap-2 rounded-lg border p-2 bg-muted/40"><Avatar className="h-7 w-7"><AvatarImage src={account.persona_avatar_url || undefined} /><AvatarFallback>{account.persona_name?.charAt(0)}</AvatarFallback></Avatar><div><p className="font-medium text-sm">{account.persona_name}</p><p className="text-xs text-muted-foreground">{account.account_handle}</p></div></div>;
 }
 
 function ScheduleSummary({ data }: { data: Partial<SyncMetricsBatchRequest> }) {
@@ -49,7 +49,7 @@ function ScheduleSummary({ data }: { data: Partial<SyncMetricsBatchRequest> }) {
         const days = weekmask?.join(', ') || 'selected days';
         return `Will sync ~${avgCount} time(s) per day on ${days}, from ${date_range.start} to ${date_range.end}.`;
     }, [data]);
-    return <div className="text-sm text-muted-foreground flex items-center gap-2 p-2 rounded-lg bg-muted/50"><Info className="h-4 w-4" /><span>{summary}</span></div>;
+    return <div className="text-xs text-muted-foreground flex items-center gap-2 p-2 rounded-lg bg-muted/50"><Info className="h-3 w-3" /><span>{summary}</span></div>;
 }
 
 export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (scheduleIds: number[]) => void }) {
@@ -192,12 +192,12 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
 
     return (
         <TooltipProvider>
-            <Card className="rounded-2xl border bg-card text-card-foreground shadow-md w-full max-w-4xl mx-auto">
-                <CardHeader className="pb-4">
+            <Card className="rounded-xl border bg-card text-card-foreground w-full max-w-4xl mx-auto">
+                <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle className="text-2xl">Sync Account Metrics</CardTitle>
-                            <CardDescription className="text-base mt-1">
+                            <CardTitle className="text-lg">Sync Account Metrics</CardTitle>
+                            <CardDescription className="text-sm mt-1">
                                 Set up automated metrics synchronization
                             </CardDescription>
                         </div>
@@ -207,11 +207,11 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
                     </div>
                     <Progress value={progressValue} className="mt-4" />
                 </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-4">
                 {/* Auto-selected Persona Info */}
-                <div className="mb-6 p-4 bg-muted/20 rounded-lg border">
-                    <div className="flex items-center gap-3 mb-2">
-                        <User className="h-5 w-5 text-primary" />
+                <div className="mb-4 p-3 bg-muted/20 rounded-lg border">
+                    <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-primary" />
                         <Label className="text-sm font-medium">Active Persona</Label>
                     </div>
                     <ContextPersonaDisplay />
@@ -219,16 +219,16 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
 
                 {currentStep === 2 && (
                     /* Step 2: Platform & Publication Selection */
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
-                                <Target className="h-4 w-4" />
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary border-2 border-primary text-primary-foreground text-xs font-semibold">
+                                <Target className="h-3 w-3" />
                             </div>
-                            <Label className="text-lg font-semibold">Choose Target</Label>
+                            <Label className="text-sm font-medium">Choose Target</Label>
                         </div>
 
-                        <div className="grid gap-6 max-w-2xl">
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-4 max-w-2xl">
+                            <div className="grid grid-cols-2 gap-3">
                                 <div className="grid gap-2">
                                     <Label className="text-sm font-medium">Platform</Label>
                                     <Select value={formData.payload_template?.platform || ''} onValueChange={handlePlatformChange}>
@@ -354,12 +354,12 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
 
                 {currentStep === 3 && (
                     /* Step 2: Scheduling */
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary border-2 border-primary text-primary-foreground text-sm font-semibold">
-                                <Calendar className="h-4 w-4" />
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary border-2 border-primary text-primary-foreground text-xs font-semibold">
+                                <Calendar className="h-3 w-3" />
                             </div>
-                            <Label className="text-lg font-semibold">Schedule Settings</Label>
+                            <Label className="text-sm font-medium">Schedule Settings</Label>
                         </div>
 
                         <div className="max-w-2xl">
@@ -368,7 +368,7 @@ export function CreateSyncMetricsScheduleForm({ onCreated }: { onCreated: (sched
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="p-6 border-t bg-muted/20 flex justify-between">
+            <CardFooter className="p-4 border-t bg-muted/20 flex justify-between">
                 <div className="flex gap-2">
                     {currentStep > 1 && (
                         <Button

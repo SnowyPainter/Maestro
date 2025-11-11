@@ -3197,21 +3197,12 @@ export const draftsDeleteApiOrchestratorDraftsDraftIdDeleteResponse = zod.object
  * Generate a schedule DAG specification from higher level template parameters
  * @summary Compile Schedule DAG
  */
-export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailCountryDefault = "US";export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailLimitDefault = 20;export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailWaitTimeoutSDefault = 604800;export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyAbtestScheduleVariantALabelMax = 20;
+export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyAbtestScheduleVariantALabelMax = 20;
 export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyAbtestScheduleVariantBLabelMax = 20;
 
 
 export const actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBody = zod.object({
-  "template": zod.enum(['mail.trends_with_reply', 'post.publish', 'insights.sync_metrics', 'abtest.schedule_ab_test', 'abtest.complete_ab_test']),
-  "mail": zod.union([zod.object({
-  "persona_id": zod.number(),
-  "persona_account_id": zod.number(),
-  "email_to": zod.string(),
-  "country": zod.string().default(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailCountryDefault),
-  "limit": zod.number().default(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailLimitDefault),
-  "wait_timeout_s": zod.number().default(actionScheduleCompileTemplateApiOrchestratorActionsSchedulesCompilePostBodyMailWaitTimeoutSDefault),
-  "pipeline_id": zod.string().nullish()
-}).describe('Parameters for the mail trends + reply template.'),zod.null()]).optional(),
+  "template": zod.enum(['post.publish', 'insights.sync_metrics', 'abtest.schedule_ab_test', 'abtest.complete_ab_test']),
   "post_publish": zod.union([zod.object({
   "post_publication_id": zod.number(),
   "persona_account_id": zod.number(),
@@ -3335,63 +3326,6 @@ export const actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedule
 
 export const actionScheduleCancelDraftPostScheduleApiOrchestratorActionsSchedulesCancelDraftPostPostResponse = zod.object({
   "message": zod.string()
-})
-
-
-/**
- * Create or update a mail publication schedule for the given draft variant
- * @summary Create Trends similar to persona Mail Schedule
- */
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefault = "UTC";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefault = 1;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMin = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefault = "even";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesDefault = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMin = 0;
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefault = 1;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateCountryDefault = "US";export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateLimitDefault = 20;export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateWaitTimeoutSDefault = 604800;
-
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBody = zod.object({
-  "title": zod.string().nullish(),
-  "timezone": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyTimezoneDefault),
-  "date_range": zod.object({
-  "start": zod.iso.date(),
-  "end": zod.iso.date()
-}),
-  "weekmask": zod.array(zod.string()).optional(),
-  "exdates": zod.array(zod.iso.date()).optional(),
-  "segments": zod.array(zod.object({
-  "id": zod.string(),
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({}),
-  "count_per_day": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayMin).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodySegmentsItemCountPerDayDefault)
-})),
-  "distribution": zod.object({
-  "mode": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyDistributionModeDefault),
-  "fixed_times": zod.record(zod.string(), zod.array(zod.iso.time({}))).optional(),
-  "weights": zod.record(zod.string(), zod.number()).optional()
-}).optional(),
-  "constraints": zod.object({
-  "min_gap_minutes": zod.number().min(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMinGapMinutesMin).optional(),
-  "max_per_day": zod.union([zod.number(),zod.null()]).optional(),
-  "max_parallel": zod.union([zod.number().min(1),zod.null()]).default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyConstraintsMaxParallelDefault),
-  "blackouts": zod.array(zod.object({
-  "start": zod.iso.time({}),
-  "end": zod.iso.time({})
-})).optional()
-}).optional(),
-  "queue": zod.string().nullish(),
-  "template": zod.literal("mail.trends_with_reply"),
-  "payload_template": zod.object({
-  "persona_id": zod.number(),
-  "persona_account_id": zod.number(),
-  "email_to": zod.string(),
-  "country": zod.string().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateCountryDefault),
-  "limit": zod.number().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateLimitDefault),
-  "wait_timeout_s": zod.number().default(actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostBodyPayloadTemplateWaitTimeoutSDefault),
-  "pipeline_id": zod.string().nullish()
-}).describe('Parameters for the mail trends + reply template.')
-})
-
-export const actionScheduleCreateTrendsMailScheduleApiOrchestratorActionsSchedulesMailCreatePostResponse = zod.object({
-  "schedule_ids": zod.array(zod.number())
 })
 
 

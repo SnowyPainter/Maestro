@@ -76,12 +76,6 @@ beat_schedule["refresh_trends_cache"] = {
     "options": {"queue": "synchro"},
 }
 
-beat_schedule["sniff_mailbox"] = {
-    "task": "apps.backend.src.workers.Sniffer.tasks.sniff_mailbox",
-    "schedule": timedelta(seconds=60),
-    "options": {"queue": "sniffer"},
-}
-
 beat_schedule["ensure_coworker_polls"] = {
     "task": "apps.backend.src.workers.coworker.ensure_coworker_polls",
     "schedule": timedelta(seconds=45),

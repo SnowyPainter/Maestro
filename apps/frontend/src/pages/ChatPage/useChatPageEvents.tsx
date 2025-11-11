@@ -7,7 +7,6 @@ import {
   DraftVariantRender,
   CoworkerLeaseState,
   ChatCard,
-  ReactionMessageTemplateOut,
   bffRagExpandApiBffRagNodesNodeIdNeighborsGet,
   RagRelatedEdge,
 } from "@/lib/api/generated";
@@ -38,7 +37,6 @@ import { CoworkerToolCard } from "@/features/coworkers/components/CoworkerToolCa
 import { ScheduleToolCard } from "@/features/schedules/components/ScheduleToolCard";
 import { CreateRawScheduleForm } from "@/features/schedules/components/CreateRawScheduleForm";
 import { CreatePostScheduleForm } from "@/features/schedules/components/CreatePostScheduleForm";
-import { CreateTrendsMailScheduleForm } from "@/features/schedules/components/CreateTrendsMailScheduleForm";
 import { CoWorkerDetail } from "@/entities/coworkers/components/CoWorkerDetail";
 import { EditCoworkerForm } from "@/features/coworkers/components/EditCoworkerForm";
 import { CancelScheduleForm } from "@/features/schedules/components/CancelScheduleForm";
@@ -446,20 +444,6 @@ export function useChatPageEvents() {
       type: 'card',
       content: (
         <CreatePostScheduleForm
-          onCreated={(scheduleIds) => handleScheduleCreateSuccess(scheduleIds[0], messageId)}
-        />
-      ),
-    });
-  }, [appendMessage, getNextMessageId, handleScheduleCreateSuccess, removeMessagesByComponent]);
-
-  const handleNewMailSchedule = useCallback(() => {
-    removeMessagesByComponent(ScheduleToolCard);
-    const messageId = getNextMessageId();
-    appendMessage({
-      id: messageId,
-      type: 'card',
-      content: (
-        <CreateTrendsMailScheduleForm
           onCreated={(scheduleIds) => handleScheduleCreateSuccess(scheduleIds[0], messageId)}
         />
       ),
@@ -917,9 +901,7 @@ export function useChatPageEvents() {
           addCardMessage(() => (
             <ScheduleToolCard
               onScheduleAction={(template) => {
-                if (template.key.startsWith("mail.")) {
-                  handleNewMailSchedule();
-                } else if (template.key.startsWith("post.")) {
+                if (template.key.startsWith("post.")) {
                   handleNewPostSchedule();
                 } else if (template.key.startsWith("insights.")) {
                   handleNewSyncMetricsSchedule();
@@ -997,7 +979,6 @@ export function useChatPageEvents() {
       handleSelectPersonaForLinks,
       removeMessagesByComponent,
       handleNewPostSchedule,
-      handleNewMailSchedule,
       handleNewRawSchedule,
       handleCancelSchedule,
       handleNewABTest,

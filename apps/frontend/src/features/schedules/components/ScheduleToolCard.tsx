@@ -55,11 +55,11 @@ function ScheduleTypeCard({ template }: ScheduleTypeCardProps) {
         <button
             onClick={template.action}
             disabled={template.disabled}
-            className="group p-4 rounded-2xl bg-card text-left transition-all duration-200 shadow-md hover:shadow-lg flex flex-col items-start gap-3 w-full h-full disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md border border-transparent hover:border-primary"
+            className="group p-3 rounded-lg bg-card text-left transition-colors duration-200 flex flex-col items-start gap-2 w-full h-full disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-primary"
         >
             <div className="flex items-start justify-between w-full">
-                <div className="p-2 bg-muted rounded-xl">
-                    <div className="transition-transform duration-200 group-hover:scale-110">
+                <div className="p-1.5 bg-muted rounded-md">
+                    <div className="transition-transform duration-200 group-hover:scale-105">
                         {template.icon}
                     </div>
                 </div>
@@ -70,8 +70,8 @@ function ScheduleTypeCard({ template }: ScheduleTypeCardProps) {
                 )}
             </div>
             <div className="flex-1 w-full">
-                <h4 className="font-semibold text-base">{template.title}</h4>
-                <p className="text-sm text-muted-foreground">{template.description}</p>
+                <h4 className="font-medium text-sm">{template.title}</h4>
+                <p className="text-xs text-muted-foreground">{template.description}</p>
             </div>
         </button>
     );
@@ -154,58 +154,58 @@ export function ScheduleToolCard({
   }, [allTemplates, searchQuery]);
 
   return (
-    <Card className="rounded-2xl border bg-card text-card-foreground shadow-md">
-      <CardHeader className="p-6 pb-4">
-        <CardTitle className="flex items-center gap-3 text-xl">
-          <CalendarPlus className="h-6 w-6" />
+    <Card className="rounded-xl border bg-card text-card-foreground">
+      <CardHeader className="p-4 pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <CalendarPlus className="h-5 w-5" />
           Create a new Schedule
         </CardTitle>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-xs mt-1">
           Select a template to start, or create a raw schedule for advanced use.
         </p>
-        <div className="relative mt-4">
-          <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative mt-3">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search templates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-9 h-8 text-sm"
           />
         </div>
       </CardHeader>
 
-      <CardContent className="p-6 pt-2">
-          <ScrollArea className="h-[420px] -mx-2 px-2">
+      <CardContent className="p-4 pt-1">
+          <ScrollArea className="h-[380px] -mx-1 px-1">
             <div className="py-2">
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="p-4 rounded-2xl bg-card border flex flex-col gap-3">
+                    <div key={i} className="p-3 rounded-lg bg-card border flex flex-col gap-2">
                         <div className="flex items-start justify-between w-full">
-                            <Skeleton className="h-12 w-12 rounded-xl" />
-                            <Skeleton className="h-6 w-16 rounded-full" />
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                            <Skeleton className="h-5 w-12 rounded-full" />
                         </div>
-                        <div className="flex-1 w-full space-y-2">
-                            <Skeleton className="h-5 w-3/4" />
-                            <Skeleton className="h-4 w-full" />
+                        <div className="flex-1 w-full space-y-1.5">
+                            <Skeleton className="h-4 w-2/3" />
+                            <Skeleton className="h-3 w-full" />
                         </div>
                     </div>
                   ))}
                 </div>
               ) : isError ? (
-                <div className="text-center py-10 text-destructive bg-destructive/5 rounded-2xl">
-                  <AlertTriangle className="h-10 w-10 mx-auto mb-3 opacity-80" />
-                  <p className="font-semibold">Error Loading Templates</p>
-                  <p className="text-sm text-destructive/80">Could not fetch schedule templates. Please try again later.</p>
+                <div className="text-center py-8 text-destructive bg-destructive/5 rounded-xl">
+                  <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-80" />
+                  <p className="font-medium text-sm">Error Loading Templates</p>
+                  <p className="text-xs text-destructive/80 mt-1">Could not fetch schedule templates. Please try again later.</p>
                 </div>
               ) : filteredTemplates.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground bg-muted/50 rounded-2xl">
-                  <Search className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                  <p className="font-semibold">No Templates Found</p>
-                  <p className="text-sm">Your search for "{searchQuery}" did not match any templates.</p>
+                <div className="text-center py-8 text-muted-foreground bg-muted/50 rounded-xl">
+                  <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="font-medium text-sm">No Templates Found</p>
+                  <p className="text-xs mt-1">Your search for "{searchQuery}" did not match any templates.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {filteredTemplates.map((template) => (
                     <ScheduleTypeCard key={template.id} template={template} />
                   ))}

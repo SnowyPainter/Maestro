@@ -107,22 +107,23 @@ async def cmd_template(args: argparse.Namespace) -> None:
     )
     from apps.backend.src.modules.scheduler.schemas import (
         ScheduleCompileRequest,
-        MailScheduleTemplateParams,
+        SlackScheduleTemplateParams,
     )
 
     # Build compile request
-    mail_params = MailScheduleTemplateParams(
+    slack_params = SlackScheduleTemplateParams(
         persona_id=args.persona_id,
         persona_account_id=args.persona_account_id,
-        email_to=args.email_to,
+        slack_channel=args.slack_channel,
+        slack_user_id=args.slack_user_id,
         country=args.country,
         limit=args.limit,
         wait_timeout_s=args.wait_timeout_s,
         pipeline_id=args.pipeline_id,
     )
     request = ScheduleCompileRequest(
-        template=ScheduleTemplateKey.MAIL_TRENDS_WITH_REPLY,
-        mail=mail_params,
+        template=ScheduleTemplateKey.SLACK_TRENDS_WITH_REPLY,
+        slack=slack_params,
     )
     compiled = compile_schedule_template(request)
     dag_spec_model = compiled.dag_spec
@@ -180,11 +181,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Create schedules from template or raw dag spec")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    # Template: MAIL_TRENDS_WITH_REPLY (single or repeated)
-    t = sub.add_parser("template", help="Create schedule(s) from MAIL_TRENDS_WITH_REPLY template")
+    # Template: SLACK_TRENDS_WITH_REPLY (single or repeated)
+    t = sub.add_parser("template", help="Create schedule(s) from SLACK_TRENDS_WITH_REPLY template")
     t.add_argument("--persona-id", type=int, required=True)
     t.add_argument("--persona-account-id", type=int, required=True)
-    t.add_argument("--email-to", type=str, required=True)
+    t.add_argument("--slack-channel", type=str, required=True, help="Channel ID or DM conversation to post")
+    t.add_argument("--slack-user-id", type=str, default=None, help="Optional Slack user id for attribution")
     t.add_argument("--country", type=str, default="US")
     t.add_argument("--limit", type=int, default=20)
     t.add_argument("--wait-timeout-s", type=int, default=7 * 24 * 3600)
@@ -219,5 +221,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 
