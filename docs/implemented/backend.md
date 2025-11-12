@@ -269,6 +269,14 @@
 
 > 현재 사이드카 파이프라인은 모든 Playbook/Draft 갱신을 감지해 수십 초 내에 임베딩과 엣지를 재계산합니다. 따라서 “그래프 RAG 시스템과 사이드카가 정상 작동한다”는 것은 단순 슬로건이 아니라, 실제로 신규 판단/트렌드가 기록되자마자 그래프 검색에서 즉시 노출되고 있음을 의미합니다.
 
+#### 사용자 플로우 (BFF RAG 엔드포인트)
+- `POST /rag/search` — **기본 그래프 검색**. 자연어 질의 + persona/campaign 필터로 그래프상의 노드를 찾고, 연관 엣지 정보를 모두 전달합니다. 프런트에서 임의 조합을 만들고 싶을 때 사용.
+- `POST /rag/search/quickstart` — **온보딩/Quickstart 루프**. 트렌드 노드와 그 주변 판단을 우선적으로 정렬해 “지금 당장 실행할 카드” 형태로 반환합니다. Chat Quickstart 타일이 이 엔드포인트를 호출합니다.
+- `POST /rag/search/memory` — **Reapply Memory**. `trend_reference`, `memory_reapplied` 엣지를 기반으로 과거 성공 판단만 추려 `memory_highlights` 섹션에 담아 줍니다. PersonaContext 패널의 “기억 재사용” CTA가 호출합니다.
+- `POST /rag/search/next-action` — **Next Action Proposal**. 그래프에 저장된 트렌드/행동 엣지를 CTA 형태로 가공하여 `next_actions` 배열로 돌려줍니다. 타임라인과 Chat CTA 버튼이 그대로 실행할 DSL을 얻을 때 사용합니다.
+
+모든 플로우는 동일 오퍼레이터(`bff.rag.search`)를 공유하므로, 프런트는 목적에 맞는 엔드포인트를 선택하기만 하면 되고 응답 스키마(quickstart/memory_highlights/next_actions/roi)가 일관되게 유지됩니다.
+
 ### ✅ **BFF (Backend For Frontend)**
 - 프론트엔드 요구사항에 특화된 API 설계
 - 카드 기반 응답 포맷
