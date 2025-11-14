@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.backend.src.core.context import get_persona_account_id
 from apps.backend.src.modules.common.enums import PlatformKind
 from apps.backend.src.modules.drafts.models import Draft
 from apps.backend.src.modules.drafts.schemas import (
@@ -22,6 +23,7 @@ from apps.backend.src.modules.drafts.service import (
     update_draft_ir,
 )
 from apps.backend.src.modules.rag.events import GraphRagRefreshEvent, publish_graph_rag_refresh
+from apps.backend.src.modules.playbooks.service import record_playbook_event
 from apps.backend.src.modules.users.models import User
 
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -77,6 +79,16 @@ async def op_create_draft(payload: DraftSaveRequest, ctx: TaskContext) -> DraftO
     )
     publish_graph_rag_refresh(
         GraphRagRefreshEvent(trigger="draft_created", campaign_id=draft.campaign_id)
+    )
+    persona_account_id = get_persona_account_id()
+    await record_playbook_event(
+        db,
+        event="draft.created",
+        persona_account_id=persona_account_id,
+        campaign_id=draft.campaign_id,
+        draft_id=draft.id,
+        message="Draft created via drafts.create flow",
+        meta={"source": "drafts.create"},
     )
     return DraftOut.model_validate(draft)
 

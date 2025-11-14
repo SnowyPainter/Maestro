@@ -262,27 +262,69 @@
 - IR (중간 표현) → 플랫폼별 컴파일 → 발행
 
 ### ✅ **Graph RAG (그래프 기반 검색 증강 생성)**
-- **벡터 검색 + 그래프 탐색** — pgvector 코사인 유사도 검색 후 GraphEdge로 이웃 노드 확장
-- **통합 지식 그래프** — Persona, Campaign, Draft, Publication, Trend, Comment, Rule을 단일 그래프로 연결
-- **Celery 사이드카** — 주기적으로 domain 테이블 스캔 → CanonicalPayload 정규화 → 임베딩 생성 → GraphNode/Chunk/Edge 동기화
-- **실시간 관계 업데이트** — Playbook/Draft 로그의 트렌드 스냅샷을 해석해 `trend_reference`, `trend_of` 엣지를 자동 생성하여 “이 판단이 어떤 트렌드를 재사용했는지”가 그래프에 즉시 반영
-- **멱등 동기화** — `signature_hash`로 중복 임베딩 방지, 변경된 내용만 재처리
-- **관계 우선순위** — edge_type별 가중치로 중요한 관계 우선 탐색 (produces > published_as > comment_on > related_trend)
-- **LLM 호출 없음** — 검색 시 추가 요약/생성 없이 **저장된 요약/메트릭을 그대로 활용**하여 지연 최소화
-- **Redis 캐싱** — 쿼리 임베딩 60초 TTL, 컨텍스트 번들 30~120초 TTL
-- **Prometheus 메트릭** — `rag_nodes_processed_total`, `rag_watch_duration_seconds`로 사이드카 상태 모니터링
-- **의미**: 단순 트렌드 검색을 넘어 **"Persona X가 Campaign Y에서 Trend Z를 기반으로 작성한 Draft와 그 성과"를 그래프 관계로 추적**
-- **"기억하는 자동화"의 핵심** — 과거 판단의 맥락(페르소나, 캠페인, 트렌드, 성과)을 그래프로 기억하고 검색
 
-> 현재 사이드카 파이프라인은 모든 Playbook/Draft 갱신을 감지해 수십 초 내에 임베딩과 엣지를 재계산합니다. 따라서 “그래프 RAG 시스템과 사이드카가 정상 작동한다”는 것은 단순 슬로건이 아니라, 실제로 신규 판단/트렌드가 기록되자마자 그래프 검색에서 즉시 노출되고 있음을 의미합니다.
+**한 줄 요약:** “브랜드가 내린 모든 판단을 그래프로 묶어두고, 필요할 때마다 즉시 찾아 쓴다.”
 
-#### 사용자 플로우 (BFF RAG 엔드포인트)
-- `POST /rag/search` — **기본 그래프 검색**. 자연어 질의 + persona/campaign 필터로 그래프상의 노드를 찾고, 연관 엣지 정보를 모두 전달합니다. 프런트에서 임의 조합을 만들고 싶을 때 사용.
-- `POST /rag/search/quickstart` — **온보딩/Quickstart 루프**. 트렌드 노드와 그 주변 판단을 우선적으로 정렬해 “지금 당장 실행할 카드” 형태로 반환합니다. Chat Quickstart 타일이 이 엔드포인트를 호출합니다.
-- `POST /rag/search/memory` — **Reapply Memory**. `trend_reference`, `memory_reapplied` 엣지를 기반으로 과거 성공 판단만 추려 `memory_highlights` 섹션에 담아 줍니다. PersonaContext 패널의 “기억 재사용” CTA가 호출합니다.
-- `POST /rag/search/next-action` — **Next Action Proposal**. 그래프에 저장된 트렌드/행동 엣지를 CTA 형태로 가공하여 `next_actions` 배열로 돌려줍니다. 타임라인과 Chat CTA 버튼이 그대로 실행할 DSL을 얻을 때 사용합니다.
+#### 왜 굳이 그래프여야 할까?
+- **문맥이 길다** — 페르소나, 캠페인, 드래프트, 실제 발행물, 댓글, 트렌드가 서로 얽혀 있는데 단일 테이블로는 상관관계를 잃는다.
+- **재사용 근거가 필요하다** — “이 카드가 왜 떴는지”를 설명하려면 `trend_reference`, `memory_reapplied` 같은 엣지로 과거 판단을 따라가야 한다.
+- **속도도 중요하다** — 검색 시 LLM을 다시 돌리지 않고, 이미 저장된 요약/메트릭/스냅샷을 그대로 재조합해 latency를 줄인다.
 
-모든 플로우는 동일 오퍼레이터(`bff.rag.search`)를 공유하므로, 프런트는 목적에 맞는 엔드포인트를 선택하기만 하면 되고 응답 스키마(quickstart/memory_highlights/next_actions/roi)가 일관되게 유지됩니다.
+#### 데이터가 그래프로 들어오는 과정
+1. **Watchers**  
+   Celery Beat가 60~300초 간격으로 `watch_*` 작업을 돌려 최근 15분 이내에 바뀐 도메인 레코드(또는 아직 그래프에 없는 레코드)를 뽑는다.
+2. **Canonicalizer**  
+   레코드를 CanonicalPayload로 정규화하면서 요약, 섹션, 엣지 목록을 만든다. Playbook/Draft는 최신 로그를 읽어 `trend_reference`/`trend_of` 엣지를 계산한다.
+3. **`sync_payload`**  
+   GraphNode/Chunk/Edge를 upsert하고, Redis로 `graph_rag.suggestions` refresh 이벤트를 던져 실시간 스트림이 새 데이터를 읽게 만든다.
+
+이 루프 덕분에 “Playbook을 고치면 몇 초 뒤 바로 RAG 카드에 반영”되는 경험이 유지된다.
+
+#### RAG 추천 API (프런트에서 고르는 것만 다를 뿐 내부 오퍼레이터는 동일)
+| 엔드포인트 | 목적 | 주요 필드 |
+| --- | --- | --- |
+| `POST /rag/search` | 기본 그래프 검색 | `items`, `related` |
+| `POST /rag/search/quickstart` | 온보딩/트렌드 카드 | `quickstart`, `next_actions` |
+| `POST /rag/search/memory` | 기억 재사용 카드 | `memory_highlights`, `roi` |
+| `POST /rag/search/next-action` | 즉시 실행 CTA | `next_actions`, `roi` |
+
+#### `suggest` 응답이 바뀌는 정확한 조건
+- `graph_rag.collect_context`는 요청에 들어온 persona/campaign/query/limit/section 플래그만 보고 `search_rag`를 호출한다. 이 값이 같다면 결과도 같다.
+- 값이 변하려면 **그래프 자체**가 바뀌어야 한다. 즉 `sync_payload`가 새로운 노드를 넣거나, 요약/메타/엣지를 수정해야 한다.
+- 빠르게 확인하고 싶으면 `/graph-rag/suggestions/stream`을 켜 두고, refresh 이벤트가 들어올 때마다 카드 payload diff를 보면 된다.
+
+#### 결과 확인이 필요할 때 (초간단 버전)
+1. 지금 `persona_id`/`campaign_id`로 `POST /graph-rag/suggest` 호출 → baseline 저장.
+2. 아래 스크립트로 테스트 노드 하나 삽입.
+   ```bash
+   python scripts/insert_graph_rag_node.py \
+     --owner-user-id 1 --persona-id 1 --campaign-id 1 \
+     --node-type trend --source-table trends --source-id sandbox-001 \
+     --title "테스트 트렌드" --summary "AI 캠페인 트렌드 실험"
+   ```
+3. 같은 요청을 다시 보내 결과 비교. 웹소켓을 쓰고 있다면 `graph_rag.suggestion` 이벤트 diff만 보면 끝.
+
+#### 어떤 사용자 행동이 그래프를 갱신하나?
+- Celery Beat가 60~300초 간격으로 `watch_*` 작업을 돌리면서 각 도메인 테이블을 스캔하고, `graph_node_id`가 비어 있거나 최근 15분 이내에 수정된 레코드를 큐에 넣는다.  
+- 큐 worker가 해당 레코드를 CanonicalPayload로 변환해 `sync_payload`에 넣으면, GraphNode/GraphEdge/GraphChunk가 upsert 되고 즉시 `publish_graph_rag_refresh`가 호출되어 `/graph-rag/suggestions/stream` 구독자에게 “그래프 리프레시” 이벤트가 전달된다.
+- **중요 결정 (2025-11-14)**: Draft를 생성하는 순간 Playbook 로그도 함께 남겨 최근 트렌드 스냅샷을 고정한다. 이렇게 하면 사용자가 트렌드 기반 카드에서 Draft를 만들었을 때 `trend_snapshot`이 즉시 PlaybookLog에 기록되고, 사이드카가 `trend_reference` 엣지를 더 쉽게 만들 수 있다.
+
+| 사용자 행동 | 내부에서 무슨 일이? | 그래프 영향 | `suggest` 체감 |
+| --- | --- | --- | --- |
+| 페르소나를 만들거나 스타일을 바꿈 | `watch_personas` → `build_persona_payload`가 Persona → Playbook `owns_playbook` 엣지 재계산 | Persona 노드 요약/톤/연결 Playbook 갱신 | 동일 persona_id로 검색할 때 카드의 persona 정보/퀵스타트 문구가 갱신 |
+| 캠페인 생성·기간 조정 | `watch_campaigns` → `build_campaign_payload` | Campaign → Playbook `has_playbook` 엣지, 일정/요약 업데이트 | ROI/Next Action 카드에 새 캠페인 정보 반영 |
+| Playbook 로그/집계가 바뀜 | `watch_playbooks` → `build_playbook_payload`가 최신 PlaybookLog를 읽음 | Trend 엣지/메모리 하이라이트/ROI 기반 데이터가 새로 저장 | 메모리/ROI 카드가 최신 성과·트렌드 문장을 사용 |
+| **Draft를 생성** | `drafts.create`가 즉시 PlaybookLog를 남김 → `watch_drafts` | Draft → Variant 엣지 + PlaybookLog의 `trend_snapshot`이 저장되어 `trend_reference` 엣지를 만들 발판 확보 | Draft/Next Action 카드가 새 제목·트렌드 컨텍스트로 갱신 |
+| Draft 내용을 수정 | `watch_drafts` | Draft 메타 및 연결 변형 재계산 | Draft/Next Action 카드 내용 업데이트 |
+| Variant 컴파일/편집 | `watch_draft_variants` → `build_variant_payload` | Variant → PersonaAccount/Publication 연결 | 플랫폼별 미리보기·정책 메타가 최신 상태 |
+| 게시물 발행 | `watch_publications` → `build_publication_payload` | Publication → Draft/Persona/Campaign 엣지 | ROI/Next Action 카드에 “어디에 언제 나갔는가” 반영 |
+| Sniffer가 새 Trend를 저장 | `watch_trends` → `build_trend_payload` | Trend → Playbook `trend_of` 엣지, 섹션 문구 | Trend/Quickstart 카드가 최신 감지 결과 사용 |
+| 댓글/멘션 유입 | `watch_insights` → `build_insight_comment_payload` | InsightComment → Publication `comment_on` 엣지 | 메모리/Next Action 카드가 최신 반응을 근거로 제안 |
+| 리액션 룰 편집 | `watch_reaction_rules` → `build_reaction_rule_payload` | Rule → Persona/Publication 연결 | “자동화로 대응 가능” Next Action 카드가 갱신 |
+
+즉, 사용자가 **페르소나·캠페인·Draft·Playbook·게시물·트렌드·댓글·리액션 룰** 중 하나를 만들거나 수정하는 순간 → 몇 분 이내에 사이드카가 동일 레코드를 재임베딩하고 → 그래프 리프레시 이벤트가 발생 → `suggest` 결과가 변한다. 별도의 버튼을 누를 필요는 없고, “최근 15분 안에 수정했다”는 사실만으로 자동 반영된다는 점을 기억하면 된다.
+
+**주의:** 모든 수정이 항상 그래프 변화를 만들지는 않는다. Canonicalizer가 참조할 데이터가 없으면 엣지가 만들어지지 않고, `sync_payload`는 이전과 동일한 `signature_hash`라면 노드를 건너뛴다. 예를 들어 Draft를 저장했더라도 Variant가 하나도 없으면 `produces` 엣지가 생기지 않고, PlaybookLog에 트렌드 스냅샷이 없다면 Trend 관련 엣지는 추가되지 않는다. `trend_reference` 역시 최근 PlaybookLog/DraftLog의 `trend_snapshot` 안에 trend id가 있어야 만들어지며, 빈 로그만 남기면 엣지가 생기지 않는다. Trend도 마찬가지로 Sniffer가 새 항목을 넣었어도 `_trend_edges_from_playbooks`가 최근 14일 이내 PlaybookLog에서 해당 trend id를 발견하지 못하면 `trend_of` 엣지를 만들지 않는다. 그러면 quickstart/Trend 카드에도 변화가 없다. 또, 15분 창(`SCAN_WINDOW_MINUTES`) 밖에서 수정되었거나 `updated_at`이 갱신되지 않은 경우에는 watcher가 레코드를 집지 못한다. 이런 경우엔 `resync_rag.py`나 `insert_graph_rag_node.py`처럼 명시적으로 canonicalize를 돌리거나, 해당 레코드를 다시 저장하여 `updated_at`을 갱신해 줘야 한다.
 
 ### ✅ **BFF (Backend For Frontend)**
 - 프론트엔드 요구사항에 특화된 API 설계
