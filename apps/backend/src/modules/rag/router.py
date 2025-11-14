@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi.encoders import jsonable_encoder
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocketState
@@ -179,16 +180,13 @@ async def graph_rag_suggestions_stream(websocket: WebSocket) -> None:
                 runtime.provide(user, type_hint=User)
             result = await orchestrate_flow(flow, payload, runtime)
 
-        if hasattr(result, "model_dump"):
-            return result.model_dump()  # type: ignore[return-value]
-        if hasattr(result, "dict"):
-            return result.dict()  # type: ignore[return-value]
-        if isinstance(result, str):
+        encoded = jsonable_encoder(result)
+        if isinstance(encoded, str):
             try:
-                return json.loads(result)
+                return json.loads(encoded)
             except json.JSONDecodeError:
-                return {"raw": result}
-        return result
+                return {"raw": encoded}
+        return encoded
 
     async def _run_mock() -> None:
         if debug:
