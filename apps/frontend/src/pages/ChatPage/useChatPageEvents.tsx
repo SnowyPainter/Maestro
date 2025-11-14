@@ -7,8 +7,10 @@ import {
   DraftVariantRender,
   CoworkerLeaseState,
   ChatCard,
+  ChatCardData,
   bffRagExpandApiBffRagNodesNodeIdNeighborsGet,
   RagRelatedEdge,
+  GraphRagActionAck,
 } from "@/lib/api/generated";
 import { TrendQueryCard } from "@/features/trends/components/TrendQueryCard";
 import { TrendResultCard } from "@/entities/trends/components/TrendResultCard";
@@ -1047,24 +1049,28 @@ export function useChatPageEvents() {
     }
   }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, handleReactiveRuleSelect, handleReactiveCreateRule, handleReactiveViewActivity, handleRagNavigate, t]);
 
-  const handleExecuteAction = useCallback(async (card: any) => {
-    // TODO: Implement actual execution logic based on operator_key
-    console.log("Executing Copilot action:", card);
 
-    // For now, just show a message
-    const message: Message = {
-      id: getNextMessageId(),
-      type: 'user',
-      content: `🚀 Executing: ${card.title}\n${card.description || ''}`,
+  const handleActionResult = useCallback((result: GraphRagActionAck) => {
+    console.log("Graph RAG action result:", result);
+
+    const card: ChatCard = {
+      card_type: "action.graph_rag.ack",
+      data: result as unknown as ChatCardData,
+      title: "Action Result",
     };
-    appendMessage(message);
 
-    // Here we would call the appropriate operator based on card.operator_key
-    // For example:
-    // if (card.operator_key === 'draft.create_from_trend') {
-    //   await handleDraftCreate(card.operator_payload);
-    // }
-  }, [appendMessage]);
+    console.log("Created card for action result:", card);
+
+    addCardMessage(messageId => {
+      console.log("addCardMessage calling renderCardByType for action result");
+      return renderCardByType(card, {
+        messageId,
+        callbacks: {
+          onRemoveMessage: handleCardDelete,
+        },
+      });
+    });
+  }, [addCardMessage, renderCardByType, handleCardDelete]);
 
   return {
     handleChatSend,
@@ -1073,6 +1079,6 @@ export function useChatPageEvents() {
     handleToolClick,
     handleSelectCampaign,
     handleSelectDraft,
-    handleExecuteAction,
+    handleActionResult,
   };
 }

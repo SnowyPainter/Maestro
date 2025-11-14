@@ -4538,6 +4538,126 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/actions/trend-to-draft:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - actions
+      - graph_rag.actions.trend_to_draft
+      summary: Create draft from Graph RAG trend
+      description: Spin up a new draft using a trend suggestion
+      operationId: graph_rag_actions_trend_to_draft_api_orchestrator_graph_rag_actions_trend_to_draft_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagTrendActionCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagActionAck'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/actions/next-action:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - actions
+      - graph_rag.actions.next_action
+      summary: Apply Graph RAG next action
+      description: Record or apply the next recommended action
+      operationId: graph_rag_actions_next_action_api_orchestrator_graph_rag_actions_next_action_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagNextActionCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagActionAck'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/actions/playbook-reapply:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - actions
+      - graph_rag.actions.playbook_reapply
+      summary: Reapply Graph RAG playbook
+      description: Log the reuse of a highlighted playbook
+      operationId: graph_rag_actions_playbook_reapply_api_orchestrator_graph_rag_actions_playbook_reapply_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagPlaybookActionCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagActionAck'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/actions/persona-focus:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - actions
+      - graph_rag.actions.persona_focus
+      summary: Record Graph RAG focus
+      description: Capture a focus insight for the persona/campaign
+      operationId: graph_rag_actions_persona_focus_api_orchestrator_graph_rag_actions_persona_focus_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagPersonaFocusCommand'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagActionAck'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/graph-rag/suggest:
     post:
       tags:
@@ -7186,6 +7306,23 @@ components:
       - task_id
       - text
       title: GenerateTextResponse
+    GraphRagActionAck:
+      properties:
+        status:
+          type: string
+          title: Status
+        message:
+          type: string
+          title: Message
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
+      type: object
+      required:
+      - status
+      - message
+      title: GraphRagActionAck
     GraphRagActionCard:
       properties:
         id:
@@ -7245,6 +7382,104 @@ components:
       - category
       - title
       title: GraphRagActionCard
+    GraphRagNextActionCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        playbook_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+        title:
+          type: string
+          title: Title
+        action:
+          type: string
+          title: Action
+        source_node_id:
+          title: Source Node Id
+          format: uuid
+          type: string
+          nullable: true
+        confidence:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Confidence
+      type: object
+      required:
+      - title
+      - action
+      title: GraphRagNextActionCommand
+    GraphRagPersonaFocusCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        focus_query:
+          type: string
+          title: Focus Query
+        roi:
+          anyOf:
+          - $ref: '#/components/schemas/RagValueInsight'
+          - type: 'null'
+      type: object
+      required:
+      - focus_query
+      title: GraphRagPersonaFocusCommand
+    GraphRagPlaybookActionCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        playbook_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Playbook Id
+        title:
+          title: Title
+          type: string
+          nullable: true
+        summary:
+          title: Summary
+          type: string
+          nullable: true
+        node_id:
+          title: Node Id
+          format: uuid
+          type: string
+          nullable: true
+        reuse_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Reuse Count
+      type: object
+      title: GraphRagPlaybookActionCommand
     GraphRagSuggestPayload:
       properties:
         query:
@@ -7326,6 +7561,38 @@ components:
           - type: 'null'
       type: object
       title: GraphRagSuggestionResponse
+    GraphRagTrendActionCommand:
+      properties:
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        query:
+          type: string
+          title: Query
+        title:
+          type: string
+          title: Title
+        description:
+          title: Description
+          type: string
+          nullable: true
+        source_node_id:
+          title: Source Node Id
+          format: uuid
+          type: string
+          nullable: true
+      type: object
+      required:
+      - query
+      - title
+      title: GraphRagTrendActionCommand
     HTTPValidationError:
       properties:
         detail:

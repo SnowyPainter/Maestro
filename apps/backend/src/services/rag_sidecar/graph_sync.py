@@ -14,6 +14,7 @@ from apps.backend.src.modules.drafts.models import Draft, DraftVariant, PostPubl
 from apps.backend.src.modules.insights.models import InsightComment
 from apps.backend.src.modules.playbooks.models import Playbook
 from apps.backend.src.modules.rag.models import GraphChunk, GraphEdge, GraphNode
+from apps.backend.src.modules.rag.events import GraphRagRefreshEvent, publish_graph_rag_refresh
 from apps.backend.src.modules.reactive.models import ReactionRule
 from apps.backend.src.modules.trends.models import Trend
 from apps.backend.src.services.embeddings import embed_texts_sync
@@ -55,6 +56,7 @@ def sync_payload(session: Session, payload: CanonicalPayload) -> SyncResult:
     if node.signature_hash == signature_hash:
         _ensure_source_ref(session, payload, node)
         session.commit()
+        _publish_refresh_event(node, payload)
         return SyncResult(node=node, chunks_synced=0, edges_synced=0, skipped=True)
 
     body_chunks = chunk_sections(payload.body_sections)
@@ -108,6 +110,7 @@ def sync_payload(session: Session, payload: CanonicalPayload) -> SyncResult:
     _ensure_source_ref(session, payload, node)
 
     session.commit()
+    _publish_refresh_event(node, payload)
     return SyncResult(node=node, chunks_synced=chunks_synced, edges_synced=edges_synced, skipped=False)
 
 
@@ -198,6 +201,25 @@ def _resolve_node_id(session: Session, ref: NodeReference) -> Optional[str]:
     )
     result = session.execute(stmt).scalar_one_or_none()
     return str(result) if result else None
+
+
+def _publish_refresh_event(node: GraphNode, payload: CanonicalPayload) -> None:
+    try:
+        publish_graph_rag_refresh(
+            GraphRagRefreshEvent(
+                trigger="graph_sync",
+                persona_id=node.persona_id or payload.persona_id,
+                campaign_id=node.campaign_id or payload.campaign_id,
+            )
+        )
+    except Exception:
+        logger.exception(
+            "Failed to publish Graph RAG refresh event",
+            extra={
+                "persona_id": node.persona_id or payload.persona_id,
+                "campaign_id": node.campaign_id or payload.campaign_id,
+            },
+        )
 
 
 def _ensure_source_ref(session: Session, payload: CanonicalPayload, node: GraphNode) -> None:

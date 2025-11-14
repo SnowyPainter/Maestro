@@ -6,16 +6,20 @@ import { PersonaAccountContext } from "./PersonaAccountContext"
 import { CopilotCard } from "./CopilotCard"
 import { useGraphRagSuggestions } from "./useGraphRagSuggestions"
 
+import { GraphRagActionAck } from "@/lib/api/generated"
+
 interface ChatContextPanelProps {
   onSelectCampaign?: () => void
   onSelectDraft?: () => void
   onExecuteAction?: () => void
+  onActionResult?: (result: GraphRagActionAck) => void
 }
 
 export function ChatContextPanel({
   onSelectCampaign,
   onSelectDraft,
   onExecuteAction,
+  onActionResult,
 }: ChatContextPanelProps) {
   const {
     projection,
@@ -23,7 +27,9 @@ export function ChatContextPanel({
     isExecuting,
     isConnected,
     hasPersona,
-  } = useGraphRagSuggestions()
+  } = useGraphRagSuggestions({
+    onActionResult: onActionResult,
+  })
 
   const handleExecute = useCallback(
     (card?: GraphRagActionCard | null) => {

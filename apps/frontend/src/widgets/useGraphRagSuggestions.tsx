@@ -2,13 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { apiFetch } from "@/lib/api/fetcher"
-import { GraphRagActionCard, GraphRagSuggestionResponse, GraphRagSuggestPayload, graphRagSuggestApiOrchestratorGraphRagSuggestPost } from "@/lib/api/generated"
+import { GraphRagActionCard, GraphRagSuggestionResponse, GraphRagSuggestPayload, GraphRagActionAck, graphRagSuggestApiOrchestratorGraphRagSuggestPost } from "@/lib/api/generated"
 import { usePersonaContextStore } from "@/store/persona-context"
 import { useSessionStore } from "@/store/session"
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api"
 const STREAM_PATH = "/sse/graph-rag/suggestions/stream"
-
 
 export interface CopilotProjection {
   roi: {
@@ -44,8 +43,32 @@ const buildQueryString = (params: Record<string, unknown>): string => {
 const sanitizePayload = (payload: Record<string, unknown> = {}) =>
   Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined))
 
+const numberFromMeta = (
+  meta: GraphRagActionCard["meta"],
+  key: string,
+  fallback = 0,
+): number => {
+  if (!meta || typeof meta !== "object") {
+    return fallback
+  }
+  const value = (meta as Record<string, unknown>)[key]
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
+  return fallback
+}
 
-export function useGraphRagSuggestions() {
+
+interface UseGraphRagSuggestionsOptions {
+  onActionResult?: (result: GraphRagActionAck) => void
+}
+
+export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = {}) {
+  const { onActionResult } = options
   const { personaId, personaAccountId, campaignId } = usePersonaContextStore()
   const token = useSessionStore((state) => state.token)
 
@@ -222,18 +245,34 @@ export function useGraphRagSuggestions() {
     if (!suggestions || !suggestions.cards) {
       return { roi: null, primaryAction: null, actionCards: [] }
     }
+
     const actionCards = suggestions.cards
       .filter((card) => Boolean(card.flow_path))
       .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
 
+    let roiMetrics: { memoryReuse: number; savedMinutes: number; automationRate: number } | null = null
+
+    if (suggestions.roi) {
+      roiMetrics = {
+        memoryReuse: suggestions.roi.memory_reuse_count ?? 0,
+        savedMinutes: suggestions.roi.saved_minutes ?? 0,
+        automationRate: suggestions.roi.ai_intervention_rate ?? 0,
+      }
+    } else {
+      const roiCard = suggestions.cards.find(
+        (card) => card.category === "persona" && card.meta?.kind === "roi"
+      )
+      if (roiCard) {
+        roiMetrics = {
+          memoryReuse: numberFromMeta(roiCard.meta, "memory_reuse_count"),
+          savedMinutes: numberFromMeta(roiCard.meta, "saved_minutes"),
+          automationRate: numberFromMeta(roiCard.meta, "ai_intervention_rate"),
+        }
+      }
+    }
+
     return {
-      roi: suggestions.roi
-        ? {
-            memoryReuse: suggestions.roi.memory_reuse_count ?? 0,
-            savedMinutes: suggestions.roi.saved_minutes ?? 0,
-            automationRate: suggestions.roi.ai_intervention_rate ?? 0,
-          }
-        : null,
+      roi: roiMetrics,
       primaryAction: actionCards[0] ?? null,
       actionCards,
     }
@@ -253,13 +292,19 @@ export function useGraphRagSuggestions() {
 
       setIsExecuting(true)
       try {
-        await apiFetch({
-          url: `/orchestrator${target.flow_path}`,
+        const response = await apiFetch<GraphRagActionAck>({
+          url: `/api/orchestrator${target.flow_path}`,
           method: "POST",
           data: sanitizePayload(target.operator_payload),
         })
         toast.success(target.cta_label ?? "Action executed")
+
+        // Call the callback to handle the action result
+        if (onActionResult) {
+          onActionResult(response)
+        }
       } catch (err: any) {
+        console.error("Graph RAG action error:", err)
         toast.error(err?.data?.detail || err?.message || "Failed to execute Graph RAG action")
       } finally {
         setIsExecuting(false)

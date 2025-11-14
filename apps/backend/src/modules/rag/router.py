@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, Query
 from sse_starlette.sse import EventSourceResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.backend.src.core.deps import get_current_user, get_db
+from apps.backend.src.core.db import SessionLocal
+from apps.backend.src.core.deps import get_current_user
 from apps.backend.src.modules.rag.events import stream_graph_rag_refresh
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import ExecutionRuntime, orchestrate_flow
@@ -44,7 +45,6 @@ async def graph_rag_suggestions_stream(
     include_next_actions: bool = Query(default=True),
     include_roi: bool = Query(default=True),
     user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
 ) -> EventSourceResponse:
     flow = FLOWS.get("graph_rag.suggest")
     base_payload = GraphRagSuggestPayload(
@@ -59,14 +59,14 @@ async def graph_rag_suggestions_stream(
         include_roi=include_roi,
     )
 
-    runtime = ExecutionRuntime()
-    runtime.provide(db, type_hint=AsyncSession)
-    runtime.provide(user, type_hint=User)
-
     async def _render() -> str:
         data = base_payload.model_dump() if hasattr(base_payload, "model_dump") else base_payload.dict()  # type: ignore[attr-defined]
         payload = GraphRagSuggestPayload(**data)
-        result = await orchestrate_flow(flow, payload, runtime.clone())
+        async with SessionLocal() as session:
+            runtime = ExecutionRuntime()
+            runtime.provide(session, type_hint=AsyncSession)
+            runtime.provide(user, type_hint=User)
+            result = await orchestrate_flow(flow, payload, runtime)
         if hasattr(result, "model_dump_json"):
             return result.model_dump_json()  # type: ignore[attr-defined]
         return result.json()  # type: ignore[no-any-return]

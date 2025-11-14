@@ -54,6 +54,8 @@ CARD_TYPE_BY_MODEL_NAME: Mapping[str, str] = {
 
     "RagSearchResponse": "rag.search.result",
     
+    "GraphRagActionAck": "action.graph_rag.ack",
+
     "OperationResult": "info",
 }
 

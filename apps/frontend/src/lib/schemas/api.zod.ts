@@ -4182,6 +4182,99 @@ export const reactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLin
 
 
 /**
+ * Spin up a new draft using a trend suggestion
+ * @summary Create draft from Graph RAG trend
+ */
+export const graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostBody = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "query": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "source_node_id": zod.uuid().nullish()
+})
+
+export const graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostResponse = zod.object({
+  "status": zod.string(),
+  "message": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})
+
+
+/**
+ * Record or apply the next recommended action
+ * @summary Apply Graph RAG next action
+ */
+export const graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostBody = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "title": zod.string(),
+  "action": zod.string(),
+  "source_node_id": zod.uuid().nullish(),
+  "confidence": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostResponse = zod.object({
+  "status": zod.string(),
+  "message": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})
+
+
+/**
+ * Log the reuse of a highlighted playbook
+ * @summary Reapply Graph RAG playbook
+ */
+export const graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostBody = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "playbook_id": zod.union([zod.number(),zod.null()]).optional(),
+  "title": zod.string().nullish(),
+  "summary": zod.string().nullish(),
+  "node_id": zod.uuid().nullish(),
+  "reuse_count": zod.union([zod.number(),zod.null()]).optional()
+})
+
+export const graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostResponse = zod.object({
+  "status": zod.string(),
+  "message": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})
+
+
+/**
+ * Capture a focus insight for the persona/campaign
+ * @summary Record Graph RAG focus
+ */
+export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiMemoryReuseCountDefault = 0;export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiAutomatedDecisionsDefault = 0;export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiSavedMinutesDefault = 0;export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiAiInterventionRateDefault = 0;
+
+export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBody = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "focus_query": zod.string(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
+})
+
+export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostResponse = zod.object({
+  "status": zod.string(),
+  "message": zod.string(),
+  "meta": zod.record(zod.string(), zod.any()).optional()
+})
+
+
+/**
  * Generate proactive Graph RAG action cards
  * @summary Graph RAG action suggestions
  */

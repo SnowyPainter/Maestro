@@ -2,6 +2,7 @@ import React from "react";
 import { ChatSidebar } from "../../widgets/ChatSidebar";
 import { ChatStream } from "@/widgets/ChatStream";
 import { ChatContextPanel } from "../../widgets/ChatContextPanel";
+import { GraphRagActionAck } from "@/lib/api/generated";
 import { ChatMessagesProvider, useChatMessages } from "@/entities/messages/context/ChatMessagesContext";
 import { useChatPageEvents } from "./useChatPageEvents";
 
@@ -14,7 +15,8 @@ function ChatPageContent() {
     handleToolClick,
     handleSelectCampaign,
     handleSelectDraft,
-    handleExecuteAction
+    handleExecuteAction,
+    handleActionResult
   } = useChatPageEvents();
 
   return (
@@ -29,6 +31,7 @@ function ChatPageContent() {
         onSelectCampaign={handleSelectCampaign}
         onSelectDraft={handleSelectDraft}
         onExecuteAction={handleExecuteAction}
+        onActionResult={handleActionResult}
       />
     </div>
   );

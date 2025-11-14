@@ -2114,6 +2114,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orchestrator/graph-rag/actions/trend-to-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create draft from Graph RAG trend
+         * @description Spin up a new draft using a trend suggestion
+         */
+        post: operations["graph_rag_actions_trend_to_draft_api_orchestrator_graph_rag_actions_trend_to_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/graph-rag/actions/next-action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply Graph RAG next action
+         * @description Record or apply the next recommended action
+         */
+        post: operations["graph_rag_actions_next_action_api_orchestrator_graph_rag_actions_next_action_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/graph-rag/actions/playbook-reapply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reapply Graph RAG playbook
+         * @description Log the reuse of a highlighted playbook
+         */
+        post: operations["graph_rag_actions_playbook_reapply_api_orchestrator_graph_rag_actions_playbook_reapply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/graph-rag/actions/persona-focus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Graph RAG focus
+         * @description Capture a focus insight for the persona/campaign
+         */
+        post: operations["graph_rag_actions_persona_focus_api_orchestrator_graph_rag_actions_persona_focus_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orchestrator/graph-rag/suggest": {
         parameters: {
             query?: never;
@@ -3641,6 +3721,17 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** GraphRagActionAck */
+        GraphRagActionAck: {
+            /** Status */
+            status: string;
+            /** Message */
+            message: string;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+        };
         /** GraphRagActionCard */
         GraphRagActionCard: {
             /** Id */
@@ -3681,6 +3772,56 @@ export interface components {
             meta?: {
                 [key: string]: unknown;
             };
+        };
+        /** GraphRagNextActionCommand */
+        GraphRagNextActionCommand: {
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+            /** Playbook Id */
+            playbook_id?: number | null;
+            /** Title */
+            title: string;
+            /** Action */
+            action: string;
+            /**
+             * Source Node Id
+             * Format: uuid
+             */
+            source_node_id?: string | null;
+            /** Confidence */
+            confidence?: number | null;
+        };
+        /** GraphRagPersonaFocusCommand */
+        GraphRagPersonaFocusCommand: {
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+            /** Focus Query */
+            focus_query: string;
+            roi?: components["schemas"]["RagValueInsight"] | null;
+        };
+        /** GraphRagPlaybookActionCommand */
+        GraphRagPlaybookActionCommand: {
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+            /** Playbook Id */
+            playbook_id?: number | null;
+            /** Title */
+            title?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /**
+             * Node Id
+             * Format: uuid
+             */
+            node_id?: string | null;
+            /** Reuse Count */
+            reuse_count?: number | null;
         };
         /** GraphRagSuggestPayload */
         GraphRagSuggestPayload: {
@@ -3743,6 +3884,24 @@ export interface components {
              */
             generated_at?: string;
             roi?: components["schemas"]["RagValueInsight"] | null;
+        };
+        /** GraphRagTrendActionCommand */
+        GraphRagTrendActionCommand: {
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+            /** Query */
+            query: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description?: string | null;
+            /**
+             * Source Node Id
+             * Format: uuid
+             */
+            source_node_id?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -9664,6 +9823,138 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OperationResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_actions_trend_to_draft_api_orchestrator_graph_rag_actions_trend_to_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagTrendActionCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagActionAck"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_actions_next_action_api_orchestrator_graph_rag_actions_next_action_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagNextActionCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagActionAck"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_actions_playbook_reapply_api_orchestrator_graph_rag_actions_playbook_reapply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagPlaybookActionCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagActionAck"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_actions_persona_focus_api_orchestrator_graph_rag_actions_persona_focus_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagPersonaFocusCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagActionAck"];
                 };
             };
             /** @description Validation Error */

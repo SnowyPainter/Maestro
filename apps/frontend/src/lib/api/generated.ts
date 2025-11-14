@@ -989,6 +989,14 @@ export interface GenerateTextResponse {
   text: string;
 }
 
+export type GraphRagActionAckMeta = { [key: string]: unknown };
+
+export interface GraphRagActionAck {
+  status: string;
+  message: string;
+  meta?: GraphRagActionAckMeta;
+}
+
 export type GraphRagActionCardPersona = RagPersonaContext | null;
 
 export type GraphRagActionCardOperatorPayload = { [key: string]: unknown };
@@ -1015,6 +1023,59 @@ export interface GraphRagActionCard {
   priority?: number;
   confidence?: GraphRagActionCardConfidence;
   meta?: GraphRagActionCardMeta;
+}
+
+export type GraphRagNextActionCommandPersonaId = number | null;
+
+export type GraphRagNextActionCommandCampaignId = number | null;
+
+export type GraphRagNextActionCommandPlaybookId = number | null;
+
+export type GraphRagNextActionCommandConfidence = number | null;
+
+export interface GraphRagNextActionCommand {
+  persona_id?: GraphRagNextActionCommandPersonaId;
+  campaign_id?: GraphRagNextActionCommandCampaignId;
+  playbook_id?: GraphRagNextActionCommandPlaybookId;
+  title: string;
+  action: string;
+  /** @nullable */
+  source_node_id?: string | null;
+  confidence?: GraphRagNextActionCommandConfidence;
+}
+
+export type GraphRagPersonaFocusCommandPersonaId = number | null;
+
+export type GraphRagPersonaFocusCommandCampaignId = number | null;
+
+export type GraphRagPersonaFocusCommandRoi = RagValueInsight | null;
+
+export interface GraphRagPersonaFocusCommand {
+  persona_id?: GraphRagPersonaFocusCommandPersonaId;
+  campaign_id?: GraphRagPersonaFocusCommandCampaignId;
+  focus_query: string;
+  roi?: GraphRagPersonaFocusCommandRoi;
+}
+
+export type GraphRagPlaybookActionCommandPersonaId = number | null;
+
+export type GraphRagPlaybookActionCommandCampaignId = number | null;
+
+export type GraphRagPlaybookActionCommandPlaybookId = number | null;
+
+export type GraphRagPlaybookActionCommandReuseCount = number | null;
+
+export interface GraphRagPlaybookActionCommand {
+  persona_id?: GraphRagPlaybookActionCommandPersonaId;
+  campaign_id?: GraphRagPlaybookActionCommandCampaignId;
+  playbook_id?: GraphRagPlaybookActionCommandPlaybookId;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  summary?: string | null;
+  /** @nullable */
+  node_id?: string | null;
+  reuse_count?: GraphRagPlaybookActionCommandReuseCount;
 }
 
 export type GraphRagSuggestPayloadPersonaId = number | null;
@@ -1069,6 +1130,21 @@ export interface GraphRagSuggestionResponse {
   cards?: GraphRagActionCard[];
   generated_at?: string;
   roi?: GraphRagSuggestionResponseRoi;
+}
+
+export type GraphRagTrendActionCommandPersonaId = number | null;
+
+export type GraphRagTrendActionCommandCampaignId = number | null;
+
+export interface GraphRagTrendActionCommand {
+  persona_id?: GraphRagTrendActionCommandPersonaId;
+  campaign_id?: GraphRagTrendActionCommandCampaignId;
+  query: string;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  source_node_id?: string | null;
 }
 
 export interface HTTPValidationError {
@@ -12198,6 +12274,270 @@ export const useReactiveUnlinkRulePublicationApiOrchestratorReactivePublications
       > => {
 
       const mutationOptions = getReactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Spin up a new draft using a trend suggestion
+ * @summary Create draft from Graph RAG trend
+ */
+export const graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost = (
+    graphRagTrendActionCommand: GraphRagTrendActionCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagActionAck>(
+      {url: `/api/orchestrator/graph-rag/actions/trend-to-draft`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagTrendActionCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost>>, TError,{data: GraphRagTrendActionCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost>>, TError,{data: GraphRagTrendActionCommand}, TContext> => {
+
+const mutationKey = ['graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost>>, {data: GraphRagTrendActionCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost>>>
+    export type GraphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostMutationBody = GraphRagTrendActionCommand
+    export type GraphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create draft from Graph RAG trend
+ */
+export const useGraphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost>>, TError,{data: GraphRagTrendActionCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPost>>,
+        TError,
+        {data: GraphRagTrendActionCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Record or apply the next recommended action
+ * @summary Apply Graph RAG next action
+ */
+export const graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost = (
+    graphRagNextActionCommand: GraphRagNextActionCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagActionAck>(
+      {url: `/api/orchestrator/graph-rag/actions/next-action`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagNextActionCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost>>, TError,{data: GraphRagNextActionCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost>>, TError,{data: GraphRagNextActionCommand}, TContext> => {
+
+const mutationKey = ['graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost>>, {data: GraphRagNextActionCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost>>>
+    export type GraphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostMutationBody = GraphRagNextActionCommand
+    export type GraphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Apply Graph RAG next action
+ */
+export const useGraphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost>>, TError,{data: GraphRagNextActionCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPost>>,
+        TError,
+        {data: GraphRagNextActionCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Log the reuse of a highlighted playbook
+ * @summary Reapply Graph RAG playbook
+ */
+export const graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost = (
+    graphRagPlaybookActionCommand: GraphRagPlaybookActionCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagActionAck>(
+      {url: `/api/orchestrator/graph-rag/actions/playbook-reapply`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagPlaybookActionCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost>>, TError,{data: GraphRagPlaybookActionCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost>>, TError,{data: GraphRagPlaybookActionCommand}, TContext> => {
+
+const mutationKey = ['graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost>>, {data: GraphRagPlaybookActionCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost>>>
+    export type GraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostMutationBody = GraphRagPlaybookActionCommand
+    export type GraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Reapply Graph RAG playbook
+ */
+export const useGraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost>>, TError,{data: GraphRagPlaybookActionCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPost>>,
+        TError,
+        {data: GraphRagPlaybookActionCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Capture a focus insight for the persona/campaign
+ * @summary Record Graph RAG focus
+ */
+export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost = (
+    graphRagPersonaFocusCommand: GraphRagPersonaFocusCommand,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagActionAck>(
+      {url: `/api/orchestrator/graph-rag/actions/persona-focus`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagPersonaFocusCommand, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, TError,{data: GraphRagPersonaFocusCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, TError,{data: GraphRagPersonaFocusCommand}, TContext> => {
+
+const mutationKey = ['graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, {data: GraphRagPersonaFocusCommand}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>>
+    export type GraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationBody = GraphRagPersonaFocusCommand
+    export type GraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Record Graph RAG focus
+ */
+export const useGraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, TError,{data: GraphRagPersonaFocusCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>,
+        TError,
+        {data: GraphRagPersonaFocusCommand},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

@@ -10,6 +10,7 @@ import {
   RagExpandResponse,
   RagSearchResponse,
   TrackingLinkListResponse,
+  GraphRagActionAck,
 } from "@/lib/api/generated";
 
 // Generic Cards
@@ -45,6 +46,7 @@ import { ActionLogDetailCard } from "@/entities/reactive/components/ActionLogDet
 import { TemplateDetailCard } from "@/entities/reactive/components/template/TemplateDetailCard";
 import { TrackingLinkList } from "@/entities/tracking/components/TrackingLinkList";
 import GraphExplorer from "@/entities/rag/components/GraphExplorer";
+import ActionAck from "@/entities/rag/components/ActionAck";
 
 export interface CardRenderCallbacks {
   onRemoveMessage?: (messageId: number) => void;
@@ -77,6 +79,8 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
   const { card_type, data, title } = card;
   const messageId = options?.messageId ?? -1;
   const callbacks = options?.callbacks ?? {};
+
+  console.log('renderCardByType called with:', { card_type, data, title, messageId });
 
   // Playbook Dashboard 페이지 매핑
   const dashboardPages: Record<string, string> = {
@@ -348,12 +352,28 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
         />
       );
 
+    case 'action.graph_rag.ack':
+      console.log('cardRouter: action.graph_rag.ack case triggered', { card_type, data, title });
+      if (data) {
+        console.log('cardRouter: returning ActionAck component');
+        try {
+          return <ActionAck data={data as unknown as GraphRagActionAck} title={title} />;
+        } catch (error) {
+          console.error('cardRouter: ActionAck component error', error);
+          // Fallback to InfoCard if ActionAck fails
+          return <InfoCard title={title || "Action Result"} data={data} />;
+        }
+      }
+      console.log('cardRouter: no data, breaking to default');
+      break;
+
     // ==================== Generic Cards ====================
     case 'info':
     case 'message':
       return <InfoCard title={title || "Data"} data={data || card} />;
 
     default:
+      console.log('renderCardByType: falling back to default case for card_type:', card_type);
       return <SeriesTableCard title={title || "Data"} data={data || card} />;
   }
 };

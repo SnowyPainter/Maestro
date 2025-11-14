@@ -192,9 +192,9 @@ def _simple_flow(
         description=description,
         input_model=input_model,
         output_model=GraphRagActionAck,
-        method="post",
+        method="POST",
         path=path,
-        tags=("graph_rag", "actions"),
+        tags=("action", "graph_rag", "actions", key),
     )
     def _build(builder: FlowBuilder):
         task = builder.task(key, key)
