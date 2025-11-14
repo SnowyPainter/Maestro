@@ -5,6 +5,8 @@ from typing import Optional
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.backend.src.core.context import get_persona_account_id
+from apps.backend.src.modules.accounts.service import get_persona_account
 from apps.backend.src.modules.drafts.schemas import BlockText, DraftIR, DraftSaveRequest
 from apps.backend.src.modules.drafts.service import create_draft
 from apps.backend.src.modules.playbooks.service import record_playbook_event
@@ -19,6 +21,13 @@ from apps.backend.src.modules.rag.schemas import (
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
+
+import logging
+from apps.backend.src.core.logging import setup_logging
+
+setup_logging()
+
+logger = logging.getLogger(__name__)
 
 
 class GraphRagActionAck(GraphRagActionResult):
@@ -35,6 +44,28 @@ def _publish_refresh(persona_id: Optional[int], campaign_id: Optional[int], *, t
     )
 
 
+async def _resolve_persona_context(
+    db: AsyncSession,
+    payload_persona_id: Optional[int],
+) -> tuple[Optional[int], Optional[int]]:
+    persona_id = payload_persona_id
+    persona_account_id: Optional[int] = None
+
+    raw_ctx_persona_account = get_persona_account_id()
+    if raw_ctx_persona_account:
+        try:
+            persona_account_id = int(raw_ctx_persona_account)
+        except (TypeError, ValueError):
+            persona_account_id = None
+
+    if persona_id is None and persona_account_id is not None:
+        account = await get_persona_account(db, persona_account_id=persona_account_id)
+        if account is not None:
+            persona_id = account.persona_id
+
+    return persona_id, persona_account_id
+
+
 @operator(
     key="graph_rag.actions.trend_to_draft",
     title="Create draft from Graph RAG trend",
@@ -43,6 +74,11 @@ def _publish_refresh(persona_id: Optional[int], campaign_id: Optional[int], *, t
 async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
     user: User = ctx.require(User)
+
+    persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
+
+    logger.info(f"persona_id: {persona_id}, persona_account_id: {persona_account_id}")
+    logger.info(f"payload: {payload}")
 
     ir = DraftIR(
         blocks=[
@@ -74,7 +110,25 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
         created_by=user.id,
         payload=draft_request,
     )
-    _publish_refresh(payload.persona_id, payload.campaign_id, trigger="trend_to_draft")
+
+    if persona_id and payload.campaign_id:
+        log = await record_playbook_event(
+            db,
+            event="graph_rag.trend_to_draft",
+            persona_id=persona_id,
+            persona_account_id=persona_account_id,
+            campaign_id=payload.campaign_id,
+            draft_id=draft.id,
+            message=payload.title,
+            meta={
+                "trend_query": payload.query,
+                "trend_description": payload.description,
+                "source_node_id": str(payload.source_node_id) if payload.source_node_id else None,
+            },
+        )
+        await db.commit()
+
+    _publish_refresh(persona_id, payload.campaign_id, trigger="trend_to_draft")
     return GraphRagActionResult(
         status="draft_created",
         message=f"Draft #{draft.id} created from trend",
@@ -90,10 +144,12 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
 async def op_graph_rag_next_action(payload: GraphRagNextActionCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
 
+    persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
     log = await record_playbook_event(
         db,
         event="graph_rag.next_action",
-        persona_id=payload.persona_id,
+        persona_id=persona_id,
+        persona_account_id=persona_account_id,
         campaign_id=payload.campaign_id,
         message=payload.title,
         meta={
@@ -103,7 +159,8 @@ async def op_graph_rag_next_action(payload: GraphRagNextActionCommand, ctx: Task
             "confidence": payload.confidence,
         },
     )
-    _publish_refresh(payload.persona_id, payload.campaign_id, trigger="next_action")
+
+    _publish_refresh(persona_id, payload.campaign_id, trigger="next_action")
     return GraphRagActionResult(
         status="logged",
         message="Next action recorded",
@@ -119,10 +176,12 @@ async def op_graph_rag_next_action(payload: GraphRagNextActionCommand, ctx: Task
 async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
 
+    persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
     log = await record_playbook_event(
         db,
         event="graph_rag.playbook_reapply",
-        persona_id=payload.persona_id,
+        persona_id=persona_id,
+        persona_account_id=persona_account_id,
         campaign_id=payload.campaign_id,
         message=payload.title or "Graph RAG memory highlight",
         meta={
@@ -132,7 +191,7 @@ async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, 
             "node_id": str(payload.node_id) if payload.node_id else None,
         },
     )
-    _publish_refresh(payload.persona_id, payload.campaign_id, trigger="playbook_reapply")
+    _publish_refresh(persona_id, payload.campaign_id, trigger="playbook_reapply")
     return GraphRagActionResult(
         status="logged",
         message="Playbook reuse logged",
@@ -148,6 +207,7 @@ async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, 
 async def op_graph_rag_persona_focus(payload: GraphRagPersonaFocusCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
 
+    persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
     roi = payload.roi
     meta = {
         "focus_query": payload.focus_query,
@@ -165,12 +225,13 @@ async def op_graph_rag_persona_focus(payload: GraphRagPersonaFocusCommand, ctx: 
     log = await record_playbook_event(
         db,
         event="graph_rag.persona_focus",
-        persona_id=payload.persona_id,
+        persona_id=persona_id,
+        persona_account_id=persona_account_id,
         campaign_id=payload.campaign_id,
         message=f"Focus on {payload.focus_query}",
         meta=meta,
     )
-    _publish_refresh(payload.persona_id, payload.campaign_id, trigger="persona_focus")
+    _publish_refresh(persona_id, payload.campaign_id, trigger="persona_focus")
     return GraphRagActionResult(
         status="logged",
         message="Persona focus recorded",

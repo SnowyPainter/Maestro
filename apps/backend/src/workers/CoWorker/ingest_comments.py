@@ -474,6 +474,20 @@ async def _ingest(window_minutes: int, limit: int) -> Dict[str, int]:
     return summary
 
 
+_worker_loop: asyncio.AbstractEventLoop | None = None
+
+
+def _ensure_worker_loop() -> asyncio.AbstractEventLoop:
+    global _worker_loop
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+    if _worker_loop is None or _worker_loop.is_closed():
+        _worker_loop = asyncio.new_event_loop()
+    return _worker_loop
+
+
 @celery_app.task(
     name="apps.backend.src.workers.CoWorker.ingest_comments.ingest_reactive_comments",
     queue="coworker",
@@ -482,13 +496,16 @@ async def _ingest(window_minutes: int, limit: int) -> Dict[str, int]:
 )
 def ingest_reactive_comments(self, *, window_minutes: int = 10, limit: int = 200) -> Dict[str, int]:
     """Entry point for Celery beat to evaluate recent insight comments."""
-    try:
-        # Celery가 제공하는 이벤트 루프에서 직접 실행
-        loop = asyncio.get_running_loop()
+    loop = _ensure_worker_loop()
+    if loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(
+            _ingest(window_minutes=window_minutes, limit=limit),
+            loop,
+        )
+        result = future.result()
+    else:
+        asyncio.set_event_loop(loop)
         result = loop.run_until_complete(_ingest(window_minutes=window_minutes, limit=limit))
-    except RuntimeError:
-        # 이벤트 루프가 실행 중이 아닌 경우 asyncio.run 사용
-        result = asyncio.run(_ingest(window_minutes=window_minutes, limit=limit))
 
     logger.info(
         "Reactive comment ingest complete",
