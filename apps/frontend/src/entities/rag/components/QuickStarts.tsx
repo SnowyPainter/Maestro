@@ -8,12 +8,11 @@ import { RagQuickstartTemplate } from "@/lib/api/generated"
 
 interface QuickStartsProps {
   data: RagQuickstartTemplate[]
-  onQuickStartClick?: (query: string) => void
 }
 
 const SHOW_LIMIT = 3
 
-const QuickStarts: React.FC<QuickStartsProps> = ({ data, onQuickStartClick }) => {
+const QuickStarts: React.FC<QuickStartsProps> = ({ data }) => {
   const [showMore, setShowMore] = useState(false)
 
   if (!data || data.length === 0) {
@@ -33,7 +32,7 @@ const QuickStarts: React.FC<QuickStartsProps> = ({ data, onQuickStartClick }) =>
 
       <div className="space-y-2">
         {visibleItems.map((template, index) => (
-          <div key={index} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+          <div key={index} className="p-3 rounded-lg border hover:bg-muted/50 transition-colors">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="font-medium text-sm truncate">{template.title}</h4>
@@ -53,14 +52,6 @@ const QuickStarts: React.FC<QuickStartsProps> = ({ data, onQuickStartClick }) =>
                 Query: {template.query}
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onQuickStartClick?.(template.query)}
-              className="shrink-0 ml-2"
-            >
-              Use
-            </Button>
           </div>
         ))}
       </div>

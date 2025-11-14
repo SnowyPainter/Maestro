@@ -7,19 +7,17 @@ import {
   Lightbulb,
   RotateCcw,
   Calendar,
-  User,
-  ChevronRight
+  User
 } from "lucide-react"
 import { RagMemoryHighlight } from "@/lib/api/generated"
 
 interface MemoryHighlightsProps {
   data: RagMemoryHighlight[]
-  onNavigate?: (nodeId: string) => void
 }
 
 const SHOW_LIMIT = 3
 
-const MemoryHighlights: React.FC<MemoryHighlightsProps> = ({ data, onNavigate }) => {
+const MemoryHighlights: React.FC<MemoryHighlightsProps> = ({ data }) => {
   const [showMore, setShowMore] = useState(false)
 
   if (!data || data.length === 0) {
@@ -99,16 +97,6 @@ const MemoryHighlights: React.FC<MemoryHighlightsProps> = ({ data, onNavigate })
                 )}
               </div>
 
-              {highlight.node_id && onNavigate && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onNavigate(highlight.node_id!)}
-                  className="shrink-0 mt-1"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
         ))}

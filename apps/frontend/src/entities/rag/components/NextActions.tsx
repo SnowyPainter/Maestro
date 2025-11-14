@@ -8,19 +8,17 @@ import {
   ArrowRight,
   Calendar,
   User,
-  Target,
-  Play
+  Target
 } from "lucide-react"
 import { RagNextActionProposal } from "@/lib/api/generated"
 
 interface NextActionsProps {
   data: RagNextActionProposal[]
-  onExecuteAction?: (action: RagNextActionProposal) => void
 }
 
 const SHOW_LIMIT = 3
 
-const NextActions: React.FC<NextActionsProps> = ({ data, onExecuteAction }) => {
+const NextActions: React.FC<NextActionsProps> = ({ data }) => {
   const [showMore, setShowMore] = useState(false)
 
   if (!data || data.length === 0) {
@@ -109,16 +107,6 @@ const NextActions: React.FC<NextActionsProps> = ({ data, onExecuteAction }) => {
                 </div>
               </div>
 
-              {onExecuteAction && (
-                <Button
-                  size="sm"
-                  onClick={() => onExecuteAction(action)}
-                  className="shrink-0 mt-1"
-                >
-                  <Play className="h-4 w-4 mr-1" />
-                  Execute
-                </Button>
-              )}
             </div>
           </div>
         ))}
