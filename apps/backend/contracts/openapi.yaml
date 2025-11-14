@@ -5023,6 +5023,106 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /sse/schedules/events:
+    get:
+      tags:
+      - schedules
+      - stream
+      summary: Scheduler:Sse
+      operationId: scheduler_sse_sse_schedules_events_get
+      responses:
+        '200':
+          description: Successful Response
+  /sse/graph-rag/suggestions/stream:
+    get:
+      tags:
+      - graph_rag
+      - stream
+      summary: Graph Rag:Suggestions Stream
+      operationId: graph_rag_suggestions_stream_sse_graph_rag_suggestions_stream_get
+      parameters:
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: persona_account_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: mode
+        in: query
+        required: false
+        schema:
+          enum:
+          - default
+          - quickstart
+          - memory
+          - next_action
+          type: string
+          default: default
+          title: Mode
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 8
+          title: Limit
+      - name: include_quickstart
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Quickstart
+      - name: include_memory
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Memory
+      - name: include_next_actions
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Next Actions
+      - name: include_roi
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Roi
+      responses:
+        '200':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     ABTestCompleteCommand:
@@ -7182,7 +7282,7 @@ components:
           - next_action
           title: Mode
           description: Action generation mode
-          default: default
+          default: quickstart
         include_quickstart:
           type: boolean
           title: Include Quickstart
@@ -7220,6 +7320,10 @@ components:
           type: string
           format: date-time
           title: Generated At
+        roi:
+          anyOf:
+          - $ref: '#/components/schemas/RagValueInsight'
+          - type: 'null'
       type: object
       title: GraphRagSuggestionResponse
     HTTPValidationError:

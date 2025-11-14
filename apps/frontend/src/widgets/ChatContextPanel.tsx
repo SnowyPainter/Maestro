@@ -1,5 +1,9 @@
+import { useCallback } from "react"
+
+import { GraphRagActionCard } from "@/lib/api/generated"
+
 import { PersonaAccountContext } from "./PersonaAccountContext"
-import { CopilotCard, CopilotCardData } from "./CopilotCard"
+import { CopilotCard } from "./CopilotCard"
 import { useGraphRagSuggestions } from "./useGraphRagSuggestions"
 
 interface ChatContextPanelProps {
@@ -13,22 +17,24 @@ export function ChatContextPanel({
   onSelectDraft,
   onExecuteAction,
 }: ChatContextPanelProps) {
-  const { projection, executePrimaryAction, isExecuting, isConnected, hasPersona } = useGraphRagSuggestions()
+  const {
+    projection,
+    executeAction,
+    isExecuting,
+    isConnected,
+    hasPersona,
+  } = useGraphRagSuggestions()
 
-  const copilotData: CopilotCardData | null = projection.roi || projection.actionCard
-    ? {
-        roi: projection.roi,
-        currentTask: projection.actionCard
-          ? {
-              title: projection.actionCard.title,
-              description: projection.actionCard.description ?? "",
-              ctaLabel: projection.actionCard.cta_label ?? "Execute Action",
-            }
-          : null,
+  const handleExecute = useCallback(
+    (card?: GraphRagActionCard | null) => {
+      if (projection.actionCards.length) {
+        executeAction(card)
+      } else if (onExecuteAction) {
+        onExecuteAction()
       }
-    : null
-
-  const handleExecute = projection.actionCard ? executePrimaryAction : onExecuteAction
+    },
+    [projection.actionCards.length, executeAction, onExecuteAction],
+  )
 
   return (
     <aside className="bg-card border-l px-3 py-4 h-screen hidden lg:block max-w-[280px]">
@@ -36,9 +42,10 @@ export function ChatContextPanel({
         <PersonaAccountContext onSelectCampaign={onSelectCampaign} onSelectDraft={onSelectDraft} />
 
         <CopilotCard
-          data={copilotData}
+          roi={projection.roi}
+          actions={projection.actionCards}
           onExecute={handleExecute}
-          isLoading={hasPersona && !isConnected}
+          isLoading={hasPersona && !isConnected && !projection.actionCards.length}
           isExecuting={isExecuting}
         />
       </div>

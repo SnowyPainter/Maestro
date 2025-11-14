@@ -124,7 +124,7 @@ def fallback_query_for_mode(mode: RagSearchMode, ctx: Optional[RagPersonaContext
         return f"{persona} judgements that worked well before"
     if mode == "next_action":
         return f"Next best action for {persona}"
-    return ""
+    return f"Recent wins or insights for {persona}"
 
 
 def rag_mode_config(
@@ -297,8 +297,6 @@ def estimate_roi(
     next_actions: Sequence[RagNextActionProposal],
     persona_ctx: Optional[RagPersonaContext],
 ) -> Optional[RagValueInsight]:
-    if not memory_highlights and not next_actions:
-        return None
     reuse_total = sum(max(0, highlight.reuse_count) for highlight in memory_highlights)
     automation_total = len(next_actions)
     saved_minutes = reuse_total * 5 + automation_total * 10

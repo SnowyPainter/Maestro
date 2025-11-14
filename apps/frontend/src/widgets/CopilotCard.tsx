@@ -1,29 +1,57 @@
-import { Button } from "@/components/ui/button"
-import { Brain, Play, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
 
-export interface CopilotCardData {
+import { Button } from "@/components/ui/button"
+import { GraphRagActionCard } from "@/lib/api/generated"
+import { Brain, ChevronLeft, ChevronRight, Play, TrendingUp } from "lucide-react"
+
+interface CopilotCardProps {
   roi: {
     memoryReuse: number
     savedMinutes: number
     automationRate: number
   } | null
-  currentTask: {
-    title: string
-    description: string
-    ctaLabel?: string
-  } | null
-}
-
-interface CopilotCardProps {
-  data?: CopilotCardData | null
-  onExecute?: () => void
+  actions: GraphRagActionCard[]
+  onExecute?: (card?: GraphRagActionCard | null) => void
   isLoading?: boolean
   isExecuting?: boolean
 }
 
-export function CopilotCard({ data, onExecute, isLoading = false, isExecuting = false }: CopilotCardProps) {
-  const roi = data?.roi ?? null
-  const currentTask = data?.currentTask ?? null
+export function CopilotCard({
+  roi,
+  actions,
+  onExecute,
+  isLoading = false,
+  isExecuting = false,
+}: CopilotCardProps) {
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    setCurrentIndex(0)
+  }, [actions])
+
+  const hasActions = actions.length > 0
+  const currentAction = hasActions ? actions[currentIndex] : null
+
+  const handleExecute = () => {
+    if (!currentAction || !onExecute) {
+      return
+    }
+    onExecute(currentAction)
+  }
+
+  const handlePrev = () => {
+    if (!hasActions) {
+      return
+    }
+    setCurrentIndex((idx) => (idx - 1 + actions.length) % actions.length)
+  }
+
+  const handleNext = () => {
+    if (!hasActions) {
+      return
+    }
+    setCurrentIndex((idx) => (idx + 1) % actions.length)
+  }
 
   return (
     <div className="space-y-4">
@@ -72,7 +100,7 @@ export function CopilotCard({ data, onExecute, isLoading = false, isExecuting = 
           </div>
         ) : (
           <div className="text-center text-xs text-muted-foreground py-4 border rounded-lg">
-            {isLoading ? "Loading Graph RAG ROI..." : "Connect a persona to view ROI"}
+            {isLoading ? "Loading Graph RAG ROI..." : "ROI data not available yet."}
           </div>
         )}
       </div>
@@ -84,24 +112,48 @@ export function CopilotCard({ data, onExecute, isLoading = false, isExecuting = 
           </span>
         </div>
         <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 border border-slate-200/60 shadow-sm">
-          {currentTask ? (
-            <div className="text-center space-y-3">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-800 leading-tight">
-                  {currentTask.title}
-                </p>
-                <p className="text-xs text-slate-600 leading-relaxed max-w-[200px] mx-auto">
-                  {currentTask.description}
+          {currentAction ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>
+                  Action {currentIndex + 1} / {actions.length}
+                </span>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={handlePrev}
+                    disabled={actions.length <= 1}
+                  >
+                    <ChevronLeft className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={handleNext}
+                    disabled={actions.length <= 1}
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="text-center space-y-1">
+                <p className="text-sm font-semibold text-slate-800 leading-tight">{currentAction.title}</p>
+                <p className="text-xs text-slate-600 leading-relaxed max-w-[220px] mx-auto">
+                  {currentAction.description || (typeof currentAction.meta?.summary === "string" ? currentAction.meta.summary : "Graph RAG recommendation")}
                 </p>
               </div>
               <Button
                 size="sm"
-                onClick={onExecute}
+                onClick={handleExecute}
                 disabled={!onExecute || isExecuting}
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0 shadow-md hover:shadow-lg transition-all duration-200 font-medium disabled:opacity-60"
               >
                 <Play className="h-4 w-4 mr-2" />
-                {isExecuting ? "Executing..." : currentTask.ctaLabel ?? "Execute Action"}
+                {isExecuting ? "Executing..." : currentAction.cta_label ?? "Execute Action"}
               </Button>
             </div>
           ) : (

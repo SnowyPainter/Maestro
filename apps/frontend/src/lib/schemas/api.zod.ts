@@ -4189,7 +4189,7 @@ export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyQueryDefault =
 export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyQueryMin = 0;
 export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyLimitDefault = 8;
 export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyLimitMax = 50;
-export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyModeDefault = "default";export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeMemoryDefault = true;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeRoiDefault = true;
+export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyModeDefault = "quickstart";export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeMemoryDefault = true;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeRoiDefault = true;
 
 export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBody = zod.object({
   "query": zod.string().min(graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyQueryMin).optional(),
@@ -4204,7 +4204,7 @@ export const graphRagSuggestApiOrchestratorGraphRagSuggestPostBody = zod.object(
   "include_roi": zod.boolean().default(graphRagSuggestApiOrchestratorGraphRagSuggestPostBodyIncludeRoiDefault).describe('Include ROI/value insights')
 })
 
-export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseCardsItemPriorityDefault = 0;
+export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseCardsItemPriorityDefault = 0;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseRoiMemoryReuseCountDefault = 0;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseRoiAutomatedDecisionsDefault = 0;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseRoiSavedMinutesDefault = 0;export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponseRoiAiInterventionRateDefault = 0;
 
 export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponse = zod.object({
   "persona": zod.union([zod.object({
@@ -4233,7 +4233,19 @@ export const graphRagSuggestApiOrchestratorGraphRagSuggestPostResponse = zod.obj
   "confidence": zod.union([zod.number(),zod.null()]).optional(),
   "meta": zod.record(zod.string(), zod.any()).optional()
 })).optional(),
-  "generated_at": zod.iso.datetime({}).optional()
+  "generated_at": zod.iso.datetime({}).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
 })
 
 
@@ -4245,7 +4257,7 @@ export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPo
 export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyQueryMin = 0;
 export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyLimitDefault = 8;
 export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyLimitMax = 50;
-export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyModeDefault = "default";export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeMemoryDefault = true;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeRoiDefault = true;
+export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyModeDefault = "quickstart";export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeMemoryDefault = true;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeRoiDefault = true;
 
 export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBody = zod.object({
   "query": zod.string().min(graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyQueryMin).optional(),
@@ -4260,7 +4272,7 @@ export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPo
   "include_roi": zod.boolean().default(graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostBodyIncludeRoiDefault).describe('Include ROI/value insights')
 })
 
-export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseCardsItemPriorityDefault = 0;
+export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseCardsItemPriorityDefault = 0;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseRoiMemoryReuseCountDefault = 0;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseRoiAutomatedDecisionsDefault = 0;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseRoiSavedMinutesDefault = 0;export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponseRoiAiInterventionRateDefault = 0;
 
 export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostResponse = zod.object({
   "persona": zod.union([zod.object({
@@ -4289,7 +4301,19 @@ export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPo
   "confidence": zod.union([zod.number(),zod.null()]).optional(),
   "meta": zod.record(zod.string(), zod.any()).optional()
 })).optional(),
-  "generated_at": zod.iso.datetime({}).optional()
+  "generated_at": zod.iso.datetime({}).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
 })
 
 
@@ -4301,7 +4325,7 @@ export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyQu
 export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyQueryMin = 0;
 export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyLimitDefault = 8;
 export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyLimitMax = 50;
-export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyModeDefault = "default";export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeMemoryDefault = true;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeRoiDefault = true;
+export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyModeDefault = "quickstart";export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeMemoryDefault = true;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeRoiDefault = true;
 
 export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBody = zod.object({
   "query": zod.string().min(graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyQueryMin).optional(),
@@ -4316,7 +4340,7 @@ export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBody =
   "include_roi": zod.boolean().default(graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostBodyIncludeRoiDefault).describe('Include ROI/value insights')
 })
 
-export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseCardsItemPriorityDefault = 0;
+export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseCardsItemPriorityDefault = 0;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseRoiMemoryReuseCountDefault = 0;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseRoiAutomatedDecisionsDefault = 0;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseRoiSavedMinutesDefault = 0;export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponseRoiAiInterventionRateDefault = 0;
 
 export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostResponse = zod.object({
   "persona": zod.union([zod.object({
@@ -4345,7 +4369,19 @@ export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostRespon
   "confidence": zod.union([zod.number(),zod.null()]).optional(),
   "meta": zod.record(zod.string(), zod.any()).optional()
 })).optional(),
-  "generated_at": zod.iso.datetime({}).optional()
+  "generated_at": zod.iso.datetime({}).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
 })
 
 
@@ -4357,7 +4393,7 @@ export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPo
 export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyQueryMin = 0;
 export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyLimitDefault = 8;
 export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyLimitMax = 50;
-export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyModeDefault = "default";export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeMemoryDefault = true;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeRoiDefault = true;
+export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyModeDefault = "quickstart";export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeQuickstartDefault = true;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeMemoryDefault = true;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeNextActionsDefault = true;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeRoiDefault = true;
 
 export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBody = zod.object({
   "query": zod.string().min(graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyQueryMin).optional(),
@@ -4372,7 +4408,7 @@ export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPo
   "include_roi": zod.boolean().default(graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostBodyIncludeRoiDefault).describe('Include ROI/value insights')
 })
 
-export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseCardsItemPriorityDefault = 0;
+export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseCardsItemCtaLabelDefault = "Open";export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseCardsItemPriorityDefault = 0;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseRoiMemoryReuseCountDefault = 0;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseRoiAutomatedDecisionsDefault = 0;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseRoiSavedMinutesDefault = 0;export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponseRoiAiInterventionRateDefault = 0;
 
 export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostResponse = zod.object({
   "persona": zod.union([zod.object({
@@ -4401,7 +4437,19 @@ export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPo
   "confidence": zod.union([zod.number(),zod.null()]).optional(),
   "meta": zod.record(zod.string(), zod.any()).optional()
 })).optional(),
-  "generated_at": zod.iso.datetime({}).optional()
+  "generated_at": zod.iso.datetime({}).optional(),
+  "roi": zod.union([zod.object({
+  "persona": zod.union([zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_name": zod.string().nullish(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_name": zod.string().nullish()
+}),zod.null()]).optional(),
+  "memory_reuse_count": zod.number().optional(),
+  "automated_decisions": zod.number().optional(),
+  "saved_minutes": zod.number().optional(),
+  "ai_intervention_rate": zod.number().optional()
+}),zod.null()]).optional()
 })
 
 
@@ -4625,3 +4673,23 @@ export const redirectTrackingLinkLTokenGetParams = zod.object({
 })
 
 export const redirectTrackingLinkLTokenGetResponse = zod.any()
+
+
+/**
+ * @summary Graph Rag:Suggestions Stream
+ */
+export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryModeDefault = "default";export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitDefault = 8;
+export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitMax = 50;
+export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeQuickstartDefault = true;export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeMemoryDefault = true;export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeNextActionsDefault = true;export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeRoiDefault = true;
+
+export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryParams = zod.object({
+  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
+  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
+  "mode": zod.enum(['default', 'quickstart', 'memory', 'next_action']).default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryModeDefault),
+  "limit": zod.number().min(1).max(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitMax).default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitDefault),
+  "include_quickstart": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeQuickstartDefault),
+  "include_memory": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeMemoryDefault),
+  "include_next_actions": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeNextActionsDefault),
+  "include_roi": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeRoiDefault)
+})

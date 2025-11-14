@@ -140,6 +140,7 @@ class GraphRagSuggestionResponse(BaseModel):
     persona: Optional[RagPersonaContext] = None
     cards: List[GraphRagActionCard] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
+    roi: Optional[RagValueInsight] = None
 
 
 class GraphRagTrendActionCommand(BaseModel):

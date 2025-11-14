@@ -55,9 +55,8 @@ app.add_middleware(ContextMiddleware)
 
 # BFF 라우터(오케스트레이터 기반) 등록
 api.include_router(orchestrator_bff_router, prefix="/bff")
-# Scheduler SSE 라우터 등록
+# Scheduler / Graph RAG SSE 라우터 등록 (bff prefix + top-level for backward compatibility)
 api.include_router(scheduler_stream_router, prefix="/sse")
-# Graph RAG SSE 라우터 등록
 api.include_router(rag_stream_router, prefix="/sse")
 # 파일 라우터 등록
 api.include_router(file_router, prefix="/files")
@@ -100,6 +99,8 @@ async def reset_db():
 # 최종적으로 app에 붙이기
 app.include_router(api)
 app.include_router(link_tracking_router, prefix="/l")
+app.include_router(scheduler_stream_router, prefix="/sse")
+app.include_router(rag_stream_router, prefix="/sse")
 
 def _deunionize_nullable(d):
     """anyOf/oneOf에 [string + null] 패턴이 나오면 nullable 표현으로 정규화"""

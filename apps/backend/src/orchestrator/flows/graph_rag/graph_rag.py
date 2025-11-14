@@ -29,6 +29,7 @@ from apps.backend.src.modules.rag.schemas import (
     RagSearchItem,
     RagSearchMode,
     RagSearchResponse,
+    RagValueInsight,
 )
 from apps.backend.src.modules.rag.search import search_rag
 from apps.backend.src.modules.users.models import User
@@ -53,7 +54,7 @@ class GraphRagSuggestPayload(BaseModel):
     persona_account_id: Optional[int] = None
     campaign_id: Optional[int] = None
     limit: int = Field(8, ge=1, le=50)
-    mode: RagSearchMode = Field("default", description="Action generation mode")
+    mode: RagSearchMode = Field("quickstart", description="Action generation mode")
     include_quickstart: bool = Field(True, description="Include quickstart templates")
     include_memory: bool = Field(True, description="Include memory reuse cards")
     include_next_actions: bool = Field(True, description="Include Next Action proposals")
@@ -64,6 +65,7 @@ class GraphRagAggregatePayload(BaseModel):
     persona: Optional[RagPersonaContext] = None
     limit: int = Field(12, ge=1, le=50)
     buckets: List[GraphRagActionList] = Field(default_factory=list)
+    roi: Optional[RagValueInsight] = None
 
 
 @operator(
@@ -427,6 +429,7 @@ async def op_graph_rag_aggregate_cards(payload: GraphRagAggregatePayload, ctx: T
         persona=payload.persona,
         cards=ordered[:limit],
         generated_at=datetime.now(timezone.utc),
+        roi=payload.roi,
     )
 
 
@@ -444,6 +447,7 @@ def _aggregate_payload_factory(state, _payload):
         "persona": persona,
         "limit": limit,
         "buckets": [bucket for bucket in buckets if bucket is not None],
+        "roi": getattr(getattr(context, "response", None), "roi", None),
     }
 
 
