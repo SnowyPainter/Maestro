@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     host: "localhost",
     port: 5173,
-    allowedHosts: ["app.yukiscale.work"], // Cloudflare tunnel 호스트 허용
+    allowedHosts: ["localhost", "app.yukiscale.work"], // Cloudflare tunnel 호스트 허용
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

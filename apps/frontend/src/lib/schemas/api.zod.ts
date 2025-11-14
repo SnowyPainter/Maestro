@@ -2533,26 +2533,6 @@ export const bffTrendsListTrendsApiBffTrendsGetResponse = zod.object({
 
 
 /**
- * @summary Graph Rag:Suggestions Stream
- */
-export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryModeDefault = "default";export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryLimitDefault = 8;
-export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryLimitMax = 50;
-export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeQuickstartDefault = true;export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeMemoryDefault = true;export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeNextActionsDefault = true;export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeRoiDefault = true;
-
-export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryParams = zod.object({
-  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
-  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
-  "mode": zod.enum(['default', 'quickstart', 'memory', 'next_action']).default(graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryModeDefault),
-  "limit": zod.number().min(1).max(graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryLimitMax).default(graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryLimitDefault),
-  "include_quickstart": zod.boolean().default(graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeQuickstartDefault),
-  "include_memory": zod.boolean().default(graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeMemoryDefault),
-  "include_next_actions": zod.boolean().default(graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeNextActionsDefault),
-  "include_roi": zod.boolean().default(graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryIncludeRoiDefault)
-})
-
-
-/**
  * @summary Upload a media file
  */
 export const uploadFileApiFilesFilesPostBody = zod.object({
@@ -4766,23 +4746,3 @@ export const redirectTrackingLinkLTokenGetParams = zod.object({
 })
 
 export const redirectTrackingLinkLTokenGetResponse = zod.any()
-
-
-/**
- * @summary Graph Rag:Suggestions Stream
- */
-export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryModeDefault = "default";export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitDefault = 8;
-export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitMax = 50;
-export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeQuickstartDefault = true;export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeMemoryDefault = true;export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeNextActionsDefault = true;export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeRoiDefault = true;
-
-export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryParams = zod.object({
-  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "persona_account_id": zod.union([zod.number(),zod.null()]).optional(),
-  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
-  "mode": zod.enum(['default', 'quickstart', 'memory', 'next_action']).default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryModeDefault),
-  "limit": zod.number().min(1).max(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitMax).default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryLimitDefault),
-  "include_quickstart": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeQuickstartDefault),
-  "include_memory": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeMemoryDefault),
-  "include_next_actions": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeNextActionsDefault),
-  "include_roi": zod.boolean().default(graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryIncludeRoiDefault)
-})

@@ -6,8 +6,25 @@ import { GraphRagActionCard, GraphRagSuggestionResponse, GraphRagSuggestPayload,
 import { usePersonaContextStore } from "@/store/persona-context"
 import { useSessionStore } from "@/store/session"
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "/api"
-const STREAM_PATH = "/sse/graph-rag/suggestions/stream"
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api"
+const WS_PATH = "/sse/graph-rag/suggestions/stream"
+
+const parseBooleanFlag = (envValue: string | undefined, searchKey: string): boolean => {
+  const normalized = (envValue ?? "").trim().toLowerCase()
+  const envEnabled = normalized === "1" || normalized === "true"
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search)
+    const fromQuery = params.get(searchKey)
+    if (fromQuery !== null) {
+      const normalizedQuery = fromQuery.trim().toLowerCase()
+      return normalizedQuery === "1" || normalizedQuery === "true"
+    }
+  }
+  return envEnabled
+}
+
+const SSE_DEBUG_ENABLED = parseBooleanFlag(import.meta.env.VITE_GRAPH_RAG_SSE_DEBUG, "graphRagDebug")
+const SSE_MOCK_ENABLED = parseBooleanFlag(import.meta.env.VITE_GRAPH_RAG_SSE_MOCK, "graphRagMock")
 
 export interface CopilotProjection {
   roi: {
@@ -26,6 +43,22 @@ const joinBaseAndPath = (base: string, path: string): string => {
   const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base
   const normalizedPath = path.startsWith("/") ? path : `/${path}`
   return `${normalizedBase}${normalizedPath}`
+}
+
+const buildWebSocketUrl = (baseUrl: string, query: string): string => {
+  if (typeof window === "undefined") {
+    return baseUrl
+  }
+  const absoluteBase = baseUrl.startsWith("http://") || baseUrl.startsWith("https://")
+    ? baseUrl
+    : `${window.location.origin}${baseUrl.startsWith("/") ? "" : "/"}${baseUrl}`
+  const url = new URL(absoluteBase)
+  const trimmedQuery = query.startsWith("?") ? query.slice(1) : query
+  if (trimmedQuery) {
+    url.search = trimmedQuery
+  }
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:"
+  return url.toString()
 }
 
 const buildQueryString = (params: Record<string, unknown>): string => {
@@ -67,6 +100,20 @@ interface UseGraphRagSuggestionsOptions {
   onActionResult?: (result: GraphRagActionAck) => void
 }
 
+interface GraphRagDebugEvent {
+  kind: string
+  ts?: string
+  [key: string]: unknown
+}
+
+interface GraphRagMockEvent {
+  kind: string
+  counter: number
+  ts?: string
+  persona_id?: number | null
+  campaign_id?: number | null
+}
+
 export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = {}) {
   const { onActionResult } = options
   const { personaId, personaAccountId, campaignId } = usePersonaContextStore()
@@ -76,8 +123,10 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
   const [isConnected, setIsConnected] = useState(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lastDebugEvent, setLastDebugEvent] = useState<GraphRagDebugEvent | null>(null)
+  const [lastMockEvent, setLastMockEvent] = useState<GraphRagMockEvent | null>(null)
 
-  const controllerRef = useRef<AbortController | null>(null)
+  const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const buildSuggestPayload = useCallback((): GraphRagSuggestPayload => {
@@ -109,120 +158,98 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
   }, [personaId, token, buildSuggestPayload])
 
   useEffect(() => {
-    if (!personaId) {
-      controllerRef.current?.abort()
-      controllerRef.current = null
+    if (!personaId && !SSE_MOCK_ENABLED) {
+      wsRef.current?.close()
+      wsRef.current = null
       setSuggestions(null)
       setIsConnected(false)
       setError(null)
+      setLastDebugEvent(null)
+      setLastMockEvent(null)
       return
     }
 
-    if (!token) {
+    if (!SSE_MOCK_ENABLED && !token) {
       setError("Not authenticated")
       setSuggestions(null)
       setIsConnected(false)
       return
     }
 
-    let isActive = true
+    setLastDebugEvent(null)
+    setLastMockEvent(null)
 
-    fetchSnapshot()
+    if (!SSE_MOCK_ENABLED) {
+      fetchSnapshot()
+    }
 
-    const streamUrl =
-      joinBaseAndPath(API_BASE, STREAM_PATH) +
-      buildQueryString({
-        persona_id: personaId,
-        persona_account_id: personaAccountId || undefined,
-        campaign_id: campaignId || undefined,
-      })
+    const queryString = buildQueryString({
+      persona_id: personaId || undefined,
+      persona_account_id: personaAccountId || undefined,
+      campaign_id: campaignId || undefined,
+      debug: SSE_DEBUG_ENABLED ? "1" : undefined,
+      mock: SSE_MOCK_ENABLED ? "1" : undefined,
+      token: !SSE_MOCK_ENABLED ? token : undefined,
+    })
+    console.log("queryString", queryString, API_BASE, WS_PATH)
+    const basePath = joinBaseAndPath(API_BASE, WS_PATH)
+    const wsUrl = buildWebSocketUrl(basePath, queryString)
+    let manualClose = false
 
-    const connect = async () => {
-      const controller = new AbortController()
-      controllerRef.current = controller
-      setError(null)
-
-      const headers = new Headers()
-      headers.set("Accept", "text/event-stream")
-      headers.set("Cache-Control", "no-cache")
-      headers.set("X-Request-ID", crypto.randomUUID())
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`)
+    const connect = () => {
+      if (!wsUrl) {
+        setError("Invalid WebSocket URL")
+        return
       }
 
-      try {
-        const response = await fetch(streamUrl, {
-          method: "GET",
-          headers,
-          credentials: "include",
-          signal: controller.signal,
-        })
+      const socket = new WebSocket(wsUrl)
+      wsRef.current = socket
 
-        if (!response.ok || !response.body) {
-          throw new Error(`SSE request failed (${response.status})`)
-        }
-
+      socket.onopen = () => {
         setIsConnected(true)
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ""
+        setError(null)
+      }
 
-        const dispatchEvent = (eventName: string, payload: string) => {
-          if (!payload) return
-          if (eventName && eventName !== "graph_rag.suggestion" && eventName !== "message") {
+      socket.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data)
+          const { type, data } = parsed
+          if (type === "graph_rag.debug") {
+            setLastDebugEvent(data as GraphRagDebugEvent)
+            if (SSE_DEBUG_ENABLED) {
+              console.debug("[GraphRag WS][debug]", data)
+            }
             return
           }
-          try {
-            const parsed: GraphRagSuggestionResponse = JSON.parse(payload)
-            setSuggestions(parsed)
-          } catch (err) {
-            console.error("Failed to parse Graph RAG SSE payload", err)
+          if (type === "graph_rag.mock") {
+            setLastMockEvent(data as GraphRagMockEvent)
+            console.info("[GraphRag WS][mock]", data)
+            return
           }
-        }
-
-        const processBuffer = () => {
-          while (true) {
-            const delimiterIndex = buffer.indexOf("\n\n")
-            if (delimiterIndex === -1) {
-              break
-            }
-            const rawEvent = buffer.slice(0, delimiterIndex)
-            buffer = buffer.slice(delimiterIndex + 2)
-
-            let eventName = ""
-            const dataLines: string[] = []
-
-            rawEvent.split(/\r?\n/).forEach((line) => {
-              if (line.startsWith("event:")) {
-                eventName = line.slice(6).trim()
-              } else if (line.startsWith("data:")) {
-                dataLines.push(line.slice(5).trim())
-              }
+          if (type === "graph_rag.suggestion") {
+            setSuggestions(data as GraphRagSuggestionResponse)
+            console.info("[GraphRag WS][suggestion]", {
+              cards: (data as GraphRagSuggestionResponse)?.cards?.length ?? 0,
+              roi: Boolean((data as GraphRagSuggestionResponse)?.roi),
+              ts: new Date().toISOString(),
             })
-
-            const data = dataLines.join("\n")
-            dispatchEvent(eventName, data)
           }
+        } catch (err) {
+          console.error("Failed to parse Graph RAG WebSocket payload", err)
         }
+      }
 
-        while (isActive) {
-          const { value, done } = await reader.read()
-          if (done) {
-            break
-          }
-          buffer += decoder.decode(value, { stream: true })
-          processBuffer()
-        }
-      } catch (err: any) {
-        if (!controller.signal.aborted) {
-          console.error("Graph RAG SSE error", err)
-          setError(err?.message ?? "Failed to connect")
-          // fallback to snapshot when SSE handshake fails
+      socket.onerror = (event) => {
+        console.error("Graph RAG WebSocket error", event)
+        setError("WebSocket connection error")
+        if (!SSE_MOCK_ENABLED) {
           fetchSnapshot()
         }
-      } finally {
+      }
+
+      socket.onclose = () => {
         setIsConnected(false)
-        if (isActive && !controller.signal.aborted) {
+        if (!manualClose) {
           reconnectTimerRef.current = setTimeout(connect, 3000)
         }
       }
@@ -231,15 +258,17 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
     connect()
 
     return () => {
-      isActive = false
-      controllerRef.current?.abort()
-      controllerRef.current = null
+      manualClose = true
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current)
         reconnectTimerRef.current = null
       }
+      if (wsRef.current) {
+        wsRef.current.close()
+        wsRef.current = null
+      }
     }
-  }, [personaId, personaAccountId, campaignId, token, fetchSnapshot, buildSuggestPayload])
+  }, [personaId, personaAccountId, campaignId, token, fetchSnapshot])
 
   const projection: CopilotProjection = useMemo(() => {
     if (!suggestions || !suggestions.cards) {
@@ -320,9 +349,13 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
     projection,
     isConnected,
     error,
+    lastDebugEvent,
+    lastMockEvent,
+    isDebugEnabled: SSE_DEBUG_ENABLED,
+    isMockEnabled: SSE_MOCK_ENABLED,
     executePrimaryAction,
     executeAction,
     isExecuting,
-    hasPersona: Boolean(personaId),
+    hasPersona: Boolean(personaId) || SSE_MOCK_ENABLED,
   }
 }

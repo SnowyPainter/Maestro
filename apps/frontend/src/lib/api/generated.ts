@@ -3357,33 +3357,6 @@ since?: string | null;
 until?: string | null;
 };
 
-export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams = {
-persona_id?: number | null;
-persona_account_id?: number | null;
-campaign_id?: number | null;
-mode?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode;
-/**
- * @minimum 1
- * @maximum 50
- */
-limit?: number;
-include_quickstart?: boolean;
-include_memory?: boolean;
-include_next_actions?: boolean;
-include_roi?: boolean;
-};
-
-export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode = typeof GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode[keyof typeof GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode = {
-  default: 'default',
-  quickstart: 'quickstart',
-  memory: 'memory',
-  next_action: 'next_action',
-} as const;
-
 export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams = {
 soft?: boolean;
 };
@@ -3432,33 +3405,6 @@ flow?: string | null;
  */
 limit?: number;
 };
-
-export type GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams = {
-persona_id?: number | null;
-persona_account_id?: number | null;
-campaign_id?: number | null;
-mode?: GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetMode;
-/**
- * @minimum 1
- * @maximum 50
- */
-limit?: number;
-include_quickstart?: boolean;
-include_memory?: boolean;
-include_next_actions?: boolean;
-include_roi?: boolean;
-};
-
-export type GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetMode = typeof GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetMode[keyof typeof GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetMode];
-
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetMode = {
-  default: 'default',
-  quickstart: 'quickstart',
-  memory: 'memory',
-  next_action: 'next_action',
-} as const;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -9053,95 +8999,6 @@ export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnTy
 
 
 /**
- * @summary Graph Rag:Suggestions Stream
- */
-export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet = (
-    params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<null>(
-      {url: `/api/sse/graph-rag/suggestions/stream`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-  
-
-export const getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryKey = (params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams,) => {
-    return [`/api/sse/graph-rag/suggestions/stream`, ...(params ? [params]: [])] as const;
-    }
-
-    
-export const getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryOptions = <TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>> = ({ signal }) => graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet(params, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryResult = NonNullable<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>>
-export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryError = HTTPValidationError
-
-
-export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params: undefined |  GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>,
-          TError,
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>,
-          TError,
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Graph Rag:Suggestions Stream
- */
-
-export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryOptions(params,options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
  * @summary Upload a media file
  */
 export const uploadFileApiFilesFilesPost = (
@@ -13819,95 +13676,6 @@ export function useSchedulerSseSseSchedulesEventsGet<TData = Awaited<ReturnType<
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSchedulerSseSseSchedulesEventsGetQueryOptions(options)
-
-  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
- * @summary Graph Rag:Suggestions Stream
- */
-export const graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet = (
-    params?: GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<null>(
-      {url: `/sse/graph-rag/suggestions/stream`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-  
-
-export const getGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryKey = (params?: GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams,) => {
-    return [`/sse/graph-rag/suggestions/stream`, ...(params ? [params]: [])] as const;
-    }
-
-    
-export const getGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryOptions = <TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(params?: GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>> = ({ signal }) => graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet(params, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryResult = NonNullable<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>>
-export type GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryError = HTTPValidationError
-
-
-export function useGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params: undefined |  GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>,
-          TError,
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params?: GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>,
-          TError,
-          Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params?: GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Graph Rag:Suggestions Stream
- */
-
-export function useGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
- params?: GraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGraphRagSuggestionsStreamSseGraphRagSuggestionsStreamGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

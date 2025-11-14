@@ -1281,23 +1281,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/sse/graph-rag/suggestions/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Graph Rag:Suggestions Stream */
-        get: operations["graph_rag_suggestions_stream_api_sse_graph_rag_suggestions_stream_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/files/files": {
         parameters: {
             query?: never;
@@ -2502,23 +2485,6 @@ export interface paths {
         };
         /** Scheduler:Sse */
         get: operations["scheduler_sse_sse_schedules_events_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sse/graph-rag/suggestions/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Graph Rag:Suggestions Stream */
-        get: operations["graph_rag_suggestions_stream_sse_graph_rag_suggestions_stream_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8239,43 +8205,6 @@ export interface operations {
             };
         };
     };
-    graph_rag_suggestions_stream_api_sse_graph_rag_suggestions_stream_get: {
-        parameters: {
-            query?: {
-                persona_id?: number | null;
-                persona_account_id?: number | null;
-                campaign_id?: number | null;
-                mode?: "default" | "quickstart" | "memory" | "next_action";
-                limit?: number;
-                include_quickstart?: boolean;
-                include_memory?: boolean;
-                include_next_actions?: boolean;
-                include_roi?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     upload_file_api_files_files_post: {
         parameters: {
             query?: never;
@@ -10485,43 +10414,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    graph_rag_suggestions_stream_sse_graph_rag_suggestions_stream_get: {
-        parameters: {
-            query?: {
-                persona_id?: number | null;
-                persona_account_id?: number | null;
-                campaign_id?: number | null;
-                mode?: "default" | "quickstart" | "memory" | "next_action";
-                limit?: number;
-                include_quickstart?: boolean;
-                include_memory?: boolean;
-                include_next_actions?: boolean;
-                include_roi?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
             };
         };
     };
