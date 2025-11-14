@@ -146,85 +146,90 @@ export function PersonaAccountContext({
 
     if (!hasPersona) {
         return (
-            <section>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Persona Account</h3>
-                <div className="mt-2 rounded-lg border bg-muted/40 p-3 text-sm">
-                    <p className="text-xs text-muted-foreground p-2 text-center">No persona account selected.</p>
+            <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
+                    Persona Account
+                </p>
+                <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs">
+                    <p className="text-muted-foreground text-center">No persona selected</p>
                 </div>
-            </section>
+            </div>
         );
     }
 
     return (
-        <section>
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Persona Account</h3>
-            <div className="mt-2 space-y-4">
+        <div className="space-y-3">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
+                Persona Account
+            </p>
+            <div className="space-y-2">
                 {isLoading ? (
-                    <div className="rounded-2xl border bg-card shadow-md p-4">
-                        <div className="flex items-center gap-3">
-                            <Skeleton className="h-10 w-10 rounded-full" />
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-28" />
-                                <Skeleton className="h-3 w-32" />
+                    <div className="rounded-xl border bg-card p-3">
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-3 w-20" />
+                                <Skeleton className="h-2 w-24" />
                             </div>
                         </div>
                     </div>
                 ) : (
                     <>
-                        <ContextCard
-                            icon={User}
-                            label="Persona Account"
-                            value={personaName || "Unknown"}
-                            enabled={true}
-                            toggleDisabled={true}
-                            clearDisabled={true}
-                            variant="persona"
-                            personaAvatarUrl={personaAvatarUrl || undefined}
-                            accountHandle={accountHandle || undefined}
-                            accountPlatform={accountPlatform ? formatPlatformName(accountPlatform) : undefined}
-                            isValid={isValidOut?.is_valid}
-                            onReconnect={handleReconnect}
-                            isReconnecting={isReconnecting}
-                            helper={isError ? "Could not confirm account status. You can still manage the context below." : "Your active persona account context"}
-                        />
-                        {contextTiles.length > 0 && (
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Attached Contexts</p>
-                                    <div className="flex items-center gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 w-6 p-0"
-                                            onClick={prevContext}
-                                            disabled={contextTiles.length <= 1}
-                                        >
-                                            <ChevronLeft className="h-3 w-3" />
-                                        </Button>
-                                        <span className="text-xs text-muted-foreground min-w-[3ch] text-center">
-                                            {currentContextIndex + 1}/{contextTiles.length}
-                                        </span>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 w-6 p-0"
-                                            onClick={nextContext}
-                                            disabled={contextTiles.length <= 1}
-                                        >
-                                            <ChevronRight className="h-3 w-3" />
-                                        </Button>
-                                    </div>
+                        <div className="rounded-xl border bg-card p-3">
+                            <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={personaAvatarUrl || undefined} />
+                                    <AvatarFallback className="text-xs">
+                                        {personaName?.charAt(0) || "U"}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{personaName}</p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        {accountHandle && `${accountHandle} • `}
+                                        {accountPlatform && formatPlatformName(accountPlatform)}
+                                    </p>
                                 </div>
-                                <div className="relative">
-                                    {contextTiles.map((tile, index) => (
+                                {!isValidOut?.is_valid && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                                        onClick={handleReconnect}
+                                        disabled={isReconnecting}
+                                    >
+                                        <RefreshCw className={cn("h-3 w-3", isReconnecting && "animate-spin")} />
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                        {contextTiles.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
+                                    Contexts
+                                </p>
+                                <div className="space-y-1">
+                                    {contextTiles.slice(0, 2).map((tile) => (
                                         <div
                                             key={tile.label}
-                                            className={cn(
-                                                "transition-opacity duration-200",
-                                                index === currentContextIndex ? "opacity-100" : "opacity-0 absolute inset-0 pointer-events-none"
-                                            )}
+                                            className="rounded-lg border bg-card/50 px-3 py-2 text-xs hover:bg-card cursor-pointer transition-colors"
+                                            onClick={tile.onClick}
                                         >
-                                            <ContextCard {...tile} />
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <tile.icon className="h-3 w-3 text-muted-foreground" />
+                                                    <span className="font-medium">{tile.label}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    {tile.enabled && (
+                                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                                    )}
+                                                    <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                                </div>
+                                            </div>
+                                            <p className="text-muted-foreground truncate mt-0.5">
+                                                {tile.value}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>
@@ -233,6 +238,6 @@ export function PersonaAccountContext({
                     </>
                 )}
             </div>
-        </section>
+        </div>
     );
 }

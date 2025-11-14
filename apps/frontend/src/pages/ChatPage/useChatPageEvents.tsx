@@ -1047,6 +1047,18 @@ export function useChatPageEvents() {
     }
   }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, handleReactiveRuleSelect, handleReactiveCreateRule, handleReactiveViewActivity, handleRagNavigate, t]);
 
+  const handleExecuteAction = useCallback(() => {
+    // TODO: Implement actual execution logic
+    console.log("Executing Copilot action...");
+    // For now, just show a message
+    const message: Message = {
+      id: getNextMessageId(),
+      type: 'user',
+      content: "🚀 Copilot action executed! Starting new draft creation from Trend #Aurora...",
+    };
+    appendMessage(message);
+  }, [appendMessage]);
+
   return {
     handleChatSend,
     addTrendQueryCard,
@@ -1054,5 +1066,6 @@ export function useChatPageEvents() {
     handleToolClick,
     handleSelectCampaign,
     handleSelectDraft,
+    handleExecuteAction,
   };
 }

@@ -4,7 +4,6 @@ import { ChatStream } from "@/widgets/ChatStream";
 import { ChatContextPanel } from "../../widgets/ChatContextPanel";
 import { ChatMessagesProvider, useChatMessages } from "@/entities/messages/context/ChatMessagesContext";
 import { useChatPageEvents } from "./useChatPageEvents";
-import { useGetAvailableFlowsApiOrchestratorChatFlowsGet } from "@/lib/api/generated";
 
 function ChatPageContent() {
   const messages = useChatMessages();
@@ -14,9 +13,9 @@ function ChatPageContent() {
     clearChat,
     handleToolClick,
     handleSelectCampaign,
-    handleSelectDraft
+    handleSelectDraft,
+    handleExecuteAction
   } = useChatPageEvents();
-  const { data: flows } = useGetAvailableFlowsApiOrchestratorChatFlowsGet();
 
   return (
     <div className="grid md:grid-cols-[256px_1fr] lg:grid-cols-[256px_1fr_280px] h-screen bg-muted/20 min-h-[100dvh] overflow-hidden">
@@ -27,9 +26,9 @@ function ChatPageContent() {
       />
       <ChatStream messages={messages} onSendMessage={handleChatSend} onClearChat={clearChat} />
       <ChatContextPanel
-        flows={flows || []}
         onSelectCampaign={handleSelectCampaign}
         onSelectDraft={handleSelectDraft}
+        onExecuteAction={handleExecuteAction}
       />
     </div>
   );

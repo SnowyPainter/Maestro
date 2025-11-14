@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
+
+RagSearchMode = Literal["default", "quickstart", "memory", "next_action"]
 
 
 class RagPersonaContext(BaseModel):
@@ -99,3 +102,40 @@ class RagSearchResponse(BaseModel):
 
 class RagExpandResponse(BaseModel):
     items: List[RagRelatedEdge] = Field(default_factory=list)
+
+
+class GraphRagActionCard(BaseModel):
+    id: str
+    category: str
+    title: str
+    description: Optional[str] = None
+    persona: Optional[RagPersonaContext] = None
+    cta_label: str = "Open"
+    operator_key: Optional[str] = None
+    operator_payload: Dict[str, Any] = Field(default_factory=dict)
+    source_node_id: Optional[UUID] = None
+    priority: int = 0
+    confidence: Optional[float] = None
+    meta: Dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphRagActionList(BaseModel):
+    cards: List[GraphRagActionCard] = Field(default_factory=list)
+
+
+class GraphRagActionContext(BaseModel):
+    owner_user_id: int
+    persona_id: Optional[int] = None
+    campaign_id: Optional[int] = None
+    persona: Optional[RagPersonaContext] = None
+    query: str
+    mode: RagSearchMode
+    sections: List[str] = Field(default_factory=list)
+    limit: int = 6
+    response: RagSearchResponse
+
+
+class GraphRagSuggestionResponse(BaseModel):
+    persona: Optional[RagPersonaContext] = None
+    cards: List[GraphRagActionCard] = Field(default_factory=list)
+    generated_at: datetime = Field(default_factory=datetime.utcnow)

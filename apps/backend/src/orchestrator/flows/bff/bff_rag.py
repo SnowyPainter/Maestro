@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.service import get_persona_account
 from apps.backend.src.modules.rag.functions import (
-    RagSearchMode,
     build_memory_highlights_from_graph,
     build_next_actions_from_graph,
     build_quickstart_templates,
@@ -18,7 +17,12 @@ from apps.backend.src.modules.rag.functions import (
     resolve_persona_context,
     resolve_sections,
 )
-from apps.backend.src.modules.rag.schemas import RagExpandResponse, RagSearchItem, RagSearchResponse
+from apps.backend.src.modules.rag.schemas import (
+    RagExpandResponse,
+    RagSearchItem,
+    RagSearchResponse,
+    RagSearchMode,
+)
 from apps.backend.src.modules.rag.search import expand_neighbors, search_rag
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext

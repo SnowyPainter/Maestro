@@ -146,6 +146,10 @@ slots:
   - campaigns.upsert_kpi_defs
   - drafts.create
   - drafts.update_ir
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: complete_at
   label: Complete At
   description: Filter by complete at
@@ -337,6 +341,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: include_next_actions
   label: Include Next Actions
   description: Filter by include next actions
@@ -346,6 +354,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: include_quickstart
   label: Include Quickstart
   description: Filter by include quickstart
@@ -355,6 +367,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: include_roi
   label: Include Roi
   description: Filter by include roi
@@ -364,6 +380,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: ingest_key
   label: Ingest Key
   description: Filter by ingest key
@@ -453,6 +473,10 @@ slots:
   - bff.timeline.post_publications
   - bff.timeline.trends
   - bff.trends.list_trends
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
   - internal.insights.list_comments
 - name: link
   label: Link
@@ -505,6 +529,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: name
   label: Name
   description: Filter by name
@@ -600,6 +628,10 @@ slots:
   - bff.timeline.playbooks
   - bff.timeline.post_publications
   - bff.timeline.trends
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
   - internal.drafts.publish
   - internal.insights.list_comments
   - internal.insights.sync_metrics
@@ -638,6 +670,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: platform
   label: Platform
   description: Filter by platform slug
@@ -718,6 +754,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.suggest
+  - graph_rag.suggest.memory
+  - graph_rag.suggest.next_action
+  - graph_rag.suggest.quickstart
 - name: queue
   label: Queue
   description: Filter by queue

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Optional, Sequence, Set
+from typing import Any, Dict, List, Optional, Sequence, Set
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.service import get_persona
 from apps.backend.src.modules.campaigns.service import get_campaign
 from apps.backend.src.modules.rag.schemas import (
+    RagSearchMode,
     RagMemoryHighlight,
     RagNextActionProposal,
     RagPersonaContext,
@@ -25,8 +26,6 @@ from apps.backend.src.modules.rag.utils import (
     persona_label,
     sort_key_ts,
 )
-
-RagSearchMode = Literal["default", "quickstart", "memory", "next_action"]
 
 MEMORY_EDGE_TYPES: Set[str] = {
     "memory_reapplied",
@@ -523,7 +522,6 @@ def _is_trend_node(node_type: Optional[str], meta: Optional[Dict[str, Any]]) -> 
 
 
 __all__ = [
-    "RagSearchMode",
     "resolve_persona_context",
     "resolve_sections",
     "fallback_query_for_mode",
