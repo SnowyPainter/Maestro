@@ -17,6 +17,8 @@ from apps.backend.src.modules.playbooks.schemas import (
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from datetime import datetime, timezone
+
 from apps.backend.src.modules.accounts.service import get_persona
 from apps.backend.src.modules.campaigns.service import get_campaign
 from apps.backend.src.modules.playbooks.schemas import PlaybookOut, PlaybookEnrichedOut, PlaybookLogOut
@@ -188,7 +190,8 @@ async def op_get_playbook_detail(
         logs_result = await list_logs_for_persona(
             db,
             persona_id=row.persona_id,
-            limit=50  # 최근 50개 로그
+            until=datetime.now(timezone.utc),
+            limit=200  # 최근 200개 로그
         )
         # logs_result is a tuple (logs_list, total_count), so access [0] for logs
         logs_list = logs_result[0] if logs_result else []

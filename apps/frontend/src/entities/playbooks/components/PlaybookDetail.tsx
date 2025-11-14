@@ -46,6 +46,7 @@ const isValidLlmData = (obj: unknown): obj is {
 };
 
 export function PlaybookDetail({ playbookId, onDelete }: { playbookId: number, onDelete: () => void }) {
+  const [displayedLogCount, setDisplayedLogCount] = useState(20);
   const { data: playbookDetail, isLoading, isError } = useBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet({
     playbook_id: playbookId,
     include_logs: true
@@ -227,43 +228,98 @@ export function PlaybookDetail({ playbookId, onDelete }: { playbookId: number, o
                 </div>
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {logs.slice(0, 20).map((log, index) => (
-                    <div key={log.id} className="border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {log.event}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(log.timestamp).toLocaleString('ko-KR')}
-                          </span>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          ID: {log.id}
-                        </Badge>
-                      </div>
-                      {log.message && (
-                        <p className="text-sm text-gray-700 mb-2">{log.message}</p>
-                      )}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {log.draft_id && (
-                          <div className="text-muted-foreground">
-                            Draft: {log.draft_id}
+                  {(() => {
+                    // Sort logs by timestamp (newest first) and compress consecutive duplicates
+                    const sortedLogs = [...logs].sort((a, b) =>
+                      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+                    );
+
+                    const compressedLogs: Array<{
+                      log: typeof logs[0];
+                      count: number;
+                      ids: number[];
+                    }> = [];
+
+                    for (const log of sortedLogs) {
+                      const lastCompressed = compressedLogs[compressedLogs.length - 1];
+                      if (lastCompressed && lastCompressed.log.event === log.event) {
+                        // Same event as previous, compress it
+                        lastCompressed.count += 1;
+                        lastCompressed.ids.push(log.id);
+                        // Update to show the earliest timestamp for compressed group
+                        if (new Date(log.timestamp).getTime() < new Date(lastCompressed.log.timestamp).getTime()) {
+                          lastCompressed.log = log;
+                        }
+                      } else {
+                        // Different event, add new entry
+                        compressedLogs.push({
+                          log,
+                          count: 1,
+                          ids: [log.id]
+                        });
+                      }
+                    }
+
+                    const displayedLogs = compressedLogs.slice(0, displayedLogCount);
+                    const remainingLogs = compressedLogs.length - displayedLogCount;
+
+                    return (
+                      <>
+                        {displayedLogs.map((compressed, index) => (
+                          <div key={`${compressed.log.event}-${index}`} className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {compressed.log.event}
+                                  {compressed.count > 1 && (
+                                    <span className="ml-1 text-xs opacity-75">×{compressed.count}</span>
+                                  )}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(compressed.log.timestamp).toLocaleString('ko-KR')}
+                                </span>
+                              </div>
+                              <Badge variant="secondary" className="text-xs">
+                                ID: {compressed.count === 1 ? compressed.log.id : `${compressed.ids[0]}...`}
+                              </Badge>
+                            </div>
+                            {compressed.log.message && (
+                              <p className="text-sm text-gray-700 mb-2">{compressed.log.message}</p>
+                            )}
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              {compressed.log.draft_id && (
+                                <div className="text-muted-foreground">
+                                  Draft: {compressed.log.draft_id}
+                                </div>
+                              )}
+                              {compressed.log.schedule_id && (
+                                <div className="text-muted-foreground">
+                                  Schedule: {compressed.log.schedule_id}
+                                </div>
+                              )}
+                            </div>
+                            {compressed.count > 1 && (
+                              <div className="mt-2 text-xs text-muted-foreground">
+                                {compressed.count} identical events compressed
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {remainingLogs > 0 && (
+                          <div className="text-center py-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setDisplayedLogCount(prev => Math.min(prev + 20, compressedLogs.length))}
+                              className="border-muted-foreground/20 text-muted-foreground hover:text-foreground hover:border-foreground/50"
+                            >
+                              Load {Math.min(20, remainingLogs)} more logs ({remainingLogs} remaining)
+                            </Button>
                           </div>
                         )}
-                        {log.schedule_id && (
-                          <div className="text-muted-foreground">
-                            Schedule: {log.schedule_id}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {logs.length > 20 && (
-                    <div className="text-center text-muted-foreground text-sm py-2">
-                      ... and {logs.length - 20} more logs
-                    </div>
-                  )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>
