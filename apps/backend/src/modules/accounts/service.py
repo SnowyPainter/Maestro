@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Iterable, Optional, Sequence
 from datetime import datetime, timezone, timedelta
 
-from sqlalchemy import select, and_, or_, update, delete
+from sqlalchemy import select, and_, or_, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -16,6 +16,7 @@ from apps.backend.src.modules.accounts.schemas import (
     PersonaAccountLinkCreate, RichPersonaAccountOut
 )
 from apps.backend.src.modules.common.enums import PlatformKind, Permission
+from apps.backend.src.modules.scheduler.models import Schedule
 from fastapi import HTTPException
 from apps.backend.src.core.config import settings
 from apps.backend.src.services.oauth_threads import ThreadsOAuthProvider
@@ -514,6 +515,15 @@ async def unlink_persona_account(
         account = await get_platform_account(db, account_id=account_id)
         if not persona or not account or persona.owner_user_id != owner_user_id or account.owner_user_id != owner_user_id:
             raise PermissionError("owner_user_id mismatch")
+
+    # Prevent unlink when schedules still reference this persona_account
+    count_stmt = select(func.count()).where(Schedule.persona_account_id == link.id)
+    pending = (await db.execute(count_stmt)).scalar_one()
+    if pending and pending > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot unlink persona/account while schedules are still assigned. Please cancel or reassign schedules first.",
+        )
 
     await db.delete(link)
     await db.flush()
