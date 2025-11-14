@@ -54,56 +54,7 @@ export function CopilotCard({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
-          Copilot
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-center gap-2">
-          <TrendingUp className="h-3 w-3 text-emerald-500" />
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-            ROI Impact
-          </span>
-        </div>
-        {roi ? (
-          <div className="grid grid-cols-3 gap-1.5">
-            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200/50">
-              <div className="p-1.5 bg-emerald-500 rounded-md mb-1">
-                <Brain className="h-3 w-3 text-white" />
-              </div>
-              <p className="text-[9px] text-emerald-700 uppercase tracking-wide font-medium text-center leading-tight">
-                Reuse
-              </p>
-              <p className="text-sm font-bold text-emerald-800">{roi.memoryReuse}×</p>
-            </div>
-            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200/50">
-              <div className="p-1.5 bg-blue-500 rounded-md mb-1">
-                <TrendingUp className="h-3 w-3 text-white" />
-              </div>
-              <p className="text-[9px] text-blue-700 uppercase tracking-wide font-medium text-center leading-tight">
-                Saved
-              </p>
-              <p className="text-sm font-bold text-blue-800">{roi.savedMinutes}m</p>
-            </div>
-            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200/50">
-              <div className="p-1.5 bg-purple-500 rounded-md mb-1">
-                <Play className="h-3 w-3 text-white" />
-              </div>
-              <p className="text-[9px] text-purple-700 uppercase tracking-wide font-medium text-center leading-tight">
-                Auto
-              </p>
-              <p className="text-sm font-bold text-purple-800">{(roi.automationRate * 100).toFixed(0)}%</p>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center text-xs text-muted-foreground py-4 border rounded-lg">
-            {isLoading ? "Loading Graph RAG ROI..." : "ROI data not available yet."}
-          </div>
-        )}
-      </div>
+    <div className="space-y-2">
 
       <div className="space-y-3">
         <div className="text-center">
@@ -111,7 +62,7 @@ export function CopilotCard({
             Current Task
           </span>
         </div>
-        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 border border-slate-200/60 shadow-sm">
+        <div className="rounded-2xl p-4">
           {currentAction ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -162,6 +113,44 @@ export function CopilotCard({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        {roi ? (
+          <div className="grid grid-cols-3 gap-1.5">
+            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200/50">
+              <div className="p-1.5 bg-emerald-500 rounded-md mb-1">
+                <Brain className="h-3 w-3 text-white" />
+              </div>
+              <p className="text-[9px] text-emerald-700 uppercase tracking-wide font-medium text-center leading-tight">
+                Reuse
+              </p>
+              <p className="text-sm font-bold text-emerald-800">{roi.memoryReuse}×</p>
+            </div>
+            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200/50">
+              <div className="p-1.5 bg-blue-500 rounded-md mb-1">
+                <TrendingUp className="h-3 w-3 text-white" />
+              </div>
+              <p className="text-[9px] text-blue-700 uppercase tracking-wide font-medium text-center leading-tight">
+                Saved
+              </p>
+              <p className="text-sm font-bold text-blue-800">{roi.savedMinutes}m</p>
+            </div>
+            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200/50">
+              <div className="p-1.5 bg-purple-500 rounded-md mb-1">
+                <Play className="h-3 w-3 text-white" />
+              </div>
+              <p className="text-[9px] text-purple-700 uppercase tracking-wide font-medium text-center leading-tight">
+                Auto
+              </p>
+              <p className="text-sm font-bold text-purple-800">{(roi.automationRate * 100).toFixed(0)}%</p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-xs text-muted-foreground py-4 border rounded-lg">
+            {isLoading ? "Loading Graph RAG ROI..." : "ROI data not available yet."}
+          </div>
+        )}
       </div>
     </div>
   )
