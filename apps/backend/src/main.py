@@ -12,6 +12,7 @@ from apps.backend.src.modules.files.file_router import router as file_router
 from apps.backend.src.modules.files.public_router import router as public_media_router
 from apps.backend.src.modules.link_tracking.router import router as link_tracking_router
 from apps.backend.src.modules.scheduler.router import router as scheduler_stream_router
+from apps.backend.src.modules.rag.router import router as rag_stream_router
 from apps.backend.src.core.logging import setup_logging
 
 from apps.backend.src.core.config import settings
@@ -56,6 +57,8 @@ app.add_middleware(ContextMiddleware)
 api.include_router(orchestrator_bff_router, prefix="/bff")
 # Scheduler SSE 라우터 등록
 api.include_router(scheduler_stream_router, prefix="/sse")
+# Graph RAG SSE 라우터 등록
+api.include_router(rag_stream_router, prefix="/sse")
 # 파일 라우터 등록
 api.include_router(file_router, prefix="/files")
 # 퍼블릭 미디어 프록시 라우터 등록

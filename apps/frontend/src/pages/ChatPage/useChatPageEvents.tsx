@@ -1047,16 +1047,23 @@ export function useChatPageEvents() {
     }
   }, [addCardMessage, addTextMessage, chatMutation, handleCampaignSelect, handleCardDelete, handleDraftSelect, handlePersonaSelect, handleAccountSelect, handleDraftVariantSelect, handleCoworkerSelect, handleReactiveRuleSelect, handleReactiveCreateRule, handleReactiveViewActivity, handleRagNavigate, t]);
 
-  const handleExecuteAction = useCallback(() => {
-    // TODO: Implement actual execution logic
-    console.log("Executing Copilot action...");
+  const handleExecuteAction = useCallback(async (card: any) => {
+    // TODO: Implement actual execution logic based on operator_key
+    console.log("Executing Copilot action:", card);
+
     // For now, just show a message
     const message: Message = {
       id: getNextMessageId(),
       type: 'user',
-      content: "🚀 Copilot action executed! Starting new draft creation from Trend #Aurora...",
+      content: `🚀 Executing: ${card.title}\n${card.description || ''}`,
     };
     appendMessage(message);
+
+    // Here we would call the appropriate operator based on card.operator_key
+    // For example:
+    // if (card.operator_key === 'draft.create_from_trend') {
+    //   await handleDraftCreate(card.operator_payload);
+    // }
   }, [appendMessage]);
 
   return {

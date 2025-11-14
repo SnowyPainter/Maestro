@@ -989,6 +989,85 @@ export interface GenerateTextResponse {
   text: string;
 }
 
+export type GraphRagActionCardPersona = RagPersonaContext | null;
+
+export type GraphRagActionCardOperatorPayload = { [key: string]: unknown };
+
+export type GraphRagActionCardConfidence = number | null;
+
+export type GraphRagActionCardMeta = { [key: string]: unknown };
+
+export interface GraphRagActionCard {
+  id: string;
+  category: string;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  persona?: GraphRagActionCardPersona;
+  cta_label?: string;
+  /** @nullable */
+  operator_key?: string | null;
+  operator_payload?: GraphRagActionCardOperatorPayload;
+  /** @nullable */
+  flow_path?: string | null;
+  /** @nullable */
+  source_node_id?: string | null;
+  priority?: number;
+  confidence?: GraphRagActionCardConfidence;
+  meta?: GraphRagActionCardMeta;
+}
+
+export type GraphRagSuggestPayloadPersonaId = number | null;
+
+export type GraphRagSuggestPayloadPersonaAccountId = number | null;
+
+export type GraphRagSuggestPayloadCampaignId = number | null;
+
+/**
+ * Action generation mode
+ */
+export type GraphRagSuggestPayloadMode = typeof GraphRagSuggestPayloadMode[keyof typeof GraphRagSuggestPayloadMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GraphRagSuggestPayloadMode = {
+  default: 'default',
+  quickstart: 'quickstart',
+  memory: 'memory',
+  next_action: 'next_action',
+} as const;
+
+export interface GraphRagSuggestPayload {
+  /** @minLength 0 */
+  query?: string;
+  persona_id?: GraphRagSuggestPayloadPersonaId;
+  persona_account_id?: GraphRagSuggestPayloadPersonaAccountId;
+  campaign_id?: GraphRagSuggestPayloadCampaignId;
+  /**
+   * @minimum 1
+   * @maximum 50
+   */
+  limit?: number;
+  /** Action generation mode */
+  mode?: GraphRagSuggestPayloadMode;
+  /** Include quickstart templates */
+  include_quickstart?: boolean;
+  /** Include memory reuse cards */
+  include_memory?: boolean;
+  /** Include Next Action proposals */
+  include_next_actions?: boolean;
+  /** Include ROI/value insights */
+  include_roi?: boolean;
+}
+
+export type GraphRagSuggestionResponsePersona = RagPersonaContext | null;
+
+export interface GraphRagSuggestionResponse {
+  persona?: GraphRagSuggestionResponsePersona;
+  cards?: GraphRagActionCard[];
+  generated_at?: string;
+}
+
 export interface HTTPValidationError {
   detail?: ValidationError[];
 }
@@ -3198,6 +3277,33 @@ since?: string | null;
  */
 until?: string | null;
 };
+
+export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams = {
+persona_id?: number | null;
+persona_account_id?: number | null;
+campaign_id?: number | null;
+mode?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+include_quickstart?: boolean;
+include_memory?: boolean;
+include_next_actions?: boolean;
+include_roi?: boolean;
+};
+
+export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode = typeof GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode[keyof typeof GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetMode = {
+  default: 'default',
+  quickstart: 'quickstart',
+  memory: 'memory',
+  next_action: 'next_action',
+} as const;
 
 export type AccountsPlatformDeleteApiOrchestratorAccountsPlatformAccountIdDeleteParams = {
 soft?: boolean;
@@ -8841,6 +8947,95 @@ export function useSchedulerSseApiSseSchedulesEventsGet<TData = Awaited<ReturnTy
 
 
 /**
+ * @summary Graph Rag:Suggestions Stream
+ */
+export const graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet = (
+    params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<null>(
+      {url: `/api/sse/graph-rag/suggestions/stream`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+export const getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryKey = (params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams,) => {
+    return [`/api/sse/graph-rag/suggestions/stream`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryOptions = <TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>> = ({ signal }) => graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryResult = NonNullable<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>>
+export type GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryError = HTTPValidationError
+
+
+export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
+ params: undefined |  GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>,
+          TError,
+          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
+ params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>,
+          TError,
+          Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
+ params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Graph Rag:Suggestions Stream
+ */
+
+export function useGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet<TData = Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError = HTTPValidationError>(
+ params?: GraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof graphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGraphRagSuggestionsStreamApiSseGraphRagSuggestionsStreamGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
  * @summary Upload a media file
  */
 export const uploadFileApiFilesFilesPost = (
@@ -11973,6 +12168,270 @@ export const useReactiveUnlinkRulePublicationApiOrchestratorReactivePublications
       > => {
 
       const mutationOptions = getReactiveUnlinkRulePublicationApiOrchestratorReactivePublicationsLinkIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Generate proactive Graph RAG action cards
+ * @summary Graph RAG action suggestions
+ */
+export const graphRagSuggestApiOrchestratorGraphRagSuggestPost = (
+    graphRagSuggestPayload: GraphRagSuggestPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagSuggestionResponse>(
+      {url: `/api/orchestrator/graph-rag/suggest`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagSuggestPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagSuggestApiOrchestratorGraphRagSuggestPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestApiOrchestratorGraphRagSuggestPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestApiOrchestratorGraphRagSuggestPost>>, TError,{data: GraphRagSuggestPayload}, TContext> => {
+
+const mutationKey = ['graphRagSuggestApiOrchestratorGraphRagSuggestPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagSuggestApiOrchestratorGraphRagSuggestPost>>, {data: GraphRagSuggestPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagSuggestApiOrchestratorGraphRagSuggestPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagSuggestApiOrchestratorGraphRagSuggestPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagSuggestApiOrchestratorGraphRagSuggestPost>>>
+    export type GraphRagSuggestApiOrchestratorGraphRagSuggestPostMutationBody = GraphRagSuggestPayload
+    export type GraphRagSuggestApiOrchestratorGraphRagSuggestPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Graph RAG action suggestions
+ */
+export const useGraphRagSuggestApiOrchestratorGraphRagSuggestPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestApiOrchestratorGraphRagSuggestPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagSuggestApiOrchestratorGraphRagSuggestPost>>,
+        TError,
+        {data: GraphRagSuggestPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagSuggestApiOrchestratorGraphRagSuggestPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Generate quickstart focused Graph RAG cards
+ * @summary Graph RAG quickstart suggestions
+ */
+export const graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost = (
+    graphRagSuggestPayload: GraphRagSuggestPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagSuggestionResponse>(
+      {url: `/api/orchestrator/graph-rag/suggest/quickstart`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagSuggestPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost>>, TError,{data: GraphRagSuggestPayload}, TContext> => {
+
+const mutationKey = ['graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost>>, {data: GraphRagSuggestPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost>>>
+    export type GraphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostMutationBody = GraphRagSuggestPayload
+    export type GraphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Graph RAG quickstart suggestions
+ */
+export const useGraphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPost>>,
+        TError,
+        {data: GraphRagSuggestPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagSuggestQuickstartApiOrchestratorGraphRagSuggestQuickstartPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Generate memory reuse Graph RAG cards
+ * @summary Graph RAG memory suggestions
+ */
+export const graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost = (
+    graphRagSuggestPayload: GraphRagSuggestPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagSuggestionResponse>(
+      {url: `/api/orchestrator/graph-rag/suggest/memory`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagSuggestPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost>>, TError,{data: GraphRagSuggestPayload}, TContext> => {
+
+const mutationKey = ['graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost>>, {data: GraphRagSuggestPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost>>>
+    export type GraphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostMutationBody = GraphRagSuggestPayload
+    export type GraphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Graph RAG memory suggestions
+ */
+export const useGraphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPost>>,
+        TError,
+        {data: GraphRagSuggestPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagSuggestMemoryApiOrchestratorGraphRagSuggestMemoryPostMutationOptions(options);
+
+      return useMutation(mutationOptions , queryClient);
+    }
+    
+/**
+ * Generate next action Graph RAG cards
+ * @summary Graph RAG next action suggestions
+ */
+export const graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost = (
+    graphRagSuggestPayload: GraphRagSuggestPayload,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<GraphRagSuggestionResponse>(
+      {url: `/api/orchestrator/graph-rag/suggest/next-action`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: graphRagSuggestPayload, signal
+    },
+      options);
+    }
+  
+
+
+export const getGraphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost>>, TError,{data: GraphRagSuggestPayload}, TContext> => {
+
+const mutationKey = ['graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost>>, {data: GraphRagSuggestPayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GraphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost>>>
+    export type GraphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostMutationBody = GraphRagSuggestPayload
+    export type GraphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Graph RAG next action suggestions
+ */
+export const useGraphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost>>, TError,{data: GraphRagSuggestPayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof graphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPost>>,
+        TError,
+        {data: GraphRagSuggestPayload},
+        TContext
+      > => {
+
+      const mutationOptions = getGraphRagSuggestNextActionApiOrchestratorGraphRagSuggestNextActionPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

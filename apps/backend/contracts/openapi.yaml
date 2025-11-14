@@ -2865,6 +2865,96 @@ paths:
       responses:
         '200':
           description: Successful Response
+  /api/sse/graph-rag/suggestions/stream:
+    get:
+      tags:
+      - graph_rag
+      - stream
+      summary: Graph Rag:Suggestions Stream
+      operationId: graph_rag_suggestions_stream_api_sse_graph_rag_suggestions_stream_get
+      parameters:
+      - name: persona_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+      - name: persona_account_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+      - name: campaign_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+      - name: mode
+        in: query
+        required: false
+        schema:
+          enum:
+          - default
+          - quickstart
+          - memory
+          - next_action
+          type: string
+          default: default
+          title: Mode
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 8
+          title: Limit
+      - name: include_quickstart
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Quickstart
+      - name: include_memory
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Memory
+      - name: include_next_actions
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Next Actions
+      - name: include_roi
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: true
+          title: Include Roi
+      responses:
+        '200':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/files/files:
     post:
       tags:
@@ -4442,6 +4532,126 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OperationResult'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/suggest:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - rag
+      - actions
+      summary: Graph RAG action suggestions
+      description: Generate proactive Graph RAG action cards
+      operationId: graph_rag_suggest_api_orchestrator_graph_rag_suggest_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagSuggestPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagSuggestionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/suggest/quickstart:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - rag
+      - quickstart
+      summary: Graph RAG quickstart suggestions
+      description: Generate quickstart focused Graph RAG cards
+      operationId: graph_rag_suggest_quickstart_api_orchestrator_graph_rag_suggest_quickstart_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagSuggestPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagSuggestionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/suggest/memory:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - rag
+      - memory
+      summary: Graph RAG memory suggestions
+      description: Generate memory reuse Graph RAG cards
+      operationId: graph_rag_suggest_memory_api_orchestrator_graph_rag_suggest_memory_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagSuggestPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagSuggestionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/orchestrator/graph-rag/suggest/next-action:
+    post:
+      tags:
+      - action
+      - action
+      - graph_rag
+      - rag
+      - next_action
+      summary: Graph RAG next action suggestions
+      description: Generate next action Graph RAG cards
+      operationId: graph_rag_suggest_next_action_api_orchestrator_graph_rag_suggest_next_action_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphRagSuggestPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphRagSuggestionResponse'
         '422':
           description: Validation Error
           content:
@@ -6876,6 +7086,142 @@ components:
       - task_id
       - text
       title: GenerateTextResponse
+    GraphRagActionCard:
+      properties:
+        id:
+          type: string
+          title: Id
+        category:
+          type: string
+          title: Category
+        title:
+          type: string
+          title: Title
+        description:
+          title: Description
+          type: string
+          nullable: true
+        persona:
+          anyOf:
+          - $ref: '#/components/schemas/RagPersonaContext'
+          - type: 'null'
+        cta_label:
+          type: string
+          title: Cta Label
+          default: Open
+        operator_key:
+          title: Operator Key
+          type: string
+          nullable: true
+        operator_payload:
+          additionalProperties: true
+          type: object
+          title: Operator Payload
+        flow_path:
+          title: Flow Path
+          type: string
+          nullable: true
+        source_node_id:
+          title: Source Node Id
+          format: uuid
+          type: string
+          nullable: true
+        priority:
+          type: integer
+          title: Priority
+          default: 0
+        confidence:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Confidence
+        meta:
+          additionalProperties: true
+          type: object
+          title: Meta
+      type: object
+      required:
+      - id
+      - category
+      - title
+      title: GraphRagActionCard
+    GraphRagSuggestPayload:
+      properties:
+        query:
+          type: string
+          minLength: 0
+          title: Query
+          default: ''
+        persona_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Id
+        persona_account_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Persona Account Id
+        campaign_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Campaign Id
+        limit:
+          type: integer
+          maximum: 50.0
+          minimum: 1.0
+          title: Limit
+          default: 8
+        mode:
+          type: string
+          enum:
+          - default
+          - quickstart
+          - memory
+          - next_action
+          title: Mode
+          description: Action generation mode
+          default: default
+        include_quickstart:
+          type: boolean
+          title: Include Quickstart
+          description: Include quickstart templates
+          default: true
+        include_memory:
+          type: boolean
+          title: Include Memory
+          description: Include memory reuse cards
+          default: true
+        include_next_actions:
+          type: boolean
+          title: Include Next Actions
+          description: Include Next Action proposals
+          default: true
+        include_roi:
+          type: boolean
+          title: Include Roi
+          description: Include ROI/value insights
+          default: true
+      type: object
+      title: GraphRagSuggestPayload
+    GraphRagSuggestionResponse:
+      properties:
+        persona:
+          anyOf:
+          - $ref: '#/components/schemas/RagPersonaContext'
+          - type: 'null'
+        cards:
+          items:
+            $ref: '#/components/schemas/GraphRagActionCard'
+          type: array
+          title: Cards
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+      type: object
+      title: GraphRagSuggestionResponse
     HTTPValidationError:
       properties:
         detail:

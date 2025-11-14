@@ -21,6 +21,7 @@ from apps.backend.src.modules.drafts.service import (
     delete_draft,
     update_draft_ir,
 )
+from apps.backend.src.modules.rag.events import GraphRagRefreshEvent, publish_graph_rag_refresh
 from apps.backend.src.modules.users.models import User
 
 from apps.backend.src.orchestrator.dispatch import TaskContext
@@ -74,6 +75,9 @@ async def op_create_draft(payload: DraftSaveRequest, ctx: TaskContext) -> DraftO
         created_by=user.id,
         payload=payload,
     )
+    publish_graph_rag_refresh(
+        GraphRagRefreshEvent(trigger="draft_created", campaign_id=draft.campaign_id)
+    )
     return DraftOut.model_validate(draft)
 
 
@@ -96,6 +100,9 @@ async def op_update_draft(payload: DraftUpdateCommand, ctx: TaskContext) -> Draf
         goal=payload.goal,
         campaign_id=payload.campaign_id,
     )
+    publish_graph_rag_refresh(
+        GraphRagRefreshEvent(trigger="draft_updated", campaign_id=updated.campaign_id)
+    )
     return DraftOut.model_validate(updated)
 
 
@@ -108,8 +115,11 @@ async def op_delete_draft(payload: DraftDeleteCommand, ctx: TaskContext) -> Mess
     db: AsyncSession = ctx.require(AsyncSession)
     user: User = ctx.require(User)
     draft_id = _require_identifier(payload.draft_id, "draft_id")
-    await _load_owned_draft(db, draft_id=draft_id, owner_user_id=user.id)
+    draft = await _load_owned_draft(db, draft_id=draft_id, owner_user_id=user.id)
     await delete_draft(db, draft_id=draft_id)
+    publish_graph_rag_refresh(
+        GraphRagRefreshEvent(trigger="draft_deleted", campaign_id=getattr(draft, "campaign_id", None))
+    )
     return MessageOut(message="Draft deleted successfully")
 
 

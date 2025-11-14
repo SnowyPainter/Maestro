@@ -52,6 +52,12 @@ slots:
   - bff.drafts.list_post_publications_by_variant
   - bff.drafts.list_post_publications_enriched
   - insights.ingest
+- name: action
+  label: Action
+  description: Filter by action
+  value_type: string
+  flows:
+  - graph_rag.actions.next_action
 - name: action_log_id
   label: Action Log Id
   description: Target a specific action log id
@@ -146,6 +152,10 @@ slots:
   - campaigns.upsert_kpi_defs
   - drafts.create
   - drafts.update_ir
+  - graph_rag.actions.next_action
+  - graph_rag.actions.persona_focus
+  - graph_rag.actions.playbook_reapply
+  - graph_rag.actions.trend_to_draft
   - graph_rag.suggest
   - graph_rag.suggest.memory
   - graph_rag.suggest.next_action
@@ -156,6 +166,12 @@ slots:
   value_type: string
   flows:
   - abtests.schedule_abtest
+- name: confidence
+  label: Confidence
+  description: Filter by confidence
+  value_type: float
+  flows:
+  - graph_rag.actions.next_action
 - name: constraints
   label: Constraints
   description: Filter by constraints
@@ -213,6 +229,7 @@ slots:
   flows:
   - campaigns.create_campaign
   - campaigns.update_campaign
+  - graph_rag.actions.trend_to_draft
   - reactive.create_rule
   - reactive.update_rule
 - name: distribution
@@ -274,6 +291,12 @@ slots:
   value_type: string
   flows:
   - abtests.complete_abtest
+- name: focus_query
+  label: Focus Query
+  description: Filter by focus query
+  value_type: string
+  flows:
+  - graph_rag.actions.persona_focus
 - name: force_restart
   label: Force Restart
   description: Filter by force restart
@@ -549,6 +572,7 @@ slots:
   value_type: integer
   flows:
   - bff.rag.expand
+  - graph_rag.actions.playbook_reapply
 - name: notes
   label: Notes
   description: Filter by notes
@@ -670,6 +694,10 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.actions.next_action
+  - graph_rag.actions.persona_focus
+  - graph_rag.actions.playbook_reapply
+  - graph_rag.actions.trend_to_draft
   - graph_rag.suggest
   - graph_rag.suggest.memory
   - graph_rag.suggest.next_action
@@ -710,6 +738,8 @@ slots:
   - bff.playbook.dashboard_trend_correlation
   - bff.playbook.get_playbook_detail
   - bff.playbook.search_playbooks
+  - graph_rag.actions.next_action
+  - graph_rag.actions.playbook_reapply
 - name: post_publication_id
   label: Post Publication Id
   description: Target a specific post publication id
@@ -754,6 +784,7 @@ slots:
   - bff.rag.search.memory
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
+  - graph_rag.actions.trend_to_draft
   - graph_rag.suggest
   - graph_rag.suggest.memory
   - graph_rag.suggest.next_action
@@ -790,6 +821,18 @@ slots:
   value_type: integer
   flows:
   - action.schedule.create_from_raw_dag
+- name: reuse_count
+  label: Reuse Count
+  description: Filter by reuse count
+  value_type: integer
+  flows:
+  - graph_rag.actions.playbook_reapply
+- name: roi
+  label: Roi
+  description: Filter by roi
+  value_type: string
+  flows:
+  - graph_rag.actions.persona_focus
 - name: rule_id
   label: Rule Id
   description: Target a specific rule id
@@ -869,6 +912,13 @@ slots:
   - manual
   flows:
   - insights.ingest
+- name: source_node_id
+  label: Source Node Id
+  description: Target a specific source node id
+  value_type: integer
+  flows:
+  - graph_rag.actions.next_action
+  - graph_rag.actions.trend_to_draft
 - name: start
   label: Start
   description: Filter by start
@@ -909,6 +959,12 @@ slots:
   value_type: string
   flows:
   - bff.schedule.get_schedule_stream
+- name: summary
+  label: Summary
+  description: Filter by summary
+  value_type: string
+  flows:
+  - graph_rag.actions.playbook_reapply
 - name: sync_metrics
   label: Sync Metrics
   description: Filter by sync metrics
@@ -977,6 +1033,9 @@ slots:
   - action.schedule.create_sync_metrics_schedule
   - drafts.create
   - drafts.update_ir
+  - graph_rag.actions.next_action
+  - graph_rag.actions.playbook_reapply
+  - graph_rag.actions.trend_to_draft
   - reactive.create_message_template
   - reactive.update_message_template
 - name: ts

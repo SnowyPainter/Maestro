@@ -113,6 +113,7 @@ class GraphRagActionCard(BaseModel):
     cta_label: str = "Open"
     operator_key: Optional[str] = None
     operator_payload: Dict[str, Any] = Field(default_factory=dict)
+    flow_path: Optional[str] = None
     source_node_id: Optional[UUID] = None
     priority: int = 0
     confidence: Optional[float] = None
@@ -139,3 +140,45 @@ class GraphRagSuggestionResponse(BaseModel):
     persona: Optional[RagPersonaContext] = None
     cards: List[GraphRagActionCard] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class GraphRagTrendActionCommand(BaseModel):
+    persona_id: Optional[int] = None
+    campaign_id: Optional[int] = None
+    query: str
+    title: str
+    description: Optional[str] = None
+    source_node_id: Optional[UUID] = None
+
+
+class GraphRagNextActionCommand(BaseModel):
+    persona_id: Optional[int] = None
+    campaign_id: Optional[int] = None
+    playbook_id: Optional[int] = None
+    title: str
+    action: str
+    source_node_id: Optional[UUID] = None
+    confidence: Optional[float] = None
+
+
+class GraphRagPlaybookActionCommand(BaseModel):
+    persona_id: Optional[int] = None
+    campaign_id: Optional[int] = None
+    playbook_id: Optional[int] = None
+    title: Optional[str] = None
+    summary: Optional[str] = None
+    node_id: Optional[UUID] = None
+    reuse_count: Optional[int] = None
+
+
+class GraphRagPersonaFocusCommand(BaseModel):
+    persona_id: Optional[int] = None
+    campaign_id: Optional[int] = None
+    focus_query: str
+    roi: Optional[RagValueInsight] = None
+
+
+class GraphRagActionResult(BaseModel):
+    status: str
+    message: str
+    meta: Dict[str, Any] = Field(default_factory=dict)

@@ -41,6 +41,11 @@ DRAFT_CARD_LIMIT = 4
 PLAYBOOK_CARD_LIMIT = 3
 PERSONA_CARD_LIMIT = 2
 
+TREND_ACTION_PATH = "/graph-rag/actions/trend-to-draft"
+NEXT_ACTION_PATH = "/graph-rag/actions/next-action"
+PLAYBOOK_ACTION_PATH = "/graph-rag/actions/playbook-reapply"
+PERSONA_FOCUS_PATH = "/graph-rag/actions/persona-focus"
+
 
 class GraphRagSuggestPayload(BaseModel):
     query: str = Field("", min_length=0)
@@ -178,10 +183,15 @@ async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskCo
                 description=template.description or template.query,
                 persona=persona,
                 cta_label="Create draft",
+                operator_key="graph_rag.actions.trend_to_draft",
+                flow_path=TREND_ACTION_PATH,
                 operator_payload={
                     "query": template.query,
                     "persona_id": persona.persona_id if persona else payload.persona_id,
                     "campaign_id": persona.campaign_id if persona else payload.campaign_id,
+                    "title": template.title,
+                    "description": template.description or template.query,
+                    "source_node_id": str(template.source_node_id) if template.source_node_id else None,
                 },
                 source_node_id=template.source_node_id,
                 priority=90 - idx,
@@ -201,9 +211,15 @@ async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskCo
                     description=item.summary,
                     persona=payload.persona,
                     cta_label="React to trend",
+                    operator_key="graph_rag.actions.trend_to_draft",
+                    flow_path=TREND_ACTION_PATH,
                     operator_payload={
-                        "node_id": str(item.node_id),
                         "query": payload.query,
+                        "persona_id": payload.persona_id,
+                        "campaign_id": payload.campaign_id,
+                        "title": item.title or "Trend insight",
+                        "description": item.summary,
+                        "source_node_id": str(item.node_id) if item.node_id else None,
                     },
                     source_node_id=item.node_id,
                     priority=80 - idx,
@@ -235,9 +251,16 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
                 description=action.action,
                 persona=persona,
                 cta_label="Apply next action",
+                operator_key="graph_rag.actions.next_action",
+                flow_path=NEXT_ACTION_PATH,
                 operator_payload={
                     "playbook_id": action.playbook_id,
                     "action": action.action,
+                    "title": action.title,
+                    "persona_id": persona.persona_id if persona else payload.persona_id,
+                    "campaign_id": persona.campaign_id if persona else payload.campaign_id,
+                    "source_node_id": (action.meta or {}).get("source_node_id"),
+                    "confidence": action.confidence,
                 },
                 source_node_id=_safe_uuid((action.meta or {}).get("source_node_id")),
                 priority=85 - idx,
@@ -292,9 +315,16 @@ async def op_graph_rag_playbook_actions(payload: GraphRagActionContext, ctx: Tas
                 description=highlight.summary,
                 persona=persona,
                 cta_label="Reapply playbook",
+                operator_key="graph_rag.actions.playbook_reapply",
+                flow_path=PLAYBOOK_ACTION_PATH,
                 operator_payload={
                     "playbook_id": highlight.playbook_id,
                     "node_id": str(highlight.node_id) if highlight.node_id else None,
+                    "persona_id": persona.persona_id if persona else payload.persona_id,
+                    "campaign_id": persona.campaign_id if persona else payload.campaign_id,
+                    "title": highlight.title,
+                    "summary": highlight.summary,
+                    "reuse_count": highlight.reuse_count,
                 },
                 source_node_id=highlight.node_id,
                 priority=60 - idx,
@@ -331,13 +361,23 @@ async def op_graph_rag_persona_actions(payload: GraphRagActionContext, ctx: Task
                 ),
                 persona=roi.persona or payload.persona,
                 cta_label="Review automation impact",
+                operator_key="graph_rag.actions.persona_focus",
+                flow_path=PERSONA_FOCUS_PATH,
                 operator_payload={
-                    "memory_reuse_count": roi.memory_reuse_count,
-                    "automated_decisions": roi.automated_decisions,
+                    "persona_id": (roi.persona or payload.persona).persona_id if (roi.persona or payload.persona) else payload.persona_id,
+                    "campaign_id": (roi.persona or payload.persona).campaign_id if (roi.persona or payload.persona) else payload.campaign_id,
+                    "focus_query": payload.query or "Graph RAG ROI",
+                    "roi": roi.model_dump(),
                 },
                 priority=50,
                 confidence=roi.ai_intervention_rate,
-                meta={"kind": "roi"},
+                meta={
+                    "kind": "roi",
+                    "memory_reuse_count": roi.memory_reuse_count,
+                    "saved_minutes": roi.saved_minutes,
+                    "automated_decisions": roi.automated_decisions,
+                    "ai_intervention_rate": roi.ai_intervention_rate,
+                },
             )
         )
 
@@ -350,7 +390,13 @@ async def op_graph_rag_persona_actions(payload: GraphRagActionContext, ctx: Task
                 description=f"Stay ahead on '{payload.query}'",
                 persona=payload.persona,
                 cta_label="Open insight",
-                operator_payload={"query": payload.query, "mode": payload.mode},
+                operator_key="graph_rag.actions.persona_focus",
+                flow_path=PERSONA_FOCUS_PATH,
+                operator_payload={
+                    "focus_query": payload.query,
+                    "persona_id": payload.persona_id,
+                    "campaign_id": payload.campaign_id,
+                },
                 priority=45,
                 meta={"kind": "focus"},
             )
@@ -448,7 +494,7 @@ def _build_graph_rag_flow(builder: FlowBuilder, *, context_config: Optional[Dict
     output_model=GraphRagSuggestionResponse,
     method="post",
     path="/graph-rag/suggest",
-    tags=("graph_rag", "rag", "actions"),
+    tags=("action", "graph_rag", "rag", "actions"),
 )
 def _flow_graph_rag_suggest(builder: FlowBuilder):
     _build_graph_rag_flow(builder)
@@ -462,7 +508,7 @@ def _flow_graph_rag_suggest(builder: FlowBuilder):
     output_model=GraphRagSuggestionResponse,
     method="post",
     path="/graph-rag/suggest/quickstart",
-    tags=("graph_rag", "rag", "quickstart"),
+    tags=("action", "graph_rag", "rag", "quickstart"),
 )
 def _flow_graph_rag_suggest_quickstart(builder: FlowBuilder):
     _build_graph_rag_flow(
@@ -487,7 +533,7 @@ def _flow_graph_rag_suggest_quickstart(builder: FlowBuilder):
     output_model=GraphRagSuggestionResponse,
     method="post",
     path="/graph-rag/suggest/memory",
-    tags=("graph_rag", "rag", "memory"),
+    tags=("action", "graph_rag", "rag", "memory"),
 )
 def _flow_graph_rag_suggest_memory(builder: FlowBuilder):
     _build_graph_rag_flow(
@@ -510,7 +556,7 @@ def _flow_graph_rag_suggest_memory(builder: FlowBuilder):
     output_model=GraphRagSuggestionResponse,
     method="post",
     path="/graph-rag/suggest/next-action",
-    tags=("graph_rag", "rag", "next_action"),
+    tags=("action", "graph_rag", "rag", "next_action"),
 )
 def _flow_graph_rag_suggest_next_action(builder: FlowBuilder):
     _build_graph_rag_flow(

@@ -1281,6 +1281,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sse/graph-rag/suggestions/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Graph Rag:Suggestions Stream */
+        get: operations["graph_rag_suggestions_stream_api_sse_graph_rag_suggestions_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/files/files": {
         parameters: {
             query?: never;
@@ -2092,6 +2109,86 @@ export interface paths {
          * @description Detach a reaction rule from a publication
          */
         delete: operations["reactive_unlink_rule_publication_api_orchestrator_reactive_publications__link_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/graph-rag/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG action suggestions
+         * @description Generate proactive Graph RAG action cards
+         */
+        post: operations["graph_rag_suggest_api_orchestrator_graph_rag_suggest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/graph-rag/suggest/quickstart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG quickstart suggestions
+         * @description Generate quickstart focused Graph RAG cards
+         */
+        post: operations["graph_rag_suggest_quickstart_api_orchestrator_graph_rag_suggest_quickstart_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/graph-rag/suggest/memory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG memory suggestions
+         * @description Generate memory reuse Graph RAG cards
+         */
+        post: operations["graph_rag_suggest_memory_api_orchestrator_graph_rag_suggest_memory_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orchestrator/graph-rag/suggest/next-action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Graph RAG next action suggestions
+         * @description Generate next action Graph RAG cards
+         */
+        post: operations["graph_rag_suggest_next_action_api_orchestrator_graph_rag_suggest_next_action_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3509,6 +3606,108 @@ export interface components {
             task_id: string;
             /** Text */
             text: string;
+        };
+        /** GraphRagActionCard */
+        GraphRagActionCard: {
+            /** Id */
+            id: string;
+            /** Category */
+            category: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description?: string | null;
+            persona?: components["schemas"]["RagPersonaContext"] | null;
+            /**
+             * Cta Label
+             * @default Open
+             */
+            cta_label: string;
+            /** Operator Key */
+            operator_key?: string | null;
+            /** Operator Payload */
+            operator_payload?: {
+                [key: string]: unknown;
+            };
+            /** Flow Path */
+            flow_path?: string | null;
+            /**
+             * Source Node Id
+             * Format: uuid
+             */
+            source_node_id?: string | null;
+            /**
+             * Priority
+             * @default 0
+             */
+            priority: number;
+            /** Confidence */
+            confidence?: number | null;
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            };
+        };
+        /** GraphRagSuggestPayload */
+        GraphRagSuggestPayload: {
+            /**
+             * Query
+             * @default
+             */
+            query: string;
+            /** Persona Id */
+            persona_id?: number | null;
+            /** Persona Account Id */
+            persona_account_id?: number | null;
+            /** Campaign Id */
+            campaign_id?: number | null;
+            /**
+             * Limit
+             * @default 8
+             */
+            limit: number;
+            /**
+             * Mode
+             * @description Action generation mode
+             * @default default
+             * @enum {string}
+             */
+            mode: "default" | "quickstart" | "memory" | "next_action";
+            /**
+             * Include Quickstart
+             * @description Include quickstart templates
+             * @default true
+             */
+            include_quickstart: boolean;
+            /**
+             * Include Memory
+             * @description Include memory reuse cards
+             * @default true
+             */
+            include_memory: boolean;
+            /**
+             * Include Next Actions
+             * @description Include Next Action proposals
+             * @default true
+             */
+            include_next_actions: boolean;
+            /**
+             * Include Roi
+             * @description Include ROI/value insights
+             * @default true
+             */
+            include_roi: boolean;
+        };
+        /** GraphRagSuggestionResponse */
+        GraphRagSuggestionResponse: {
+            persona?: components["schemas"]["RagPersonaContext"] | null;
+            /** Cards */
+            cards?: components["schemas"]["GraphRagActionCard"][];
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at?: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -7846,6 +8045,43 @@ export interface operations {
             };
         };
     };
+    graph_rag_suggestions_stream_api_sse_graph_rag_suggestions_stream_get: {
+        parameters: {
+            query?: {
+                persona_id?: number | null;
+                persona_account_id?: number | null;
+                campaign_id?: number | null;
+                mode?: "default" | "quickstart" | "memory" | "next_action";
+                limit?: number;
+                include_quickstart?: boolean;
+                include_memory?: boolean;
+                include_next_actions?: boolean;
+                include_roi?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_file_api_files_files_post: {
         parameters: {
             query?: never;
@@ -9393,6 +9629,138 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OperationResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_suggest_api_orchestrator_graph_rag_suggest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagSuggestPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagSuggestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_suggest_quickstart_api_orchestrator_graph_rag_suggest_quickstart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagSuggestPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagSuggestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_suggest_memory_api_orchestrator_graph_rag_suggest_memory_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagSuggestPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagSuggestionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    graph_rag_suggest_next_action_api_orchestrator_graph_rag_suggest_next_action_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GraphRagSuggestPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphRagSuggestionResponse"];
                 };
             };
             /** @description Validation Error */
