@@ -184,7 +184,7 @@ async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskCo
                 title=template.title,
                 description=template.description or template.query,
                 persona=persona,
-                cta_label="Create draft",
+                cta_label="Draft from this trend",
                 operator_key="graph_rag.actions.trend_to_draft",
                 flow_path=TREND_ACTION_PATH,
                 operator_payload={
@@ -212,7 +212,7 @@ async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskCo
                     title=item.title or "Trend insight",
                     description=item.summary,
                     persona=payload.persona,
-                    cta_label="React to trend",
+                    cta_label="Plan response to trend",
                     operator_key="graph_rag.actions.trend_to_draft",
                     flow_path=TREND_ACTION_PATH,
                     operator_payload={
@@ -252,7 +252,7 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
                 title=action.title,
                 description=action.action,
                 persona=persona,
-                cta_label="Apply next action",
+                cta_label="Run next action",
                 operator_key="graph_rag.actions.next_action",
                 flow_path=NEXT_ACTION_PATH,
                 operator_payload={
@@ -282,7 +282,7 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
                     title=item.title or "High performing draft",
                     description=item.summary,
                     persona=payload.persona,
-                    cta_label="Review draft",
+                    cta_label="Open draft",
                     operator_payload={
                         "node_id": str(item.node_id),
                         "source_table": item.source_table,
@@ -316,7 +316,7 @@ async def op_graph_rag_playbook_actions(payload: GraphRagActionContext, ctx: Tas
                 title=highlight.title or "Reusable playbook",
                 description=highlight.summary,
                 persona=persona,
-                cta_label="Reapply playbook",
+                cta_label="Reuse this playbook",
                 operator_key="graph_rag.actions.playbook_reapply",
                 flow_path=PLAYBOOK_ACTION_PATH,
                 operator_payload={
@@ -391,7 +391,7 @@ async def op_graph_rag_persona_actions(payload: GraphRagActionContext, ctx: Task
                 title="Focus area",
                 description=f"Stay ahead on '{payload.query}'",
                 persona=payload.persona,
-                cta_label="Open insight",
+                cta_label="Set focus topic",
                 operator_key="graph_rag.actions.persona_focus",
                 flow_path=PERSONA_FOCUS_PATH,
                 operator_payload={

@@ -156,6 +156,13 @@
 - **의미**: 단순 벡터 검색을 넘어 **도메인 간 관계를 그래프로 탐색**하여 더 풍부한 컨텍스트 제공
   - 예: "Trend X와 관련된 Draft는?" → Trend 노드 검색 → related_trend 간선으로 Draft/Publication 자동 탐색
   - 예: "Campaign Y의 모든 게시물과 댓글" → Campaign 노드 → belongs_to → Publication → comment_on → InsightComment
+- **Graph Copilot & SSE**
+  - `apps/backend/src/orchestrator/flows/graph_rag/graph_rag.py`의 `graph_rag.suggest*` 플로우가 Trend/Draft/Playbook/Persona 카드를 만들어 `/api/orchestrator/graph-rag/suggest` 및 `/api/sse/graph-rag/suggestions/stream`으로 제공
+  - 각 카드에는 실행 가능한 operator key + `flow_path` + payload가 포함되어 Copilot UI에서 그대로 실행 가능
+  - ROI(`RagValueInsight`)를 항상 포함하도록 하여 BFF와 동일한 인사이트 블럭을 전달
+- **실시간 새로고침**
+  - 사이드카 Canonicalizer가 `sync_payload` 이후 `publish_graph_rag_refresh(GraphRagRefreshEvent)`를 호출하여 그래프가 갱신되면 즉시 SSE가 새 데이터를 스트리밍
+  - SSE 라우터는 요청마다 새로운 AsyncSession을 생성/정리하여 커넥션 누수 없이 장시간 스트림을 유지
 
 ##### 🔌 **adapters** — 플랫폼 어댑터
 - **CapabilityAdapter 패턴** — 플랫폼별 차이 흡수

@@ -79,9 +79,11 @@ src/
 - 채팅 히스토리
 
 #### 📋 **ChatContextPanel**
-- 현재 선택된 **Persona** 표시
-- 연결된 **PlatformAccount** 목록
-- 사용 가능한 **Flow** 목록
+- 현재 선택된 **Persona** / **Campaign** 컨텍스트 표시
+- Graph RAG Copilot 카드
+  - `/api/sse/graph-rag/suggestions/stream` SSE로 실시간 제안 스트림 수신
+  - ROI(재사용 횟수, 절약 시간, 자동화 비율)와 Trend/Draft/Playbook/Persona 액션 카드 렌더
+  - 복수 액션을 이전/다음 버튼으로 탐색 가능, 각 카드 CTA는 서버가 제공한 `flow_path`로 즉시 실행
 
 #### 👤 **PersonaAccountContext**
 - Persona 선택 드롭다운
@@ -150,6 +152,8 @@ src/
 - **카드 타입**: `rag.search.result` — 채팅 스트림에서 Graph RAG 결과를 `GraphExplorer`로 자동 렌더링
 - **콜백 체인**: `onRagExpand`, `onRagNavigate` — 사용자가 노드를 확장/탐색할 때 채팅 메시지로 전파하여 연속 탐색 가능
 - **의미**: 단순 검색 결과를 넘어 **도메인 간 관계를 시각화**하여 사용자가 "Trend → Draft → Publication → Comment" 경로를 인터랙티브하게 탐색
+- **Copilot 통합**: Graph RAG suggestion SSE를 받아 ROI + 실행 카드 UI (`CopilotCard`) 로 재구성, 실행 시 `useGraphRagSuggestions` 훅이 `/api/orchestrator/graph-rag/actions/*` 플로우 호출
+- **ActionAck 컴포넌트**: Graph RAG 액션 실행 결과를 `ActionAck` 카드로 채팅 스트림에 삽입하여 성공/실패 피드백과 후속 제안을 이어감
 
 #### 🤝 **coworkers**
 - CoWorker 리스 관리
