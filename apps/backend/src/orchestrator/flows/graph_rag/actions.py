@@ -9,7 +9,7 @@ from apps.backend.src.core.context import get_persona_account_id
 from apps.backend.src.modules.accounts.service import get_persona_account
 from apps.backend.src.modules.drafts.schemas import BlockText, DraftIR, DraftSaveRequest
 from apps.backend.src.modules.drafts.service import create_draft
-from apps.backend.src.modules.playbooks.service import record_playbook_event
+from apps.backend.src.modules.playbooks.service import get_playbook, record_playbook_event
 from apps.backend.src.modules.rag.events import GraphRagRefreshEvent, publish_graph_rag_refresh
 from apps.backend.src.modules.rag.schemas import (
     GraphRagActionResult,
@@ -177,12 +177,22 @@ async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, 
     db: AsyncSession = ctx.require(AsyncSession)
 
     persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
+    campaign_id = payload.campaign_id
+
+    if payload.playbook_id and (campaign_id is None or persona_id is None):
+        playbook = await get_playbook(db, payload.playbook_id)
+        if playbook is not None:
+            if campaign_id is None:
+                campaign_id = playbook.campaign_id
+            if persona_id is None:
+                persona_id = playbook.persona_id
+
     log = await record_playbook_event(
         db,
         event="graph_rag.playbook_reapply",
         persona_id=persona_id,
         persona_account_id=persona_account_id,
-        campaign_id=payload.campaign_id,
+        campaign_id=campaign_id,
         message=payload.title or "Graph RAG memory highlight",
         meta={
             "playbook_id": payload.playbook_id,
@@ -191,7 +201,8 @@ async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, 
             "node_id": str(payload.node_id) if payload.node_id else None,
         },
     )
-    _publish_refresh(persona_id, payload.campaign_id, trigger="playbook_reapply")
+    await db.commit()
+    _publish_refresh(persona_id, campaign_id, trigger="playbook_reapply")
     return GraphRagActionResult(
         status="logged",
         message="Playbook reuse logged",

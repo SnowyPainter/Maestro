@@ -68,8 +68,8 @@ def parse_args() -> argparse.Namespace:
         "--entities",
         nargs="+",
         choices=sorted(ENTITY_CONFIG.keys()),
-        default=["playbook", "draft", "trend"],
-        help="Which entity types to re-sync (default: playbook draft trend)",
+        default=["playbook", "draft"],
+        help="Which entity types to re-sync (default: playbook draft; trend excluded)",
     )
     parser.add_argument(
         "--ids",

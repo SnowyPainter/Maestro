@@ -116,7 +116,7 @@ async def graph_rag_suggestions_stream(websocket: WebSocket) -> None:
     persona_id = _parse_int(params.get("persona_id"))
     persona_account_id = _parse_int(params.get("persona_account_id"))
     campaign_id = _parse_int(params.get("campaign_id"))
-    limit = max(1, min(_parse_int(params.get("limit"), default=8) or 8, 50))
+    limit = max(1, min(_parse_int(params.get("limit"), default=20) or 20, 50))
     mode = _parse_mode(params.get("mode"))
     include_quickstart = _parse_bool(params.get("include_quickstart"), default=True)
     include_memory = _parse_bool(params.get("include_memory"), default=True)

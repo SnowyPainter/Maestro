@@ -176,6 +176,11 @@ def build_playbook_payload(session: Session, playbook_id: int) -> Optional[Canon
         summary=summary,
         body_sections=sections,
         meta={
+            "playbook_id": playbook.id,
+            "persona_id": playbook.persona_id,
+            "campaign_id": playbook.campaign_id,
+            "persona_name": playbook.persona.name if playbook.persona else None,
+            "campaign_name": playbook.campaign.name if playbook.campaign else None,
             "best_tone": playbook.best_tone,
             "best_time_window": playbook.best_time_window,
         },

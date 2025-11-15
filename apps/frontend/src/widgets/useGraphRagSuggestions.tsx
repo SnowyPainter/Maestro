@@ -2,7 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { apiFetch } from "@/lib/api/fetcher"
-import { GraphRagActionCard, GraphRagSuggestionResponse, GraphRagSuggestPayload, GraphRagActionAck, graphRagSuggestApiOrchestratorGraphRagSuggestPost } from "@/lib/api/generated"
+import {
+  GraphRagActionCard,
+  GraphRagSuggestionResponse,
+  GraphRagSuggestPayload,
+  GraphRagActionAck,
+  graphRagSuggestApiOrchestratorGraphRagSuggestPost,
+  bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet,
+} from "@/lib/api/generated"
 import { usePersonaContextStore } from "@/store/persona-context"
 import { useSessionStore } from "@/store/session"
 
@@ -117,6 +124,7 @@ interface GraphRagMockEvent {
 export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = {}) {
   const { onActionResult } = options
   const { personaId, personaAccountId, campaignId } = usePersonaContextStore()
+  const setCampaignContext = usePersonaContextStore((state) => state.setCampaignContext)
   const token = useSessionStore((state) => state.token)
 
   const [suggestions, setSuggestions] = useState<GraphRagSuggestionResponse | null>(null)
@@ -129,12 +137,65 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const ensureCampaignContextForCard = useCallback(
+    async (card?: GraphRagActionCard | null) => {
+      if (!card) {
+        return
+      }
+
+      const rawCampaignId =
+        (card.operator_payload as { campaign_id?: number | string | null } | undefined)?.campaign_id ?? null
+      const campaignFromPayload =
+        typeof rawCampaignId === "number"
+          ? rawCampaignId
+          : typeof rawCampaignId === "string"
+            ? Number(rawCampaignId)
+            : null
+
+      if (campaignFromPayload && !Number.isNaN(campaignFromPayload) && campaignFromPayload > 0) {
+        setCampaignContext(campaignFromPayload)
+        return
+      }
+
+      if (card.operator_key !== "graph_rag.actions.playbook_reapply") {
+        return
+      }
+
+      const rawPlaybookId =
+        (card.operator_payload as { playbook_id?: number | string | null } | undefined)?.playbook_id ?? null
+      const playbookId =
+        typeof rawPlaybookId === "number"
+          ? rawPlaybookId
+          : typeof rawPlaybookId === "string"
+            ? Number(rawPlaybookId)
+            : null
+
+      if (!playbookId || Number.isNaN(playbookId) || playbookId <= 0) {
+        return
+      }
+
+      try {
+        const detail = await bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet({
+          playbook_id: playbookId,
+          include_logs: false,
+        })
+        const campaignFromPlaybook = detail?.playbook?.campaign_id
+        if (typeof campaignFromPlaybook === "number" && campaignFromPlaybook > 0) {
+          setCampaignContext(campaignFromPlaybook)
+        }
+      } catch (error) {
+        console.error("Failed to resolve campaign context for playbook reuse", error)
+      }
+    },
+    [setCampaignContext],
+  )
+
   const buildSuggestPayload = useCallback((): GraphRagSuggestPayload => {
     return {
       persona_id: personaId ?? undefined,
       persona_account_id: personaAccountId ?? undefined,
       campaign_id: campaignId ?? undefined,
-      limit: 8,
+      limit: 20,
       mode: "quickstart",
       include_quickstart: true,
       include_memory: true,
@@ -321,6 +382,7 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
 
       setIsExecuting(true)
       try {
+        await ensureCampaignContextForCard(target)
         const response = await apiFetch<GraphRagActionAck>({
           url: `/api/orchestrator${target.flow_path}`,
           method: "POST",
@@ -339,7 +401,7 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
         setIsExecuting(false)
       }
     },
-    [projection.primaryAction],
+    [projection.primaryAction, ensureCampaignContextForCard, onActionResult],
   )
 
   const executePrimaryAction = useCallback(() => executeAction(), [executeAction])

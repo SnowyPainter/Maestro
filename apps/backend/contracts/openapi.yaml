@@ -7327,7 +7327,7 @@ components:
           maximum: 50.0
           minimum: 1.0
           title: Limit
-          default: 8
+          default: 20
         mode:
           type: string
           enum:

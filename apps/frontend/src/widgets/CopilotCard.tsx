@@ -57,11 +57,9 @@ export function CopilotCard({
     <div className="space-y-2">
 
       <div className="space-y-3">
-        <div className="text-center">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Current Task
-          </span>
-        </div>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          Current Task
+        </span>
         <div className="rounded-2xl p-4">
           {currentAction ? (
             <div className="space-y-3">

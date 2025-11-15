@@ -3804,7 +3804,7 @@ export interface components {
             campaign_id?: number | null;
             /**
              * Limit
-             * @default 8
+             * @default 20
              */
             limit: number;
             /**

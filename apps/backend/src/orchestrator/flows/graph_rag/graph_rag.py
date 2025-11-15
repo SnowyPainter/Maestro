@@ -53,7 +53,7 @@ class GraphRagSuggestPayload(BaseModel):
     persona_id: Optional[int] = None
     persona_account_id: Optional[int] = None
     campaign_id: Optional[int] = None
-    limit: int = Field(8, ge=1, le=50)
+    limit: int = Field(20, ge=1, le=50)
     mode: RagSearchMode = Field("quickstart", description="Action generation mode")
     include_quickstart: bool = Field(True, description="Include quickstart templates")
     include_memory: bool = Field(True, description="Include memory reuse cards")
