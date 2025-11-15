@@ -20,6 +20,7 @@ from apps.backend.src.modules.rag.utils import (
     extract_float,
     extract_int,
     extract_reasons,
+    normalize_node_key,
     parse_timestamp,
     payload_to_dict,
     persona_context_from_meta,
@@ -206,11 +207,8 @@ def build_memory_highlights_from_graph(
     def _ensure(highlight: Optional[RagMemoryHighlight]) -> None:
         if highlight is None:
             return
-        key = str(
-            highlight.playbook_id
-            or highlight.node_id
-            or f"{highlight.title}-{highlight.summary}"
-        )
+        raw_key = highlight.playbook_id or highlight.node_id
+        key = normalize_node_key(raw_key) or f"{highlight.title}-{highlight.summary}"
         existing = highlights.get(key)
         if existing:
             existing.reuse_count = max(existing.reuse_count, highlight.reuse_count)

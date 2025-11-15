@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Set
 
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.backend.src.modules.playbooks.models import Playbook, PlaybookLog
 from apps.backend.src.modules.rag.schemas import RagPersonaContext
 
 
@@ -127,6 +131,88 @@ def sort_key_ts(value: Optional[datetime]) -> float:
     return float("-inf")
 
 
+def normalize_node_key(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    try:
+        return str(value)
+    except Exception:
+        return None
+
+
+def normalize_action_signature(title: Optional[str], action: Optional[str]) -> Optional[str]:
+    candidate = (action or title or "").strip()
+    if not candidate:
+        return None
+    return candidate.lower()
+
+
+GRAPH_RAG_COMPLETION_EVENTS: Set[str] = {
+    "graph_rag.trend_to_draft",
+    "graph_rag.next_action",
+    "graph_rag.playbook_reapply",
+    "copilot.task_completed",
+}
+
+
+@dataclass
+class CompletedGraphActions:
+    node_ids: Set[str]
+    playbook_ids: Set[int]
+    action_signatures: Set[str]
+
+
+async def load_completed_graph_actions(
+    db: AsyncSession,
+    persona_id: Optional[int],
+    campaign_id: Optional[int],
+    *,
+    limit: int = 400,
+) -> CompletedGraphActions:
+    if not persona_id or not campaign_id:
+        return CompletedGraphActions(set(), set(), set())
+
+    stmt = (
+        select(PlaybookLog.event, PlaybookLog.meta)
+        .join(Playbook, Playbook.id == PlaybookLog.playbook_id)
+        .where(Playbook.persona_id == persona_id, Playbook.campaign_id == campaign_id)
+        .where(PlaybookLog.event.in_(GRAPH_RAG_COMPLETION_EVENTS))
+        .order_by(PlaybookLog.created_at.desc())
+        .limit(limit)
+    )
+    rows = await db.execute(stmt)
+
+    node_ids: Set[str] = set()
+    playbook_ids: Set[int] = set()
+    action_signatures: Set[str] = set()
+
+    for event, meta in rows:
+        if not isinstance(meta, dict):
+            continue
+        context_meta = meta
+        if event == "copilot.task_completed":
+            graph_meta = meta.get("graph_rag")
+            if isinstance(graph_meta, dict):
+                context_meta = graph_meta
+        node_key = normalize_node_key(context_meta.get("node_id") or context_meta.get("source_node_id"))
+        if node_key:
+            node_ids.add(node_key)
+        playbook_value = context_meta.get("playbook_id")
+        if playbook_value is not None:
+            try:
+                playbook_ids.add(int(playbook_value))
+            except (TypeError, ValueError):
+                pass
+        action_signature = normalize_action_signature(
+            context_meta.get("title"),
+            context_meta.get("action") or context_meta.get("proposal"),
+        )
+        if action_signature:
+            action_signatures.add(action_signature)
+
+    return CompletedGraphActions(node_ids=node_ids, playbook_ids=playbook_ids, action_signatures=action_signatures)
+
+
 __all__ = [
     "payload_to_dict",
     "persona_label",
@@ -136,4 +222,9 @@ __all__ = [
     "extract_float",
     "parse_timestamp",
     "sort_key_ts",
+    "normalize_node_key",
+    "normalize_action_signature",
+    "load_completed_graph_actions",
+    "CompletedGraphActions",
+    "GRAPH_RAG_COMPLETION_EVENTS",
 ]
