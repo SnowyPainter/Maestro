@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Set
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -134,6 +134,9 @@ class GraphRagActionContext(BaseModel):
     sections: List[str] = Field(default_factory=list)
     limit: int = 6
     response: RagSearchResponse
+    completed_node_ids: Set[str] = Field(default_factory=set)
+    completed_playbook_ids: Set[int] = Field(default_factory=set)
+    completed_action_signatures: Set[str] = Field(default_factory=set)
 
 
 class GraphRagSuggestionResponse(BaseModel):

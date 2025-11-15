@@ -12,7 +12,7 @@
 3. **기억과 ROI 노출**  
    “Reapply Memory” CTA, Timeline 로그, Dashboard(Tab “Memory ROI”) 배지가 동일한 데이터를 공유한다. 사용자는 어떤 판단이 재사용됐고 얼마나 시간을 절약했는지 확인할 수 있다.
 4. **남은 공백**  
-   Copilot이 실행한 작업을 완전히 기록하지 못해 중복 추천이 발생하고, persona별 문맥과 연결된 개인화 루프가 부족하다. 또한 CoWorker → Copilot → 사용자 승인의 폐루프가 자동화되지 않았다.
+   Copilot이 실행한 작업은 Playbook 로그 기반으로 필터링되어 중복 추천이 차단되지만, persona별 개인화 루프와 CoWorker → Copilot → 사용자 승인의 자동화는 여전히 개선 여지가 있다.
 
 ---
 
@@ -49,7 +49,7 @@
 | Reapply Memory CTA/로그 | ✅ 완료 | Persona 컨텍스트 + Timeline 하이라이트 제공 |
 | Memory ROI 배지 | ✅ 완료 | Dashboard + Copilot 카드 연동 (프런트 메트릭 반영 중) |
 | Copilot Action Logging | 🔄 진행중 | `copilot.task_completed` 이벤트 정의 및 PlaybookLog 저장 |
-| Graph RAG 중복 추천 차단 | 🔄 진행중 | 추천 시 최신 Playbook 로그/노드 상태 조회 필요 |
+| Graph RAG 중복 추천 차단 | ✅ 완료 | PlaybookLog 기반으로 추천 카드 생성 시 완료된 노드/플레이북 자동 제외 |
 | Next Action Proposal 루프 | 🔄 진행중 | CoWorker 출력 스키마 확장, CTA 연결 작업 중 |
 | 플랫폼 어댑터 확장 | 🔄 진행중 | LinkedIn/X 우선, KPI 매핑 `insights`에 추가 예정 |
 

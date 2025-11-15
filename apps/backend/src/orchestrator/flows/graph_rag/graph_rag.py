@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.service import get_persona_account
+from apps.backend.src.modules.playbooks.models import Playbook, PlaybookLog
 from apps.backend.src.modules.rag.functions import (
     build_memory_highlights_from_graph,
     build_next_actions_from_graph,
@@ -46,6 +49,92 @@ TREND_ACTION_PATH = "/graph-rag/actions/trend-to-draft"
 NEXT_ACTION_PATH = "/graph-rag/actions/next-action"
 PLAYBOOK_ACTION_PATH = "/graph-rag/actions/playbook-reapply"
 PERSONA_FOCUS_PATH = "/graph-rag/actions/persona-focus"
+
+
+GRAPH_RAG_COMPLETION_EVENTS: Set[str] = {
+    "graph_rag.trend_to_draft",
+    "graph_rag.next_action",
+    "graph_rag.playbook_reapply", # Graph Rag Reapply 등 Reapply 관련은 다시 수행 가능하게 한다. 정책화 필요
+    "copilot.task_completed",
+}
+
+
+@dataclass
+class CompletedGraphActions:
+    node_ids: Set[str]
+    playbook_ids: Set[int]
+    action_signatures: Set[str]
+
+
+def _empty_completed_actions() -> CompletedGraphActions:
+    return CompletedGraphActions(set(), set(), set())
+
+
+def _normalize_node_key(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    try:
+        return str(value)
+    except Exception:
+        return None
+
+
+def _normalize_action_signature(title: Optional[str], action: Optional[str]) -> Optional[str]:
+    candidate = (action or title or "").strip()
+    if not candidate:
+        return None
+    return candidate.lower()
+
+
+async def _load_completed_graph_actions(
+    db: AsyncSession,
+    persona_id: Optional[int],
+    campaign_id: Optional[int],
+    *,
+    limit: int = 400,
+) -> CompletedGraphActions:
+    if not persona_id or not campaign_id:
+        return _empty_completed_actions()
+
+    stmt = (
+        select(PlaybookLog.event, PlaybookLog.meta)
+        .join(Playbook, Playbook.id == PlaybookLog.playbook_id)
+        .where(Playbook.persona_id == persona_id, Playbook.campaign_id == campaign_id)
+        .where(PlaybookLog.event.in_(GRAPH_RAG_COMPLETION_EVENTS))
+        .order_by(PlaybookLog.created_at.desc())
+        .limit(limit)
+    )
+    rows = await db.execute(stmt)
+
+    node_ids: Set[str] = set()
+    playbook_ids: Set[int] = set()
+    action_signatures: Set[str] = set()
+
+    for event, meta in rows:
+        if not isinstance(meta, dict):
+            continue
+        context_meta = meta
+        if event == "copilot.task_completed":
+            graph_meta = meta.get("graph_rag")
+            if isinstance(graph_meta, dict):
+                context_meta = graph_meta
+        node_key = _normalize_node_key(context_meta.get("node_id") or context_meta.get("source_node_id"))
+        if node_key:
+            node_ids.add(node_key)
+        playbook_value = context_meta.get("playbook_id")
+        if playbook_value is not None:
+            try:
+                playbook_ids.add(int(playbook_value))
+            except (TypeError, ValueError):
+                pass
+        action_signature = _normalize_action_signature(
+            context_meta.get("title"),
+            context_meta.get("action") or context_meta.get("proposal"),
+        )
+        if action_signature:
+            action_signatures.add(action_signature)
+
+    return CompletedGraphActions(node_ids=node_ids, playbook_ids=playbook_ids, action_signatures=action_signatures)
 
 
 class GraphRagSuggestPayload(BaseModel):
@@ -153,6 +242,12 @@ async def op_graph_rag_collect_context(payload: GraphRagSuggestPayload, ctx: Tas
             persona_ctx,
         )
 
+    completed = await _load_completed_graph_actions(
+        db,
+        persona_id=persona_id,
+        campaign_id=payload.campaign_id,
+    )
+
     return GraphRagActionContext(
         owner_user_id=user.id,
         persona_id=persona_id,
@@ -163,6 +258,9 @@ async def op_graph_rag_collect_context(payload: GraphRagSuggestPayload, ctx: Tas
         sections=sorted(sections),
         limit=effective_limit,
         response=response,
+        completed_node_ids=completed.node_ids,
+        completed_playbook_ids=completed.playbook_ids,
+        completed_action_signatures=completed.action_signatures,
     )
 
 
@@ -174,8 +272,14 @@ async def op_graph_rag_collect_context(payload: GraphRagSuggestPayload, ctx: Tas
 async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
     limit = min(TREND_CARD_LIMIT, max(1, payload.limit))
     cards: List[GraphRagActionCard] = []
+    completed_nodes = payload.completed_node_ids
 
-    for idx, template in enumerate(payload.response.quickstart[:limit]):
+    for idx, template in enumerate(payload.response.quickstart):
+        if len(cards) >= limit:
+            break
+        node_key = _normalize_node_key(template.source_node_id)
+        if node_key and node_key in completed_nodes:
+            continue
         persona = template.persona or payload.persona
         cards.append(
             GraphRagActionCard(
@@ -204,6 +308,9 @@ async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskCo
     if len(cards) < limit:
         for idx, item in enumerate(payload.response.items):
             if not _looks_like_trend(item):
+                continue
+            node_key = _normalize_node_key(item.node_id)
+            if node_key and node_key in completed_nodes:
                 continue
             cards.append(
                 GraphRagActionCard(
@@ -242,8 +349,18 @@ async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskCo
 async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
     limit = min(DRAFT_CARD_LIMIT, max(2, payload.limit))
     cards: List[GraphRagActionCard] = []
+    completed_nodes = payload.completed_node_ids
+    completed_actions = payload.completed_action_signatures
 
-    for idx, action in enumerate(payload.response.next_actions[:limit]):
+    for idx, action in enumerate(payload.response.next_actions):
+        if len(cards) >= limit:
+            break
+        node_key = _normalize_node_key((action.meta or {}).get("source_node_id"))
+        action_signature = _normalize_action_signature(action.title, action.action)
+        if node_key and node_key in completed_nodes:
+            continue
+        if action_signature and action_signature in completed_actions:
+            continue
         persona = action.persona or payload.persona
         cards.append(
             GraphRagActionCard(
@@ -274,6 +391,9 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
     if len(cards) < limit:
         for idx, item in enumerate(payload.response.items):
             if not _looks_like_draft(item):
+                continue
+            node_key = _normalize_node_key(item.node_id)
+            if node_key and node_key in completed_nodes:
                 continue
             cards.append(
                 GraphRagActionCard(
@@ -306,8 +426,17 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
 async def op_graph_rag_playbook_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
     limit = min(PLAYBOOK_CARD_LIMIT, max(1, payload.limit))
     cards: List[GraphRagActionCard] = []
+    completed_nodes = payload.completed_node_ids
+    completed_playbooks = payload.completed_playbook_ids
 
-    for idx, highlight in enumerate(payload.response.memory_highlights[:limit]):
+    for idx, highlight in enumerate(payload.response.memory_highlights):
+        if len(cards) >= limit:
+            break
+        node_key = _normalize_node_key(highlight.node_id)
+        if highlight.playbook_id and highlight.playbook_id in completed_playbooks:
+            continue
+        if node_key and node_key in completed_nodes:
+            continue
         persona = highlight.persona or payload.persona
         cards.append(
             GraphRagActionCard(
