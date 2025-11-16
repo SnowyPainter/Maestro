@@ -165,9 +165,6 @@ export function CopilotCard({
                     {renderGroupTitleIcon(group.key)}
                     {group.title}
                   </span>
-                  {group.helper ? (
-                    <span className="text-[10px] text-muted-foreground">{group.helper}</span>
-                  ) : null}
                 </div>
                 <span className="text-[10px] text-muted-foreground">×{group.cards.length}</span>
               </div>
