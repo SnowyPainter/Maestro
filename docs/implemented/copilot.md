@@ -1,45 +1,49 @@
-# Graph RAG Copilot
+# Graph RAG Copilot — 동작 요약과 개선 로드맵
 
-## 현재 동작 개요
-- **엔드포인트**: `/graph-rag/suggest`(기본) 및 quickstart/memory/next-action 전용 엔드포인트가 모두 `graph_rag.py`에서 동일한 플로우 빌더를 공유하며, `GraphRagSuggestPayload` 기반으로 카드 리스트(`GraphRagSuggestionResponse`)를 반환한다.
-- **컨텍스트 수집**: `op_graph_rag_collect_context`가 페르소나/캠페인 컨텍스트를 해석하고, 비어 있는 쿼리일 때 모드별 fallback 쿼리를 주입한다. 이후 `search_rag`로 그래프+벡터 검색을 실행하고, 섹션 플래그에 따라 Quickstart 템플릿, Memory highlight, Next Action, ROI를 계산한다. 이미 완료된 노드/플레이북/액션 서명은 `load_completed_graph_actions`로 필터링하여 카드 생성에 반영된다.
-- **카드 생성**: 네 개의 오퍼레이터가 컨텍스트를 받아 카드화한다.
-  - Trend 카드: Quickstart 템플릿 또는 트렌드 노드를 Trend→Draft CTA로 노출.
-  - Draft 카드: Next Action 제안이나 Draft 노드를 "Run next action" 또는 "Open draft" CTA로 노출하며 완료된 액션 서명은 스킵.
-  - Playbook 카드: Memory highlight를 재사용 CTA로 노출하며 재사용 횟수/최근 사용 시점 기반 confidence를 부여.
-  - Persona 카드: (제거됨) 컨텍스트 고정이 기본이므로 별도 포커스 CTA 없음.
-- **집계/정렬**: `op_graph_rag_aggregate_cards`가 카드 ID로 dedupe 후 priority→title→ID 순으로 정렬하여 limit까지 반환한다.
-- **액션 실행** (`actions.py`):
-  - `trend_to_draft`: 트렌드 설명과 쿼리로 IR을 구성해 Draft를 생성하고, playbook 이벤트를 기록 후 `graph_rag_refresh` 이벤트 발행.
-  - `next_action`: Next Action 실행을 이벤트로 기록하고 refresh 발행.
-  - `playbook_reapply`: 필요한 경우 플레이북/캠페인/페르소나를 역으로 채워 넣어 재사용 이벤트 기록 후 refresh.
-- **프런트엔드**: `ChatContextPanel`에서 `/api/sse/graph-rag/suggestions/stream` SSE로 수신한 ROI/Trend/Draft/Playbook/Persona 카드를 `flow_path`에 맞춰 즉시 실행하거나 이전/다음 탐색 UI로 노출한다.
+## 현재 동작
+- **제안 API**: `/graph-rag/suggest` 및 quickstart/memory/next-action 변형이 공통 플로우를 통해 컨텍스트 수집 → Graph RAG 검색 → 카드 우선순위 산정 → `GraphRagSuggestionResponse` 반환.
+- **카드 섹션**  
+  - Trend: 추격 초안용 템플릿(CTA: trend→draft).  
+  - Draft/Next Action: 그래프 엣지 기반 “계획” 텍스트(CTA 없음, Plan only).  
+  - Playbook: 메모리/재사용 하이라이트(CTA: playbook_reapply).  
+  - ROI 스냅샷: 재사용·자동화 집계 기반.
+- **실행 플로우**  
+  - `graph_rag.actions.trend_to_draft`: PromptRegistry `draft.from_trend` LLM 호출 → Draft 생성(LLM 실패 시 마크다운 폴백) → playbook 이벤트 기록 → 그래프 리프레시.  
+  - `graph_rag.actions.playbook_reapply`: 재사용 이벤트 기록, persona/campaign 역채움 → 커밋 → 리프레시.  
+  - `graph_rag.actions.next_action`: 선택 로그만 기록(부작용 없음) → 리프레시.
+- **결과 스키마**: `GraphRagActionResult`가 intent, inputs/outputs, reason, confidence, timing_ms, refresh 대상, audit(LLM 사용), dedupe_signature를 포함. ActionAck에서 모두 노출.
+- **프런트 UX**: CopilotCard는 automatable 카드만 CTA를 노출하고, Next Action은 “Plan only” 배지로 수동 검토용 표시. ActionAck는 입력/출력/감사 메타/소요시간을 시각화.
 
-## 상품화 업그레이드 제안
-1) **추천 품질/랭킹 강화**
-- `graph_rag.py` 카드 생성 시 검색 스코어, 관련 엣지 강도, 최근성 등을 priority 산정에 반영하고, 동일 source_node/업데이트 시점 기준으로 하중치 있는 dedupe/채점 함수를 추가.
-- `GraphRagActionContext`에 사용자 피드백(건너뛰기/싫어요 등) 히스토리를 받아 재노출 억제 필터를 적용.
+## 현재 ROI 계산 (`estimate_roi`)
+- 입력: memory_highlights, next_actions, persona_ctx.
+- 절차:
+  - 재사용 횟수 합계와 자동화 개수 집계.
+  - 채널/액션 가중치: paid 1.5, longform 1.2, shortform 0.8, comment 0.6(메타에서 channel/kind 추정, 기본 1.0).
+  - 시간 절감 추정:  
+    - 재사용: 5분 × reuse_count × 채널 가중치.  
+    - 자동화: (10분 + confidence×5) × 채널 가중치.  
+  - saved_minutes를 반올림하여 반환하고, AI介入률(ai_rate)을 자동화 기여분/총 효과로 계산.
+- 반환: `RagValueInsight(memory_reuse_count, automated_decisions, saved_minutes, ai_intervention_rate, persona)`.
+- 한계: 비용/채널 단가, 콘텐츠 성과(도달/반응), 리스크/불확실성은 미포함.
 
-2) **모드별 경험 최적화**
-- `rag_mode_config`로 설정되는 fallback 쿼리/limit를 UI 모드와 동기화하고, quickstart 모드에서 trend-only, memory 모드에서 playbook-only처럼 카드 유형별 필터를 명시적으로 적용.
-- ROI 포함 여부(`include_roi`)를 사용자 세션 옵션으로 노출해 계산 비용 절감 경로 제공.
+## 한계
+- Next Action은 실행 불가(텍스트 계획)라 자동화와 분리가 필요.
+- 근거(소스 노드/엣지, score, suggested_at) UI 노출이 부족.
+- ROI가 시간 절감 위주로 단순하며 비용/성과/리스크 모델이 없다.
+- 자동화 가능한 액션 세트가 제한적(트렌드→드래프트, 플레이북 재사용).
 
-3) **액션 안전성 및 감사 가능성**
-- `op_graph_rag_next_action`와 같이 DB 커밋 경계를 암묵적으로 두는 함수에 대해 트랜잭션/에러 처리/로깅을 통일해 일관된 성공 기준을 확보하고, 실행 결과 메타(`action_signature`, `confidence`)를 액션 로그에 저장해 재추천 방지 정확도를 높인다.
-- CTA 실행 전 개인화 맥락이 비어 있을 때 `_resolve_persona_context`의 추론 결과를 카드 메타에 명시적으로 표기해 프런트엔드에서 확인/변경할 수 있게 한다.
-
-4) **신선도 및 폴백 전략**
-- `publish_graph_rag_refresh` 트리거 외에 캐시 만료/주기적 새로고침을 추가하고, SSE 타임아웃 시 `fallback_query_for_mode`를 활용한 기본 카드 세트를 즉시 공급하는 폴백을 제공.
-- 그래프 검색 실패 시 최근 성공한 카드 세트를 리플레이하거나 Draft/Playbook 최근 활동 로그를 기반으로 최소 설정 카드 묶음을 구성.
-
-5) **관측성/실험 토대**
-- 각 오퍼레이터에 구조화 로깅(추천 개수, 필터로 제외된 카드 수, dedupe 비율, 평균 priority)을 추가하고, SSE 구독/CTA 실행까지의 end-to-end 지표(전환율, ROI 클릭률)를 계측.
-- 추천 알고리즘/priority 함수를 토글할 수 있는 플래그를 도입해 A/B 테스트를 빠르게 돌릴 수 있게 만든다.
-
-6) **프런트엔드 UX 정교화**
-- 카드마다 로딩/실패/성공 상태를 `ActionAck`로 확장해 “실행 중 → 완료 → 후속 제안” 흐름을 명시하고, CTA 연속 실행 시 비동기 중복 실행을 막는 optimistic UI를 적용.
-- 카드 묶음을 Persona/Campaign 컨텍스트와 연동해 세션 간 동일 맥락 재진입 시 이전 추천을 복원하고, 컨텍스트 변경 시 강제 새로고침하도록 큐를 분리.
-
-7) **개발 편의/안전 가드** (단기)
-- Graph RAG 추천/액션 플로우를 `__all__`에 명시한 키 기반으로 자동 테스트하는 smoke 테스트를 추가하고, 스키마 변경 시 플로우 빌더가 깨지지 않도록 pydantic 모델 필수 필드 스냅샷을 유지.
-- 카드 수(`limit`)와 섹션 토글을 관리하는 프런트 설정값을 `.env`나 런타임 구성으로 노출해 운영 중 핫픽스 가능성을 높인다.
+## 개선 로드맵
+1) **액션 타입 정규화**  
+   - Plan(next_action)은 그대로 두되, 자동화 가능 액션을 enum+필수 파라미터로 분리(`draft_from_trend`, `playbook_reuse`, `schedule_post`, `reply_comment` 등). CTA는 자동화 타입에만 노출.
+2) **근거 노출**  
+   - 카드/ACK에 `meta.source_node_id`, 엣지 타입, score, suggested_at을 표준화해 “왜 이 제안인가”를 명시.
+3) **워크플로 확장**  
+   - 스케줄/댓글 응답 등 실행 플로우 추가, playbook/worker에 연결. dedupe_signature로 멱등/중복 방지.
+4) **랭킹/필터**  
+   - 최신성+엣지 강도+완료 여부 기반 priority, “자동화만 보기/계획 보기” 토글.
+5) **관측성**  
+   - 추천 후보/필터링 수, 실행 성공률, 리프레시 지연을 로깅·계측해 UI/모니터링에 반영.
+6) **ROI 고도화**  
+   - 추가 변수: `cost_savings`(채널별 시간·매체비), `content_lift`(도달/반응률 개선), `risk_score`(품질·규칙 위반 리스크), `confidence_interval`.  
+   - 예시 모델: `saved_minutes = reuse*5 + automations*10`; `cost_savings = saved_minutes * blended_hourly_rate`; `content_lift = baseline_reach * lift_factor_by_channel`; `roi_score = w1*cost_savings + w2*content_lift - w3*risk_score`.  
+   - 데이터 필요: 채널 단가/평균 도달, 액션 성공률 히스토리, 휴먼 리뷰 시간, 리스크 로그(품질/규칙 위반).

@@ -295,11 +295,40 @@ def estimate_roi(
     next_actions: Sequence[RagNextActionProposal],
     persona_ctx: Optional[RagPersonaContext],
 ) -> Optional[RagValueInsight]:
+    # 기본 재사용 횟수/자동화 건수 집계
     reuse_total = sum(max(0, highlight.reuse_count) for highlight in memory_highlights)
     automation_total = len(next_actions)
-    saved_minutes = reuse_total * 5 + automation_total * 10
-    total = reuse_total + automation_total
-    ai_rate = round((reuse_total / total) if total else 0.0, 2)
+
+    # 채널/액션 유형에 따른 가중치
+    CHANNEL_WEIGHT = {
+        "paid": 1.5,
+        "longform": 1.2,
+        "shortform": 0.8,
+        "comment": 0.6,
+    }
+    BASE_MEMORY_MINUTES = 5.0
+    BASE_AUTOMATION_MINUTES = 10.0
+
+    def _channel_weight(meta: Optional[Dict[str, Any]]) -> float:
+        if not meta:
+            return 1.0
+        channel = str(meta.get("channel") or meta.get("kind") or "").lower()
+        return CHANNEL_WEIGHT.get(channel, 1.0)
+
+    # 시간 절감 추정: 재사용은 횟수 기반, 자동화는 confidence/채널 가중치 포함
+    saved_minutes_reuse = sum(
+        BASE_MEMORY_MINUTES * max(1, highlight.reuse_count) * _channel_weight(highlight.meta if hasattr(highlight, "meta") else None)  # type: ignore[attr-defined]
+        for highlight in memory_highlights
+    )
+    saved_minutes_automation = sum(
+        (BASE_AUTOMATION_MINUTES + (proposal.confidence or 0.6) * 5.0)
+        * _channel_weight(proposal.meta if hasattr(proposal, "meta") else None)  # type: ignore[attr-defined]
+        for proposal in next_actions
+    )
+    saved_minutes = round(saved_minutes_reuse + saved_minutes_automation)
+
+    total_effect = saved_minutes_reuse + saved_minutes_automation
+    ai_rate = round((saved_minutes_automation / total_effect) if total_effect else 0.0, 2)
     return RagValueInsight(
         persona=persona_ctx,
         memory_reuse_count=reuse_total,
