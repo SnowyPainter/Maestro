@@ -570,6 +570,18 @@ def _is_trend_node(node_type: Optional[str], meta: Optional[Dict[str, Any]]) -> 
     return bool(meta.get("is_trend"))
 
 
+def _looks_like_comment(item: RagSearchItem) -> bool:
+    node_type = (item.node_type or "").lower()
+    if "comment" in node_type or "reply" in node_type:
+        return True
+    tags = item.meta.get("tags")
+    if isinstance(tags, list):
+        for value in tags:
+            if isinstance(value, str) and ("comment" in value.lower() or "reply" in value.lower()):
+                return True
+    return bool(item.meta.get("is_comment"))
+
+
 __all__ = [
     "resolve_persona_context",
     "resolve_sections",

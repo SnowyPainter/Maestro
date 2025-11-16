@@ -85,8 +85,8 @@ export function CopilotCard({
     const fallbackGroups: CopilotActionGroup[] = [
       { key: "trend", title: "Trend-driven Next Actions", cards: actions.filter((card) => card.category === "trend") },
       { key: "draft", title: "Next Steps & Drafts", cards: actions.filter((card) => card.category === "draft") },
+      { key: "comment", title: "Comments to Respond", cards: actions.filter((card) => card.category === "comment") },
       { key: "playbook", title: "Memory & Playbooks", cards: actions.filter((card) => card.category === "playbook") },
-      { key: "persona", title: "Persona & Focus", cards: actions.filter((card) => card.category === "persona") },
     ]
     return fallbackGroups.filter((group) => group.cards.length > 0)
   }, [actionGroups, actions])
@@ -97,10 +97,10 @@ export function CopilotCard({
         return <Sparkles className="h-3.5 w-3.5 text-amber-600" />
       case "draft":
         return <Layers className="h-3.5 w-3.5 text-indigo-600" />
+      case "comment":
+        return <Radio className="h-3.5 w-3.5 text-rose-600" />
       case "playbook":
         return <Brain className="h-3.5 w-3.5 text-emerald-600" />
-      case "persona":
-        return <Compass className="h-3.5 w-3.5 text-slate-600" />
       default:
         return <Sparkles className="h-3.5 w-3.5 text-slate-600" />
     }

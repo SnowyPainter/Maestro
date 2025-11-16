@@ -6,12 +6,14 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 from uuid import UUID
 
+from apps.backend.src.modules.rag.events import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.modules.accounts.service import get_persona_account
 from apps.backend.src.modules.rag.functions import (
     build_memory_highlights_from_graph,
+    _looks_like_comment,
     build_next_actions_from_graph,
     build_quickstart_templates,
     estimate_roi,
@@ -45,6 +47,7 @@ from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 TREND_CARD_LIMIT = 4
 DRAFT_CARD_LIMIT = 4
 PLAYBOOK_CARD_LIMIT = 3
+COMMENT_CARD_LIMIT = 3
 
 TREND_ACTION_PATH = "/graph-rag/actions/trend-to-draft"
 NEXT_ACTION_PATH = "/graph-rag/actions/next-action"
@@ -325,6 +328,46 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
 
 
 @operator(
+    key="graph_rag.actions.comment",
+    title="Comment oriented Graph RAG cards",
+    side_effect="read",
+)
+async def op_graph_rag_comment_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
+    limit = min(COMMENT_CARD_LIMIT, max(1, payload.limit))
+    cards: List[GraphRagActionCard] = []
+    completed_nodes = payload.completed_node_ids
+    for idx, item in enumerate(payload.response.items):
+        if len(cards) >= limit:
+            break
+        if not _looks_like_comment(item):
+            continue
+        node_key = normalize_node_key(item.node_id)
+        if node_key and node_key in completed_nodes:
+            continue
+        cards.append(
+            GraphRagActionCard(
+                id=f"comment:item:{item.node_id}",
+                category="comment",
+                title=item.title or "Comment to respond",
+                description=item.summary,
+                persona=payload.persona,
+                cta_label=None,  # informational only for now
+                operator_key=None,
+                flow_path=None,
+                operator_payload={
+                    "node_id": str(item.node_id),
+                    "source_table": item.source_table,
+                },
+                source_node_id=item.node_id,
+                priority=65 - idx,
+                meta={"kind": "comment_node", "score": item.score},
+            )
+        )
+
+    return GraphRagActionList(cards=cards)
+
+
+@operator(
     key="graph_rag.actions.playbook",
     title="Playbook oriented Graph RAG cards",
     side_effect="read",
@@ -408,6 +451,7 @@ def _aggregate_payload_factory(state, _payload):
     buckets = [
         state.results.get("trend_cards"),
         state.results.get("draft_cards"),
+        state.results.get("comment_cards"),
         state.results.get("playbook_cards"),
     ]
     limit = getattr(state.payload, "limit", 12) or 12
@@ -435,6 +479,12 @@ def _build_graph_rag_flow(builder: FlowBuilder, *, context_config: Optional[Dict
         upstream=[context_task],
         config={"payload_from": "task:context"},
     )
+    comment_task = builder.task(
+        "comment_cards",
+        "graph_rag.actions.comment",
+        upstream=[context_task],
+        config={"payload_from": "task:context"},
+    )
     playbook_task = builder.task(
         "playbook_cards",
         "graph_rag.actions.playbook",
@@ -445,7 +495,7 @@ def _build_graph_rag_flow(builder: FlowBuilder, *, context_config: Optional[Dict
     aggregate_task = builder.task(
         "aggregate_cards",
         "graph_rag.aggregate_cards",
-        upstream=[trend_task, draft_task, playbook_task],
+        upstream=[trend_task, draft_task, comment_task, playbook_task],
         config={"payload_factory": _aggregate_payload_factory},
     )
 
