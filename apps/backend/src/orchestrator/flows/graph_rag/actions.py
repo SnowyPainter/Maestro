@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -22,6 +23,8 @@ from apps.backend.src.modules.rag.events import GraphRagRefreshEvent, publish_gr
 from apps.backend.src.modules.rag.schemas import (
     GraphRagActionResult,
     GraphRagNextActionCommand,
+    GraphRagActionAudit,
+    GraphRagActionIntent,
     GraphRagPersonaFocusCommand,
     GraphRagPlaybookActionCommand,
     GraphRagTrendActionCommand,
@@ -29,6 +32,11 @@ from apps.backend.src.modules.rag.schemas import (
 from apps.backend.src.modules.trends.schemas import TrendItem
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.adapters.utils import build_persona_brief, _ensure_draft_ir_props
+from apps.backend.src.orchestrator.flows.graph_rag.action_result import (
+    build_action_result,
+    elapsed_ms,
+    make_refresh_targets,
+)
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
@@ -84,6 +92,7 @@ async def _resolve_persona_context(
 async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
     user: User = ctx.require(User)
+    started = time.perf_counter()
 
     persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
 
@@ -115,6 +124,7 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
     )
 
     llm_output: Optional[DraftFromTrendOutput] = None
+    audit: Optional[GraphRagActionAudit] = None
     try:
         result_dict = await LLMService.instance().ainvoke(
             PromptKey.DRAFT_FROM_TREND,
@@ -127,12 +137,21 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
             llm_result = LlmResult.model_validate(result_dict)
             llm_output = DraftFromTrendOutput.model_validate(llm_result.data)
             llm_output.draft_ir = _ensure_draft_ir_props(llm_output.draft_ir)
+            audit = GraphRagActionAudit(
+                llm_model=llm_result.model,
+                llm_usage_id=(llm_result.meta or {}).get("usage_id"),
+                tokens_prompt=llm_result.tokens_prompt,
+                tokens_completion=llm_result.tokens_completion,
+                cost_usd=llm_result.cost_usd,
+                latency_ms=llm_result.latency_ms,
+            )
     except Exception:
         logger.exception("Failed to generate draft via LLM for graph_rag trend")
 
     if llm_output:
         ir = llm_output.draft_ir
         draft_title = llm_output.title or payload.title
+        reason = "LLM draft.from_trend"
     else:
         ir = DraftIR(
             blocks=[
@@ -152,6 +171,7 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
             options={},
         )
         draft_title = payload.title
+        reason = "fallback_markdown"
 
     logger.info(f"persona_id: {persona_id}, persona_account_id: {persona_account_id}")
     logger.info(f"payload: {payload}")
@@ -170,6 +190,7 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
         payload=draft_request,
     )
 
+    playbook_log_id = None
     if persona_id and payload.campaign_id:
         log = await record_playbook_event(
             db,
@@ -186,12 +207,30 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
             },
         )
         await db.commit()
+        playbook_log_id = getattr(log, "id", None)
 
     _publish_refresh(persona_id, payload.campaign_id, trigger="trend_to_draft")
-    return GraphRagActionResult(
+    return build_action_result(
         status="draft_created",
         message=f"Draft #{draft.id} created from trend",
-        meta={"draft_id": draft.id},
+        action_key="graph_rag.actions.trend_to_draft",
+        intent="trend_followup",
+        inputs={
+            "persona_id": persona_id,
+            "persona_account_id": persona_account_id,
+            "campaign_id": payload.campaign_id,
+            "query": payload.query,
+            "source_node_id": str(payload.source_node_id) if payload.source_node_id else None,
+        },
+        outputs={
+            "draft_id": draft.id,
+            "playbook_log_id": playbook_log_id,
+        },
+        reason=reason,
+        timing_ms=elapsed_ms(started),
+        refresh=make_refresh_targets(persona_id, payload.campaign_id),
+        audit=audit,
+        dedupe_signature=f"trend_to_draft:{payload.source_node_id or payload.query}:{draft_title}",
     )
 
 
@@ -202,6 +241,7 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
 )
 async def op_graph_rag_next_action(payload: GraphRagNextActionCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
+    started = time.perf_counter()
 
     persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
     log = await record_playbook_event(
@@ -220,10 +260,23 @@ async def op_graph_rag_next_action(payload: GraphRagNextActionCommand, ctx: Task
     )
 
     _publish_refresh(persona_id, payload.campaign_id, trigger="next_action")
-    return GraphRagActionResult(
+    return build_action_result(
         status="logged",
         message="Next action recorded",
-        meta={"playbook_log_id": getattr(log, "id", None)},
+        action_key="graph_rag.actions.next_action",
+        intent="next_action",
+        inputs={
+            "persona_id": persona_id,
+            "persona_account_id": persona_account_id,
+            "campaign_id": payload.campaign_id,
+            "playbook_id": payload.playbook_id,
+            "source_node_id": str(payload.source_node_id) if payload.source_node_id else None,
+        },
+        outputs={"playbook_log_id": getattr(log, "id", None)},
+        confidence=payload.confidence,
+        timing_ms=elapsed_ms(started),
+        refresh=make_refresh_targets(persona_id, payload.campaign_id),
+        dedupe_signature=f"next_action:{payload.playbook_id}:{payload.title}",
     )
 
 
@@ -234,6 +287,7 @@ async def op_graph_rag_next_action(payload: GraphRagNextActionCommand, ctx: Task
 )
 async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
+    started = time.perf_counter()
 
     persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
     campaign_id = payload.campaign_id
@@ -262,10 +316,23 @@ async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, 
     )
     await db.commit()
     _publish_refresh(persona_id, campaign_id, trigger="playbook_reapply")
-    return GraphRagActionResult(
+    return build_action_result(
         status="logged",
         message="Playbook reuse logged",
-        meta={"playbook_log_id": getattr(log, "id", None)},
+        action_key="graph_rag.actions.playbook_reapply",
+        intent="playbook_reuse",
+        inputs={
+            "persona_id": persona_id,
+            "persona_account_id": persona_account_id,
+            "campaign_id": campaign_id,
+            "playbook_id": payload.playbook_id,
+            "node_id": str(payload.node_id) if payload.node_id else None,
+        },
+        outputs={"playbook_log_id": getattr(log, "id", None)},
+        reason="reuse_memory_highlight",
+        timing_ms=elapsed_ms(started),
+        refresh=make_refresh_targets(persona_id, campaign_id),
+        dedupe_signature=f"playbook_reapply:{payload.playbook_id or payload.node_id}",
     )
 
 
@@ -276,6 +343,7 @@ async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, 
 )
 async def op_graph_rag_persona_focus(payload: GraphRagPersonaFocusCommand, ctx: TaskContext) -> GraphRagActionResult:
     db: AsyncSession = ctx.require(AsyncSession)
+    started = time.perf_counter()
 
     persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
     roi = payload.roi
@@ -302,10 +370,22 @@ async def op_graph_rag_persona_focus(payload: GraphRagPersonaFocusCommand, ctx: 
         meta=meta,
     )
     _publish_refresh(persona_id, payload.campaign_id, trigger="persona_focus")
-    return GraphRagActionResult(
+    return build_action_result(
         status="logged",
         message="Persona focus recorded",
-        meta={"playbook_log_id": getattr(log, "id", None)},
+        action_key="graph_rag.actions.persona_focus",
+        intent="persona_focus",
+        inputs={
+            "persona_id": persona_id,
+            "persona_account_id": persona_account_id,
+            "campaign_id": payload.campaign_id,
+            "focus_query": payload.focus_query,
+        },
+        outputs={"playbook_log_id": getattr(log, "id", None)},
+        reason="record_focus_area",
+        timing_ms=elapsed_ms(started),
+        refresh=make_refresh_targets(persona_id, payload.campaign_id),
+        dedupe_signature=f"persona_focus:{payload.focus_query}:{payload.campaign_id}",
     )
 
 

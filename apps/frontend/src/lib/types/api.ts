@@ -3697,6 +3697,51 @@ export interface components {
             meta?: {
                 [key: string]: unknown;
             };
+            /**
+             * Intent
+             * @enum {string|null}
+             */
+            intent?: "trend_followup" | "next_action" | "playbook_reuse" | "persona_focus" | "other" | null;
+            /** Action Key */
+            action_key?: string | null;
+            /** Inputs */
+            inputs?: {
+                [key: string]: unknown;
+            };
+            /** Outputs */
+            outputs?: {
+                [key: string]: unknown;
+            };
+            /** Reason */
+            reason?: string | null;
+            /** Confidence */
+            confidence?: number | null;
+            /** Timing Ms */
+            timing_ms?: number | null;
+            /** Refresh */
+            refresh?: string[];
+            audit?: components["schemas"]["GraphRagActionAudit"] | null;
+            /** Dedupe Signature */
+            dedupe_signature?: string | null;
+        };
+        /** GraphRagActionAudit */
+        GraphRagActionAudit: {
+            /** Llm Model */
+            llm_model?: string | null;
+            /** Llm Usage Id */
+            llm_usage_id?: string | null;
+            /** Tokens Prompt */
+            tokens_prompt?: number | null;
+            /** Tokens Completion */
+            tokens_completion?: number | null;
+            /** Cost Usd */
+            cost_usd?: number | null;
+            /** Latency Ms */
+            latency_ms?: number | null;
+            /** Error Code */
+            error_code?: string | null;
+            /** Error Message */
+            error_message?: string | null;
         };
         /** GraphRagActionCard */
         GraphRagActionCard: {

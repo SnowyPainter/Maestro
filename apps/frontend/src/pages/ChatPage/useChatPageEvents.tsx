@@ -82,6 +82,7 @@ export function useChatPageEvents() {
   const messageIdRef = useRef<number>(Date.now());
   const { t } = useTranslation();
 
+
   const handleCoworkerSelect = useCallback(() => {
     // Placeholder for future implementation
   }, []);
@@ -1061,16 +1062,40 @@ export function useChatPageEvents() {
 
     console.log("Created card for action result:", card);
 
+    const handleValueClick = (key: string, value: unknown) => {
+      console.log("ActionAck value clicked:", key, value);
+
+      // ID 값들을 클릭했을 때 해당 상세 카드 열기 (기존 카드 유지)
+      if (typeof value === "string" || typeof value === "number") {
+        const id = typeof value === "number" ? value : parseInt(value);
+        if (!isNaN(id)) {
+          if (key.includes("draft")) {
+            console.log("Draft ID clicked:", id);
+            handleDraftSelect(id, undefined); // Ack 카드 삭제 방지
+          } else if (key.includes("campaign")) {
+            handleCampaignSelect(id, undefined); // Ack 카드 삭제 방지
+          } else if (key.includes("persona")) {
+            handlePersonaSelect(id, undefined); // Ack 카드 삭제 방지
+          } else if (key.includes("account")) {
+            handleAccountSelect(id, undefined); // Ack 카드 삭제 방지
+          } else if (key.includes("playbook") && !key.includes("log")) {
+            handlePlaybookSelect(id, undefined); // Ack 카드 삭제 방지
+          }
+        }
+      }
+    };
+
     addCardMessage(messageId => {
       console.log("addCardMessage calling renderCardByType for action result");
       return renderCardByType(card, {
         messageId,
         callbacks: {
           onRemoveMessage: handleCardDelete,
+          onValueClick: handleValueClick,
         },
       });
     });
-  }, [addCardMessage, renderCardByType, handleCardDelete]);
+  }, [addCardMessage, renderCardByType, handleCardDelete, handleDraftSelect, handleCampaignSelect, handlePersonaSelect, handleAccountSelect, handlePlaybookSelect]);
 
   return {
     handleChatSend,

@@ -7138,11 +7138,100 @@ components:
           additionalProperties: true
           type: object
           title: Meta
+        intent:
+          title: Intent
+          enum:
+          - trend_followup
+          - next_action
+          - playbook_reuse
+          - persona_focus
+          - other
+          type: string
+          nullable: true
+        action_key:
+          title: Action Key
+          type: string
+          nullable: true
+        inputs:
+          additionalProperties: true
+          type: object
+          title: Inputs
+        outputs:
+          additionalProperties: true
+          type: object
+          title: Outputs
+        reason:
+          title: Reason
+          type: string
+          nullable: true
+        confidence:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Confidence
+        timing_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Timing Ms
+        refresh:
+          items:
+            type: string
+          type: array
+          title: Refresh
+        audit:
+          anyOf:
+          - $ref: '#/components/schemas/GraphRagActionAudit'
+          - type: 'null'
+        dedupe_signature:
+          title: Dedupe Signature
+          type: string
+          nullable: true
       type: object
       required:
       - status
       - message
       title: GraphRagActionAck
+    GraphRagActionAudit:
+      properties:
+        llm_model:
+          title: Llm Model
+          type: string
+          nullable: true
+        llm_usage_id:
+          title: Llm Usage Id
+          type: string
+          nullable: true
+        tokens_prompt:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Tokens Prompt
+        tokens_completion:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Tokens Completion
+        cost_usd:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cost Usd
+        latency_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Latency Ms
+        error_code:
+          title: Error Code
+          type: string
+          nullable: true
+        error_message:
+          title: Error Message
+          type: string
+          nullable: true
+      type: object
+      title: GraphRagActionAudit
     GraphRagActionCard:
       properties:
         id:

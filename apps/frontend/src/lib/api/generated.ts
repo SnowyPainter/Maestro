@@ -991,10 +991,72 @@ export interface GenerateTextResponse {
 
 export type GraphRagActionAckMeta = { [key: string]: unknown };
 
+/**
+ * @nullable
+ */
+export type GraphRagActionAckIntent = typeof GraphRagActionAckIntent[keyof typeof GraphRagActionAckIntent] | null;
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GraphRagActionAckIntent = {
+  trend_followup: 'trend_followup',
+  next_action: 'next_action',
+  playbook_reuse: 'playbook_reuse',
+  persona_focus: 'persona_focus',
+  other: 'other',
+} as const;
+
+export type GraphRagActionAckInputs = { [key: string]: unknown };
+
+export type GraphRagActionAckOutputs = { [key: string]: unknown };
+
+export type GraphRagActionAckConfidence = number | null;
+
+export type GraphRagActionAckTimingMs = number | null;
+
+export type GraphRagActionAckAudit = GraphRagActionAudit | null;
+
 export interface GraphRagActionAck {
   status: string;
   message: string;
   meta?: GraphRagActionAckMeta;
+  /** @nullable */
+  intent?: GraphRagActionAckIntent;
+  /** @nullable */
+  action_key?: string | null;
+  inputs?: GraphRagActionAckInputs;
+  outputs?: GraphRagActionAckOutputs;
+  /** @nullable */
+  reason?: string | null;
+  confidence?: GraphRagActionAckConfidence;
+  timing_ms?: GraphRagActionAckTimingMs;
+  refresh?: string[];
+  audit?: GraphRagActionAckAudit;
+  /** @nullable */
+  dedupe_signature?: string | null;
+}
+
+export type GraphRagActionAuditTokensPrompt = number | null;
+
+export type GraphRagActionAuditTokensCompletion = number | null;
+
+export type GraphRagActionAuditCostUsd = number | null;
+
+export type GraphRagActionAuditLatencyMs = number | null;
+
+export interface GraphRagActionAudit {
+  /** @nullable */
+  llm_model?: string | null;
+  /** @nullable */
+  llm_usage_id?: string | null;
+  tokens_prompt?: GraphRagActionAuditTokensPrompt;
+  tokens_completion?: GraphRagActionAuditTokensCompletion;
+  cost_usd?: GraphRagActionAuditCostUsd;
+  latency_ms?: GraphRagActionAuditLatencyMs;
+  /** @nullable */
+  error_code?: string | null;
+  /** @nullable */
+  error_message?: string | null;
 }
 
 export type GraphRagActionCardPersona = RagPersonaContext | null;

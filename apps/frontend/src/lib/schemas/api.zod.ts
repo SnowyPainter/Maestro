@@ -4177,7 +4177,26 @@ export const graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDra
 export const graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDraftPostResponse = zod.object({
   "status": zod.string(),
   "message": zod.string(),
-  "meta": zod.record(zod.string(), zod.any()).optional()
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
+  "action_key": zod.string().nullish(),
+  "inputs": zod.record(zod.string(), zod.any()).optional(),
+  "outputs": zod.record(zod.string(), zod.any()).optional(),
+  "reason": zod.string().nullish(),
+  "confidence": zod.union([zod.number(),zod.null()]).optional(),
+  "timing_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "refresh": zod.array(zod.string()).optional(),
+  "audit": zod.union([zod.object({
+  "llm_model": zod.string().nullish(),
+  "llm_usage_id": zod.string().nullish(),
+  "tokens_prompt": zod.union([zod.number(),zod.null()]).optional(),
+  "tokens_completion": zod.union([zod.number(),zod.null()]).optional(),
+  "cost_usd": zod.union([zod.number(),zod.null()]).optional(),
+  "latency_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "error_code": zod.string().nullish(),
+  "error_message": zod.string().nullish()
+}),zod.null()]).optional(),
+  "dedupe_signature": zod.string().nullish()
 })
 
 
@@ -4198,7 +4217,26 @@ export const graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPo
 export const graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPostResponse = zod.object({
   "status": zod.string(),
   "message": zod.string(),
-  "meta": zod.record(zod.string(), zod.any()).optional()
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
+  "action_key": zod.string().nullish(),
+  "inputs": zod.record(zod.string(), zod.any()).optional(),
+  "outputs": zod.record(zod.string(), zod.any()).optional(),
+  "reason": zod.string().nullish(),
+  "confidence": zod.union([zod.number(),zod.null()]).optional(),
+  "timing_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "refresh": zod.array(zod.string()).optional(),
+  "audit": zod.union([zod.object({
+  "llm_model": zod.string().nullish(),
+  "llm_usage_id": zod.string().nullish(),
+  "tokens_prompt": zod.union([zod.number(),zod.null()]).optional(),
+  "tokens_completion": zod.union([zod.number(),zod.null()]).optional(),
+  "cost_usd": zod.union([zod.number(),zod.null()]).optional(),
+  "latency_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "error_code": zod.string().nullish(),
+  "error_message": zod.string().nullish()
+}),zod.null()]).optional(),
+  "dedupe_signature": zod.string().nullish()
 })
 
 
@@ -4219,7 +4257,26 @@ export const graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlayboo
 export const graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostResponse = zod.object({
   "status": zod.string(),
   "message": zod.string(),
-  "meta": zod.record(zod.string(), zod.any()).optional()
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
+  "action_key": zod.string().nullish(),
+  "inputs": zod.record(zod.string(), zod.any()).optional(),
+  "outputs": zod.record(zod.string(), zod.any()).optional(),
+  "reason": zod.string().nullish(),
+  "confidence": zod.union([zod.number(),zod.null()]).optional(),
+  "timing_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "refresh": zod.array(zod.string()).optional(),
+  "audit": zod.union([zod.object({
+  "llm_model": zod.string().nullish(),
+  "llm_usage_id": zod.string().nullish(),
+  "tokens_prompt": zod.union([zod.number(),zod.null()]).optional(),
+  "tokens_completion": zod.union([zod.number(),zod.null()]).optional(),
+  "cost_usd": zod.union([zod.number(),zod.null()]).optional(),
+  "latency_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "error_code": zod.string().nullish(),
+  "error_message": zod.string().nullish()
+}),zod.null()]).optional(),
+  "dedupe_signature": zod.string().nullish()
 })
 
 
@@ -4250,7 +4307,26 @@ export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFoc
 export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostResponse = zod.object({
   "status": zod.string(),
   "message": zod.string(),
-  "meta": zod.record(zod.string(), zod.any()).optional()
+  "meta": zod.record(zod.string(), zod.any()).optional(),
+  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
+  "action_key": zod.string().nullish(),
+  "inputs": zod.record(zod.string(), zod.any()).optional(),
+  "outputs": zod.record(zod.string(), zod.any()).optional(),
+  "reason": zod.string().nullish(),
+  "confidence": zod.union([zod.number(),zod.null()]).optional(),
+  "timing_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "refresh": zod.array(zod.string()).optional(),
+  "audit": zod.union([zod.object({
+  "llm_model": zod.string().nullish(),
+  "llm_usage_id": zod.string().nullish(),
+  "tokens_prompt": zod.union([zod.number(),zod.null()]).optional(),
+  "tokens_completion": zod.union([zod.number(),zod.null()]).optional(),
+  "cost_usd": zod.union([zod.number(),zod.null()]).optional(),
+  "latency_ms": zod.union([zod.number(),zod.null()]).optional(),
+  "error_code": zod.string().nullish(),
+  "error_message": zod.string().nullish()
+}),zod.null()]).optional(),
+  "dedupe_signature": zod.string().nullish()
 })
 
 

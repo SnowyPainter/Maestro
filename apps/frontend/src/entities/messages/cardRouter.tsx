@@ -65,6 +65,7 @@ export interface CardRenderCallbacks {
   onReactiveSelectActionLog?: (actionLogId: number, sourceMessageId: number) => void;
   onRagExpand?: (nodeId: string, nodeType: string, sourceMessageId: number, expandedData?: any) => void;
   onRagNavigate?: (nodeId: string, nodeType: string, sourceMessageId: number) => void;
+  onValueClick?: (key: string, value: unknown) => void;
 }
 
 export interface RenderCardOptions {
@@ -357,7 +358,11 @@ export const renderCardByType = (card: ChatCard, options?: RenderCardOptions): R
       if (data) {
         console.log('cardRouter: returning ActionAck component');
         try {
-          return <ActionAck data={data as unknown as GraphRagActionAck} title={title} />;
+          return <ActionAck
+            data={data as unknown as GraphRagActionAck}
+            title={title}
+            onValueClick={callbacks?.onValueClick}
+          />;
         } catch (error) {
           console.error('cardRouter: ActionAck component error', error);
           // Fallback to InfoCard if ActionAck fails

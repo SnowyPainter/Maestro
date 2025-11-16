@@ -182,7 +182,37 @@ class GraphRagPersonaFocusCommand(BaseModel):
     roi: Optional[RagValueInsight] = None
 
 
+GraphRagActionIntent = Literal[
+    "trend_followup",
+    "next_action",
+    "playbook_reuse",
+    "persona_focus",
+    "other",
+]
+
+
+class GraphRagActionAudit(BaseModel):
+    llm_model: Optional[str] = None
+    llm_usage_id: Optional[str] = None
+    tokens_prompt: Optional[int] = None
+    tokens_completion: Optional[int] = None
+    cost_usd: Optional[float] = None
+    latency_ms: Optional[int] = None
+    error_code: Optional[str] = None
+    error_message: Optional[str] = None
+
+
 class GraphRagActionResult(BaseModel):
     status: str
     message: str
     meta: Dict[str, Any] = Field(default_factory=dict)
+    intent: Optional[GraphRagActionIntent] = None
+    action_key: Optional[str] = None
+    inputs: Dict[str, Any] = Field(default_factory=dict)
+    outputs: Dict[str, Any] = Field(default_factory=dict)
+    reason: Optional[str] = None
+    confidence: Optional[float] = None
+    timing_ms: Optional[int] = None
+    refresh: List[str] = Field(default_factory=list)
+    audit: Optional[GraphRagActionAudit] = None
+    dedupe_signature: Optional[str] = None
