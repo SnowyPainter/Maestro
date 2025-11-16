@@ -113,9 +113,9 @@ export function ContextCard({
       <>
         <div
           className={cn(
-            "rounded-2xl border shadow-md p-2 transition-colors relative overflow-hidden min-h-[80px] cursor-pointer hover:opacity-90",
+            "rounded-2xl border p-2 transition-colors relative overflow-hidden min-h-[80px] cursor-pointer hover:opacity-90",
             platformGradient ? "text-white" : "text-card-foreground",
-            platformGradient || "bg-card border-primary/70 shadow-lg",
+            platformGradient || "bg-card border-primary/70",
             className
           )}
           onClick={onClick}
@@ -192,8 +192,8 @@ export function ContextCard({
     <>
       <div
         className={cn(
-          "rounded-2xl border bg-card text-card-foreground shadow-md p-2 transition-colors min-h-[60px] cursor-pointer hover:opacity-90",
-          enabled ? "border-primary/60 shadow-sm" : "border-border",
+          "rounded-2xl border bg-card text-card-foreground p-2 transition-colors min-h-[60px] cursor-pointer hover:opacity-90",
+          enabled ? "border-primary/60" : "border-border",
           className
         )}
         onClick={onClick}
