@@ -50,6 +50,12 @@ export function ChatContextPanel({
         <CopilotCard
           roi={projection.roi}
           actions={projection.actionCards}
+          actionGroups={projection.groups}
+          summary={projection.summary}
+          personaName={projection.personaName}
+          campaignName={projection.campaignName}
+          updatedAt={projection.updatedAt}
+          isLive={isConnected}
           onExecute={handleExecute}
           isLoading={hasPersona && !isConnected && !projection.actionCards.length}
           isExecuting={isExecuting}

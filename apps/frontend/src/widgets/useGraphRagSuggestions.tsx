@@ -39,8 +39,20 @@ export interface CopilotProjection {
     savedMinutes: number
     automationRate: number
   } | null
+  summary: string | null
+  personaName: string | null
+  campaignName: string | null
+  updatedAt: string | null
+  groups: CopilotActionGroup[]
   primaryAction: GraphRagActionCard | null
   actionCards: GraphRagActionCard[]
+}
+
+export interface CopilotActionGroup {
+  key: string
+  title: string
+  helper?: string
+  cards: GraphRagActionCard[]
 }
 
 const joinBaseAndPath = (base: string, path: string): string => {
@@ -133,6 +145,7 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
   const [error, setError] = useState<string | null>(null)
   const [lastDebugEvent, setLastDebugEvent] = useState<GraphRagDebugEvent | null>(null)
   const [lastMockEvent, setLastMockEvent] = useState<GraphRagMockEvent | null>(null)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null)
 
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -211,6 +224,7 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
     try {
       const snapshot = await graphRagSuggestApiOrchestratorGraphRagSuggestPost(buildSuggestPayload())
       setSuggestions(snapshot)
+      setLastUpdatedAt(snapshot.generated_at ?? new Date().toISOString())
       setError(null)
     } catch (err: any) {
       console.error("Failed to fetch Graph RAG snapshot", err)
@@ -227,6 +241,7 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
       setError(null)
       setLastDebugEvent(null)
       setLastMockEvent(null)
+      setLastUpdatedAt(null)
       return
     }
 
@@ -288,10 +303,12 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
             return
           }
           if (type === "graph_rag.suggestion") {
-            setSuggestions(data as GraphRagSuggestionResponse)
+            const suggestion = data as GraphRagSuggestionResponse
+            setSuggestions(suggestion)
+            setLastUpdatedAt(suggestion.generated_at ?? new Date().toISOString())
             console.info("[GraphRag WS][suggestion]", {
-              cards: (data as GraphRagSuggestionResponse)?.cards?.length ?? 0,
-              roi: Boolean((data as GraphRagSuggestionResponse)?.roi),
+              cards: suggestion?.cards?.length ?? 0,
+              roi: Boolean(suggestion?.roi),
               ts: new Date().toISOString(),
             })
           }
@@ -333,7 +350,16 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
 
   const projection: CopilotProjection = useMemo(() => {
     if (!suggestions || !suggestions.cards) {
-      return { roi: null, primaryAction: null, actionCards: [] }
+      return {
+        roi: null,
+        summary: null,
+        personaName: null,
+        campaignName: null,
+        updatedAt: lastUpdatedAt,
+        groups: [],
+        primaryAction: null,
+        actionCards: [],
+      }
     }
 
     const actionCards = suggestions.cards
@@ -361,12 +387,41 @@ export function useGraphRagSuggestions(options: UseGraphRagSuggestionsOptions = 
       }
     }
 
+    const groupDefs: Array<{ key: CopilotActionGroup["key"]; title: string; helper?: string; match: (card: GraphRagActionCard) => boolean }> = [
+      { key: "trend", title: "Trend-driven Next Actions", helper: "Use trending signals to draft", match: (card) => card.category === "trend" },
+      { key: "draft", title: "Next Steps & Drafts", helper: "Operational next steps from graph", match: (card) => card.category === "draft" },
+      { key: "playbook", title: "Memory & Playbooks", helper: "Reuse proven playbooks", match: (card) => card.category === "playbook" },
+      { key: "persona", title: "Persona & Focus", helper: "Context and ROI reminders", match: (card) => card.category === "persona" },
+    ]
+
+    const groups: CopilotActionGroup[] = groupDefs
+      .map((def) => ({
+        key: def.key,
+        title: def.title,
+        helper: def.helper,
+        cards: actionCards.filter(def.match),
+      }))
+      .filter((group) => group.cards.length > 0)
+
+    const updatedAt = suggestions.generated_at ?? lastUpdatedAt
+    const primaryAction = actionCards[0] ?? null
+    const summary =
+      primaryAction?.description ||
+      primaryAction?.title ||
+      actionCards.find((card) => Boolean(card.title))?.title ||
+      null
+
     return {
       roi: roiMetrics,
-      primaryAction: actionCards[0] ?? null,
+      summary,
+      personaName: suggestions.persona?.persona_name ?? null,
+      campaignName: suggestions.persona?.campaign_name ?? null,
+      updatedAt,
+      groups,
+      primaryAction,
       actionCards,
     }
-  }, [suggestions])
+  }, [suggestions, lastUpdatedAt])
 
   const executeAction = useCallback(
     async (card?: GraphRagActionCard | null) => {

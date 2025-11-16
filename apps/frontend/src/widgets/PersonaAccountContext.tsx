@@ -157,9 +157,9 @@ export function PersonaAccountContext({
     }
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Persona Account</p>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
                 {isLoading ? (
                     <div className="rounded-xl border bg-card p-3">
                         <div className="flex items-center gap-2">
@@ -189,21 +189,23 @@ export function PersonaAccountContext({
                     />
                 )}
 
-                {contextTiles.map((tile) => (
-                    <ContextCard
-                        key={tile.key}
-                        icon={tile.icon}
-                        label={tile.label}
-                        value={tile.value}
-                        enabled={tile.enabled}
-                        onToggle={tile.onToggle}
-                        toggleDisabled={tile.toggleDisabled}
-                        onClear={tile.onClear}
-                        clearDisabled={tile.clearDisabled}
-                        onClick={tile.onClick}
-                        registryKeys={tile.registryKeys}
-                    />
-                ))}
+                <div className="grid grid-cols-2 gap-1.5">
+                    {contextTiles.map((tile) => (
+                        <ContextCard
+                            key={tile.key}
+                            icon={tile.icon}
+                            label={tile.label}
+                            value={tile.value}
+                            enabled={tile.enabled}
+                            onToggle={tile.onToggle}
+                            toggleDisabled={tile.toggleDisabled}
+                            onClear={tile.onClear}
+                            clearDisabled={tile.clearDisabled}
+                            onClick={tile.onClick}
+                            registryKeys={tile.registryKeys}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     )
