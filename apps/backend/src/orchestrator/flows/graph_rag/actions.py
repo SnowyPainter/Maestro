@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel
@@ -9,6 +10,13 @@ from apps.backend.src.core.context import get_persona_account_id
 from apps.backend.src.modules.accounts.service import get_persona_account
 from apps.backend.src.modules.drafts.schemas import BlockText, DraftIR, DraftSaveRequest
 from apps.backend.src.modules.drafts.service import create_draft
+from apps.backend.src.modules.llm.schemas import (
+    DraftFromTrendOutput,
+    LlmResult,
+    PromptKey,
+    PromptVars,
+)
+from apps.backend.src.modules.llm.service import LLMService
 from apps.backend.src.modules.playbooks.service import get_playbook, record_playbook_event
 from apps.backend.src.modules.rag.events import GraphRagRefreshEvent, publish_graph_rag_refresh
 from apps.backend.src.modules.rag.schemas import (
@@ -18,7 +26,9 @@ from apps.backend.src.modules.rag.schemas import (
     GraphRagPlaybookActionCommand,
     GraphRagTrendActionCommand,
 )
+from apps.backend.src.modules.trends.schemas import TrendItem
 from apps.backend.src.modules.users.models import User
+from apps.backend.src.orchestrator.adapters.utils import build_persona_brief, _ensure_draft_ir_props
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 
@@ -77,29 +87,78 @@ async def op_graph_rag_trend_to_draft(payload: GraphRagTrendActionCommand, ctx: 
 
     persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
 
+    persona_brief = await build_persona_brief(
+        {
+            "persona_id": persona_id,
+            "persona_account_id": persona_account_id,
+        }
+    )
+
+    trend_item = TrendItem.model_validate(
+        {
+            "rank": 1,
+            "retrieved": datetime.now(timezone.utc).isoformat(),
+            "title": payload.title,
+            "approx_traffic": None,
+            "summary": payload.description or payload.query,
+            "source_query": payload.query,
+            "source_node_id": str(payload.source_node_id) if payload.source_node_id else None,
+        }
+    )
+
+    prompt_vars = PromptVars(
+        trend_data=[trend_item],
+        tone=(persona_brief or {}).get("tone"),
+        goal="engagement",
+        text=payload.description or payload.query,
+        persona_brief=persona_brief or {},
+    )
+
+    llm_output: Optional[DraftFromTrendOutput] = None
+    try:
+        result_dict = await LLMService.instance().ainvoke(
+            PromptKey.DRAFT_FROM_TREND,
+            prompt_vars,
+            session=db,
+        )
+        if isinstance(result_dict, dict) and result_dict.get("error"):
+            logger.warning("LLM draft generation returned error", extra=result_dict)
+        else:
+            llm_result = LlmResult.model_validate(result_dict)
+            llm_output = DraftFromTrendOutput.model_validate(llm_result.data)
+            llm_output.draft_ir = _ensure_draft_ir_props(llm_output.draft_ir)
+    except Exception:
+        logger.exception("Failed to generate draft via LLM for graph_rag trend")
+
+    if llm_output:
+        ir = llm_output.draft_ir
+        draft_title = llm_output.title or payload.title
+    else:
+        ir = DraftIR(
+            blocks=[
+                BlockText(
+                    type="text",
+                    props={
+                        "markdown": "\n\n".join(
+                            [
+                                f"## {payload.title}",
+                                payload.description or "",
+                                f"_Trend query_: {payload.query}",
+                            ]
+                        ).strip(),
+                    },
+                )
+            ],
+            options={},
+        )
+        draft_title = payload.title
+
     logger.info(f"persona_id: {persona_id}, persona_account_id: {persona_account_id}")
     logger.info(f"payload: {payload}")
 
-    ir = DraftIR(
-        blocks=[
-            BlockText(
-                type="text",
-                props={
-                    "markdown": "\n\n".join(
-                        [
-                            f"## {payload.title}",
-                            payload.description or "",
-                            f"_Trend query_: {payload.query}",
-                        ]
-                    ).strip(),
-                },
-            )
-        ],
-        options={},
-    )
     draft_request = DraftSaveRequest(
         campaign_id=payload.campaign_id,
-        title=payload.title,
+        title=draft_title,
         goal="Graph RAG trend follow-up",
         tags=["graph_rag", "trend"],
         ir=ir,

@@ -155,11 +155,12 @@ export function CopilotCard({
         </span>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {groups.length > 0 ? (
-          groups.map((group) => (
-            <div key={group.key} className="space-y-1 rounded-lg border bg-white/60 p-1.5">
-              <div className="flex items-center justify-between">
+          groups.map((group, index) => (
+            <div key={group.key}>
+              {index > 0 && <div className="border-t border-slate-200 my-2" />}
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
                   <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 flex items-center gap-1">
                     {renderGroupTitleIcon(group.key)}
