@@ -133,12 +133,13 @@ def build_playbook_payload(session: Session, playbook_id: int) -> Optional[Canon
     if playbook.top_hashtags:
         sections.append(f"Top hashtags: {', '.join(playbook.top_hashtags)}")
 
-    latest_logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime]] = (
+    latest_logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime, Optional[dict]]] = (
         session.query(
             PlaybookLog.event,
             PlaybookLog.message,
             PlaybookLog.trend_snapshot,
             PlaybookLog.timestamp,
+            PlaybookLog.kpi_snapshot,
         )
         .filter(PlaybookLog.playbook_id == playbook.id)
         .order_by(PlaybookLog.timestamp.desc())
@@ -224,12 +225,13 @@ def build_draft_payload(session: Session, draft_id: int) -> Optional[CanonicalPa
         )
         for var_id, platform in variants
     ]
-    draft_logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime]] = (
+    draft_logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime, Optional[dict]]] = (
         session.query(
             PlaybookLog.event,
             PlaybookLog.message,
             PlaybookLog.trend_snapshot,
             PlaybookLog.timestamp,
+            PlaybookLog.kpi_snapshot,
         )
         .filter(PlaybookLog.draft_id == draft.id, PlaybookLog.trend_snapshot.isnot(None))
         .order_by(PlaybookLog.timestamp.desc())
@@ -574,12 +576,12 @@ def _format_news_item(item: NewsItem) -> str:
 
 def _build_trend_edges_from_logs(
     src_node: NodeReference,
-    logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime]],
+    logs: Sequence[Tuple[str, Optional[str], Optional[dict], datetime, Optional[dict]]],
     edge_type: str = "trend_reference",
 ) -> List[EdgeReference]:
     edges: List[EdgeReference] = []
     seen: Set[int] = set()
-    for _event, _message, snapshot, timestamp in logs:
+    for _event, _message, snapshot, timestamp, kpi_snapshot in logs:
         for item in _iter_trend_items(snapshot):
             trend_id = _coerce_int(item.get("id"))
             if trend_id is None or trend_id in seen:
@@ -596,6 +598,7 @@ def _build_trend_edges_from_logs(
                         "rank": item.get("rank"),
                         "retrieved": item.get("retrieved"),
                         "snapshot_timestamp": dt_iso(timestamp),
+                        "kpi_snapshot": kpi_snapshot,
                     },
                 )
             )
@@ -617,6 +620,7 @@ def _trend_edges_from_playbooks(session: Session, trend: Trend, *, limit: int) -
             PlaybookLog.timestamp,
             Playbook.persona_id,
             Playbook.campaign_id,
+            PlaybookLog.kpi_snapshot,
         )
         .join(Playbook, Playbook.id == PlaybookLog.playbook_id)
         .filter(PlaybookLog.trend_snapshot.isnot(None))
@@ -628,7 +632,7 @@ def _trend_edges_from_playbooks(session: Session, trend: Trend, *, limit: int) -
 
     edges: List[EdgeReference] = []
     seen_playbooks: Set[int] = set()
-    for playbook_id, snapshot, timestamp, persona_id, campaign_id in rows:
+    for playbook_id, snapshot, timestamp, persona_id, campaign_id, kpi_snapshot in rows:
         if playbook_id in seen_playbooks:
             continue
         if not any(_coerce_int(item.get("id")) == trend.id for item in _iter_trend_items(snapshot)):
@@ -643,6 +647,7 @@ def _trend_edges_from_playbooks(session: Session, trend: Trend, *, limit: int) -
                     "last_referenced_at": dt_iso(timestamp),
                     "persona_id": persona_id,
                     "campaign_id": campaign_id,
+                    "kpi_snapshot": kpi_snapshot,
                 },
             )
         )

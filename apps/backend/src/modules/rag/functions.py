@@ -342,7 +342,7 @@ def _gather_trend_candidates(
     items: Sequence[RagSearchItem],
     default_ctx: Optional[RagPersonaContext],
 ) -> List[RagQuickstartTemplate]:
-    templates: List[RagQuickstartTemplate] = []
+    ranked_templates: List[tuple[float, RagQuickstartTemplate]] = []
     seen: Set[Any] = set()
     for item in items:
         ctx = persona_context_from_meta(item.meta, default_ctx)
@@ -351,13 +351,16 @@ def _gather_trend_candidates(
             if key in seen:
                 continue
             seen.add(key)
-            templates.append(
-                RagQuickstartTemplate(
-                    title=item.title or item.summary or "Trend insight",
-                    description=item.summary,
-                    persona=ctx,
-                    source_node_id=item.node_id,
-                    query=_trend_followup_query(item.title or item.summary, ctx),
+            ranked_templates.append(
+                (
+                    _trend_kpi_score(item.meta),
+                    RagQuickstartTemplate(
+                        title=item.title or item.summary or "Trend insight",
+                        description=item.summary,
+                        persona=ctx,
+                        source_node_id=item.node_id,
+                        query=_trend_followup_query(item.title or item.summary, ctx),
+                    ),
                 )
             )
         for edge in item.related:
@@ -373,16 +376,20 @@ def _gather_trend_candidates(
             if key in seen:
                 continue
             seen.add(key)
-            templates.append(
-                RagQuickstartTemplate(
-                    title=edge.title or combined_meta.get("title") or "Trend insight",
-                    description=edge.summary or combined_meta.get("summary") or item.summary,
-                    persona=edge_ctx,
-                    source_node_id=edge.dst_node_id,
-                    query=_trend_followup_query(edge.title or edge.summary, edge_ctx),
+            ranked_templates.append(
+                (
+                    _trend_kpi_score(combined_meta),
+                    RagQuickstartTemplate(
+                        title=edge.title or combined_meta.get("title") or "Trend insight",
+                        description=edge.summary or combined_meta.get("summary") or item.summary,
+                        persona=edge_ctx,
+                        source_node_id=edge.dst_node_id,
+                        query=_trend_followup_query(edge.title or edge.summary, edge_ctx),
+                    ),
                 )
             )
-    return templates
+    ranked_templates_sorted = sorted(ranked_templates, key=lambda pair: pair[0], reverse=True)
+    return [tpl for _score, tpl in ranked_templates_sorted]
 
 
 def _memory_from_node(
@@ -514,6 +521,23 @@ def _trend_followup_query(
     persona = persona_label(persona_ctx)
     topic = title or "this trend"
     return f"Draft the next post reacting to {topic} for {persona}"
+
+
+def _trend_kpi_score(meta: Optional[Dict[str, Any]]) -> float:
+    """Score a trend candidate using KPI snapshot/meta if available."""
+    if not meta:
+        return 0.0
+    # Direct numeric score
+    direct = extract_float(meta, ("kpi_score", "ctr", "engagement_rate"), default=None)
+    if direct is not None:
+        return max(0.0, direct)
+    snapshot = meta.get("kpi_snapshot")
+    if isinstance(snapshot, dict):
+        numeric_values = [extract_float(snapshot, (key,), default=None) for key in snapshot.keys()]
+        numeric_values = [v for v in numeric_values if v is not None]
+        if numeric_values:
+            return max(numeric_values)
+    return 0.0
 
 
 def _is_memory_edge(edge: RagRelatedEdge) -> bool:
