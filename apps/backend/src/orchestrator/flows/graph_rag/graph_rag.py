@@ -45,12 +45,10 @@ from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
 TREND_CARD_LIMIT = 4
 DRAFT_CARD_LIMIT = 4
 PLAYBOOK_CARD_LIMIT = 3
-PERSONA_CARD_LIMIT = 2
 
 TREND_ACTION_PATH = "/graph-rag/actions/trend-to-draft"
 NEXT_ACTION_PATH = "/graph-rag/actions/next-action"
 PLAYBOOK_ACTION_PATH = "/graph-rag/actions/playbook-reapply"
-PERSONA_FOCUS_PATH = "/graph-rag/actions/persona-focus"
 
 
 class GraphRagSuggestPayload(BaseModel):
@@ -285,22 +283,14 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
                 title=action.title,
                 description=action.action,
                 persona=persona,
-                cta_label="Run next action",
-                operator_key="graph_rag.actions.next_action",
-                flow_path=NEXT_ACTION_PATH,
-                operator_payload={
-                    "playbook_id": action.playbook_id,
-                    "action": action.action,
-                    "title": action.title,
-                    "persona_id": persona.persona_id if persona else payload.persona_id,
-                    "campaign_id": persona.campaign_id if persona else payload.campaign_id,
-                    "source_node_id": (action.meta or {}).get("source_node_id"),
-                    "confidence": action.confidence,
-                },
+                cta_label=None,  # informational only; no direct execute CTA
+                operator_key=None,
+                flow_path=None,
+                operator_payload={},
                 source_node_id=_safe_uuid((action.meta or {}).get("source_node_id")),
                 priority=85 - idx,
                 confidence=action.confidence,
-                meta={"kind": "next_action"},
+                meta={"kind": "next_action", "source_node_id": (action.meta or {}).get("source_node_id")},
             )
         )
 
@@ -388,71 +378,6 @@ async def op_graph_rag_playbook_actions(payload: GraphRagActionContext, ctx: Tas
 
 
 @operator(
-    key="graph_rag.actions.persona",
-    title="Persona level Graph RAG cards",
-    side_effect="read",
-)
-async def op_graph_rag_persona_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
-    cards: List[GraphRagActionCard] = []
-    roi = payload.response.roi
-
-    if roi is not None:
-        cards.append(
-            GraphRagActionCard(
-                id="persona:roi",
-                category="persona",
-                title="ROI snapshot",
-                description=(
-                    f"{roi.memory_reuse_count} memories reapplied, "
-                    f"{roi.automated_decisions} automations → {roi.saved_minutes} minutes saved"
-                ),
-                persona=roi.persona or payload.persona,
-                cta_label="Review automation impact",
-                operator_key="graph_rag.actions.persona_focus",
-                flow_path=PERSONA_FOCUS_PATH,
-                operator_payload={
-                    "persona_id": (roi.persona or payload.persona).persona_id if (roi.persona or payload.persona) else payload.persona_id,
-                    "campaign_id": (roi.persona or payload.persona).campaign_id if (roi.persona or payload.persona) else payload.campaign_id,
-                    "focus_query": payload.query or "Graph RAG ROI",
-                    "roi": roi.model_dump(),
-                },
-                priority=50,
-                confidence=roi.ai_intervention_rate,
-                meta={
-                    "kind": "roi",
-                    "memory_reuse_count": roi.memory_reuse_count,
-                    "saved_minutes": roi.saved_minutes,
-                    "automated_decisions": roi.automated_decisions,
-                    "ai_intervention_rate": roi.ai_intervention_rate,
-                },
-            )
-        )
-
-    if payload.query:
-        cards.append(
-            GraphRagActionCard(
-                id="persona:focus",
-                category="persona",
-                title="Focus area",
-                description=f"Stay ahead on '{payload.query}'",
-                persona=payload.persona,
-                cta_label="Set focus topic",
-                operator_key="graph_rag.actions.persona_focus",
-                flow_path=PERSONA_FOCUS_PATH,
-                operator_payload={
-                    "focus_query": payload.query,
-                    "persona_id": payload.persona_id,
-                    "campaign_id": payload.campaign_id,
-                },
-                priority=45,
-                meta={"kind": "focus"},
-            )
-        )
-
-    return GraphRagActionList(cards=cards[:PERSONA_CARD_LIMIT])
-
-
-@operator(
     key="graph_rag.aggregate_cards",
     title="Aggregate Graph RAG cards",
     side_effect="read",
@@ -484,7 +409,6 @@ def _aggregate_payload_factory(state, _payload):
         state.results.get("trend_cards"),
         state.results.get("draft_cards"),
         state.results.get("playbook_cards"),
-        state.results.get("persona_cards"),
     ]
     limit = getattr(state.payload, "limit", 12) or 12
     persona = getattr(context, "persona", None) if context else None
@@ -517,17 +441,11 @@ def _build_graph_rag_flow(builder: FlowBuilder, *, context_config: Optional[Dict
         upstream=[context_task],
         config={"payload_from": "task:context"},
     )
-    persona_task = builder.task(
-        "persona_cards",
-        "graph_rag.actions.persona",
-        upstream=[context_task],
-        config={"payload_from": "task:context"},
-    )
 
     aggregate_task = builder.task(
         "aggregate_cards",
         "graph_rag.aggregate_cards",
-        upstream=[trend_task, draft_task, playbook_task, persona_task],
+        upstream=[trend_task, draft_task, playbook_task],
         config={"payload_factory": _aggregate_payload_factory},
     )
 

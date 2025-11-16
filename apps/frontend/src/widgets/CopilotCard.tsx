@@ -59,6 +59,9 @@ export function CopilotCard({
     if (!target || !onExecute) {
       return
     }
+    if (!target.operator_key || !target.flow_path) {
+      return
+    }
     onExecute(target)
   }
 
@@ -87,21 +90,6 @@ export function CopilotCard({
     ]
     return fallbackGroups.filter((group) => group.cards.length > 0)
   }, [actionGroups, actions])
-
-  const personaLine = personaName ? `Persona: ${personaName}` : "Persona: Not selected"
-  const campaignLine = campaignName ? `Campaign: ${campaignName}` : "Campaign: Not set"
-
-  const renderBadge = (card: GraphRagActionCard) => {
-    const kind = (card.meta as Record<string, unknown> | undefined)?.["kind"]
-    if (typeof kind !== "string") {
-      return null
-    }
-    return (
-      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-        {kind}
-      </span>
-    )
-  }
 
   const renderGroupTitleIcon = (key: string) => {
     switch (key) {
@@ -142,17 +130,6 @@ export function CopilotCard({
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 text-[11px] text-slate-700">
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1">
-          <Compass className="h-3.5 w-3.5 text-slate-600" />
-          {personaLine}
-        </span>
-        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-indigo-700">
-          <Layers className="h-3.5 w-3.5" />
-          {campaignLine}
-        </span>
       </div>
 
       <div className="space-y-2">
@@ -196,17 +173,28 @@ export function CopilotCard({
                               {card.persona.campaign_name}
                             </span>
                           ) : null}
+                          {card.meta?.kind === "next_action" && (
+                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-700">
+                              Plan only
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleExecute(card)}
-                        disabled={!onExecute || isExecuting}
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0 text-[11px] py-1 h-7"
-                      >
-                        <Play className="h-3 w-3 mr-1" />
-                        {isExecuting ? "Executing..." : card.cta_label ?? "Run"}
-                      </Button>
+                      {card.operator_key && card.flow_path ? (
+                        <Button
+                          size="sm"
+                          onClick={() => handleExecute(card)}
+                          disabled={!onExecute || isExecuting}
+                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0 text-[11px] py-1 h-7"
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          {isExecuting ? "Executing..." : card.cta_label ?? "Run"}
+                        </Button>
+                      ) : (
+                        <div className="text-[10px] text-muted-foreground italic">
+                          No automated action; review manually.
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

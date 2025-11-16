@@ -25,7 +25,6 @@ from apps.backend.src.modules.rag.schemas import (
     GraphRagNextActionCommand,
     GraphRagActionAudit,
     GraphRagActionIntent,
-    GraphRagPersonaFocusCommand,
     GraphRagPlaybookActionCommand,
     GraphRagTrendActionCommand,
 )
@@ -336,59 +335,6 @@ async def op_graph_rag_playbook_reapply(payload: GraphRagPlaybookActionCommand, 
     )
 
 
-@operator(
-    key="graph_rag.actions.persona_focus",
-    title="Record Graph RAG persona focus",
-    side_effect="write",
-)
-async def op_graph_rag_persona_focus(payload: GraphRagPersonaFocusCommand, ctx: TaskContext) -> GraphRagActionResult:
-    db: AsyncSession = ctx.require(AsyncSession)
-    started = time.perf_counter()
-
-    persona_id, persona_account_id = await _resolve_persona_context(db, payload.persona_id)
-    roi = payload.roi
-    meta = {
-        "focus_query": payload.focus_query,
-    }
-    if roi:
-        meta.update(
-            {
-                "memory_reuse_count": roi.memory_reuse_count,
-                "automated_decisions": roi.automated_decisions,
-                "saved_minutes": roi.saved_minutes,
-                "ai_intervention_rate": roi.ai_intervention_rate,
-            }
-        )
-
-    log = await record_playbook_event(
-        db,
-        event="graph_rag.persona_focus",
-        persona_id=persona_id,
-        persona_account_id=persona_account_id,
-        campaign_id=payload.campaign_id,
-        message=f"Focus on {payload.focus_query}",
-        meta=meta,
-    )
-    _publish_refresh(persona_id, payload.campaign_id, trigger="persona_focus")
-    return build_action_result(
-        status="logged",
-        message="Persona focus recorded",
-        action_key="graph_rag.actions.persona_focus",
-        intent="persona_focus",
-        inputs={
-            "persona_id": persona_id,
-            "persona_account_id": persona_account_id,
-            "campaign_id": payload.campaign_id,
-            "focus_query": payload.focus_query,
-        },
-        outputs={"playbook_log_id": getattr(log, "id", None)},
-        reason="record_focus_area",
-        timing_ms=elapsed_ms(started),
-        refresh=make_refresh_targets(persona_id, payload.campaign_id),
-        dedupe_signature=f"persona_focus:{payload.focus_query}:{payload.campaign_id}",
-    )
-
-
 def _simple_flow(
     *,
     key: str,
@@ -436,18 +382,9 @@ _simple_flow(
     input_model=GraphRagPlaybookActionCommand,
 )
 
-_simple_flow(
-    key="graph_rag.actions.persona_focus",
-    title="Record Graph RAG focus",
-    description="Capture a focus insight for the persona/campaign",
-    path="/graph-rag/actions/persona-focus",
-    input_model=GraphRagPersonaFocusCommand,
-)
-
 
 __all__ = [
     "op_graph_rag_trend_to_draft",
     "op_graph_rag_next_action",
     "op_graph_rag_playbook_reapply",
-    "op_graph_rag_persona_focus",
 ]

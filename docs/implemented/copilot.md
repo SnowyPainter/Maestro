@@ -7,13 +7,12 @@
   - Trend 카드: Quickstart 템플릿 또는 트렌드 노드를 Trend→Draft CTA로 노출.
   - Draft 카드: Next Action 제안이나 Draft 노드를 "Run next action" 또는 "Open draft" CTA로 노출하며 완료된 액션 서명은 스킵.
   - Playbook 카드: Memory highlight를 재사용 CTA로 노출하며 재사용 횟수/최근 사용 시점 기반 confidence를 부여.
-  - Persona 카드: ROI 스냅샷과 포커스 토픽 설정 CTA를 제공.
+  - Persona 카드: (제거됨) 컨텍스트 고정이 기본이므로 별도 포커스 CTA 없음.
 - **집계/정렬**: `op_graph_rag_aggregate_cards`가 카드 ID로 dedupe 후 priority→title→ID 순으로 정렬하여 limit까지 반환한다.
 - **액션 실행** (`actions.py`):
   - `trend_to_draft`: 트렌드 설명과 쿼리로 IR을 구성해 Draft를 생성하고, playbook 이벤트를 기록 후 `graph_rag_refresh` 이벤트 발행.
   - `next_action`: Next Action 실행을 이벤트로 기록하고 refresh 발행.
   - `playbook_reapply`: 필요한 경우 플레이북/캠페인/페르소나를 역으로 채워 넣어 재사용 이벤트 기록 후 refresh.
-  - `persona_focus`: 포커스 쿼리 및 ROI 지표를 메타로 저장 후 refresh.
 - **프런트엔드**: `ChatContextPanel`에서 `/api/sse/graph-rag/suggestions/stream` SSE로 수신한 ROI/Trend/Draft/Playbook/Persona 카드를 `flow_path`에 맞춰 즉시 실행하거나 이전/다음 탐색 UI로 노출한다.
 
 ## 상품화 업그레이드 제안

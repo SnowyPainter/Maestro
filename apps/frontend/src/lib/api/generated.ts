@@ -1002,7 +1002,6 @@ export const GraphRagActionAckIntent = {
   trend_followup: 'trend_followup',
   next_action: 'next_action',
   playbook_reuse: 'playbook_reuse',
-  persona_focus: 'persona_focus',
   other: 'other',
 } as const;
 
@@ -1104,19 +1103,6 @@ export interface GraphRagNextActionCommand {
   /** @nullable */
   source_node_id?: string | null;
   confidence?: GraphRagNextActionCommandConfidence;
-}
-
-export type GraphRagPersonaFocusCommandPersonaId = number | null;
-
-export type GraphRagPersonaFocusCommandCampaignId = number | null;
-
-export type GraphRagPersonaFocusCommandRoi = RagValueInsight | null;
-
-export interface GraphRagPersonaFocusCommand {
-  persona_id?: GraphRagPersonaFocusCommandPersonaId;
-  campaign_id?: GraphRagPersonaFocusCommandCampaignId;
-  focus_query: string;
-  roi?: GraphRagPersonaFocusCommandRoi;
 }
 
 export type GraphRagPlaybookActionCommandPersonaId = number | null;
@@ -12391,72 +12377,6 @@ export const useGraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlay
       > => {
 
       const mutationOptions = getGraphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlaybookReapplyPostMutationOptions(options);
-
-      return useMutation(mutationOptions , queryClient);
-    }
-    
-/**
- * Capture a focus insight for the persona/campaign
- * @summary Record Graph RAG focus
- */
-export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost = (
-    graphRagPersonaFocusCommand: GraphRagPersonaFocusCommand,
- options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return apiFetch<GraphRagActionAck>(
-      {url: `/api/orchestrator/graph-rag/actions/persona-focus`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: graphRagPersonaFocusCommand, signal
-    },
-      options);
-    }
-  
-
-
-export const getGraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, TError,{data: GraphRagPersonaFocusCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, TError,{data: GraphRagPersonaFocusCommand}, TContext> => {
-
-const mutationKey = ['graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, {data: GraphRagPersonaFocusCommand}> = (props) => {
-          const {data} = props ?? {};
-
-          return  graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type GraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationResult = NonNullable<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>>
-    export type GraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationBody = GraphRagPersonaFocusCommand
-    export type GraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationError = HTTPValidationError
-
-    /**
- * @summary Record Graph RAG focus
- */
-export const useGraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>, TError,{data: GraphRagPersonaFocusCommand}, TContext>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPost>>,
-        TError,
-        {data: GraphRagPersonaFocusCommand},
-        TContext
-      > => {
-
-      const mutationOptions = getGraphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostMutationOptions(options);
 
       return useMutation(mutationOptions , queryClient);
     }

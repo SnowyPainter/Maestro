@@ -4178,7 +4178,7 @@ export const graphRagActionsTrendToDraftApiOrchestratorGraphRagActionsTrendToDra
   "status": zod.string(),
   "message": zod.string(),
   "meta": zod.record(zod.string(), zod.any()).optional(),
-  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
+  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'other']).nullish(),
   "action_key": zod.string().nullish(),
   "inputs": zod.record(zod.string(), zod.any()).optional(),
   "outputs": zod.record(zod.string(), zod.any()).optional(),
@@ -4218,7 +4218,7 @@ export const graphRagActionsNextActionApiOrchestratorGraphRagActionsNextActionPo
   "status": zod.string(),
   "message": zod.string(),
   "meta": zod.record(zod.string(), zod.any()).optional(),
-  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
+  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'other']).nullish(),
   "action_key": zod.string().nullish(),
   "inputs": zod.record(zod.string(), zod.any()).optional(),
   "outputs": zod.record(zod.string(), zod.any()).optional(),
@@ -4258,57 +4258,7 @@ export const graphRagActionsPlaybookReapplyApiOrchestratorGraphRagActionsPlayboo
   "status": zod.string(),
   "message": zod.string(),
   "meta": zod.record(zod.string(), zod.any()).optional(),
-  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
-  "action_key": zod.string().nullish(),
-  "inputs": zod.record(zod.string(), zod.any()).optional(),
-  "outputs": zod.record(zod.string(), zod.any()).optional(),
-  "reason": zod.string().nullish(),
-  "confidence": zod.union([zod.number(),zod.null()]).optional(),
-  "timing_ms": zod.union([zod.number(),zod.null()]).optional(),
-  "refresh": zod.array(zod.string()).optional(),
-  "audit": zod.union([zod.object({
-  "llm_model": zod.string().nullish(),
-  "llm_usage_id": zod.string().nullish(),
-  "tokens_prompt": zod.union([zod.number(),zod.null()]).optional(),
-  "tokens_completion": zod.union([zod.number(),zod.null()]).optional(),
-  "cost_usd": zod.union([zod.number(),zod.null()]).optional(),
-  "latency_ms": zod.union([zod.number(),zod.null()]).optional(),
-  "error_code": zod.string().nullish(),
-  "error_message": zod.string().nullish()
-}),zod.null()]).optional(),
-  "dedupe_signature": zod.string().nullish()
-})
-
-
-/**
- * Capture a focus insight for the persona/campaign
- * @summary Record Graph RAG focus
- */
-export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiMemoryReuseCountDefault = 0;export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiAutomatedDecisionsDefault = 0;export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiSavedMinutesDefault = 0;export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBodyRoiAiInterventionRateDefault = 0;
-
-export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostBody = zod.object({
-  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
-  "focus_query": zod.string(),
-  "roi": zod.union([zod.object({
-  "persona": zod.union([zod.object({
-  "persona_id": zod.union([zod.number(),zod.null()]).optional(),
-  "persona_name": zod.string().nullish(),
-  "campaign_id": zod.union([zod.number(),zod.null()]).optional(),
-  "campaign_name": zod.string().nullish()
-}),zod.null()]).optional(),
-  "memory_reuse_count": zod.number().optional(),
-  "automated_decisions": zod.number().optional(),
-  "saved_minutes": zod.number().optional(),
-  "ai_intervention_rate": zod.number().optional()
-}),zod.null()]).optional()
-})
-
-export const graphRagActionsPersonaFocusApiOrchestratorGraphRagActionsPersonaFocusPostResponse = zod.object({
-  "status": zod.string(),
-  "message": zod.string(),
-  "meta": zod.record(zod.string(), zod.any()).optional(),
-  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'persona_focus', 'other']).nullish(),
+  "intent": zod.enum(['trend_followup', 'next_action', 'playbook_reuse', 'other']).nullish(),
   "action_key": zod.string().nullish(),
   "inputs": zod.record(zod.string(), zod.any()).optional(),
   "outputs": zod.record(zod.string(), zod.any()).optional(),

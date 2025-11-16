@@ -175,18 +175,10 @@ class GraphRagPlaybookActionCommand(BaseModel):
     reuse_count: Optional[int] = None
 
 
-class GraphRagPersonaFocusCommand(BaseModel):
-    persona_id: Optional[int] = None
-    campaign_id: Optional[int] = None
-    focus_query: str
-    roi: Optional[RagValueInsight] = None
-
-
 GraphRagActionIntent = Literal[
     "trend_followup",
     "next_action",
     "playbook_reuse",
-    "persona_focus",
     "other",
 ]
 

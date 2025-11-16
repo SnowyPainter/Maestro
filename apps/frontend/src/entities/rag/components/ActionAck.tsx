@@ -16,11 +16,10 @@ interface ActionAckProps {
   onValueClick?: (key: string, value: unknown) => void
 }
 
-const intentLabels: Record<NonNullable<GraphRagActionAckIntent>, string> = {
+const intentLabels: Partial<Record<NonNullable<GraphRagActionAckIntent>, string>> = {
   trend_followup: "Trend follow-up",
   next_action: "Next action",
   playbook_reuse: "Playbook reuse",
-  persona_focus: "Persona focus",
   other: "Action",
 }
 

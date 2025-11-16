@@ -153,7 +153,6 @@ slots:
   - drafts.create
   - drafts.update_ir
   - graph_rag.actions.next_action
-  - graph_rag.actions.persona_focus
   - graph_rag.actions.playbook_reapply
   - graph_rag.actions.trend_to_draft
   - graph_rag.suggest
@@ -291,12 +290,6 @@ slots:
   value_type: string
   flows:
   - abtests.complete_abtest
-- name: focus_query
-  label: Focus Query
-  description: Filter by focus query
-  value_type: string
-  flows:
-  - graph_rag.actions.persona_focus
 - name: force_restart
   label: Force Restart
   description: Filter by force restart
@@ -695,7 +688,6 @@ slots:
   - bff.rag.search.next_action
   - bff.rag.search.quickstart
   - graph_rag.actions.next_action
-  - graph_rag.actions.persona_focus
   - graph_rag.actions.playbook_reapply
   - graph_rag.actions.trend_to_draft
   - graph_rag.suggest
@@ -827,12 +819,6 @@ slots:
   value_type: integer
   flows:
   - graph_rag.actions.playbook_reapply
-- name: roi
-  label: Roi
-  description: Filter by roi
-  value_type: string
-  flows:
-  - graph_rag.actions.persona_focus
 - name: rule_id
   label: Rule Id
   description: Target a specific rule id

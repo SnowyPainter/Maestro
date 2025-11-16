@@ -2157,26 +2157,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/orchestrator/graph-rag/actions/persona-focus": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Record Graph RAG focus
-         * @description Capture a focus insight for the persona/campaign
-         */
-        post: operations["graph_rag_actions_persona_focus_api_orchestrator_graph_rag_actions_persona_focus_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orchestrator/graph-rag/suggest": {
         parameters: {
             query?: never;
@@ -3701,7 +3681,7 @@ export interface components {
              * Intent
              * @enum {string|null}
              */
-            intent?: "trend_followup" | "next_action" | "playbook_reuse" | "persona_focus" | "other" | null;
+            intent?: "trend_followup" | "next_action" | "playbook_reuse" | "other" | null;
             /** Action Key */
             action_key?: string | null;
             /** Inputs */
@@ -3803,16 +3783,6 @@ export interface components {
             source_node_id?: string | null;
             /** Confidence */
             confidence?: number | null;
-        };
-        /** GraphRagPersonaFocusCommand */
-        GraphRagPersonaFocusCommand: {
-            /** Persona Id */
-            persona_id?: number | null;
-            /** Campaign Id */
-            campaign_id?: number | null;
-            /** Focus Query */
-            focus_query: string;
-            roi?: components["schemas"]["RagValueInsight"] | null;
         };
         /** GraphRagPlaybookActionCommand */
         GraphRagPlaybookActionCommand: {
@@ -9886,39 +9856,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["GraphRagPlaybookActionCommand"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GraphRagActionAck"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    graph_rag_actions_persona_focus_api_orchestrator_graph_rag_actions_persona_focus_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GraphRagPersonaFocusCommand"];
             };
         };
         responses: {

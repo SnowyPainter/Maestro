@@ -4538,36 +4538,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /api/orchestrator/graph-rag/actions/persona-focus:
-    post:
-      tags:
-      - action
-      - action
-      - graph_rag
-      - actions
-      - graph_rag.actions.persona_focus
-      summary: Record Graph RAG focus
-      description: Capture a focus insight for the persona/campaign
-      operationId: graph_rag_actions_persona_focus_api_orchestrator_graph_rag_actions_persona_focus_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GraphRagPersonaFocusCommand'
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GraphRagActionAck'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
   /api/orchestrator/graph-rag/suggest:
     post:
       tags:
@@ -7144,7 +7114,6 @@ components:
           - trend_followup
           - next_action
           - playbook_reuse
-          - persona_focus
           - other
           type: string
           nullable: true
@@ -7329,29 +7298,6 @@ components:
       - title
       - action
       title: GraphRagNextActionCommand
-    GraphRagPersonaFocusCommand:
-      properties:
-        persona_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Persona Id
-        campaign_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Campaign Id
-        focus_query:
-          type: string
-          title: Focus Query
-        roi:
-          anyOf:
-          - $ref: '#/components/schemas/RagValueInsight'
-          - type: 'null'
-      type: object
-      required:
-      - focus_query
-      title: GraphRagPersonaFocusCommand
     GraphRagPlaybookActionCommand:
       properties:
         persona_id:
