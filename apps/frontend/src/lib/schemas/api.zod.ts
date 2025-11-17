@@ -1491,6 +1491,36 @@ export const bffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetResponse = zod.
 
 
 /**
+ * Get detailed playbook log information by log id.
+ * @summary Get Playbook Log Detail
+ */
+export const bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetParams = zod.object({
+  "playbook_log_id": zod.number()
+})
+
+export const bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetResponse = zod.object({
+  "log": zod.object({
+  "id": zod.number(),
+  "playbook_id": zod.number(),
+  "event": zod.string(),
+  "timestamp": zod.iso.datetime({}),
+  "draft_id": zod.union([zod.number(),zod.null()]).optional(),
+  "schedule_id": zod.union([zod.number(),zod.null()]).optional(),
+  "abtest_id": zod.union([zod.number(),zod.null()]).optional(),
+  "ref_id": zod.union([zod.number(),zod.null()]).optional(),
+  "persona_snapshot": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "trend_snapshot": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "llm_input": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "llm_output": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "kpi_snapshot": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "meta": zod.union([zod.record(zod.string(), zod.any()),zod.null()]).optional(),
+  "message": zod.string().nullish(),
+  "created_at": zod.iso.datetime({})
+})
+})
+
+
+/**
  * Graph RAG Search over Maestro knowledge graph
  * @summary Graph RAG Search
  */

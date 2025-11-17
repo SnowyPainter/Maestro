@@ -36,7 +36,6 @@ from apps.backend.src.modules.rag.schemas import (
 from apps.backend.src.modules.rag.search import search_rag
 from apps.backend.src.modules.rag.utils import (
     load_completed_graph_actions,
-    normalize_action_signature,
     normalize_node_key,
 )
 from apps.backend.src.modules.users.models import User
@@ -164,6 +163,9 @@ async def op_graph_rag_collect_context(payload: GraphRagSuggestPayload, ctx: Tas
         persona_id=persona_id,
         campaign_id=payload.campaign_id,
     )
+    completed_node_ids = set(completed.node_ids)
+    completed_playbook_ids = set(completed.playbook_ids)
+    completed_action_signatures = set(completed.action_signatures)
 
     return GraphRagActionContext(
         owner_user_id=user.id,
@@ -175,9 +177,9 @@ async def op_graph_rag_collect_context(payload: GraphRagSuggestPayload, ctx: Tas
         sections=sorted(sections),
         limit=effective_limit,
         response=response,
-        completed_node_ids=completed.node_ids,
-        completed_playbook_ids=completed.playbook_ids,
-        completed_action_signatures=completed.action_signatures,
+        completed_node_ids=completed_node_ids,
+        completed_playbook_ids=completed_playbook_ids,
+        completed_action_signatures=completed_action_signatures,
     )
 
 
@@ -266,18 +268,9 @@ async def op_graph_rag_trend_actions(payload: GraphRagActionContext, ctx: TaskCo
 async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
     limit = min(DRAFT_CARD_LIMIT, max(2, payload.limit))
     cards: List[GraphRagActionCard] = []
-    completed_nodes = payload.completed_node_ids
-    completed_actions = payload.completed_action_signatures
-
     for idx, action in enumerate(payload.response.next_actions):
         if len(cards) >= limit:
             break
-        node_key = normalize_node_key((action.meta or {}).get("source_node_id"))
-        action_signature = normalize_action_signature(action.title, action.action)
-        if node_key and node_key in completed_nodes:
-            continue
-        if action_signature and action_signature in completed_actions:
-            continue
         persona = action.persona or payload.persona
         cards.append(
             GraphRagActionCard(
@@ -286,7 +279,7 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
                 title=action.title,
                 description=action.action,
                 persona=persona,
-                cta_label=None,  # informational only; no direct execute CTA
+                cta_label="",  # informational only; no direct execute CTA
                 operator_key=None,
                 flow_path=None,
                 operator_payload={},
@@ -300,9 +293,6 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
     if len(cards) < limit:
         for idx, item in enumerate(payload.response.items):
             if not _looks_like_draft(item):
-                continue
-            node_key = normalize_node_key(item.node_id)
-            if node_key and node_key in completed_nodes:
                 continue
             cards.append(
                 GraphRagActionCard(
@@ -335,14 +325,10 @@ async def op_graph_rag_draft_actions(payload: GraphRagActionContext, ctx: TaskCo
 async def op_graph_rag_comment_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
     limit = min(COMMENT_CARD_LIMIT, max(1, payload.limit))
     cards: List[GraphRagActionCard] = []
-    completed_nodes = payload.completed_node_ids
     for idx, item in enumerate(payload.response.items):
         if len(cards) >= limit:
             break
         if not _looks_like_comment(item):
-            continue
-        node_key = normalize_node_key(item.node_id)
-        if node_key and node_key in completed_nodes:
             continue
         cards.append(
             GraphRagActionCard(
@@ -351,7 +337,7 @@ async def op_graph_rag_comment_actions(payload: GraphRagActionContext, ctx: Task
                 title=item.title or "Comment to respond",
                 description=item.summary,
                 persona=payload.persona,
-                cta_label=None,  # informational only for now
+                cta_label="",  # informational only for now
                 operator_key=None,
                 flow_path=None,
                 operator_payload={
@@ -375,17 +361,9 @@ async def op_graph_rag_comment_actions(payload: GraphRagActionContext, ctx: Task
 async def op_graph_rag_playbook_actions(payload: GraphRagActionContext, ctx: TaskContext) -> GraphRagActionList:
     limit = min(PLAYBOOK_CARD_LIMIT, max(1, payload.limit))
     cards: List[GraphRagActionCard] = []
-    completed_nodes = payload.completed_node_ids
-    completed_playbooks = payload.completed_playbook_ids
-
     for idx, highlight in enumerate(payload.response.memory_highlights):
         if len(cards) >= limit:
             break
-        node_key = normalize_node_key(highlight.node_id)
-        if highlight.playbook_id and highlight.playbook_id in completed_playbooks:
-            continue
-        if node_key and node_key in completed_nodes:
-            continue
         persona = highlight.persona or payload.persona
         cards.append(
             GraphRagActionCard(

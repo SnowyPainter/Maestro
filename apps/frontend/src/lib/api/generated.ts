@@ -1864,6 +1864,10 @@ export interface PlaybookListResponse {
   offset: number;
 }
 
+export interface PlaybookLogDetailResponse {
+  log: PlaybookLogOut;
+}
+
 export type PlaybookLogOutDraftId = number | null;
 
 export type PlaybookLogOutScheduleId = number | null;
@@ -7088,6 +7092,95 @@ export function useBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGet<TData = 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getBffPlaybookGetPlaybookDetailApiBffPlaybooksDetailGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Get detailed playbook log information by log id.
+ * @summary Get Playbook Log Detail
+ */
+export const bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet = (
+    playbookLogId: number,
+ options?: SecondParameter<typeof apiFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return apiFetch<PlaybookLogDetailResponse>(
+      {url: `/api/bff/playbooks/log/${playbookLogId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetQueryKey = (playbookLogId?: number,) => {
+    return [`/api/bff/playbooks/log/${playbookLogId}`] as const;
+    }
+
+    
+export const getBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetQueryOptions = <TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError = HTTPValidationError>(playbookLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetQueryKey(playbookLogId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>> = ({ signal }) => bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet(playbookLogId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(playbookLogId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>>
+export type BffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetQueryError = HTTPValidationError
+
+
+export function useBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError = HTTPValidationError>(
+ playbookLogId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError = HTTPValidationError>(
+ playbookLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError = HTTPValidationError>(
+ playbookLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Playbook Log Detail
+ */
+
+export function useBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet<TData = Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError = HTTPValidationError>(
+ playbookLogId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof bffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBffPlaybookGetPlaybookLogDetailApiBffPlaybooksLogPlaybookLogIdGetQueryOptions(playbookLogId,options)
 
   const query = useQuery(queryOptions , queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

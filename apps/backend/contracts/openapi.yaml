@@ -1836,6 +1836,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/bff/playbooks/log/{playbook_log_id}:
+    get:
+      tags:
+      - bff
+      - bff
+      - playbooks
+      - log
+      - detail
+      - ui
+      - frontend
+      summary: Get Playbook Log Detail
+      description: Get detailed playbook log information by log id.
+      operationId: bff_playbook_get_playbook_log_detail_api_bff_playbooks_log__playbook_log_id__get
+      parameters:
+      - name: playbook_log_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Playbook Log Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybookLogDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/bff/rag/search:
     post:
       tags:
@@ -8736,6 +8769,14 @@ components:
       - limit
       - offset
       title: PlaybookListResponse
+    PlaybookLogDetailResponse:
+      properties:
+        log:
+          $ref: '#/components/schemas/PlaybookLogOut'
+      type: object
+      required:
+      - log
+      title: PlaybookLogDetailResponse
     PlaybookLogOut:
       properties:
         id:

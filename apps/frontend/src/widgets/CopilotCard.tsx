@@ -107,148 +107,156 @@ export function CopilotCard({
   }
 
   return (
-    <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
-      <div className="rounded-lg border bg-muted/40 px-2.5 py-1.5 shadow-sm">
-        <div className="flex items-start gap-2">
-          <div className="flex-1 space-y-0.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-600 flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-amber-600" />
-              AI Thinking
+    <div className="flex flex-col h-[calc(100vh-250px)] max-h-[calc(100vh-100px)]">
+      {/* Scrollable Actions Area */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="space-y-2 pb-2">
+          <div className="rounded-lg border bg-gradient-to-r from-amber-50/50 to-orange-50/50 px-2.5 py-1.5 shadow-sm border-amber-200/50">
+            <div className="flex items-start gap-2">
+              <div className="flex-1 space-y-0.5">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-amber-600" />
+                  AI Thinking
+                </div>
+                <p className="text-[11px] text-slate-700 leading-tight">
+                  {summary || currentAction?.title || "Listening for new signals"}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-0.5 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <RefreshCw className="h-3 w-3" />
+                  <span>{formatUpdated(updatedAt)}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Radio className={`h-2.5 w-2.5 ${isLive ? "text-emerald-500" : "text-slate-400"}`} />
+                  <span className={isLive ? "text-emerald-600" : ""}>{isLive ? "Live" : "Idle"}</span>
+                </div>
+              </div>
             </div>
-            <p className="text-[11px] text-slate-700 leading-tight">
-              {summary || currentAction?.title || "Listening for new signals"}
-            </p>
           </div>
-          <div className="flex flex-col items-end gap-0.5 text-[10px] text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <RefreshCw className="h-3 w-3" />
-              <span>{formatUpdated(updatedAt)}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Radio className={`h-2.5 w-2.5 ${isLive ? "text-emerald-500" : "text-slate-400"}`} />
-              <span className={isLive ? "text-emerald-600" : ""}>{isLive ? "Live" : "Idle"}</span>
-            </div>
+
+          <div className="space-y-2">
+            {groups.length > 0 ? (
+              groups.map((group, index) => (
+                <div key={group.key}>
+                  {index > 0 && <div className="border-t border-slate-200 my-2" />}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700 flex items-center gap-1 shadow-sm">
+                        {renderGroupTitleIcon(group.key)}
+                        {group.title}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground bg-slate-100 px-1.5 py-0.5 rounded">
+                      {group.cards.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    {group.cards.map((card) => (
+                      <div
+                        key={card.id}
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="space-y-1">
+                            <p className="text-[13px] font-semibold text-slate-800 leading-tight">{card.title}</p>
+                            <p className="text-[10px] text-slate-600 leading-tight line-clamp-2">
+                              {card.description ||
+                                (typeof card.meta?.summary === "string"
+                                  ? card.meta.summary
+                                  : "Graph RAG recommendation")}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 text-[10px]">
+                              {card.persona?.persona_name ? (
+                                <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-700 font-medium">
+                                  {card.persona.persona_name}
+                                </span>
+                              ) : null}
+                              {card.persona?.campaign_name ? (
+                                <span className="rounded-md bg-indigo-100 px-1.5 py-0.5 text-indigo-700 font-medium">
+                                  {card.persona.campaign_name}
+                                </span>
+                              ) : null}
+                              {card.meta?.kind === "next_action" && (
+                                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-amber-700 font-medium">
+                                  Plan only
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {card.operator_key && card.flow_path ? (
+                            <Button
+                              size="sm"
+                              onClick={() => handleExecute(card)}
+                              disabled={!onExecute || isExecuting}
+                              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0 text-[11px] py-1.5 h-8 shadow-sm"
+                            >
+                              <Play className="h-3 w-3 mr-1" />
+                              {isExecuting ? "Executing..." : card.cta_label ?? "Run"}
+                            </Button>
+                          ) : (
+                            <div className="text-[10px] text-muted-foreground italic bg-slate-50 px-2 py-1 rounded">
+                              No automated action; review manually.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-lg border border-dashed bg-slate-50 px-2 py-4 text-center text-[10px] text-muted-foreground">
+                {isLoading ? "Waiting for Graph RAG suggestions..." : "No actionable suggestions yet."}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        {groups.length > 0 ? (
-          groups.map((group, index) => (
-            <div key={group.key}>
-              {index > 0 && <div className="border-t border-slate-200 my-2" />}
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 flex items-center gap-1">
-                    {renderGroupTitleIcon(group.key)}
-                    {group.title}
-                  </span>
-                </div>
-                <span className="text-[10px] text-muted-foreground">×{group.cards.length}</span>
-              </div>
-
-              <div className="space-y-0.5">
-                {group.cards.map((card) => (
-                  <div
-                    key={card.id}
-                    className="rounded border border-slate-100 bg-slate-50/50 px-2 py-1"
-                  >
-                    <div className="space-y-1.5">
-                      <div className="space-y-0.5">
-                        <p className="text-[13px] font-semibold text-slate-800 leading-tight">{card.title}</p>
-                        <p className="text-[10px] text-slate-600 leading-tight">
-                          {card.description ||
-                            (typeof card.meta?.summary === "string"
-                              ? card.meta.summary
-                              : "Graph RAG recommendation")}
-                        </p>
-                        <div className="flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
-                          {card.persona?.persona_name ? (
-                            <span className="rounded bg-slate-100 px-1.5 py-0.5">
-                              {card.persona.persona_name}
-                            </span>
-                          ) : null}
-                          {card.persona?.campaign_name ? (
-                            <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-indigo-700">
-                              {card.persona.campaign_name}
-                            </span>
-                          ) : null}
-                          {card.meta?.kind === "next_action" && (
-                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-700">
-                              Plan only
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      {card.operator_key && card.flow_path ? (
-                        <Button
-                          size="sm"
-                          onClick={() => handleExecute(card)}
-                          disabled={!onExecute || isExecuting}
-                          className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white border-0 text-[11px] py-1 h-7"
-                        >
-                          <Play className="h-3 w-3 mr-1" />
-                          {isExecuting ? "Executing..." : card.cta_label ?? "Run"}
-                        </Button>
-                      ) : (
-                        <div className="text-[10px] text-muted-foreground italic">
-                          No automated action; review manually.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="rounded border border-dashed bg-muted/40 px-2 py-3 text-center text-[10px] text-muted-foreground">
-            {isLoading ? "Waiting for Graph RAG suggestions..." : "No actionable suggestions yet."}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
+      {/* Fixed ROI Section - Always visible */}
+      <div className="flex-shrink-0 border-t-2 border-slate-300 bg-gradient-to-br from-slate-50 to-white pt-3 pb-2">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
             <TrendingUp className="h-4 w-4 text-indigo-600" />
             ROI Insights
           </div>
-          <span className="text-[11px] text-muted-foreground">Always-on justification</span>
+          <span className="text-[10px] text-muted-foreground bg-slate-100 px-2 py-0.5 rounded">Always-on</span>
         </div>
 
         {roi ? (
-          <div className="grid grid-cols-3 gap-1.5">
-            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200/50">
-              <div className="p-1.5 bg-emerald-500 rounded-md mb-1">
-                <Brain className="h-3 w-3 text-white" />
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col items-center justify-center p-2.5 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200 shadow-sm">
+              <div className="p-1.5 bg-emerald-500 rounded-md mb-1.5 shadow-sm">
+                <Brain className="h-3.5 w-3.5 text-white" />
               </div>
-              <p className="text-[9px] text-emerald-700 uppercase tracking-wide font-medium text-center leading-tight">
+              <p className="text-[9px] text-emerald-700 uppercase tracking-wide font-semibold text-center leading-tight mb-0.5">
                 Reuse
               </p>
-              <p className="text-sm font-bold text-emerald-800">{roi.memoryReuse}×</p>
+              <p className="text-base font-bold text-emerald-800">{roi.memoryReuse}×</p>
             </div>
-            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200/50">
-              <div className="p-1.5 bg-blue-500 rounded-md mb-1">
-                <TrendingUp className="h-3 w-3 text-white" />
+            <div className="flex flex-col items-center justify-center p-2.5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 shadow-sm">
+              <div className="p-1.5 bg-blue-500 rounded-md mb-1.5 shadow-sm">
+                <TrendingUp className="h-3.5 w-3.5 text-white" />
               </div>
-              <p className="text-[9px] text-blue-700 uppercase tracking-wide font-medium text-center leading-tight">
+              <p className="text-[9px] text-blue-700 uppercase tracking-wide font-semibold text-center leading-tight mb-0.5">
                 Saved
               </p>
-              <p className="text-sm font-bold text-blue-800">{roi.savedMinutes}m</p>
+              <p className="text-base font-bold text-blue-800">{roi.savedMinutes}m</p>
             </div>
-            <div className="flex flex-col items-center justify-center p-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200/50">
-              <div className="p-1.5 bg-purple-500 rounded-md mb-1">
-                <Play className="h-3 w-3 text-white" />
+            <div className="flex flex-col items-center justify-center p-2.5 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 shadow-sm">
+              <div className="p-1.5 bg-purple-500 rounded-md mb-1.5 shadow-sm">
+                <Play className="h-3.5 w-3.5 text-white" />
               </div>
-              <p className="text-[9px] text-purple-700 uppercase tracking-wide font-medium text-center leading-tight">
+              <p className="text-[9px] text-purple-700 uppercase tracking-wide font-semibold text-center leading-tight mb-0.5">
                 Auto
               </p>
-              <p className="text-sm font-bold text-purple-800">{(roi.automationRate * 100).toFixed(0)}%</p>
+              <p className="text-base font-bold text-purple-800">{(roi.automationRate * 100).toFixed(0)}%</p>
             </div>
           </div>
         ) : (
-          <div className="text-center text-xs text-muted-foreground py-2 border rounded-lg">
+          <div className="text-center text-xs text-muted-foreground py-3 border border-dashed rounded-lg bg-slate-50">
             {isLoading ? "Loading Graph RAG ROI..." : "ROI data not available yet."}
           </div>
         )}

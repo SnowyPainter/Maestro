@@ -120,6 +120,9 @@ async def list_playbooks(
     ).scalars().all()
     return rows, total
 
+async def get_playbook_log(db: AsyncSession, playbook_log_id: int) -> Optional[PlaybookLog]:
+    return await db.get(PlaybookLog, playbook_log_id)
+
 
 async def record_event(
     db: AsyncSession,

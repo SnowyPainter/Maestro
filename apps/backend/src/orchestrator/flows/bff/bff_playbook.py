@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from apps.backend.src.modules.accounts.service import get_persona
 from apps.backend.src.modules.campaigns.service import get_campaign
 from apps.backend.src.modules.playbooks.schemas import PlaybookOut, PlaybookEnrichedOut, PlaybookLogOut
-from apps.backend.src.modules.playbooks.service import list_playbooks, search_playbooks, list_logs_for_persona
+from apps.backend.src.modules.playbooks.service import list_playbooks, search_playbooks, list_logs_for_persona, get_playbook_log
 from apps.backend.src.modules.users.models import User
 from apps.backend.src.orchestrator.dispatch import TaskContext
 from apps.backend.src.orchestrator.registry import FLOWS, FlowBuilder, operator
@@ -55,6 +55,11 @@ class PlaybookListResponse(BaseModel):
     limit: int
     offset: int
 
+class PlaybookLogDetailPayload(BaseModel):
+    playbook_log_id: int
+
+class PlaybookLogDetailResponse(BaseModel):
+    log: PlaybookLogOut
 
 @operator(
     key="bff.playbook.list_playbooks",
@@ -200,7 +205,27 @@ async def op_get_playbook_detail(
 
     return PlaybookDetailResponse(playbook=enriched_playbook, logs=logs)
 
+@operator(
+    key="bff.playbook.get_playbook_log_detail",
+    title="Get Playbook Log Detail",
+    side_effect="read",
+)
+async def op_get_playbook_log_detail(
+    payload: PlaybookLogDetailPayload,
+    ctx: TaskContext,
+) -> PlaybookLogDetailResponse:
+    db: AsyncSession = ctx.require(AsyncSession)
+    user: User = ctx.require(User)
 
+    if not payload.playbook_log_id:
+        raise HTTPException(status_code=400, detail="playbook_log_id is required")
+
+    log = await get_playbook_log(db, playbook_log_id=payload.playbook_log_id)
+    if log is None:
+        raise HTTPException(status_code=404, detail="Playbook log not found")
+
+    return PlaybookLogDetailResponse(log=log)
+    
 # Dashboard Analytics Operators
 
 @operator(
@@ -486,15 +511,32 @@ def _flow_bff_get_playbook_detail(builder: FlowBuilder) -> None:
     task = builder.task("get_playbook_detail", "bff.playbook.get_playbook_detail")
     builder.expect_terminal(task)
 
+@FLOWS.flow(
+    key="bff.playbook.get_playbook_log_detail",
+    title="Get Playbook Log Detail",
+    description="Get detailed playbook log information by log id.",
+    input_model=PlaybookLogDetailPayload,
+    output_model=PlaybookLogDetailResponse,
+    method="get",
+    path="/playbooks/log/{playbook_log_id}",
+    tags=("bff", "playbooks", "log", "detail", "ui", "frontend"),
+)
+def _flow_bff_get_playbook_log_detail(builder: FlowBuilder) -> None:
+    task = builder.task("get_playbook_log_detail", "bff.playbook.get_playbook_log_detail")
+    builder.expect_terminal(task)
+
 __all__ = [
     "PlaybookListPayload",
     "PlaybookListResponse",
     "PlaybookSearchPayload",
     "PlaybookSearchResponse",
     "PlaybookDetailResponse",
+    "PlaybookLogDetailPayload",
+    "PlaybookLogDetailResponse",
     "op_list_playbooks",
     "op_search_playbooks",
     "op_get_playbook_detail",
+    "op_get_playbook_log_detail",
     "op_get_dashboard_overview",
     "op_get_dashboard_event_chain",
     "op_get_dashboard_performance",

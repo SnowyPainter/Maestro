@@ -844,6 +844,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bff/playbooks/log/{playbook_log_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Playbook Log Detail
+         * @description Get detailed playbook log information by log id.
+         */
+        get: operations["bff_playbook_get_playbook_log_detail_api_bff_playbooks_log__playbook_log_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bff/rag/search": {
         parameters: {
             query?: never;
@@ -4632,6 +4652,10 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /** PlaybookLogDetailResponse */
+        PlaybookLogDetailResponse: {
+            log: components["schemas"]["PlaybookLogOut"];
+        };
         /** PlaybookLogOut */
         PlaybookLogOut: {
             /** Id */
@@ -7481,6 +7505,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlaybookDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bff_playbook_get_playbook_log_detail_api_bff_playbooks_log__playbook_log_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                playbook_log_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaybookLogDetailResponse"];
                 };
             };
             /** @description Validation Error */

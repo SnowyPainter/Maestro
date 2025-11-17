@@ -50,6 +50,7 @@ import ABTestDetail from "@/entities/abtests/components/ABTestDetail";
 import PostPublicationList from "@/entities/post-publications/components/PostPublicationList";
 import { PlaybookList } from "@/entities/playbooks/components/PlaybookList";
 import { PlaybookDetail } from "@/entities/playbooks/components/PlaybookDetail";
+import { PlaybookLogDetail } from "@/entities/playbooks/components/PlaybookLogDetail";
 import { PlaybookAnalysisDashboard } from "@/entities/playbooks/components/PlaybookAnalysisDashboard";
 import { PlaybookToolCard } from "@/features/playbooks/components/PlaybookToolCard";
 import { RuleOverviewCard } from "@/entities/reactive/components/RuleOverviewCard";
@@ -590,6 +591,17 @@ export function useChatPageEvents() {
     ));
   }, [addCardMessage, handleCardDelete, removeMessage]);
 
+  const handlePlaybookLogSelect = useCallback<EntitySelectHandler>((playbookLogId, sourceMessageId) => {
+    if (sourceMessageId) {
+      removeMessage(sourceMessageId);
+    }
+    addCardMessage(messageId => (
+      <PlaybookLogDetail
+        playbookLogId={playbookLogId}
+      />
+    ));
+  }, [addCardMessage, removeMessage]);
+
   const handlePlaybookAnalyze = useCallback<EntitySelectHandler>((playbookId, sourceMessageId) => {
     if (sourceMessageId) {
       removeMessage(sourceMessageId);
@@ -1080,6 +1092,8 @@ export function useChatPageEvents() {
             handleAccountSelect(id, undefined); // Ack 카드 삭제 방지
           } else if (key.includes("playbook") && !key.includes("log")) {
             handlePlaybookSelect(id, undefined); // Ack 카드 삭제 방지
+          } else if (key.includes("playbook_log")) {
+            handlePlaybookLogSelect(id, undefined); // Ack 카드 삭제 방지
           }
         }
       }
@@ -1095,7 +1109,7 @@ export function useChatPageEvents() {
         },
       });
     });
-  }, [addCardMessage, renderCardByType, handleCardDelete, handleDraftSelect, handleCampaignSelect, handlePersonaSelect, handleAccountSelect, handlePlaybookSelect]);
+  }, [addCardMessage, renderCardByType, handleCardDelete, handleDraftSelect, handleCampaignSelect, handlePersonaSelect, handleAccountSelect, handlePlaybookSelect, handlePlaybookLogSelect]);
 
   return {
     handleChatSend,
