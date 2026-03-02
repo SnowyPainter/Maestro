@@ -1,5 +1,7 @@
 # AI Content Orchestration Platform
 
+[![Video Label](http://img.youtube.com/vi/GAPizGHcIEU/0.jpg)](https://youtu.be/GAPizGHcIEU)
+
 ## English
 
 Our platform redefines how businesses create and manage social content.
